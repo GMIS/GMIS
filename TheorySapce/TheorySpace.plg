@@ -1,0 +1,66 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: TheorySpace - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\Users\T61\AppData\Local\Temp\RSP35E1.tmp" with contents
+[
+/nologo /MD /W3 /GX /ZI /D "NDEBUG" /D "WIN32" /D "_UNICODE" /D "UNICODE" /Fo"obj\VC6\release/" /Fd"obj\VC6\release/" /FD /c 
+"D:\work\GMIS\GMIS_BASE\TheorySapce\src\AbstractSpace.cpp"
+"D:\work\GMIS\GMIS_BASE\TheorySapce\src\AbstractSpacePool.cpp"
+"D:\work\GMIS\GMIS_BASE\TheorySapce\src\BaseEnergy.cpp"
+"D:\work\GMIS\GMIS_BASE\TheorySapce\src\ConvertUTF.cpp"
+"D:\work\GMIS\GMIS_BASE\TheorySapce\src\FORMAT.CPP"
+"D:\work\GMIS\GMIS_BASE\TheorySapce\src\LinkerPipe.cpp"
+"D:\work\GMIS\GMIS_BASE\TheorySapce\src\Model.cpp"
+"D:\work\GMIS\GMIS_BASE\TheorySapce\src\Msg.cpp"
+"D:\work\GMIS\GMIS_BASE\TheorySapce\src\Pipeline.cpp"
+"D:\work\GMIS\GMIS_BASE\TheorySapce\src\SpaceMutex.cpp"
+"D:\work\GMIS\GMIS_BASE\TheorySapce\src\System.cpp"
+"D:\work\GMIS\GMIS_BASE\TheorySapce\src\TimeStamp.cpp"
+]
+Creating command line "cl.exe @C:\Users\T61\AppData\Local\Temp\RSP35E1.tmp" 
+Creating temporary file "C:\Users\T61\AppData\Local\Temp\RSP35E2.tmp" with contents
+[
+/nologo /out:"bin\VC6\release\TheorySpace.lib" 
+.\obj\VC6\release\AbstractSpace.obj
+.\obj\VC6\release\AbstractSpacePool.obj
+.\obj\VC6\release\BaseEnergy.obj
+.\obj\VC6\release\ConvertUTF.obj
+.\obj\VC6\release\FORMAT.OBJ
+.\obj\VC6\release\LinkerPipe.obj
+.\obj\VC6\release\Model.obj
+.\obj\VC6\release\Msg.obj
+.\obj\VC6\release\Pipeline.obj
+.\obj\VC6\release\SpaceMutex.obj
+.\obj\VC6\release\System.obj
+.\obj\VC6\release\TimeStamp.obj
+]
+Creating command line "link.exe -lib @C:\Users\T61\AppData\Local\Temp\RSP35E2.tmp"
+<h3>Output Window</h3>
+Compiling...
+AbstractSpace.cpp
+AbstractSpacePool.cpp
+BaseEnergy.cpp
+ConvertUTF.cpp
+FORMAT.CPP
+LinkerPipe.cpp
+Model.cpp
+Msg.cpp
+Pipeline.cpp
+SpaceMutex.cpp
+System.cpp
+TimeStamp.cpp
+Generating Code...
+Creating library...
+
+
+
+<h3>Results</h3>
+TheorySpace.lib - 0 error(s), 0 warning(s)
+</pre>
+</body>
+</html>

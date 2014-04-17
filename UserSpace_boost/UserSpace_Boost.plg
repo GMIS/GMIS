@@ -1,0 +1,76 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: UserSpace_Boost - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSPDD.tmp" with contents
+[
+/nologo /MDd /W3 /Gm /GX /ZI /Od /D "_DEBUG" /D "WIN32" /D "_UNICODE" /D "UNICODE" /D "_LIB" /Fp"d:\project\obj\vc6\debug\UserSpace_Boost/UserSpace_Boost.pch" /YX /Fo"d:\project\obj\vc6\debug\UserSpace_Boost/" /Fd"d:\project\obj\vc6\debug\UserSpace_Boost/" /FD /GZ /c 
+"Z:\project\src\UserSpace_Boost\UserLinkerPipe.cpp"
+"Z:\project\src\UserSpace_Boost\UserModel.cpp"
+"Z:\project\src\UserSpace_Boost\UserMutex.cpp"
+"Z:\project\src\UserSpace_Boost\UserObject.cpp"
+"Z:\project\src\UserSpace_Boost\UserSpaceMutex.cpp"
+"Z:\project\src\UserSpace_Boost\UserSpacePool.cpp"
+"Z:\project\src\UserSpace_Boost\UserSystem.cpp"
+"Z:\project\src\UserSpace_Boost\UserTimeStamp.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSPDD.tmp" 
+Creating temporary file "C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSPDE.tmp" with contents
+[
+/nologo /out:"d:\project\bin\vc6\debug\UserSpace_Boost\UserSpace_Boost.lib" 
+d:\project\obj\vc6\debug\UserSpace_Boost\UserLinkerPipe.obj
+d:\project\obj\vc6\debug\UserSpace_Boost\UserModel.obj
+d:\project\obj\vc6\debug\UserSpace_Boost\UserMutex.obj
+d:\project\obj\vc6\debug\UserSpace_Boost\UserObject.obj
+d:\project\obj\vc6\debug\UserSpace_Boost\UserSpaceMutex.obj
+d:\project\obj\vc6\debug\UserSpace_Boost\UserSpacePool.obj
+d:\project\obj\vc6\debug\UserSpace_Boost\UserSystem.obj
+d:\project\obj\vc6\debug\UserSpace_Boost\UserTimeStamp.obj
+]
+Creating command line "link.exe -lib @C:\DOCUME~1\ADMINI~1\LOCALS~1\Temp\RSPDE.tmp"
+<h3>Output Window</h3>
+Compiling...
+UserLinkerPipe.cpp
+z:\project\src\userspace_boost\userlinkerpipe.cpp(6) : fatal error C1083: Cannot open include file: 'boost/bind.hpp': No such file or directory
+UserModel.cpp
+z:\project\src\userspace_boost\usermodel.h(10) : fatal error C1083: Cannot open include file: 'boost/thread.hpp': No such file or directory
+UserMutex.cpp
+z:\project\src\userspace_boost\usermutex.h(12) : fatal error C1083: Cannot open include file: 'boost/thread.hpp': No such file or directory
+UserObject.cpp
+z:\project\src\userspace_boost\userobject.h(9) : fatal error C1083: Cannot open include file: 'boost/thread.hpp': No such file or directory
+UserSpaceMutex.cpp
+z:\project\src\userspace_boost\userspacemutex.h(13) : fatal error C1083: Cannot open include file: 'boost/thread.hpp': No such file or directory
+UserSpacePool.cpp
+d:\vc6.0\vc98\include\xtree(118) : warning C4786: 'std::_Tree<unsigned int,std::pair<unsigned int const ,std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> > >,std::map<unsigned int,std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> >,std::less<unsigned int>,std::allocator<std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> > > >::_Kfn,std::less<unsigned int>,std::allocator<std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> > > >' : identifier was truncated to '255' characters in the debug information
+        d:\vc6.0\vc98\include\map(46) : see reference to class template instantiation 'std::_Tree<unsigned int,std::pair<unsigned int const ,std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> > >,std::map<unsigned int,std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> >,std::less<unsigned int>,std::allocator<std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> > > >::_Kfn,std::less<unsigned int>,std::allocator<std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> > > >' being compiled
+        z:\project\src\theoryspace\abstractspacepool.h(26) : see reference to class template instantiation 'std::map<unsigned int,std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> >,std::less<unsigned int>,std::allocator<std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> > > >' being compiled
+d:\vc6.0\vc98\include\xtree(118) : warning C4786: 'std::_Tree<unsigned int,std::pair<unsigned int const ,std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> > >,std::map<unsigned int,std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> >,std::less<unsigned int>,std::allocator<std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> > > >::_Kfn,std::less<unsigned int>,std::allocator<std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> > > >::const_iterator' : identifier was truncated to '255' characters in the debug information
+        d:\vc6.0\vc98\include\map(46) : see reference to class template instantiation 'std::_Tree<unsigned int,std::pair<unsigned int const ,std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> > >,std::map<unsigned int,std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> >,std::less<unsigned int>,std::allocator<std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> > > >::_Kfn,std::less<unsigned int>,std::allocator<std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> > > >' being compiled
+        z:\project\src\theoryspace\abstractspacepool.h(26) : see reference to class template instantiation 'std::map<unsigned int,std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> >,std::less<unsigned int>,std::allocator<std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> > > >' being compiled
+d:\vc6.0\vc98\include\xtree(118) : warning C4786: 'std::_Tree<unsigned int,std::pair<unsigned int const ,std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> > >,std::map<unsigned int,std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> >,std::less<unsigned int>,std::allocator<std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> > > >::_Kfn,std::less<unsigned int>,std::allocator<std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> > > >::iterator' : identifier was truncated to '255' characters in the debug information
+        d:\vc6.0\vc98\include\map(46) : see reference to class template instantiation 'std::_Tree<unsigned int,std::pair<unsigned int const ,std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> > >,std::map<unsigned int,std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> >,std::less<unsigned int>,std::allocator<std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> > > >::_Kfn,std::less<unsigned int>,std::allocator<std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> > > >' being compiled
+        z:\project\src\theoryspace\abstractspacepool.h(26) : see reference to class template instantiation 'std::map<unsigned int,std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> >,std::less<unsigned int>,std::allocator<std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> > > >' being compiled
+d:\vc6.0\vc98\include\xtree(118) : warning C4786: 'std::_Tree<unsigned int,std::pair<unsigned int const ,std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> > >,std::map<unsigned int,std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> >,std::less<unsigned int>,std::allocator<std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> > > >::_Kfn,std::less<unsigned int>,std::allocator<std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> > > >::_Node' : identifier was truncated to '255' characters in the debug information
+        d:\vc6.0\vc98\include\map(46) : see reference to class template instantiation 'std::_Tree<unsigned int,std::pair<unsigned int const ,std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> > >,std::map<unsigned int,std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> >,std::less<unsigned int>,std::allocator<std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> > > >::_Kfn,std::less<unsigned int>,std::allocator<std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> > > >' being compiled
+        z:\project\src\theoryspace\abstractspacepool.h(26) : see reference to class template instantiation 'std::map<unsigned int,std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> >,std::less<unsigned int>,std::allocator<std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> > > >' being compiled
+d:\vc6.0\vc98\include\xtree(118) : warning C4786: 'std::_Tree<unsigned int,std::pair<unsigned int const ,std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> > >,std::map<unsigned int,std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> >,std::less<unsigned int>,std::allocator<std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> > > >::_Kfn,std::less<unsigned int>,std::allocator<std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> > > >::const_iterator' : identifier was truncated to '255' characters in the debug information
+        d:\vc6.0\vc98\include\map(46) : see reference to class template instantiation 'std::_Tree<unsigned int,std::pair<unsigned int const ,std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> > >,std::map<unsigned int,std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> >,std::less<unsigned int>,std::allocator<std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> > > >::_Kfn,std::less<unsigned int>,std::allocator<std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> > > >' being compiled
+        z:\project\src\theoryspace\abstractspacepool.h(26) : see reference to class template instantiation 'std::map<unsigned int,std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> >,std::less<unsigned int>,std::allocator<std::list<ABSTRACT::AbstractSpace *,std::allocator<ABSTRACT::AbstractSpace *> > > >' being compiled
+z:\project\src\userspace_boost\usermutex.h(12) : fatal error C1083: Cannot open include file: 'boost/thread.hpp': No such file or directory
+UserSystem.cpp
+z:\project\src\userspace_boost\userlinkerpipe.h(15) : fatal error C1083: Cannot open include file: 'boost/asio.hpp': No such file or directory
+UserTimeStamp.cpp
+z:\project\src\userspace_boost\usertimestamp.cpp(5) : fatal error C1083: Cannot open include file: 'boost/date_time.hpp': No such file or directory
+Error executing cl.exe.
+
+
+
+<h3>Results</h3>
+UserSpace_Boost.lib - 8 error(s), 5 warning(s)
+</pre>
+</body>
+</html>
