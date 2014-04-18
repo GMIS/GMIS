@@ -1,9 +1,11 @@
-// UserModel.h: interface for the CUserModel class.
-//
-//////////////////////////////////////////////////////////////////////
+/*
+*
+* author: ZhangHongBing(hongbing75@gmail.com)  
+*/
 
-#if !defined(AFX_USERMODEL_H__826078EB_84E9_47FE_AAE6_F72BFB07BBCA__INCLUDED_)
-#define AFX_USERMODEL_H__826078EB_84E9_47FE_AAE6_F72BFB07BBCA__INCLUDED_
+
+#ifndef _USERMODEL_H__
+#define _USERMODEL_H__
 
 #if _MSC_VER > 1000
 #pragma once
@@ -53,4 +55,4 @@ public:
 
 };
 
-#endif // !defined(AFX_USERMODEL_H__826078EB_84E9_47FE_AAE6_F72BFB07BBCA__INCLUDED_)
+#endif // _USERMODEL_H__

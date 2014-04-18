@@ -1,9 +1,11 @@
-// UserSystem.h: interface for the CUserSystem class.
-//
-//////////////////////////////////////////////////////////////////////
+/*
+*
+* author: ZhangHongBing(hongbing75@gmail.com)  
+*/
 
-#if !defined(AFX_USERSYSTEM_H__BD1D0519_113C_4099_8C34_602FEE3F3FFC__INCLUDED_)
-#define AFX_USERSYSTEM_H__BD1D0519_113C_4099_8C34_602FEE3F3FFC__INCLUDED_
+
+#ifndef _USERSYSTEM_H__
+#define _USERSYSTEM_H__
 
 #include "UserLinkerPipe.h"
 #include "System.h"
@@ -104,4 +106,4 @@ public:
 
 };
 
-#endif // !defined(AFX_USERSYSTEM_H__BD1D0519_113C_4099_8C34_602FEE3F3FFC__INCLUDED_)
+#endif // _USERSYSTEM_H__

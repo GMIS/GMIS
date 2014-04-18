@@ -1,9 +1,11 @@
-// UserObject.h: interface for the CUserObject class.
-//
-//////////////////////////////////////////////////////////////////////
+/*
+*
+* author: ZhangHongBing(hongbing75@gmail.com)  
+*/
 
-#if !defined(AFX_USEROBJECT_H__72C9065C_4EDD_46C8_B90C_E0C1245A106B__INCLUDED_)
-#define AFX_USEROBJECT_H__72C9065C_4EDD_46C8_B90C_E0C1245A106B__INCLUDED_
+
+#ifndef _USEROBJECT_H__
+#define _USEROBJECT_H__
 
 #include "Model.h"
 #include "System.h"
@@ -27,4 +29,4 @@ public:
 
 
 
-#endif // !defined(AFX_USEROBJECT_H__72C9065C_4EDD_46C8_B90C_E0C1245A106B__INCLUDED_)
+#endif // _USEROBJECT_H__

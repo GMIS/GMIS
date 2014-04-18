@@ -37,8 +37,8 @@ RSC=rc.exe
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 0
-# PROP Output_Dir "d:\project\bin\vc6\release\UserSpace_Win32"
-# PROP Intermediate_Dir "d:\project\obj\vc6\release\UserSpace_Win32"
+# PROP Output_Dir "bin\VC6\release"
+# PROP Intermediate_Dir "obj\VC6\release"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /YX /FD /c
 # ADD CPP /nologo /MD /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_UNICODE" /D "UNICODE" /D "_LIB" /FD /c
@@ -61,8 +61,8 @@ LIB32=link.exe -lib
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 1
-# PROP Output_Dir "d:\project\bin\vc6\debug\UserSpace_Win32"
-# PROP Intermediate_Dir "d:\project\obj\vc6\debug\UserSpace_Win32"
+# PROP Output_Dir "bin\VC6\release"
+# PROP Intermediate_Dir "obj\VC6\release"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /c
 # ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /D "_DEBUG" /D "WIN32" /D "_UNICODE" /D "UNICODE" /D "_LIB" /YX /FD /GZ /c
@@ -73,7 +73,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo /o"d:\project\obj\vc6\debug\UserSpace_Win32/UserSpace_Win32.bsc"
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
-# ADD LIB32 /nologo /out:"d:\project\bin\vc6\debug\UserSpace_Win32\UserSpace_Win32D.lib"
+# ADD LIB32 /nologo /out:"bin\VC6\debug\UserSpace_Win32_Debug.lib"
 
 !ENDIF 
 
@@ -86,35 +86,35 @@ LIB32=link.exe -lib
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=..\..\..\..\src\UserSpace_Win32\UserLinkerPipe.cpp
+SOURCE=.\src\UserLinkerPipe.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\UserSpace_Win32\UserModel.cpp
+SOURCE=.\src\UserModel.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\UserSpace_Win32\UserMutex.cpp
+SOURCE=.\src\UserMutex.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\UserSpace_Win32\UserObject.cpp
+SOURCE=.\src\UserObject.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\UserSpace_Win32\UserSpaceMutex.cpp
+SOURCE=.\src\UserSpaceMutex.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\UserSpace_Win32\UserSpacePool.cpp
+SOURCE=.\src\UserSpacePool.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\UserSpace_Win32\UserSystem.cpp
+SOURCE=.\src\UserSystem.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\UserSpace_Win32\UserTimeStamp.cpp
+SOURCE=.\src\UserTimeStamp.cpp
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -122,35 +122,35 @@ SOURCE=..\..\..\..\src\UserSpace_Win32\UserTimeStamp.cpp
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
-SOURCE=..\..\..\..\src\UserSpace_Win32\UserLinkerPipe.h
+SOURCE=.\src\UserLinkerPipe.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\UserSpace_Win32\UserModel.h
+SOURCE=.\src\UserModel.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\UserSpace_Win32\UserMutex.h
+SOURCE=.\src\UserMutex.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\UserSpace_Win32\UserObject.h
+SOURCE=.\src\UserObject.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\UserSpace_Win32\UserSpaceMutex.h
+SOURCE=.\src\UserSpaceMutex.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\UserSpace_Win32\UserSpacePool.h
+SOURCE=.\src\UserSpacePool.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\UserSpace_Win32\UserSystem.h
+SOURCE=.\src\UserSystem.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\UserSpace_Win32\UserTimeStamp.h
+SOURCE=.\src\UserTimeStamp.h
 # End Source File
 # End Group
 # End Target

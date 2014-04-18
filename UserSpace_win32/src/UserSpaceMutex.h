@@ -1,9 +1,11 @@
-// UserSpaceMutex.h: interface for the CUserSpaceMutex class.
-//
-//////////////////////////////////////////////////////////////////////
+/*
+*
+* author: ZhangHongBing(hongbing75@gmail.com)  
+*/
 
-#if !defined(AFX_USERSPACEMUTEX_H__5F40EADA_91D9_4CC4_8B49_E9354CADBE7A__INCLUDED_)
-#define AFX_USERSPACEMUTEX_H__5F40EADA_91D9_4CC4_8B49_E9354CADBE7A__INCLUDED_
+
+#ifndef _USERSPACEMUTEX_H__
+#define _USERSPACEMUTEX_H__
 
 
 #if _MSC_VER > 1000
@@ -53,4 +55,4 @@ public:
 	virtual SeatMutex* CreateSeat();
 };
 
-#endif // !defined(AFX_USERSPACEMUTEX_H__5F40EADA_91D9_4CC4_8B49_E9354CADBE7A__INCLUDED_)
+#endif // _USERSPACEMUTEX_H__

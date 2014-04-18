@@ -1,9 +1,11 @@
-// UserSpacePool.h: interface for the CUserSpacePool class.
-//
-//////////////////////////////////////////////////////////////////////
+/*
+*
+* author: ZhangHongBing(hongbing75@gmail.com)  
+*/
 
-#if !defined(AFX_USERSPACEPOOL_H__103D2440_2A9D_409A_92A4_5A4A99C0D7B6__INCLUDED_)
-#define AFX_USERSPACEPOOL_H__103D2440_2A9D_409A_92A4_5A4A99C0D7B6__INCLUDED_
+
+#ifndef _USERSPACEPOOL_H__
+#define _USERSPACEPOOL_H__
 
 #if _MSC_VER > 1000
 #pragma once
@@ -19,4 +21,4 @@ public:
 
 };
 
-#endif // !defined(AFX_USERSPACEPOOL_H__103D2440_2A9D_409A_92A4_5A4A99C0D7B6__INCLUDED_)
+#endif // _USERSPACEPOOL_H__

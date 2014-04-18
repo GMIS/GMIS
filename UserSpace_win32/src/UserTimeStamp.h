@@ -1,9 +1,11 @@
-// UserTimeStamp.h: interface for the CUserTimeStamp class.
-//
-//////////////////////////////////////////////////////////////////////
+/*
+*
+* author: ZhangHongBing(hongbing75@gmail.com)  
+*/
 
-#if !defined(AFX_USERTIMESTAMP_H__F6190E33_9F0D_401A_9016_3B8E06C1CD0A__INCLUDED_)
-#define AFX_USERTIMESTAMP_H__F6190E33_9F0D_401A_9016_3B8E06C1CD0A__INCLUDED_
+
+#ifndef _USERTIMESTAMP_H__
+#define _USERTIMESTAMP_H__
 
 #include "TimeStamp.h"
 
@@ -35,4 +37,4 @@ public:
 
 
 
-#endif // !defined(AFX_USERTIMESTAMP_H__F6190E33_9F0D_401A_9016_3B8E06C1CD0A__INCLUDED_)
+#endif // _USERTIMESTAMP_H__

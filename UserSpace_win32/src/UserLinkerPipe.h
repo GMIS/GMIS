@@ -1,10 +1,11 @@
-// SocketLinkerPipe.h: interface for the CUserLinkerPipe class.
-//
-//////////////////////////////////////////////////////////////////////
+/*
+*
+* author: ZhangHongBing(hongbing75@gmail.com)  
+*/
 
-#if !defined(AFX_USERLINKERPIPE_H__CBADBA55_64F7_4884_B2D2_3BA004C4CE71__INCLUDED_)
-#define AFX_USERLINKERPIPE_H__CBADBA55_64F7_4884_B2D2_3BA004C4CE71__INCLUDED_
 
+#ifndef _USERLINKERPIPE_H__
+#define _USERLINKERPIPE_H__
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
@@ -91,4 +92,4 @@ private:
 	void Accept();
 };
 
-#endif // !defined(AFX_USERLINKERPIPE_H__CBADBA55_64F7_4884_B2D2_3BA004C4CE71__INCLUDED_)
+#endif // _USERLINKERPIPE_H__

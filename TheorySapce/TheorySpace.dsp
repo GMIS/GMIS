@@ -37,8 +37,8 @@ RSC=rc.exe
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 0
-# PROP Output_Dir "d:\project\bin\vc6\release\TheorySpace"
-# PROP Intermediate_Dir "d:\project\obj\vc6\release\TheorySpace"
+# PROP Output_Dir "bin\VC6\release"
+# PROP Intermediate_Dir "obj\VC6\release"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_MBCS" /D "_LIB" /YX /FD /c
 # ADD CPP /nologo /MD /W3 /GX /ZI /D "NDEBUG" /D "WIN32" /D "_UNICODE" /D "UNICODE" /FD /c
@@ -61,8 +61,8 @@ LIB32=link.exe -lib
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 1
-# PROP Output_Dir "d:\project\bin\vc6\debug\TheorySpace"
-# PROP Intermediate_Dir "d:\project\obj\vc6\debug\TheorySpace"
+# PROP Output_Dir "bin\VC6\debug"
+# PROP Intermediate_Dir "obj\VC6\debug"
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /YX /FD /GZ /c
 # ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /D "_DEBUG" /D "WIN32" /D "_UNICODE" /D "UNICODE" /YX /FD /GZ /c
@@ -73,7 +73,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo /o"d:\project\obj\vc6\debug\TheorySpace/TheorySpace.bsc"
 LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
-# ADD LIB32 /nologo /out:"d:\project\bin\vc6\debug\TheorySpace\TheorySpaceD.lib"
+# ADD LIB32 /nologo /out:"bin\vc6\debug\TheorySpace_Debug.lib"
 
 !ENDIF 
 
@@ -86,47 +86,51 @@ LIB32=link.exe -lib
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=..\..\..\..\src\TheorySpace\AbstractSpace.cpp
+SOURCE=.\src\AbstractSpace.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\TheorySpace\AbstractSpacePool.cpp
+SOURCE=.\src\AbstractSpacePool.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\TheorySpace\BaseEnergy.cpp
+SOURCE=.\src\BaseEnergy.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\TheorySpace\ConvertUTF.cpp
+SOURCE=.\src\ConvertUTF.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\TheorySpace\LinkerPipe.cpp
+SOURCE=.\src\FORMAT.CPP
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\TheorySpace\Model.cpp
+SOURCE=.\src\LinkerPipe.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\TheorySpace\Msg.cpp
+SOURCE=.\src\Model.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\TheorySpace\Pipeline.cpp
+SOURCE=.\src\Msg.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\TheorySpace\SpaceMutex.cpp
+SOURCE=.\src\Pipeline.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\TheorySpace\System.cpp
+SOURCE=.\src\SpaceMutex.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\TheorySpace\TimeStamp.cpp
+SOURCE=.\src\System.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\src\TimeStamp.cpp
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -134,71 +138,71 @@ SOURCE=..\..\..\..\src\TheorySpace\TimeStamp.cpp
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
-SOURCE=..\..\..\..\src\TheorySpace\ABMutex.h
+SOURCE=.\src\ABMutex.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\TheorySpace\AbstractSpace.h
+SOURCE=.\src\AbstractSpace.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\TheorySpace\AbstractSpacePool.h
+SOURCE=.\src\AbstractSpacePool.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\TheorySpace\BaseEnergy.h
+SOURCE=.\src\BaseEnergy.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\TheorySpace\ConvertUTF.h
+SOURCE=.\src\ConvertUTF.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\TheorySpace\LinkerPipe.h
+SOURCE=.\src\FORMAT.H
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\TheorySpace\LockPipe.h
+SOURCE=.\src\LinkerPipe.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\TheorySpace\Model.h
+SOURCE=.\src\LockPipe.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\TheorySpace\Msg.h
+SOURCE=.\src\Model.h
 # End Source File
 # Begin Source File
 
-SOURCE="..\..\..\..\src\TheorySpace\MsgDefine(del).h"
+SOURCE=.\src\Msg.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\TheorySpace\Object.h
+SOURCE=.\src\Object.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\TheorySpace\Pipeline.h
+SOURCE=.\src\Pipeline.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\TheorySpace\SpaceMutex.h
+SOURCE=.\src\SpaceMutex.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\TheorySpace\System.h
+SOURCE=.\src\System.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\TheorySpace\TheorySpace.h
+SOURCE=.\src\TheorySpace.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\TheorySpace\TimeStamp.h
+SOURCE=.\src\TimeStamp.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\..\..\src\TheorySpace\Typedef.h
+SOURCE=.\src\Typedef.h
 # End Source File
 # End Group
 # End Target
