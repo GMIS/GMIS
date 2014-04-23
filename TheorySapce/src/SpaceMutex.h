@@ -1,4 +1,6 @@
 /*
+* 座位锁
+* 允许m个人竞争n个座位
 * author: ZhangHongBing(hongbing75@gmail.com)   
 */
 
@@ -111,4 +113,4 @@ public:
 
 
 }//namespace ABSTRACT 
-#endif // !defined(AFX_SPACEMUTEX_H__130DB3A1_8912_48B6_BFB6_676BC58287CC__INCLUDED_)
+#endif // _SPACEMUTEX_H__

@@ -20,11 +20,7 @@ CUserObject::CUserObject(){
 };
 
 CUserObject::~CUserObject(){
-	if (m_Thread)
-	{
-		delete m_Thread;
-		m_Thread = NULL;
-	}
+	
 }
 
 
@@ -44,6 +40,8 @@ void CUserObject::Dead(){
 	m_Alive = FALSE;
 	if(m_Thread){
 		m_Thread->join();
+		delete m_Thread;
+		m_Thread = NULL;
 	}
 }
 

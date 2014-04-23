@@ -35,13 +35,13 @@ int64 CTimeStamp::TimeStamp(){
 	uint32  Micro;
 	uint32  Nano;
 
+	assert(m_Mutex);
 	m_Mutex->Acquire();
 
 	GetSystemTime(Year,Month,Day,Hour,Minute,Second,Milli,Micro,Nano);
 
 	int64 NewTime = TimeToInt64(Year,Month,Day,Hour,Minute,Second,Milli,Micro,Nano);
 
-	assert(m_Mutex);
 
     int64 t=0;
 	if (m_LastTime ==0)

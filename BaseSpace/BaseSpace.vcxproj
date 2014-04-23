@@ -23,6 +23,9 @@
     <ClInclude Include="src\MathematicalOperator.h" />
     <ClInclude Include="src\RelationalOperator.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\GMIS_OBJECT\ExecuterWin\ExecuterWin.vcxproj" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <SccProjectName />
     <SccLocalPath />

@@ -6,15 +6,15 @@
 --------------------Configuration: BaseSpace - Win32 Release--------------------
 </h3>
 <h3>Command Lines</h3>
-Creating temporary file "C:\Users\T61\AppData\Local\Temp\RSP58DE.tmp" with contents
+Creating temporary file "C:\Users\T61\AppData\Local\Temp\RSP5F94.tmp" with contents
 [
-/nologo /ML /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_UNICODE" /D "UNICODE" /D "_LIB" /Fo"obj\VC6\release/" /Fd"obj\VC6\release/" /FD /c 
+/nologo /MD /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_UNICODE" /D "UNICODE" /D "_LIB" /Fo"obj\VC6\release/" /Fd"obj\VC6\release/" /FD /c 
 "D:\work\GMIS\GMIS_BASE\BaseSpace\src\BitwiseOperator.cpp"
 "D:\work\GMIS\GMIS_BASE\BaseSpace\src\LogicOperator.cpp"
 "D:\work\GMIS\GMIS_BASE\BaseSpace\src\MathematicalOperator.cpp"
 "D:\work\GMIS\GMIS_BASE\BaseSpace\src\RelationalOperator.cpp"
 ]
-Creating command line "cl.exe @C:\Users\T61\AppData\Local\Temp\RSP58DE.tmp" 
+Creating command line "cl.exe @C:\Users\T61\AppData\Local\Temp\RSP5F94.tmp" 
 Creating command line "link.exe -lib /nologo /out:"bin\VC6\release\BaseSpace.lib"  .\obj\VC6\release\BitwiseOperator.obj .\obj\VC6\release\LogicOperator.obj .\obj\VC6\release\MathematicalOperator.obj .\obj\VC6\release\RelationalOperator.obj "
 <h3>Output Window</h3>
 Compiling...

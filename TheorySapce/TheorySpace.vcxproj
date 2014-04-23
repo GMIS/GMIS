@@ -107,10 +107,6 @@
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <PreprocessorDefinitions>NDEBUG;WIN32;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AssemblerListingLocation>d:\project\obj\vc10\$(Configuration)\$(ProjectName)\</AssemblerListingLocation>
-      <PrecompiledHeaderOutputFile>d:\project\obj\vc10\$(Configuration)\$(ProjectName)\TheorySpace.pch</PrecompiledHeaderOutputFile>
-      <ObjectFileName>d:\project\obj\vc10\$(Configuration)\$(ProjectName)\</ObjectFileName>
-      <ProgramDataBaseFileName>d:\project\obj\vc10\$(Configuration)\$(ProjectName)\</ProgramDataBaseFileName>
     </ClCompile>
     <ResourceCompile>
       <Culture>0x0804</Culture>
@@ -118,11 +114,9 @@
     </ResourceCompile>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>d:\project\bin\vc10\$(Configuration)\$(ProjectName)\TheorySpace.bsc</OutputFile>
     </Bscmake>
     <Lib>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>d:\project\bin\vc10\$(Configuration)\$(ProjectName)\TheorySpace.lib</OutputFile>
     </Lib>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

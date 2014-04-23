@@ -1,9 +1,10 @@
-// UserMutex.h: interface for the CUserMutex class.
-//
-//////////////////////////////////////////////////////////////////////
+/*
+*
+* author: ZhangHongBing(hongbing75@gmail.com)  
+*/
 
-#if !defined(AFX_USERMUTEX_H__76B5425A_CBB1_4E98_B229_FF4E86EA61CF__INCLUDED_)
-#define AFX_MUTEX_H__76B5425A_CBB1_4E98_B229_FF4E86EA61CF__INCLUDED_
+#ifndef _USERMUTEX_H__
+#define _USERMUTEX_H__
 
 #if _MSC_VER > 1000
 #pragma once
