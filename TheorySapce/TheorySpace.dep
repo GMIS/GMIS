@@ -1,0 +1,130 @@
+# Microsoft Developer Studio Generated Dependency File, included by TheorySpace.mak
+
+.\src\AbstractSpace.cpp : \
+	".\src\ABMutex.h"\
+	".\src\AbstractSpace.h"\
+	".\src\AbstractSpacePool.h"\
+	".\src\BaseEnergy.h"\
+	".\src\TimeStamp.h"\
+	".\src\Typedef.h"\
+	"f:\vc6.0\vc98\include\basetsd.h"\
+	
+
+.\src\AbstractSpacePool.cpp : \
+	".\src\ABMutex.h"\
+	".\src\AbstractSpace.h"\
+	".\src\AbstractSpacePool.h"\
+	".\src\Typedef.h"\
+	"f:\vc6.0\vc98\include\basetsd.h"\
+	
+
+.\src\BaseEnergy.cpp : \
+	".\src\ABMutex.h"\
+	".\src\AbstractSpace.h"\
+	".\src\AbstractSpacePool.h"\
+	".\src\BaseEnergy.h"\
+	".\src\ConvertUTF.h"\
+	".\src\Typedef.h"\
+	"f:\vc6.0\vc98\include\basetsd.h"\
+	
+
+.\src\ConvertUTF.cpp : \
+	".\src\ConvertUTF.h"\
+	
+
+.\src\FORMAT.CPP : \
+	".\src\AbstractSpace.h"\
+	".\src\FORMAT.H"\
+	".\src\Typedef.h"\
+	"f:\vc6.0\vc98\include\basetsd.h"\
+	
+
+.\src\LinkerPipe.cpp : \
+	".\src\ABMutex.h"\
+	".\src\AbstractSpace.h"\
+	".\src\AbstractSpacePool.h"\
+	".\src\BaseEnergy.h"\
+	".\src\LinkerPipe.h"\
+	".\src\LockPipe.h"\
+	".\src\Model.h"\
+	".\src\Msg.h"\
+	".\src\Object.h"\
+	".\src\Pipeline.h"\
+	".\src\TheorySpace.h"\
+	".\src\TimeStamp.h"\
+	".\src\Typedef.h"\
+	"f:\vc6.0\vc98\include\basetsd.h"\
+	
+
+.\src\Model.cpp : \
+	".\src\ABMutex.h"\
+	".\src\AbstractSpace.h"\
+	".\src\AbstractSpacePool.h"\
+	".\src\BaseEnergy.h"\
+	".\src\FORMAT.H"\
+	".\src\LinkerPipe.h"\
+	".\src\LockPipe.h"\
+	".\src\Model.h"\
+	".\src\Msg.h"\
+	".\src\Object.h"\
+	".\src\Pipeline.h"\
+	".\src\TheorySpace.h"\
+	".\src\Typedef.h"\
+	"f:\vc6.0\vc98\include\basetsd.h"\
+	
+
+.\src\Msg.cpp : \
+	".\src\ABMutex.h"\
+	".\src\AbstractSpace.h"\
+	".\src\AbstractSpacePool.h"\
+	".\src\BaseEnergy.h"\
+	".\src\Msg.h"\
+	".\src\Pipeline.h"\
+	".\src\Typedef.h"\
+	"f:\vc6.0\vc98\include\basetsd.h"\
+	
+
+.\src\Pipeline.cpp : \
+	".\src\ABMutex.h"\
+	".\src\AbstractSpace.h"\
+	".\src\AbstractSpacePool.h"\
+	".\src\BaseEnergy.h"\
+	".\src\Msg.h"\
+	".\src\Pipeline.h"\
+	".\src\Typedef.h"\
+	"f:\vc6.0\vc98\include\basetsd.h"\
+	
+
+.\src\SpaceMutex.cpp : \
+	".\src\ABMutex.h"\
+	".\src\SpaceMutex.h"\
+	".\src\Typedef.h"\
+	"f:\vc6.0\vc98\include\basetsd.h"\
+	
+
+.\src\System.cpp : \
+	".\src\ABMutex.h"\
+	".\src\AbstractSpace.h"\
+	".\src\AbstractSpacePool.h"\
+	".\src\BaseEnergy.h"\
+	".\src\FORMAT.H"\
+	".\src\LinkerPipe.h"\
+	".\src\LockPipe.h"\
+	".\src\Model.h"\
+	".\src\Msg.h"\
+	".\src\Object.h"\
+	".\src\Pipeline.h"\
+	".\src\SpaceMutex.h"\
+	".\src\System.h"\
+	".\src\TheorySpace.h"\
+	".\src\Typedef.h"\
+	"f:\vc6.0\vc98\include\basetsd.h"\
+	
+
+.\src\TimeStamp.cpp : \
+	".\src\ABMutex.h"\
+	".\src\AbstractSpace.h"\
+	".\src\TimeStamp.h"\
+	".\src\Typedef.h"\
+	"f:\vc6.0\vc98\include\basetsd.h"\
+	

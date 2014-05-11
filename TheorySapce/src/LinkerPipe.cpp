@@ -391,7 +391,7 @@ namespace ABSTRACT{
 					}
 					else if(ch == '@' && Info->Buffer.size() >0)
 					{
-						int64 ID = _atoi64(Info->Buffer.c_str());
+						int64 ID = atoint64(Info->Buffer.c_str());
 						
 						assert(Info->DataType == TYPE_PIPELINE);
 						ePipeline* Data = (ePipeline*)Info->Data;

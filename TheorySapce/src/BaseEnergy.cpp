@@ -25,7 +25,7 @@ namespace ABSTRACT{
 
 	void eINT::ToString(AnsiString& s){
 		char buf[30];
-		_i64toa(m_Value,buf,10);
+		int64toa(m_Value,buf);
 		int len = strlen(buf);
 		PrintString(s,TYPE_INT,len,buf);
 	};

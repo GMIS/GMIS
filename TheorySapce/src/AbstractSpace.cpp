@@ -108,7 +108,7 @@ namespace ABSTRACT{
 		assert(type<TYPE_END);
 
 		char buf[20];  
-		_ultoa(datalen,buf,10);
+		uint64toa(datalen,buf);
 		int32 slen = strlen(buf);
 			
 		char temp[50];
@@ -133,15 +133,15 @@ namespace ABSTRACT{
 	{
 		char buf1[30], buf2[20],buf3[20];  
 		
-		_i64toa(ID,buf1,10);
+		int64toa(ID,buf1);
 				
 		eSTRING temp(Name);
         AnsiString AnsiName;
 		temp.ToString(AnsiName); //如果Name是unicode则通过此方式转换成utf8
 		
-		_ultoa(AnsiName.size(),buf2,10);
+		uint64toa(AnsiName.size(),buf2);
 		
-		_ultoa(datalen,buf3,10);
+		uint64toa(datalen,buf3);
 	
 		s += TYPE_TO_CHAR(type);  
 		s += '@';                  
@@ -172,7 +172,7 @@ namespace ABSTRACT{
 		int64 n=0,k;    
 		int32 p = 0, t;		
 		const char* ch = s;
-		if(*s=='-'){ --len; ch++;}      //"-0243"
+		if(*s=='-' || *s=='+'){ --len; ch++;}      //"-1243" or "+1243"
 		while(len>0){
             t  = (*ch) -'0';
 			k = INTTABLE[len][t];
@@ -190,7 +190,7 @@ namespace ABSTRACT{
 		int64 n=0,k;    
 		int32 p = 0, t;		
 		const char* ch = s;
-		if(*s=='-'){ --len; ch++;}      //"-1243"
+		if(*s=='-' || *s=='+'){ --len; ch++;}      //"-1243" or "+1243"
 		if(len>20)return 0;
 		while(len>0){
 			if(!isdigit(*ch))break;
