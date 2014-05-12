@@ -365,11 +365,17 @@ public:
 		e = NULL;
 	}
 	CMsg PopMsg(){
-		assert(m_EnergyList.size() != 0);  
+		ePipeline* p = NULL;
+		if(m_EnergyList.size() != 0){
+			CMsg m(p);
+			return m;
+		};  
 		Energy* e = m_EnergyList.front();
 		assert(e->EnergyType() == TYPE_PIPELINE);
 		m_EnergyList.pop_front();
-		return CMsg((ePipeline*)e);
+		p = (ePipeline*)e;
+		CMsg m(p);
+		return m;
 	}
 
 	/*ePipeline其实相当于一个C语言中的struct，只不过其数据长度和内容可以动态改变

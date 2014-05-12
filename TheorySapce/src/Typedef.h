@@ -74,11 +74,12 @@ const float EPSINON = 0.00001f;
 #define int64toa(t,buf) sprintf(buf,"%I64ld",t)
 #define uint64toa(t,buf) sprintf(buf,"%I64ud",t)
 #define atoint64(buf)  _atoi64(buf)
-
+#define SLEEP_MILLI(n)  Sleep(n)
 #else
 #define int64toa(t,buf) sprintf(buf,"%lld",t)
 #define uint64toa(t,buf) sprintf(buf,"%llu",t)
 #define atoint64(buf)  atoll(buf)
+#define SLEEP_MILLI(n)  usleep(n*1000)
 #endif
 
 /////////////////////////////////////////////////////

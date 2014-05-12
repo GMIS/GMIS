@@ -37,7 +37,7 @@ namespace ABSTRACT{
 					}
 					Linker = LinkerList->GetNextLinker(SourceID);
 				}
-				Sleep(20);
+				SLEEP_MILLI(20);
 			}
 
 			if (m_Parent->IsAlive()) 
@@ -112,7 +112,7 @@ namespace ABSTRACT{
 							return TRUE;
 						}
 					}
-					Sleep(20);
+					SLEEP_MILLI(20);
 				}
 			}
 #ifdef NDEBUG

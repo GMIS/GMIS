@@ -17,7 +17,6 @@
 #endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
 #include "AbstractSpace.h"
-#include <process.h>
 #include "LockPipe.h"
 #include <assert.h>
 
@@ -35,7 +34,7 @@ protected:
 	  设置这个变量除了降低CPU的占用率，还因为不同的任务可能有不同的时间敏感度，
 	  就象所有生物平时动作反应一般，但危急时刻则灵敏很多一样。
 
-      GMIP实例作为机器“大脑”，其每一个组织线程都有自己的SleepTime,系统通过这个时间来来
+      GMIS实例作为机器“大脑”，其每一个组织线程都有自己的SleepTime,系统通过这个时间来来
 	  协调整个行为的和谐，比如当收到的信息来不及处理时，系统会调小信息处理线程的间隔时间，
 	  而调大信息接受的间隔时间。相比调整线程的优先级，我们可以让大脑根据具体的任务特点，
 	  通过简单算法来实时调整各个线程所需的SleepTime。

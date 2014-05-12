@@ -193,7 +193,7 @@ bool Model::CModelIOWork::Do(Energy* E){
 				Linker = LinkerList->GetNextLinker(SourceID);
 			}
 			
-			Sleep(20);
+			SLEEP_MILLI(20);
 		}
         if (m_Parent->IsAlive()) 
         {
@@ -268,7 +268,7 @@ bool Model::CCentralNerveWork::Do(Energy* E){
 					}
 				}
 				
-				Sleep(20);
+				SLEEP_MILLI(20);
 			}
 		}
 //	}
