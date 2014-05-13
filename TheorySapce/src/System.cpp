@@ -82,7 +82,8 @@ namespace ABSTRACT{
 #endif
 			while (m_Alive)
 			{
-				CMsg Msg = m_Parent->PopNerveMsg();
+				CMsg Msg;
+				m_Parent->PopNerveMsg(Msg);
 				CLockedSystemData* LockedData = m_Parent->GetSystemData();
 				
 				if (Msg.IsValid())
@@ -431,9 +432,9 @@ void	System::GetNerveMsgList(ePipeline& Pipe){
 };
 
 
-CMsg	System::PopNerveMsg(){
+void	System::PopNerveMsg(CMsg& Msg){
 	assert(m_Nerve);
-	return m_Nerve->Pop();
+	return m_Nerve->Pop(Msg);
 };
 
 

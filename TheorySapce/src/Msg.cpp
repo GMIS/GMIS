@@ -47,6 +47,12 @@ ePipeline* CreateMsg(int64 MsgID,int64 EventID,ePipeline** ReceiverInfo,ePipelin
 	return (ePipeline*)e.Release();
 }
 
+CMsg::CMsg()
+	:m_bReaded(false),m_MsgPtr(NULL)
+{
+
+}
+
 CMsg::CMsg(int64 MsgID,int64 SenderID,int64 EventID){
 	m_bReaded = false;
 	ePipeline* ReceiverInfo = NULL;
@@ -93,6 +99,7 @@ CMsg::CMsg(ePipeline* Msg):m_MsgPtr(Msg),m_bReaded(false){
 	
 };
 
+
 CMsg::CMsg(CMsg& Msg)
 :m_MsgPtr(Msg.Release()),m_bReaded(false){	
 };
@@ -112,6 +119,7 @@ void CMsg::Reset(ePipeline* Msg /*= 0*/)
 	if(Msg!= m_MsgPtr){
 		delete m_MsgPtr;
 		m_MsgPtr = Msg;
+		m_bReaded = false;
 	}
 };
 
@@ -119,6 +127,7 @@ CMsg& CMsg::operator=(CMsg& Msg){
 	
 	if(this != &Msg){
 		Reset(Msg.Release());
+		m_bReaded = Msg.m_bReaded;
 	}
 	return *this;
 }

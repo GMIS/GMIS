@@ -142,7 +142,7 @@ public:
 
 	CLinker GetLinker(int64 ID);
 
-	CMsg		 PopNerveMsg();
+    void	     PopNerveMsg(CMsg& Msg);
 	int32		 GetNerveMsgNum();
 	void		 GetNerveMsgList(ePipeline& Pipe);
 	void		 PushNerveMsg(CMsg& Msg,bool bUrgenceMsg=FALSE);

@@ -364,18 +364,16 @@ public:
 		delete e;
 		e = NULL;
 	}
-	CMsg PopMsg(){
+
+	void PopMsg(CMsg& Msg ){
 		ePipeline* p = NULL;
-		if(m_EnergyList.size() != 0){
-			CMsg m(p);
-			return m;
-		};  
+		assert(m_EnergyList.size() != 0);
+		  
 		Energy* e = m_EnergyList.front();
 		assert(e->EnergyType() == TYPE_PIPELINE);
 		m_EnergyList.pop_front();
 		p = (ePipeline*)e;
-		CMsg m(p);
-		return m;
+		Msg.Reset(p);
 	}
 
 	/*ePipeline其实相当于一个C语言中的struct，只不过其数据长度和内容可以动态改变

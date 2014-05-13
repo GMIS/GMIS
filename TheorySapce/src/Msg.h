@@ -63,6 +63,7 @@ protected:
 	ePipeline*  m_MsgPtr;
 	bool        m_bReaded; //已读过，只要使用GetLetter()则设置为true,缺省为false
 public:
+	CMsg();
 	//系统任何一个对话主动发信给外部（收信地址为对方缺省的系统对话）
 	CMsg(int64 MsgID,int64 SenderID,int64 EventID); //EventID如果不使用则为0，但这里不设置缺省值=0，以免和下面构造函数混淆
 	//系统内部一个对话给另一个对话发信

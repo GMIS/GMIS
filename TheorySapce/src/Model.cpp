@@ -235,7 +235,8 @@ bool Model::CCentralNerveWork::Do(Energy* E){
 //	try{
 		while (m_Alive)
 		{
-			CMsg Msg = m_Parent->PopCentralNerveMsg();
+			CMsg Msg;
+			m_Parent->PopCentralNerveMsg(Msg);
 			CLockedModelData* LockedData = m_Parent->GetModelData();
 
 			if (Msg.IsValid())
@@ -670,9 +671,10 @@ void  Model::PushCentralNerveMsg(CMsg& Msg,bool bUrgenceMsg){
 	}
 }
 
-CMsg Model::PopCentralNerveMsg(){
+void Model::PopCentralNerveMsg(CMsg& Msg){
 	assert(m_CentralNerve);
-	return m_CentralNerve->Pop();
+	m_CentralNerve->Pop(Msg);
+
 };
 
 
