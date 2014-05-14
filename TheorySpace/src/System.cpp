@@ -435,6 +435,7 @@ void	System::GetNerveMsgList(ePipeline& Pipe){
 void	System::PopNerveMsg(CMsg& Msg){
 	assert(m_Nerve);
 	m_Nerve->Pop(Msg);
+
 };
 
 
