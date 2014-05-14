@@ -229,7 +229,7 @@ public:
 
 	//把信息压入中枢神经后调用CentralNerveWorkStrategy()
 	void			   PushCentralNerveMsg(CMsg& Msg,bool bUrgenceMsg=FALSE);
-	CMsg			   PopCentralNerveMsg();
+	void			   PopCentralNerveMsg(CMsg& Msg);
 	int32			   GetCentralNerveMsgNum();
 	void			   GetCentralNerveMsgList(ePipeline& Pipe);
 

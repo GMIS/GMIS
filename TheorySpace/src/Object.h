@@ -94,13 +94,22 @@ public:
 
 	void SetObjectSleepTime(int32 ms){m_SleepTime = ms;};
 
-	static unsigned __stdcall ObjectDefaultThreadFunc (LPVOID pParam)
+#ifdef _WIN32
+	static unsigned int ObjectDefaultThreadFunc (void* pParam)
 	{
 		Object* This = reinterpret_cast<Object*>(pParam);
 		assert(This != NULL);
 		This->Do(NULL); 
-		return 1;
+		return 0;
 	};
+#else
+	static void ObjectDefaultThreadFunc (void* pParam)
+	{
+		Object* This = reinterpret_cast<Object*>(pParam);
+		assert(This != NULL);
+		This->Do(NULL); 
+	};
+#endif
 };
 
 }

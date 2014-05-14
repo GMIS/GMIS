@@ -182,4 +182,4 @@ enum DLL_TYPE{
 };
 } //namespace ABSTRACT
 
-#endif _TYPEDEF_H
+#endif //_TYPEDEF_H

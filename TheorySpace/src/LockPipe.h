@@ -121,18 +121,19 @@ public:
 		}
 		m_LastPopTimeStamp = CreateTimeStamp();
 	}
-	CMsg Pop(){
+	void Pop(CMsg& Msg ){
 		CLock lk(m_Mutex,this);
 		if(m_UrgenceMsg.Size()){
 			m_LastPopTimeStamp = CreateTimeStamp();
-			return m_UrgenceMsg.PopMsg();
+			m_UrgenceMsg.PopMsg(Msg);
+			return;
 		}
 		else if(Size()){
 			m_LastPopTimeStamp = CreateTimeStamp();
-			return ePipeline::PopMsg();
+			ePipeline::PopMsg(Msg);
+			return;
 		}
-		CMsg m(NULL);
-		return m;
+		Msg.Reset(NULL);
 	}
     /*
       NOTE: 数据可能无效，用户必须自己检查

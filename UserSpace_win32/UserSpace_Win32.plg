@@ -3,14 +3,52 @@
 <pre>
 <h1>Build Log</h1>
 <h3>
---------------------Configuration: UserSpace_Win32 - Win32 Release--------------------
+--------------------Configuration: UserSpace_Win32 - Win32 Debug--------------------
 </h3>
 <h3>Command Lines</h3>
+Creating temporary file "C:\Users\T61\AppData\Local\Temp\RSP1425.tmp" with contents
+[
+/nologo /MDd /W3 /Gm /GX /ZI /Od /D "_DEBUG" /D "WIN32" /D "_UNICODE" /D "UNICODE" /D "_LIB" /Fp"obj\VC6\release/UserSpace_Win32.pch" /YX /Fo"obj\VC6\release/" /Fd"obj\VC6\release/" /FD /GZ /c 
+"D:\work\GMIS\GMIS_BASE\UserSpace_win32\src\UserLinkerPipe.cpp"
+"D:\work\GMIS\GMIS_BASE\UserSpace_win32\src\UserModel.cpp"
+"D:\work\GMIS\GMIS_BASE\UserSpace_win32\src\UserObject.cpp"
+"D:\work\GMIS\GMIS_BASE\UserSpace_win32\src\UserSystem.cpp"
+]
+Creating command line "cl.exe @C:\Users\T61\AppData\Local\Temp\RSP1425.tmp" 
+Creating temporary file "C:\Users\T61\AppData\Local\Temp\RSP1426.tmp" with contents
+[
+/nologo /out:"bin\VC6\debug\UserSpace_Win32_Debug.lib" 
+.\obj\VC6\release\UserLinkerPipe.obj
+.\obj\VC6\release\UserModel.obj
+.\obj\VC6\release\UserMutex.obj
+.\obj\VC6\release\UserObject.obj
+.\obj\VC6\release\UserSpaceMutex.obj
+.\obj\VC6\release\UserSpacePool.obj
+.\obj\VC6\release\UserSystem.obj
+.\obj\VC6\release\UserTimeStamp.obj
+]
+Creating command line "link.exe -lib @C:\Users\T61\AppData\Local\Temp\RSP1426.tmp"
+<h3>Output Window</h3>
+Compiling...
+UserModel.cpp
+d:\work\gmis\gmis_base\userspace_win32\src\usermodel.cpp(33) : error C2664: '_beginthreadex' : cannot convert parameter 3 from 'void (void *)' to 'unsigned int (__stdcall *)(void *)'
+        None of the functions with this name in scope match the target type
+d:\work\gmis\gmis_base\userspace_win32\src\usermodel.cpp(78) : error C2664: '_beginthreadex' : cannot convert parameter 3 from 'void (void *)' to 'unsigned int (__stdcall *)(void *)'
+        None of the functions with this name in scope match the target type
+d:\work\gmis\gmis_base\userspace_win32\src\usermodel.cpp(136) : error C2664: '_beginthreadex' : cannot convert parameter 3 from 'void (void *)' to 'unsigned int (__stdcall *)(void *)'
+        None of the functions with this name in scope match the target type
+UserObject.cpp
+d:\work\gmis\gmis_base\userspace_win32\src\userobject.cpp(38) : error C2664: '_beginthreadex' : cannot convert parameter 3 from 'void (void *)' to 'unsigned int (__stdcall *)(void *)'
+        None of the functions with this name in scope match the target type
+UserSystem.cpp
+d:\work\gmis\gmis_base\userspace_win32\src\usersystem.cpp(30) : error C2065: '_beginthreadex' : undeclared identifier
+UserLinkerPipe.cpp
+Error executing cl.exe.
 
 
 
 <h3>Results</h3>
-UserSpace_Win32.lib - 0 error(s), 0 warning(s)
+UserSpace_Win32_Debug.lib - 5 error(s), 0 warning(s)
 </pre>
 </body>
 </html>
