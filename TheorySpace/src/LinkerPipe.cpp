@@ -3,7 +3,6 @@
 //////////////////////////////////////////////////////////////////////
 #pragma warning(disable: 4786)
 
-#include <winsock2.h>
 #include "LinkerPipe.h"
 #include "Model.h"
 #include "TimeStamp.h"
