@@ -1,7 +1,6 @@
 // CLinkerPipe.cpp: implementation of the CCLinkerPipe class.
 //
 //////////////////////////////////////////////////////////////////////
-#pragma warning(disable: 4786)
 
 #include "LinkerPipe.h"
 #include "Model.h"
@@ -9,52 +8,6 @@
 
 namespace ABSTRACT{
 	
-	//CLinker
-	//////////////////////////////////////////////////////////////////////////
-	CLinker::CLinker(CLinkerPipe* LinkerPipe)
-		:m_Ptr(LinkerPipe)
-	{
-		if(m_Ptr){
-			m_Ptr->IncreUserNum();
-		}
-	};
-	
-	CLinker::CLinker(CLinker& Linker): m_Ptr(Linker.m_Ptr){
-		Linker.m_Ptr = NULL;
-	};
-	
-	CLinker& CLinker::operator=(CLinker& Linker)
-	{
-		if(this != &Linker){
-			if (m_Ptr)
-			{
-				m_Ptr->DecreUserNum();
-			}
-			m_Ptr = Linker.m_Ptr;
-			Linker.m_Ptr = NULL;
-		}
-		return *this;
-	}
-	
-	CLinker::~CLinker(){
-		if(m_Ptr){
-			m_Ptr->DecreUserNum();
-		}
-	}
-	bool CLinker::IsValid(){
-		return m_Ptr != NULL;
-		
-	};
-	
-	const ePipeline& CLinker::GetCompileData()const //ÓÃÓÚ¹Û²ìLinkerPipeµ±Ç°ÕýÔÚ×é×°ÖÐµÄÊý¾Ý
-	{
-		return m_Ptr->m_CurRevMsg;
-	}
-	
-	CLinkerPipe& CLinker::operator()(){
-		assert(m_Ptr);
-		return *m_Ptr;
-	}
 
 //CInnerIOLock
 //////////////////////////////////////////////////////////////////////////
@@ -67,29 +20,33 @@ namespace ABSTRACT{
 		m_Mutex->AcquireThis(m_User);				
 		m_User->m_bThreadUse = TRUE;
 
-	}
+	};
 	CLinkerPipe::_CInnerIOLock::~_CInnerIOLock (){
 
 		m_User->m_bThreadUse = FALSE;
 		m_Mutex->ReleaseThis(m_User);
-	}   	
+	};
 
 	CLinkerPipe::CLinkerPipe(CABMutex* m,Model* Parent,bool bClientLink)
 		:CLockPipe(m),
 		m_UseCounter(0),
 		m_bThreadUse(FALSE),
 		m_SourceID(-1),
+		m_LocalAddressList(),
 		m_RecoType(LINKER_STRANGER),
+		m_bClientLink(bClientLink),
 		m_Parent(Parent),
+		m_StateOutputLevel(NORMAL_LEVEL),
  		m_SendState(WAIT_MSG),
 		m_CurSendMsg(NULL),
 		m_PendingMsgID(0),
 		m_PendMsgSenderID(0),
+		m_SendBuffer(),
 		m_SendPos(0),
+		m_CurRevMsg(),
+		m_ContextStack(),
 		m_bRevError(FALSE),
 		m_ErrorSaveLen(1024),
-		m_StateOutputLevel(NORMAL_LEVEL),
-		m_bClientLink(bClientLink),
 		m_Owner(NULL)
 	{
 		
@@ -100,21 +57,25 @@ namespace ABSTRACT{
 
 	CLinkerPipe::CLinkerPipe(CABMutex* m,Model* Parent,bool bClientLink,int64 SourceID,tstring Name)
 		:CLockPipe(m,Name.c_str()),
-		m_UseCounter(0),
-		m_bThreadUse(FALSE),
-		m_SourceID(SourceID),
-		m_RecoType(LINKER_STRANGER),
-		m_Parent(Parent),
-		m_SendState(WAIT_MSG),
-		m_CurSendMsg(NULL),
-		m_PendingMsgID(0),
-		m_PendMsgSenderID(0),
-		m_SendPos(0),
-		m_bRevError(FALSE),
-		m_ErrorSaveLen(1024),
-		m_StateOutputLevel(NORMAL_LEVEL),
-		m_bClientLink(bClientLink),
-		m_Owner(NULL)
+			m_UseCounter(0),
+			m_bThreadUse(FALSE),
+			m_SourceID(SourceID),
+			m_LocalAddressList(),
+			m_RecoType(LINKER_STRANGER),
+			m_bClientLink(bClientLink),
+			m_Parent(Parent),
+			m_StateOutputLevel(NORMAL_LEVEL),
+	 		m_SendState(WAIT_MSG),
+			m_CurSendMsg(NULL),
+			m_PendingMsgID(0),
+			m_PendMsgSenderID(0),
+			m_SendBuffer(),
+			m_SendPos(0),
+			m_CurRevMsg(),
+			m_ContextStack(),
+			m_bRevError(FALSE),
+			m_ErrorSaveLen(1024),
+			m_Owner(NULL)
 	{
 
 	};
@@ -153,7 +114,7 @@ namespace ABSTRACT{
 		}
 		return TRUE;
 }
-//ÒÔÏÂº¯ÊýÄÚ²¿Ê¹ÓÃÎÞÐè¼ÓËø
+//ï¿½ï¿½ï¿½Âºï¿½ï¿½ï¿½ï¿½Ú²ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 //////////////////////////////////////////////////////////////////////////
 	bool  CLinkerPipe::ReceiverID2LocalAddress(ePipeline& Receiver,ePipeline& LocalAddress){
 		int64 ReceiverID = Receiver.PopInt();
@@ -161,11 +122,11 @@ namespace ABSTRACT{
 		if (ReceiverID==SYSTEM_SOURCE)
 		{
 			LocalAddress.PushInt(ReceiverID);
-			LocalAddress<<Receiver; //¿ÉÄÜ»¹ÓÐÆäËüµØÖ·
+			LocalAddress<<Receiver; //ï¿½ï¿½ï¿½Ü»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·
 			return TRUE;
 		}
 		
-		assert(Receiver.Size()==0); //ÆäËüÇé¿öÓ¦¸ÃÃ»ÓÐ¶àÓàµØÖ·
+		assert(Receiver.Size()==0); //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½Ã»ï¿½Ð¶ï¿½ï¿½ï¿½ï¿½Ö·
 
 		map<int64,ePipeline>::iterator It = m_LocalAddressList.find(ReceiverID);
 		if(It != m_LocalAddressList.end()){
@@ -199,8 +160,8 @@ namespace ABSTRACT{
 		return SenderID;
 	};
 	
-	/* Á÷Ê½µÄ´¦ÀíÌØ¶¨CLinkerPipe½ÓÊÕµ½µÄÐÅÏ¢,´Ëº¯Êý¶ÔÓÚÀí½â±¾Àà·Ç³£ÖØÒª,
-	sÎª½ÓÊÕµ½µÄ×Ö½Ú£¬»ò¶à»òÉÙ
+	/* ï¿½ï¿½Ê½ï¿½Ä´ï¿½ï¿½ï¿½ï¿½Ø¶ï¿½CLinkerPipeï¿½ï¿½ï¿½Õµï¿½ï¿½ï¿½ï¿½ï¿½Ï¢,ï¿½Ëºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½â±¾ï¿½ï¿½Ç³ï¿½ï¿½ï¿½Òª,
+	sÎªï¿½ï¿½ï¿½Õµï¿½ï¿½ï¿½ï¿½Ö½Ú£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	*/
 	void CLinkerPipe::CompileMsg(const char* s, int32 size)
 	{
@@ -210,7 +171,7 @@ namespace ABSTRACT{
 		CLinkerPipe::RevContextInfo* Info  = NULL;
 		
 		if( m_ContextStack.size() > 0 ){ 
-			Info = m_ContextStack.front(); //È¡³öÖ®Ç°Êý¾ÝµÄ´¦ÀíÐÅÏ¢
+			Info = m_ContextStack.front(); //È¡ï¿½ï¿½Ö®Ç°ï¿½ï¿½ÝµÄ´ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
 		}
 		else{
 			Info = new CLinkerPipe::RevContextInfo(&m_CurRevMsg);
@@ -230,8 +191,8 @@ namespace ABSTRACT{
 			
 			Info->InfoLen++;
 			
-			//ÔÚ´íÎó×´Ì¬ÏÂ½«Ö»¹ØÐÄÊÇ·ñÓÐ¿Õ¹ÜµÀ³öÏÖ
-			//ÔÚ¼ì²âµ½¿Õ¹ÜµÀÖ®Ç°£¬¸ù¾ÝÒªÇó£¬¼´Ê¹ÊÇ³ö´íµÄÊý¾ÝÒ²½«¿ÉÄÜ±»±£´æÆðÀ´,ÒÔ±ã·ÖÎö´íÎóÔ­Òò
+			//ï¿½Ú´ï¿½ï¿½ï¿½×´Ì¬ï¿½Â½ï¿½Ö»ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½Ð¿Õ¹Üµï¿½ï¿½ï¿½ï¿½ï¿½
+			//ï¿½Ú¼ï¿½âµ½ï¿½Õ¹Üµï¿½Ö®Ç°ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ó£¬¼ï¿½Ê¹ï¿½Ç³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò²ï¿½ï¿½ï¿½ï¿½ï¿½Ü±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,ï¿½Ô±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô­ï¿½ï¿½
 			if(m_bRevError)
 			{
 				if (Info->Buffer.size() < m_ErrorSaveLen)
@@ -254,7 +215,7 @@ namespace ABSTRACT{
 				continue;
 			}
 			
-			//Õý³£×´Ì¬
+			//ï¿½ï¿½×´Ì¬
 			switch(Info->State){                                              
 			case TYPE_PART:                                                    
 				{         
@@ -267,17 +228,17 @@ namespace ABSTRACT{
 							Info->ParentPipe->Push_Directly(Info->Data);
 
 						}                                                          
-						//²»ÊÇPIPELINEµ«ÊÇµÚÒ»¸öÊý¾ÝÔò±¨´í£¬ÒòÎªÐÅÏ¢µÄµÚÒ»¸öÊý¾ÝÀàÐÍ¿Ï¶¨ÊÇTYPE_PIPELINE                       
+						//ï¿½ï¿½ï¿½ï¿½PIPELINEï¿½ï¿½ï¿½Çµï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ò±¨´?ï¿½ï¿½Îªï¿½ï¿½Ï¢ï¿½Äµï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¿Ï¶ï¿½ï¿½ï¿½TYPE_PIPELINE
 						else if(Info->ParentPipe == this ){               							
 							BeginErrorState(Info,ERROR_TYPE_PART);
 						}
-						else{ //ÆäËûÀàÐÍÔòÔ¤ÏÈÉú³ÉÒ»¸ö¿ÕÊý¾Ý
+						else{ //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 						
 							Info->Data = CreateEmptyData(Info->DataType);
 							Info->ParentPipe->Push_Directly(Info->Data);
 
 						}
-					}  //È·¶¨ÀàÐÍºó£¬¸Ä±äÊý¾Ý´¦Àí×´Ì¬
+					}  //È·ï¿½ï¿½ï¿½ï¿½ï¿½Íºó£¬¸Ä±ï¿½ï¿½ï¿½Ý´ï¿½ï¿½ï¿½×´Ì¬
 					else if(ch == '@' && Info->DataType != -1) 
 					{						 
 						Info->State = (Info->DataType == TYPE_PIPELINE)?ID_PART : LENGTH_PART;
@@ -293,7 +254,7 @@ namespace ABSTRACT{
 				{
 					Info->HeaderStr += ch;
 					
-					// ch ->[0-9] ²¢ÇÒ µ¥¸öÊý¾Ý³¤¶È²»ÄÜ³¬¹ý10Î»ÕûÊý				
+					// ch ->[0-9] ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý³ï¿½ï¿½È²ï¿½ï¿½Ü³ï¿½ï¿½ï¿½10Î»ï¿½ï¿½ï¿½ï¿½				
 					if(isdigit(ch) && Info->Buffer.size() < Info->DataLen)
 					{
 						Info->Buffer  += ch;
@@ -303,7 +264,7 @@ namespace ABSTRACT{
 						Info->DataLen = atol(Info->Buffer.c_str());
 						Info->Buffer = "";
 
-						//³õ²½¼ì²é³¤¶ÈµÄºÏÀíÐÔ
+						//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½é³¤ï¿½ÈµÄºï¿½ï¿½ï¿½ï¿½ï¿½
 						if(Info->DataType == TYPE_PIPELINE)
 						{ 
 							if (Info->ParentPipe == this)
@@ -316,13 +277,13 @@ namespace ABSTRACT{
 							}else{
 
 								ePipeline  NotifData;
-								NotifData.PushInt(Info->DataLen); //×Ü³¤¶È
-								NotifData.PushInt(0);             //Ïà¶ÔÓÚParentµÄÍê³É½ø¶È£¬0Ôò±íÊ¾±¾Pipe¸Õ¿ªÊ¼
+								NotifData.PushInt(Info->DataLen); //ï¿½Ü³ï¿½ï¿½ï¿½
+								NotifData.PushInt(0);             //ï¿½ï¿½ï¿½ï¿½ï¿½Parentï¿½ï¿½ï¿½ï¿½É½ï¿½È£ï¿½0ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½Pipeï¿½Õ¿ï¿½Ê¼
 								NotifData.Push_Directly(Info->Data->Clone());
 								m_Parent->NotifyLinkerState(this,LINKER_RECEIVE_STEP,NotifData);
 								
 
-								//¶ÔÓÚ¹ÜµÀ£¬µÃµ½³¤¶ÈÒÔºó¼´Ñ¹Èë¶ÑÕ»£¬ÒòÎªËüµÄÊý¾ÝÆäÊµÊÇÆäËüÊý¾ÝµÄ¼¯ºÏ								
+								//ï¿½ï¿½ï¿½Ú¹Üµï¿½ï¿½ï¿½ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ôºï¿½Ñ¹ï¿½ï¿½ï¿½Õ»ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÝµÄ¼ï¿½ï¿½ï¿½								
 								Info->HeaderStr="";
 								
 								ePipeline* Parent = (ePipeline*)Info->Data;
@@ -344,10 +305,10 @@ namespace ABSTRACT{
 						}
 						else if(Info->DataLen ==0 )
 						{ 
-							if(Info->DataType == TYPE_STRING){ //ÔÊÐíÎª0
+							if(Info->DataType == TYPE_STRING){ //ï¿½ï¿½ï¿½ï¿½Îª0
 								bCompleteOneData = TRUE;
 							}
-							else{//	ÆäËûÊý¾Ý²»ÄÜÎª0 error
+							else{//	ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý²ï¿½ï¿½ï¿½Îª0 error
 								BeginErrorState(Info,ERROR_LENGTH_PART);
 							}
 						}else if ((Info->DataType==TYPE_INT || Info->DataType==TYPE_FLOAT) && Info->DataLen>20)
@@ -355,7 +316,7 @@ namespace ABSTRACT{
 							BeginErrorState(Info,ERROR_LENGTH_PART);
 						}
 						else{	
-							Info->State = DATA_PART;   //Ò»ÇÐOK£¬×¼±¸¿ªÊ¼´¦ÀíÊý¾Ý±¾Éí
+							Info->State = DATA_PART;   //Ò»ï¿½ï¿½OKï¿½ï¿½×¼ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý±ï¿½ï¿½ï¿½
 						}
 					}
 					else{
@@ -383,7 +344,7 @@ namespace ABSTRACT{
 				{		
 					//	Info->HeaderStr += ch;
 					
-					// ch ->[0-9] ²¢ÇÒÊý¾ÝID²»ÄÜ³¬¹ý20Î»ÕûÊý				
+					// ch ->[0-9] ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½IDï¿½ï¿½ï¿½Ü³ï¿½ï¿½ï¿½20Î»ï¿½ï¿½ï¿½ï¿½				
 					if(isdigit(ch) && Info->Buffer.size() < Info->DataLen)
 					{
 						Info->Buffer += ch;
@@ -409,7 +370,7 @@ namespace ABSTRACT{
 				{
 					//	Info->HeaderStr += ch;
 					
-					// ch ->[0-9] ²¢ÇÒ ²»ÄÜ³¬¹ý10Î»ÕûÊý				
+					// ch ->[0-9] ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ü³ï¿½ï¿½ï¿½10Î»ï¿½ï¿½ï¿½ï¿½				
 					if(isdigit(ch) && Info->Buffer.size() < Info->DataLen)
 					{
 						Info->Buffer += ch;
@@ -432,7 +393,7 @@ namespace ABSTRACT{
 				{
 					//	Info->HeaderStr += ch;
 					
-					// ch ->[0-9] ²¢ÇÒ ²»ÄÜ³¬¹ýÔ¼¶¨Î»Êý				
+					// ch ->[0-9] ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ü³ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½Î»ï¿½ï¿½				
 					if(Info->Buffer.size() < Info->DataLen)
 					{
 						Info->Buffer += ch;
@@ -464,7 +425,7 @@ namespace ABSTRACT{
 			if(bCompleteOneData){
 				bCompleteOneData = FALSE;
 				
-				//´¦ÀíµÃµ½µÄÊµ¼ÊÊý¾Ý
+				//ï¿½ï¿½ï¿½ï¿½Ãµï¿½ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½
 				while(m_ContextStack.size()){	
 					
 					//Info->ParentPipe->Push_Directly(Info->Data);
@@ -480,12 +441,12 @@ namespace ABSTRACT{
 						
 						PreInfo->DataLen -= Len;
 						
-						if (PreInfo->DataLen  == 0) //ÒÑ¾­Íê³ÉÒ»¸öÇ¶Ì×Pipe,ÖØ¸´ÉÏÊö²½Öè
+						if (PreInfo->DataLen  == 0) //ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Ç¶ï¿½ï¿½Pipe,ï¿½Ø¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 						{
 						
 							ePipeline  NotifData;
-							NotifData.PushInt(Len);   //×Ü³¤¶È								
-							NotifData.PushInt(PreInfo->InfoLen); //Parent PipeÒÑ¾­Íê³ÉµÄ
+							NotifData.PushInt(Len);   //ï¿½Ü³ï¿½ï¿½ï¿½								
+							NotifData.PushInt(PreInfo->InfoLen); //Parent Pipeï¿½Ñ¾ï¿½ï¿½ï¿½Éµï¿½
 							NotifData.Push_Directly(Data->Clone());								
 							m_Parent->NotifyLinkerState(this,LINKER_RECEIVE_STEP,NotifData);
 															
@@ -495,15 +456,15 @@ namespace ABSTRACT{
 							
 							assert(PreInfo == Info);	
 
-						}else if (PreInfo->DataLen > 0) //¼ÌÐø½ÓÊÕÏÂÒ»¸öÊý¾Ý
+						}else if (PreInfo->DataLen > 0) //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½
 						{
 							Info->Reset();  
 							break;
-						}else{ //´íÎó
+						}else{ //ï¿½ï¿½ï¿½ï¿½
 							BeginErrorState(Info,ERROR_OTHER_PARNT);
 							Info->Reset();
 						}
-					}else{ //ÒÑ¾­Íê³ÉÒ»¸öÍêÕûÐÅÏ¢µÄ×é×°
+					}else{ //ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½×°
 						
 						assert(m_ContextStack.size()==1);
 						assert(m_CurRevMsg.Size()==1);
@@ -531,7 +492,7 @@ namespace ABSTRACT{
         //  Msg->AutoTypeAB();
 		
 		int64 ID = Msg->GetID();
-        if (ID < 100) //ÄÚ²¿¿ØÖÆÐÅÏ¢
+        if (ID < 100) //ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
         {
 			assert(ID == LINKER_FEEDBACK);
             if (ID != LINKER_FEEDBACK)
@@ -542,7 +503,7 @@ namespace ABSTRACT{
 				return;
             }
 
-			if(m_PendingMsgID==NULL){
+			if(m_PendingMsgID == 0){
 				return;
 			}
 			
@@ -554,7 +515,7 @@ namespace ABSTRACT{
  
 			if (RevResult == RECEIVE_ERROR)
 			{						
-				//ÏÈ·¢ËÍÒ»¸öÖØÖÃ½ÓÊÕÐÅÏ¢£¬ÒÔ±ã¶Ô·½ÄÜ´Ó´íÎó½ÓÊÕ×´Ì¬ÏÂ»Ö¸´
+				//ï¿½È·ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Ã½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½Ô±ï¿½Ô·ï¿½ï¿½Ü´Ó´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½Â»Ö¸ï¿½
 				ePipeline*  Pipe = new ePipeline((uint64)LINKER_RESET);
 
                 ePipeline Info;
@@ -563,17 +524,17 @@ namespace ABSTRACT{
 				Info.PushInt(m_PendingMsgID);
 				m_Parent->NotifyLinkerState(this,LINKER_MSG_RECEIVED,Info);
 				
-				m_PendingMsgID = 0;//È¡ÏûÎ´¾öÐÅÏ¢£¬ÈÃ±¾Á¬½ÓÄÜ¼ÌÐø·¢ËÍ
+				m_PendingMsgID = 0;//È¡ï¿½ï¿½Î´ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½Ã±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü¼ï¿½ï¿½ï¿½ï¿½ï¿½
 				m_PendMsgSenderID = 0;
 
 				FeedbackDirectly(Pipe);
 
 			}else{
-				int64 TimeStamp   = Msg->PopInt();
+				Msg->PopInt(); //= TimeStamp;
 				int64 ReceiverID  = Msg->PopInt();
 
 				assert(m_PendMsgSenderID == ReceiverID);
-				//assert(m_PendingMsg->GetID() == TimeStamp); ¿ÉÄÜÔÚm_CurSendMsg.Reset()Ê±±»delete
+				//assert(m_PendingMsg->GetID() == TimeStamp); ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½m_CurSendMsg.Reset()Ê±ï¿½ï¿½delete
 			
                 ePipeline Info;
 				Info.PushInt(LINKER_FEEDBACK);
@@ -581,7 +542,7 @@ namespace ABSTRACT{
 				Info.PushInt(m_PendingMsgID);
 				m_Parent->NotifyLinkerState(this,LINKER_MSG_RECEIVED,Info);
 
-				m_PendingMsgID = 0;//È¡ÏûÎ´¾öÐÅÏ¢£¬ÈÃ±¾Á¬½ÓÄÜ¼ÌÐø·¢ËÍ
+				m_PendingMsgID = 0;//È¡ï¿½ï¿½Î´ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½Ã±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü¼ï¿½ï¿½ï¿½ï¿½ï¿½
 				m_PendMsgSenderID = 0;
 			}
        } 
@@ -589,19 +550,19 @@ namespace ABSTRACT{
        {
 
 			Msg->AutoTypeAB();
-			if(Msg->GetTypeAB() != 0x44400000){ //¸ñÊ½²»ÕýÈ·£¬¶ªÆú
+			if(Msg->GetTypeAB() != 0x44400000){ //ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½È·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 				ePipeline Info;
 				Info.Push_Directly(E.Release());
 				m_Parent->NotifyLinkerState(this,LINKER_ILLEGAL_MSG,Info);
 				return;
 			}
 			
-			CMsg m((ePipeline*)E.Release()); //°ü×°³É±ê×¼·â×°¸ñÊ½µÄÐÅÏ¢
+			CMsg m((ePipeline*)E.Release()); //ï¿½ï¿½×°ï¿½É±ï¿½×¼ï¿½ï¿½×°ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½Ï¢
 			int64 SenderID = m.GetSenderID();
 		
-			int64 MsgID = m.GetMsgID();
+//			int64 MsgID = m.GetMsgID();
 
-			//Ê×ÏÈÓÃ¶Ô·½µÄÊ±¼ä´ÁºÍ·¢ÐÅÕß»Ø¸´Ò»¸öOK
+			//ï¿½ï¿½ï¿½ï¿½ï¿½Ã¶Ô·ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Í·ï¿½ï¿½ï¿½ï¿½ß»Ø¸ï¿½Ò»ï¿½ï¿½OK
 			int64 TimeStamp = Msg->GetID();	
 			ePipeline* rMsg = new ePipeline(LINKER_FEEDBACK);
 			rMsg->PushInt(RECEIVE_OK);
@@ -612,9 +573,9 @@ namespace ABSTRACT{
 
 			ePipeline& Receiver = m.GetReceiver(); 
 			
-			//assert(Receiver.Size()==0); È±Ê¡µÄMSG_DIALOG_NOTIFY½ÓÊÜÕßµØÖ·size=2 
+			//assert(Receiver.Size()==0); È±Ê¡ï¿½ï¿½MSG_DIALOG_NOTIFYï¿½ï¿½ï¿½ï¿½ï¿½ßµï¿½Ö·size=2 
 
-			//°Ñ½ÓÊÕÕßID×ª»»³É±¾µØµØÖ·
+			//ï¿½Ñ½ï¿½ï¿½ï¿½ï¿½ï¿½ID×ªï¿½ï¿½ï¿½É±ï¿½ï¿½Øµï¿½Ö·
 			ePipeline LocalAddress;
 			bool ret = ReceiverID2LocalAddress(Receiver,LocalAddress);
 			if (!ret)
@@ -638,7 +599,7 @@ namespace ABSTRACT{
 		m_bRevError = true;
 		Info->DataLen = 0;
 	
-		//Í¨Öª¶Ô·½½ÓÊÕ´íÎó£¬µÈ¶Ô·½·¢Ò»¸öÖØÖÃÐÅÏ¢»ØÀ´
+		//Í¨Öªï¿½Ô·ï¿½ï¿½ï¿½ï¿½Õ´ï¿½ï¿½ó£¬µÈ¶Ô·ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½
 		ePipeline* rMsg = new ePipeline(LINKER_FEEDBACK);
 		rMsg->PushInt(RECEIVE_ERROR);
         
@@ -661,7 +622,7 @@ namespace ABSTRACT{
 		eElectron E;
 		m_CurRevMsg.Pop(&E);
 		
-        ePipeline* Msg = (ePipeline*)E.Release();
+//        ePipeline* Msg = (ePipeline*)E.Release();
 		
 		ePipeline Data;
         m_Parent->NotifyLinkerState(this,LINKER_RECEIVE_RESUME,Data);
@@ -719,7 +680,7 @@ namespace ABSTRACT{
 		return Data;
 	};
 
-//ÒÔÏÂº¯Êý±ØÐë¼ÓËø±£Ö¤Ïß³Ì°²È«£¬µ«ÓÖÒª±ÜÃâµÝ¹éËÀËø
+//ï¿½ï¿½ï¿½Âºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¤ï¿½ß³Ì°ï¿½È«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½Ý¹ï¿½ï¿½ï¿½ï¿½ï¿½
 //////////////////////////////////////////////////////////////////////////
 
 	void   CLinkerPipe::SetSourceID(int64 SourceID){ 
@@ -784,9 +745,9 @@ namespace ABSTRACT{
 		{
 			ePipeline& Address = It->second;
 			
-			if (Address.GetID() == LocalID)
+			if (Address.GetID() == (uint64)LocalID)
 			{
-				It = m_LocalAddressList.erase(It);
+				m_LocalAddressList.erase(It++);
 			}else{
 				It++;
 			}
@@ -836,7 +797,7 @@ namespace ABSTRACT{
 		CLock lk(m_Mutex,this);
 		
 		ePipeline& Sender = Msg.GetSender();
-		ePipeline& Receiver = Msg.GetReceiver();
+//		ePipeline& Receiver = Msg.GetReceiver();
         ePipeline& Letter   = Msg.GetLetter();
 		
 		int64 MsgID = Letter.GetID();
@@ -848,12 +809,12 @@ namespace ABSTRACT{
 
 		int64 EventID = Msg.GetEventID();
 
-		//°Ñ±¾µØ·¢ËÍÕßµØÖ·ÓÃÒ»¸öINT64´úÌæ
+		//ï¿½Ñ±ï¿½ï¿½Ø·ï¿½ï¿½ï¿½ï¿½ßµï¿½Ö·ï¿½ï¿½Ò»ï¿½ï¿½INT64ï¿½ï¿½ï¿½ï¿½
 		int64 SenderID = LocalAddress2SenderID(Sender);	
 		Sender.Clear();
 		Sender.PushInt(SenderID);
 		
-		//ÓÃÊ±¼ä´Á´úÌæÔ´ID£¬¶Ô·½·µ»Ø´ËÊ±¼ä´Á±íÊ¾Õý³£½ÓÊÜ
+		//ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´IDï¿½ï¿½ï¿½Ô·ï¿½ï¿½ï¿½ï¿½Ø´ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½
 		int64 TimeStamp = CreateTimeStamp();
         Msg.SetSourceID(TimeStamp);
 
@@ -885,10 +846,65 @@ namespace ABSTRACT{
 		
 		if(m_SendState == SEND_MSG)
 		{
-			int32 n = m_SendBuffer.size() - m_SendPos; //»¹Ê£¶àÉÙÊý¾ÝÃ»ÓÐ·¢ËÍ			
+			int32 n = m_SendBuffer.size() - m_SendPos; //ï¿½ï¿½Ê£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½Ð·ï¿½ï¿½ï¿½			
 			memset((void*)(m_SendBuffer.c_str()+m_SendPos),'\0',n);
 			m_SendState   = SEND_BREAK;	
 		}
 	}
 		
+
+	//CLinker
+	//////////////////////////////////////////////////////////////////////////
+
+	CLinker::CLinker(CLinkerPipe* LinkerPipe)
+		:m_Ptr(LinkerPipe)
+	{
+		if(m_Ptr){
+			m_Ptr->IncreUserNum();
+		}
+	};
+	CLinker::~CLinker(){
+		if(m_Ptr){
+			m_Ptr->DecreUserNum();
+		}
+	}
+
+	void CLinker::Reset(CLinkerPipe* Pipe)
+	{
+		if (m_Ptr)
+		{
+			m_Ptr->DecreUserNum();
+		}
+
+		m_Ptr = Pipe;
+		if(m_Ptr){
+			m_Ptr->IncreUserNum();
+		}
+	}
+
+	CLinkerPipe* CLinker::Release(){
+		if (m_Ptr)
+		{
+			m_Ptr->DecreUserNum();
+		}
+		CLinkerPipe* p = m_Ptr;
+		m_Ptr = NULL;
+		return p;
+	}
+
+	bool CLinker::IsValid(){
+		return m_Ptr != NULL;
+
+	};
+
+	const ePipeline& CLinker::GetCompileData()const //ï¿½ï¿½ï¿½Ú¹Û²ï¿½LinkerPipeï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×°ï¿½Ðµï¿½ï¿½ï¿½ï¿½
+	{
+		return m_Ptr->m_CurRevMsg;
+	}
+
+	CLinkerPipe& CLinker::operator()(){
+		assert(m_Ptr);
+		return *m_Ptr;
+	}
+
 } //namespace ABSTRACT

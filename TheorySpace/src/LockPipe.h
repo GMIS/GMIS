@@ -1,9 +1,9 @@
 /*
 *author: ZhangHongBing(hongbing75@gmail.com)  
 *  
-* ¶ÔePipelineµÄ·â×°£¬¿ÉÒÔ¿´×÷ÊÇÒ»¸öÓÃÓÚ¶àÏß³Ì°²È«¶ÓÁÐ£¬
-* ÓÃÀ´»º´æÊäÈëÊä³öÐÅÏ¢¡£
-* ×Ô´øÒ»¸ö½ô¼±Êý¾Ý¹ÜµÀ£¬Èç¹û½ô¼±Êý¾Ý¹ÜµÀÓÐÊý¾ÝÔòÓÅÏÈÊ¹ÓÃ
+* ï¿½ï¿½ePipelineï¿½Ä·ï¿½×°ï¿½ï¿½ï¿½ï¿½ï¿½Ô¿ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Ú¶ï¿½ï¿½ß³Ì°ï¿½È«ï¿½ï¿½ï¿½Ð£ï¿½
+* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½
+* ï¿½Ô´ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý¹Üµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý¹Üµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½
 */
 
 #ifndef _CLockPIPE_H
@@ -26,19 +26,19 @@ class   CLockPipe: public ePipeline
 {
 
 protected:
-	CABMutex*            m_Mutex;       //È·±£Ïß³Ì°²È«
+	CABMutex*            m_Mutex;       //È·ï¿½ï¿½ï¿½ß³Ì°ï¿½È«
 	ePipeline            m_UrgenceMsg;
-	int64                m_LastPopTimeStamp; //×îºóÈ¡³öÐÅÏ¢µÄÊ±¼ä´Á
+	int64                m_LastPopTimeStamp; //ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½Ê±ï¿½ï¿½ï¿½
 public:	
 
-	CLockPipe(CABMutex* m,const TCHAR* Name=_T("Unkown"),uint64 ID=0)
-		:m_Mutex(m),
-		 ePipeline(Name,ID),
+	CLockPipe(CABMutex* m,const wchar_t* Name=_T("Unkown"),uint64 ID=0)
+		:ePipeline(Name,ID),
+		 m_Mutex(m),
 		 m_UrgenceMsg(_T("UrgenceMsg")),
 		 m_LastPopTimeStamp(0)
 	{};
 	virtual ~CLockPipe(){
-//		CLock lk(m_Mutex);  ÓÉÓÚm_MutexÊÇºóÆÚ¾ö¶¨µÄ£¬¿ÉÄÜ±»³Ð¼ÌÀàÌáÇ°É¾³ý¶øÊ§Ð§
+//		CLock lk(m_Mutex);  ï¿½ï¿½ï¿½ï¿½m_Mutexï¿½Çºï¿½ï¿½Ú¾ï¿½ï¿½ï¿½ï¿½Ä£ï¿½ï¿½ï¿½ï¿½Ü±ï¿½ï¿½Ð¼ï¿½ï¿½ï¿½ï¿½ï¿½Ç°É¾ï¿½ï¿½ï¿½Ê§Ð§
 //      m_UrgenceMsg.Clear();
 	};
 
@@ -70,7 +70,7 @@ public:
 		Pipe.Push_Copy(&m_UrgenceMsg);
 		Pipe.Push_Copy(this);
 	}
-	//×¢Òâ£ºÊäÈëµÄ×Ö·û´®¸ñÊ½Îª£ºtype@len{type@len@data1,type@len@data2 ... type@len@dataN}
+	//×¢ï¿½â£ºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½Ê½Îªï¿½ï¿½type@len{type@len@data1,type@len@data2 ... type@len@dataN}
 	uint32   FromString(AnsiString& s,uint32 pos=0){ 
 		CLock lk(m_Mutex,this);
 
@@ -91,19 +91,19 @@ public:
 		return n;
 	}
     /*
-	   ÍùCCLockPipeÀïÐ´µÄÊý¾Ý±ØÐëÊÇePipeline
-	   NOTE: ÓÉÓÚÊ¹ÓÃPush_Directly,ËùÒÔData±ØÐëÈ¡×Ô¶Ñ
+	   ï¿½ï¿½CCLockPipeï¿½ï¿½Ð´ï¿½ï¿½ï¿½ï¿½Ý±ï¿½ï¿½ï¿½ï¿½ï¿½ePipeline
+	   NOTE: ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½Push_Directly,ï¿½ï¿½ï¿½ï¿½Dataï¿½ï¿½ï¿½ï¿½È¡ï¿½Ô¶ï¿½
 	*/
 	int64 Push(ePipeline* Data){
 		assert(Data != NULL);
 		CLock lk(m_Mutex,this);
 		Push_Directly(Data);
-		//=0¾ßÓÐ±êÊ¶Ê×´ÎÊ¹ÓÃµÄ×÷ÓÃ£¬µ«Èç¹ûpushºÜ¿ì£¬µ«»¹Ã»À´µÃ¼°popÔòm_LastPopTimeStampÊ¼ÖÕ=0,
-		//ÎªÁË±ÜÃâÕâÖÖÇé¿ö£¬ÎÒÃÇ-1£¬Èç¹ûpushºÜ¿ì¶øpopºÜÂý£¬Ôò»¹ÓÐ¼Ó´óÊ±¼ä¼ä¸ôµÄ×÷ÓÃ
+		//=0ï¿½ï¿½ï¿½Ð±ï¿½Ê¶ï¿½×´ï¿½Ê¹ï¿½Ãµï¿½ï¿½ï¿½ï¿½Ã£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½pushï¿½Ü¿ì£¬ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½Ã¼ï¿½popï¿½ï¿½m_LastPopTimeStampÊ¼ï¿½ï¿½=0,
+		//Îªï¿½Ë±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½-1ï¿½ï¿½ï¿½ï¿½ï¿½pushï¿½Ü¿ï¿½ï¿½popï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¼Ó´ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		return m_LastPopTimeStamp--; 
 	};
 	
-	//½ô¼±Êý¾Ý»á±»ÓÅÏÈÈ¡³ö
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý»á±»ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½
 	int64 PushUrgence(ePipeline* Data){
 		assert(Data != NULL);
 		CLock lk(m_Mutex,this);
@@ -136,7 +136,7 @@ public:
 		Msg.Reset(NULL);
 	}
     /*
-      NOTE: Êý¾Ý¿ÉÄÜÎÞÐ§£¬ÓÃ»§±ØÐë×Ô¼º¼ì²é
+      NOTE: ï¿½ï¿½Ý¿ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½
    
 	eData<ePipeline> Pop(){	
 		CLock lk(m_Mutex);		

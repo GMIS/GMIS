@@ -1,7 +1,6 @@
 // SpaceMutex.cpp: implementation of the CSpaceMutex class.
 //
 //////////////////////////////////////////////////////////////////////
-#pragma warning(disable: 4786)
 
 #include "SpaceMutex.h"
 

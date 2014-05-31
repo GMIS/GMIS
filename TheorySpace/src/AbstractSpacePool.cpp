@@ -1,7 +1,6 @@
 // AbstractSpacePool.cpp: implementation of the CAbstractSpacePool class.
 //
 //////////////////////////////////////////////////////////////////////
-#pragma warning (disable:4786)
 
 #include "AbstractSpace.h"
 #include "AbstractSpacePool.h"
@@ -11,7 +10,7 @@
 //////////////////////////////////////////////////////////////////////
 
 CAbstractSpacePool::CAbstractSpacePool(CABMutex* Mutex)
-:m_Mutex(Mutex),m_MaxReserveNum(1000),m_MaxTypeNum(20)
+:m_Mutex(Mutex),m_MaxTypeNum(20),m_MaxReserveNum(1000)
 {
 
 }
@@ -27,7 +26,7 @@ CAbstractSpacePool::~CAbstractSpacePool()
 			AbstractSpaceList::iterator it2 = List.begin();
 			while(it2 != List.end()){
 				AbstractSpace* Space = *it2;
-				free(Space); //¼ÓÈëÁ´±íµÄÖ¸ÕëÒÑ¾­±»Îö¹¹¹ýÁË
+				free(Space); //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 				it2++;
 			}
 		}
@@ -71,13 +70,13 @@ AbstractSpace* CAbstractSpacePool::RequireAbstractSpace(int32 Type){
 }
 
 void  CAbstractSpacePool::ReleaseAbstractSpace(int32 Type,AbstractSpace* Space){
-	if (m_Mutex==NULL) //Ææ¹Ö£¬ËÆºõSpacePoolÒÑ¾­Îö¹¹ÁË£¬»¹ÓÐÈËµ÷ÓÃ´Ëº¯Êý
+	if (m_Mutex==NULL) //ï¿½ï¿½Ö£ï¿½ï¿½Æºï¿½SpacePoolï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ëµï¿½ï¿½Ã´Ëºï¿½ï¿½ï¿½
 	{
 		free(Space);
 		return;
 	}
 	CLock lk(m_Mutex);
-	//memset(Space,0,Type);  µ¼ÖÂ×îºódelete Ê§°Ü
+	//memset(Space,0,Type);  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½delete Ê§ï¿½ï¿½
 	std::map<size_t,AbstractSpaceList>::iterator it = m_AbstractSpacePool.find(Type);
 	if (it != m_AbstractSpacePool.end())
 	{
@@ -88,7 +87,7 @@ void  CAbstractSpacePool::ReleaseAbstractSpace(int32 Type,AbstractSpace* Space){
 		{
 			it1++;
 			if(it1 !=List.end() && Space==*it1){
-				assert(0); //ÕÒµ½ÏàÍ¬µÄ£¬ÒâÎ¶×Å³ÌÐòÁ½´ÎdeleteÍ¬Ò»¸öÖ¸Õë
+				assert(0); //ï¿½Òµï¿½ï¿½ï¿½Í¬ï¿½Ä£ï¿½ï¿½ï¿½Î¶ï¿½Å³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½deleteÍ¬Ò»ï¿½ï¿½Ö¸ï¿½ï¿½
 				return;
 			}else{
 				List.insert(it1,Space);

@@ -1,8 +1,7 @@
-#pragma  warning(disable:4786)
 
 #include "System.h"
 #include "LinkerPipe.h"
-#include "format.h"
+
 namespace ABSTRACT{
 
 //SystemIOWork
@@ -24,25 +23,26 @@ namespace ABSTRACT{
 				int64 SourceID = 0;
 				
 				Model::CLockedLinkerList* LinkerList = m_Parent->GetClientLinkerList();
-				CLinker Linker = LinkerList->GetNextLinker(SourceID);
+				CLinker Linker;
+				LinkerList->GetNextLinker(SourceID,Linker);
 				
 				char buf[BUFFER_SIZE];
 				while (m_Alive && Linker.IsValid())
 				{
 					SourceID = Linker().GetSourceID();
-					//ÓëServerIO
+					//ï¿½ï¿½ServerIO
 					if (!Linker().IOBusy())
 					{
 						Linker().ThreadIOWorkProc(buf,BUFFER_SIZE);
 					}
-					Linker = LinkerList->GetNextLinker(SourceID);
+					LinkerList->GetNextLinker(SourceID,Linker);
 				}
 				SLEEP_MILLI(20);
 			}
 
 			if (m_Parent->IsAlive()) 
 			{
-				assert(0); //ÕâÖÖÇé¿ö¿ÉÄÜÐÔºÜÐ¡
+				assert(0); //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ôºï¿½Ð¡
 				ePipeline Data;
 				Data.PushInt(m_ID);
 				m_Parent->NotifySysState(SNOTIFY_IO_WORK_THREAD_CLOSE,&Data);
@@ -95,12 +95,12 @@ namespace ABSTRACT{
 					LockedData->DecreNerveWorkCount();
 				}else{
 					m_IdleCount++;
-					if (m_IdleCount>LockedData->GetNerveMaxIdleCount()) //´óÔ¼600ºÁÃëÎÞÐÅÏ¢¿É´¦ÀíÔòÍË³ö
+					if (m_IdleCount>LockedData->GetNerveMaxIdleCount()) //ï¿½ï¿½Ô¼600ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½É´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë³ï¿½
 					{
 						int n = LockedData->GetNerveWorkNum();
 						int n1 = LockedData->GetBusyNerveWorkNum();
 
-                        if (n-n1 == 1 )//×îµÍÏÞ¶È±£ÁôÒ»¸ö²»Ã¦µÄ
+                        if (n-n1 == 1 )//ï¿½ï¿½ï¿½ï¿½Þ¶È±ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Ã¦ï¿½ï¿½
                         {
 							m_IdleCount = 0;
                         }else{
@@ -138,7 +138,7 @@ System::CLockedSystemData::CLockedSystemData(CABMutex* mutex)
 	assert(m_pMutex);
 	m_MaxNerveWorkerNum = 100;
 	m_NerveMsgMaxNumInPipe = 10;
-	m_NerveMsgMaxInterval = 10*1000*1000; //1Ãë
+	m_NerveMsgMaxInterval = 10*1000*1000; //1ï¿½ï¿½
 	m_NerveIdleMaxCount   = 30;
 
 	m_NerveWorkingNum = 0;
@@ -189,7 +189,7 @@ bool System::CLockedSystemData::Activation(){
 	return TRUE;
 }
 void System::CLockedSystemData::Dead(){
-	//CLock lk(m_pMutex); IOWork->Dead()ÓÉÓÚÒªµ÷ÓÃCLockedSystemData£¬Òý·¢Ç¶Ì×ËÀËø
+	//CLock lk(m_pMutex); IOWork->Dead()ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½CLockedSystemDataï¿½ï¿½ï¿½ï¿½Ç¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
 	map<int64,CSystemIOWork*>::iterator ita = m_SystemIOWorkList.begin();
 	while (ita != m_SystemIOWorkList.end())
@@ -317,7 +317,7 @@ int32    System::CLockedSystemData::DeleteNerveWork(int64 ID){
 	return m_NerveWorkList.size();
 }
 
-bool  System::CLockedSystemData::RequestCreateNewNerveWork(int32 MsgNum,int64 Interval,uint32& Reason) //·µ»ØÀíÓÉ 
+bool  System::CLockedSystemData::RequestCreateNewNerveWork(uint32 MsgNum,int64 Interval,uint32& Reason) //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 {
 	CLock lk(m_pMutex);
 
@@ -326,15 +326,15 @@ bool  System::CLockedSystemData::RequestCreateNewNerveWork(int32 MsgNum,int64 In
 		Reason =  REASON_LIMIT;
 		return FALSE;
 	}
-	else if (m_NerveWorkingNum == m_NerveWorkList.size()) //È«²¿±»Õ¼ÓÃ
+	else if (m_NerveWorkingNum == m_NerveWorkList.size()) //È«ï¿½ï¿½ï¿½ï¿½Õ¼ï¿½ï¿½
 	{			
 		Reason = REASON_MSG_TOO_MUCH;
 		return TRUE;
-	}else if (MsgNum > m_NerveMsgMaxNumInPipe) //µ±Ç°ÐÅÏ¢ÊýÄ¿³¬¹ýÖ¸¶¨ÊýÄ¿ÔòÆôÓÃÐÂÏß³Ì
+	}else if (MsgNum > m_NerveMsgMaxNumInPipe) //ï¿½ï¿½Ç°ï¿½ï¿½Ï¢ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß³ï¿½
 	{
 		Reason = REASON_MSG_TOO_MUCH;
 		return TRUE;
-	}else if(Interval> m_NerveMsgMaxInterval){ //³¬¹ýÖ¸¶¨¼ä¸ôÊ±¼äÃ»ÓÐÈ¡³öÐÂÐÅÏ¢À´´¦ÀíÔòÆôÓÃÐÂÏß³Ì
+	}else if(Interval> m_NerveMsgMaxInterval){ //ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Ã»ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß³ï¿½
 		Reason = REASON_TIME_OUT;
 		return TRUE;
 	}else {
@@ -363,10 +363,10 @@ System::CSystemInitData::~CSystemInitData(){
 //////////////////////////////////////////////////////////////////////////
 System::System(CSystemInitData* InitData)
 :Model(InitData),
-m_SystemData(InitData->m_SystemData),
-m_ClientList(InitData->m_SystemListMutex),
-m_ClientSitMutex(InitData->m_ClientSitMutex),
-m_Nerve(InitData->m_Nerve)
+ m_Nerve(InitData->m_Nerve),
+ m_ClientList(InitData->m_SystemListMutex),
+ m_SystemData(InitData->m_SystemData),
+ m_ClientSitMutex(InitData->m_ClientSitMutex)
 {
 	assert(m_SystemData);	
 }
@@ -409,15 +409,14 @@ System::CLockedSystemData*    System::GetSystemData(){
 	return m_SystemData;
 };
 
-CLinker System::GetLinker(int64 ID){
+void System::GetLinker(int64 ID,CLinker& Linker){
 	CLockedLinkerList*  ClientList = GetClientLinkerList();
-	CLinker  Linker = ClientList->GetLinker(ID);
+	ClientList->GetLinker(ID,Linker);
 	if (!Linker.IsValid())
 	{
 		CLockedLinkerList*  SuperiorList = GetSuperiorLinkerList();
-		Linker = SuperiorList->GetLinker(ID);
+		SuperiorList->GetLinker(ID,Linker);
 	}
-	return Linker;
 }
 
 int32	System::GetNerveMsgNum(){
@@ -463,7 +462,7 @@ void  System::PushNerveMsg(CMsg& Msg,bool bUrgenceMsg){
 		tstring MsgStr = MsgID2Str(MsgID);
 		if (MsgStr != _T("MSG_EVENT_TICK"))
 		{
-			tstring s = tformat(_T("Nerve push msg: %s EventID:%I64ld MsgNum:%d,CreateNewThread:%d"),MsgStr.c_str(),EventID,m_Nerve->DataNum(),ret);
+			tstring s = Format1024(_T("Nerve push msg: %s EventID:%I64ld MsgNum:%d,CreateNewThread:%d"),MsgStr.c_str(),EventID,m_Nerve->DataNum(),ret);
 			OutputLog(LOG_MSG_NERVE_PUSH,s.c_str());
 		}
 	}	
@@ -478,7 +477,7 @@ BOOL  System::NerveWorkStrategy(int64 NewMsgPushTime,int64 LastMsgPopTime){
 	Data.PushInt(n);
 	NotifySysState(SNOTIFY_NERVE_MSG_NUM,&Data);
 				
-	if(LastMsgPopTime==0){	//µÚÒ»¸öµÄID¹æ¶¨Îª0		
+	if(LastMsgPopTime==0){	//ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½IDï¿½æ¶¨Îª0		
 		CNerveWork* NerveWork = CreateNerveWorker(0,this,REASON_MSG_TOO_MUCH);
 		if (NerveWork && NerveWork->Activation())
 		{
@@ -500,14 +499,14 @@ BOOL  System::NerveWorkStrategy(int64 NewMsgPushTime,int64 LastMsgPopTime){
 
 	int64 t = NewMsgPushTime-LastMsgPopTime;
 
-	//Èç¹ûÖÐÊàÉñ¾­ÀïÓÐ³¬¹ý10¸öÒÔÉÏÐÅÏ¢»òÕß³¬¹ý2ÃëÖÓÃ»ÓÐÈ¡³öÐÂÐÅÏ¢À´´¦ÀíÔòÆôÓÃÐÂÏß³Ì
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð³ï¿½ï¿½ï¿½10ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ß³ï¿½ï¿½ï¿½2ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß³ï¿½
 	uint32 Reason ;
 	bool ret = m_SystemData->RequestCreateNewNerveWork(n,t,Reason);
 	if (!ret)
 	{
 		if (Reason == REASON_LIMIT)
 		{
-			//Í¨ÖªÒÑ¾­´ïµ½×î´óÏÞÖÆ
+			//Í¨Öªï¿½Ñ¾ï¿½ï¿½ïµ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 			NotifySysState(SNOTIFY_NERVE_THREAD_LIMIT,NULL);
 		}
 		return FALSE;
@@ -545,7 +544,8 @@ void System::BroadcastMsg(set<int64>& SourceList,int64 BCS_ID,ePipeline& MsgData
 		Msg.GetLetter().Push_Directly(MsgData.Clone());
 		
 		int64 SourceID = *it;
-		CLinker Linker = GetLinker(SourceID);
+		CLinker Linker;
+	    GetLinker(SourceID,Linker);
         if (Linker.IsValid())
         {
 			Linker().PushMsgToSend(Msg);

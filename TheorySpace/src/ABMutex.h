@@ -2,14 +2,11 @@
 *author: ZhangHongBing(hongbing75@gmail.com)        
 * 
 * 
-* ÓÉÓÚMutexÓë¾ßÌåÊµÏÖÏµÍ³Ïà¹Ø£¬ÕâÀï¶¨ÒåÒ»¸öÐé½Ó¿Ú£¬ÒÔ·½±ãÌåÏµÉè¼Æ
+* ï¿½ï¿½ï¿½ï¿½Mutexï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½ÏµÍ³ï¿½ï¿½Ø£ï¿½ï¿½ï¿½ï¿½ï¶¨ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Ó¿Ú£ï¿½ï¿½Ô·ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½ï¿½ï¿½
 */
 #ifndef  _ABMUTEX_H__
 #define  _ABMUTEX_H__
 
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
 
 #include "Typedef.h"
 
@@ -24,17 +21,17 @@ public:
 
     virtual void Acquire()
 	{
-		//Çë¸ù¾Ý×Ô¼ºµÄÏµÍ³ÊµÏÖ´Ëº¯Êý
+		//ï¿½ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ÏµÍ³Êµï¿½Ö´Ëºï¿½ï¿½ï¿½
 		assert(0);
 	}; 
 
     virtual void Release()	
 	{
-		//Çë¸ù¾Ý×Ô¼ºµÄÏµÍ³ÊµÏÖ´Ëº¯Êý
+		//ï¿½ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ÏµÍ³Êµï¿½Ö´Ëºï¿½ï¿½ï¿½
 		assert(0);
 	}
 
-	//ÓÃÓÚ¹²ÓÃËøÐëÖØÔØ£¬²Î¼ûSpaceMutex.h
+	//ï¿½ï¿½ï¿½Ú¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø£ï¿½ï¿½Î¼ï¿½SpaceMutex.h
 	virtual bool AcquireThis(void* user){
 		Acquire();
 		return TRUE;
@@ -56,7 +53,11 @@ public:
 	}
     CLock( CABMutex* mutex,void* User): m_Mutex(mutex),m_User(User){
 		assert(mutex);
-		m_User==NULL?m_Mutex->Acquire():m_Mutex->AcquireThis(m_User);
+		if(m_User==NULL) {
+			m_Mutex->Acquire();
+		}else {
+			m_Mutex->AcquireThis(m_User);
+		}
 	}
     ~CLock (){
 		m_User==NULL?m_Mutex->Release():m_Mutex->ReleaseThis(m_User);

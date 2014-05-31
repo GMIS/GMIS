@@ -1,8 +1,8 @@
 /*
-* ePipelineÓÃÀ´¸øÆäËû¿Õ¼äÊµÀýÌá¹©Í³Ò»µÄÊý¾ÝÊäÈëÊä³ö¹ÜµÀ¡£
+* ePipelineï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ¼ï¿½Êµï¿½ï¿½ï¿½á¹©Í³Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Üµï¿½ï¿½ï¿½
 *
-* ¿ÉÒÔÀí½âÎªÒ»¸ùµçÏß£¬ÓÉÓÚËùÓÐÊý¾Ý¶¼±»Ô¼ÊøÔÚePipelineÀï£¬Ã¿Ò»¸öÊý¾ÝÊ¹ÓÃºó¾ÍÏóµçÁ÷Àï
-* µÄµç×Ó»á×Ô¶¯ÏûÊ§£¬Õâ¿ÉÒÔ½â¾öCÓïÑÔËùÃæÁÙµÄÄÚ´æ»ØÊÕÄÑÌâ¡£
+* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÎªÒ»ï¿½ï¿½ï¿½ï¿½ß£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý¶ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ePipelineï¿½ï£¬Ã¿Ò»ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½Ãºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+* ï¿½Äµï¿½ï¿½Ó»ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½Ê§ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô½ï¿½ï¿½Cï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ùµï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½â¡£
 *
 * author: ZhangHongBing(hongbing75@gmail.com)   
 */
@@ -10,16 +10,12 @@
 #ifndef _PIPELINE_H_ 
 #define _PIPELINE_H_ 
 
-#if defined(_MSC_VER) && (_MSC_VER >= 1200)
-# pragma once
-#endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
 #include "AbstractSpace.h"
 #include "BaseEnergy.h"
 #include <deque>
 #include <string>
 #include "Msg.h"
-#include <stdarg.h>
 
 using namespace std;
 
@@ -34,7 +30,7 @@ class ePipeline;
 
 class  eElectron: public Energy{
 
-	friend  ePipeline;
+	friend  class ePipeline;
     Energy* m_Pointer;
 
 public:			
@@ -106,7 +102,7 @@ public:
 
 
 /*
-  ePipelineµÄÊý¾ÝÔ­ÔòÉÏÊÇÏÈ½øÏÈ³ö£¬²»¹ÄÀøËæ»ú¶ÁÐ´
+  ePipelineï¿½ï¿½ï¿½ï¿½ï¿½Ô­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È½ï¿½ï¿½È³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð´
 */
 
 
@@ -117,32 +113,32 @@ public:
     typedef deque<Energy*>                  EnergyList;
 	typedef deque<Energy*>::iterator        EnergyPtr;
  	typedef deque<Energy*>::const_iterator  ConstEnergyPtr;
-    friend class ePipeline;
+//    friend class ePipeline;
 protected:
-	TypeAB          m_TypeAB;     //ÄÜÁ¿ÀàÐÍËõÐ´£¬Ò»´Î¿ÉÒÔÍ¬Ê±´¦ÀíÇ°8¸öÊý¾Ý
+	TypeAB          m_TypeAB;     //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð´ï¿½ï¿½Ò»ï¿½Î¿ï¿½ï¿½ï¿½Í¬Ê±ï¿½ï¿½ï¿½ï¿½Ç°8ï¿½ï¿½ï¿½ï¿½ï¿½
 	EnergyList      m_EnergyList;
 
-	bool            m_Alive;      //FALSE±íÊ¾¶Ï¿ª´Ë¹ÜµÀ,Ò»°ã×ÜÊÇÎªTRUE£¬Ò»°ãÖ»×÷ÎªÄÚ²¿Ê¹ÓÃ
+	bool            m_Alive;      //FALSEï¿½ï¿½Ê¾ï¿½Ï¿ï¿½ï¿½Ë¹Üµï¿½,Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÎªTRUEï¿½ï¿½Ò»ï¿½ï¿½Ö»ï¿½ï¿½Îªï¿½Ú²ï¿½Ê¹ï¿½ï¿½
 
 public:
     uint64          m_ID;       
-	tstring         m_Label;      //ÓÃ»§×Ô¼º¸ù¾ÝÐèÒªÌî³äºÍ½âÊÍm_Label,defaultÍ¨³£ÎªePipeline name     
+	tstring         m_Label;      //ï¿½Ã»ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½Í½ï¿½ï¿½ï¿½m_Label,defaultÍ¨ï¿½ï¿½ÎªePipeline name     
 
 public:
 	ePipeline();
 	ePipeline(uint64 ID);
-	ePipeline(const TCHAR* Text,uint64 ID = 0);
+	ePipeline(const wchar_t* Text,uint64 ID = 0);
 	virtual ~ePipeline();
 		
 	ePipeline(const ePipeline& C) { Clone(C);};
 	ePipeline& operator=(const ePipeline& C ){
 		if(this != &C)Clone(C);
 		return *this;
-	}
+	};
 
 
 
-	//°ÑÒ»¸ö¹ÜµÀÀïµÄÊý¾Ý×ªÒÆµ½±¾¹ÜµÀÄ©Î²£¬Ô­¹ÜµÀ½«Ê§È¥ËùÓÐµÄÊý¾Ý¡£  
+	//ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Üµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½Æµï¿½ï¿½ï¿½ï¿½Üµï¿½Ä©Î²ï¿½ï¿½Ô­ï¿½Üµï¿½ï¿½ï¿½Ê§È¥ï¿½ï¿½ï¿½Ðµï¿½ï¿½ï¿½Ý¡ï¿½  
 	ePipeline& operator << (ePipeline& C);
 
 	virtual eType EnergyType(){ return TYPE_PIPELINE;};	 	
@@ -152,7 +148,7 @@ public:
 	void UndeleteClear(){
 		m_EnergyList.clear();
 	};
-	// ÍêÈ«¸´ÖÆ
+	// ï¿½ï¿½È«ï¿½ï¿½ï¿½ï¿½
     void Clone(const ePipeline &C);
   
 	int  Size(){ return m_EnergyList.size();};  
@@ -161,58 +157,58 @@ public:
 	void        SetID(uint64 ID){m_ID = ID;};
 	uint64      GetID()const {return m_ID;};
 	tstring&    GetLabel(){ return m_Label;};
-	void        SetLabel(const TCHAR* Text){ m_Label=Text;}; 
+	void        SetLabel(const wchar_t* Text){ m_Label=Text;};
 
-	//±¾¹ÜµÀÊ§Ð§£¬Ä¿Ç°Ö»ÓÃÓÚÏµÍ³ÄÚ²¿
-	void Break(){ m_Alive = FALSE;}
+	//ï¿½ï¿½ï¿½Üµï¿½Ê§Ð§ï¿½ï¿½Ä¿Ç°Ö»ï¿½ï¿½ï¿½ï¿½ÏµÍ³ï¿½Ú²ï¿½
+	void Break(){ m_Alive = FALSE;};
 
 	bool IsAlive(){ return m_Alive;};
-    void Reuse(){ m_Alive = TRUE;}
+    void Reuse(){ m_Alive = TRUE;};
 
-	//Õâ±íÃ÷ePipeline±¾ÉíÒ²±»¿´×÷ÊÇÒ»ÖÖ¸´ºÏÊý¾ÝÀàÐÍ£¬Í¬Ñù¿ÉÒÔ±»´«µÝ¡£
-	void*  Value()const { return (void *)this;}  
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ePipelineï¿½ï¿½ï¿½ï¿½Ò²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í£ï¿½Í¬ï¿½ï¿½ï¿½ï¿½Ô±ï¿½ï¿½ï¿½ï¿½Ý¡ï¿½
+	void*  Value()const { return (void *)this;};
     Energy* Clone(){ return new ePipeline(*this);};   
     
 
-	/*PipelineÒ²ÊÇÒ»ÖÖ»ù±¾Êý¾ÝÀàÐÍ£¬Òò´ËËüÒ²½«±»×ª»»³É»ù±¾µÄ type@IDlen@ID@Lablelen@Lable@len@data¸ñÊ½£¬
-	 ×¢Òâ£¬Ëü±ðÆäËûÊý¾ÝÀàÐÍ¶àÒ»¸öIDÏîÄ¿£¬ÆäËûÊý¾Ý³ÉÔ±½«±»ºöÂÔ¡£
+	/*PipelineÒ²ï¿½ï¿½Ò»ï¿½Ö»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò²ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½É»ï¿½ï¿½ type@IDlen@ID@Lablelen@Lable@len@dataï¿½ï¿½Ê½ï¿½ï¿½
+	 ×¢ï¿½â£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¶ï¿½Ò»ï¿½ï¿½IDï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý³ï¿½Ô±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¡ï¿½
 	  
-	 ÓÉÓÚPipeline×°ÔØµÄ¶¼ÊÇÆäËûÊý¾Ý£¬Òò´ËÔÚdata²¿·ÖµÄ¸ñÊ½Îª£º
+	 ï¿½ï¿½ï¿½ï¿½Pipeline×°ï¿½ØµÄ¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½dataï¿½ï¿½ï¿½ÖµÄ¸ï¿½Ê½Îªï¿½ï¿½
 	     type@id@len@type@len@data1 ... type@len@dataN
 		             |-------------DATA--------------|  
-	 ÁíÍâ¹ÜµÀÊÇ¿ÉÒÔÇ¶Ì×µÄ¡£
+	 ï¿½ï¿½ï¿½ï¿½Üµï¿½ï¿½Ç¿ï¿½ï¿½ï¿½Ç¶ï¿½×µÄ¡ï¿½
 
-	 ×¢Òâ£º±¾¸ñÊ½Ö»ÊÇÔÝ¶¨£¬½«À´ÓÐ¿ÉÄÜ¸Ä±ä¡£
+	 ×¢ï¿½â£ºï¿½ï¿½ï¿½ï¿½Ê½Ö»ï¿½ï¿½ï¿½Ý¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¿ï¿½ï¿½Ü¸Ä±ä¡£
 	*/
 	void ToString(AnsiString& s);
 
-	//×¢Òâ£ºÊäÈëµÄ×Ö·û´®¸ñÊ½Îª£ºTYPE_PIPELINE@ID@LEN@type@len@data1type@len@data2 ... type@len@dataN
+	//×¢ï¿½â£ºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½Ê½Îªï¿½ï¿½TYPE_PIPELINE@ID@LEN@type@len@data1type@len@data2 ... type@len@dataN
 	uint32  FromString(AnsiString& s,uint32 pos=0);		
 	
 	/*
-	  Í¨³£ÔÚ¹ÜµÀÁ÷ÈëÄ³Ò»¸ö¿Õ¼äÊµÀýÖ®Ç°£¬ÏµÍ³×Ô¶¯µ÷ÓÃ´Ëº¯ÊýÀ´¼ì²é
-	  ÊÇ·ñºÍ¿Õ¼äÊµÀýµÄTypeAB()½Ó¿ÚÒ»ÖÂ£¬Ïàµ±ÓÚÍê³ÉCÓïÑÔµÄ²ÎÊý¼ì²é
-	  ³ý·Ç²ÎÊý³¬¹ý8¸ö»òÓÐÌØÊâÒªÇó£¬·ñÔòÓÃ»§²»±ØÔÙ×Ô¼º¼ì²éePipelineÀï
-	  µÄÊý¾ÝÊÇ·ñºÏ·¨¡£
+	  Í¨ï¿½ï¿½ï¿½Ú¹Üµï¿½ï¿½ï¿½ï¿½ï¿½Ä³Ò»ï¿½ï¿½ï¿½Õ¼ï¿½Êµï¿½ï¿½Ö®Ç°ï¿½ï¿½ÏµÍ³ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½Ã´Ëºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	  ï¿½Ç·ï¿½Í¿Õ¼ï¿½Êµï¿½ï¿½ï¿½TypeAB()ï¿½Ó¿ï¿½Ò»ï¿½Â£ï¿½ï¿½àµ±ï¿½ï¿½ï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½ÔµÄ²ï¿½ï¿½ï¿½ï¿½ï¿½
+	  ï¿½ï¿½Ç²ï¿½ï¿½ï¿½ï¿½8ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ó£¬·ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ePipelineï¿½ï¿½
+	  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½Ï·ï¿½ï¿½ï¿½
 	*/
 	TypeAB GetTypeAB(){return m_TypeAB;};
 
-	void  SetTypeAB(uint32 t){ m_TypeAB = t;}
+	void  SetTypeAB(uint32 t){ m_TypeAB = t;};
 
 	/*
-	  ÖØÐÂÉèÖÃÇ°8¸öÊý¾ÝµÄÀàÐÍËõÐ´,¹ÜµÀ±£´æµÄÊý¾Ý¸Ä±äÒÔºó¶¼Ó¦¸Ãµ÷ÓÃ
-	  Õâ¸öº¯ÊýÒÔÈ·±£ËüÕýÈ·Á÷ÈçÈëÏÂÒ»¸ö¿Õ¼äÊµÀý£¬ÕâÏî¹¤×÷Ò²ÊÇÓÉÏµÍ³×Ô¶¯
-	  Íê³ÉµÄ£¬µ«ËüÖ»ÄÜ°ïÄã¼ì²éÇ°8¸ö£¬ÄãÒªÈ¡³öµÄÊý¾Ý³¬¹ý8¸ö£¬ÄÇÄã¾ÍÐèÒª
-	  ×Ô¼ºµ÷ÓÃ´Ëº¯ÊýÈ»ºó¼ì²éËæºóµÄ8¸öÊý¾ÝÊÇ·ñºÏ·¨¡£
+	  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç°8ï¿½ï¿½ï¿½ï¿½Ýµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð´,ï¿½Üµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý¸Ä±ï¿½ï¿½Ôºï¿½Ó¦ï¿½Ãµï¿½ï¿½ï¿½
+	  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Õ¼ï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½î¹¤ï¿½ï¿½Ò²ï¿½ï¿½ï¿½ï¿½ÏµÍ³ï¿½Ô¶ï¿½
+	  ï¿½ï¿½ÉµÄ£ï¿½ï¿½ï¿½ï¿½ï¿½Ö»ï¿½Ü°ï¿½ï¿½ï¿½ï¿½ï¿½Ç°8ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÒªÈ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý³ï¿½ï¿½ï¿½8ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òª
+	  ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½Ã´Ëºï¿½ï¿½ï¿½È»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½8ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½Ï·ï¿½ï¿½ï¿½
 	*/
     void AutoTypeAB();
 
 	bool  HasTypeAB(uint32 t){
 	    AutoTypeAB();
 		return (t&m_TypeAB) == t;
-	}
+	};
 
-	//Íù¹ÜµÀÀïÐ´ÈëÒ»¸öÊý¾Ý£¬Ëü¿ËÂ¡Ä¿±êÊý¾Ý,¶ø²»ÆÆ»µÔ­Êý¾Ý
+	//ï¿½ï¿½Üµï¿½ï¿½ï¿½Ð´ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Ý£ï¿½ï¿½ï¿½ï¿½Â¡Ä¿ï¿½ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½Æ»ï¿½Ô­ï¿½ï¿½ï¿½
 	void Push_Copy(Energy* Data){
 		Energy* New = Data->Clone();
 		m_EnergyList.push_back(New);
@@ -237,36 +233,39 @@ public:
 		eINT* Data = new eINT(Value);
 		assert(Data);
         m_EnergyList.push_back(Data);   
-	}
+	};
 	void PushFloat(float64 Value){
 		eFLOAT* Data = new eFLOAT(Value);
 		assert(Data);
         m_EnergyList.push_back(Data);   
-	}
-	void PushString(const TCHAR* Value){
+	};
+	void PushString(const wchar_t* Value){
 		eSTRING* Data = new eSTRING(Value);
 		assert(Data);
         m_EnergyList.push_back(Data);   
-	}
+	};
 	void PushString(const tstring& Value){
 		eSTRING* Data = new eSTRING(Value);
 		assert(Data);
         m_EnergyList.push_back(Data);   
 	};
-#ifdef _UNICODE
+
 	void PushString(const AnsiString& Value){
-		tstring s = eSTRING::UTF8TO16(Value);
+		tstring s = eSTRING::UTF8toWS(Value);
 		eSTRING* Data = new eSTRING(s);
 		assert(Data);
         m_EnergyList.push_back(Data);   
 	};
-#endif
 
-    void Push256String(TCHAR* Format, ...){
-		TCHAR Buffer [256] ;
+    void Push256String(wchar_t* Format, ...){
+		wchar_t Buffer [256] ;
 		va_list ArgList ;		
 		va_start (ArgList, Format) ;
-		_vsntprintf(Buffer, 256, Format, ArgList) ;		
+#ifdef _WIN32
+		_vsntprintf(Buffer, 256, Format, ArgList) ;
+#else
+		vswprintf(Buffer,256,Format,ArgList);
+#endif
 		va_end (ArgList) ;
 				
 		eSTRING* Data = new eSTRING(Buffer);
@@ -274,7 +273,7 @@ public:
         m_EnergyList.push_back(Data);   
 	};
 
-	//ÒÔstd::stringÎªÔØÌå´¦Àí¶þ½øÖÆÊý¾Ý
+	//ï¿½ï¿½std::stringÎªï¿½ï¿½ï¿½å´¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	void PushBlob(const AnsiString& Value){
 		eBLOB* Data = new eBLOB(Value.c_str(),Value.size());
 		assert(Data);
@@ -296,8 +295,8 @@ public:
 		m_EnergyList.push_back(Pipe);   
 	};
 	/*
-      ËüÈÃÒ»¸öauto_ptrÀ´È¡³öÊý¾Ý£¬Äã¿ÉÒÔÊ¹ÓÃeElectron¶ÔÏóÀ´·ºÖ¸ÈÎºÎÊý¾Ý
-	  Ò²¿ÉÒÔÊ¹ÓÃËüµÄÅÉÉúÀàeData<class T>,´Ó¶ø±ÜÃâ´¦ÀíÀàÐÍ×ª»»
+      ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½auto_ptrï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½Ý£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½eElectronï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½Îºï¿½ï¿½ï¿½ï¿½
+	  Ò²ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½eData<class T>,ï¿½Ó¶ï¿½ï¿½ï¿½â´¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½
     */
 	void Pop(eElectron* Data){	
 		assert(m_EnergyList.size() != 0);  
@@ -354,7 +353,7 @@ public:
 		e = NULL;
 	}
 
-	//ÒÔstd::stringÎªÔØÌå´æ´¢¶þ½øÖÆÊý¾Ý
+	//ï¿½ï¿½std::stringÎªï¿½ï¿½ï¿½ï¿½æ´¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	void PopBlob(AnsiString& Blob){
 		assert(m_EnergyList.size() != 0);  
 		Energy* e = m_EnergyList.front();
@@ -376,10 +375,10 @@ public:
 		Msg.Reset(p);
 	}
 
-	/*ePipelineÆäÊµÏàµ±ÓÚÒ»¸öCÓïÑÔÖÐµÄstruct£¬Ö»²»¹ýÆäÊý¾Ý³¤¶ÈºÍÄÚÈÝ¿ÉÒÔ¶¯Ì¬¸Ä±ä
-	  ÓÐÊ±ÎÒÃÇÐèÒª°ÑËüµ±×÷Ò»¸ö¹Ì¶¨½á¹¹¶ø²é¿´ÆðÌØ¶¨µÄÊý¾Ý¡£
+	/*ePipelineï¿½ï¿½Êµï¿½àµ±ï¿½ï¿½Ò»ï¿½ï¿½Cï¿½ï¿½ï¿½ï¿½ï¿½Ðµï¿½structï¿½ï¿½Ö»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý³ï¿½ï¿½Èºï¿½ï¿½ï¿½ï¿½Ý¿ï¿½ï¿½Ô¶ï¿½Ì¬ï¿½Ä±ï¿½
+	  ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ì¶ï¿½ï¿½á¹¹ï¿½ï¿½é¿´ï¿½ï¿½ï¿½Ø¶ï¿½ï¿½ï¿½ï¿½ï¿½Ý¡ï¿½
 
-      ÎÒÃÇ¿ÉÒÔÍ¨¹ýÒ»¸öenum{DATA1=0,...}¶¨ÒåÊý¾Ý±£´æ´ÎÐò,È»ºóÏó½á¹¹Ò»Ñù·ÃÎÊÆäÊý¾Ý³ÉÔ±
+      ï¿½ï¿½ï¿½Ç¿ï¿½ï¿½ï¿½Í¨ï¿½ï¿½Ò»ï¿½ï¿½enum{DATA1=0,...}ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,È»ï¿½ï¿½ï¿½ï¿½á¹¹Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý³ï¿½Ô±
 	*/
 	
 	Energy* GetEnergy(uint32 Pos)
@@ -392,7 +391,7 @@ public:
 		if(m_EnergyList.size()==0)return NULL;
 		return m_EnergyList.back();
 	}
-	void* GetData(uint32 Pos)  //Ôø¿¼ÂÇÊ¹ÓÃÄ£°å£¬²»¹ý»¹ÊÇ³ÌÐòÔ±ÏÔÊ½µÄ×ª»»¸üºÃ£¬ÖÁÉÙËû²»µÃ²»Ë¼¿¼Ò»ÏÂ×Ô¼º½«Òª²Ù×÷µÄÊÇÊ²Ã´ÀàÐÍµÄÊý¾Ý
+	void* GetData(uint32 Pos)  //ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½Ä£ï¿½å£¬ï¿½ï¿½ï¿½ï¿½ï¿½Ç³ï¿½ï¿½ï¿½Ô±ï¿½ï¿½Ê½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½Ã£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã²ï¿½Ë¼ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê²Ã´ï¿½ï¿½ï¿½Íµï¿½ï¿½ï¿½ï¿½
 	{
 		assert(Pos<m_EnergyList.size());
 		Energy* Data = m_EnergyList[Pos];
@@ -417,7 +416,7 @@ public:
 		m_EnergyList.insert(m_EnergyList.begin()+Pos,1,E);
 	}
 
-	//²åÈë¹ÜµÀ½«Ê§È¥Êý¾Ý
+	//ï¿½ï¿½ï¿½ï¿½Üµï¿½ï¿½ï¿½Ê§È¥ï¿½ï¿½ï¿½
 	void InsertEnergy(uint32 Pos,ePipeline& Pipe)
 	{
 		assert(Pos<=m_EnergyList.size());
@@ -429,7 +428,8 @@ public:
 	void EraseEnergy(uint32 Pos,uint32 Len){
 		assert(Pos+Len<=m_EnergyList.size());
 		EnergyPtr It = m_EnergyList.begin()+Pos;
-		for (int i=0; i<Len;++i)
+
+		for (uint i=0; i<Len;++i)
 		{
 			Energy* E = *It++;
 			delete E;
@@ -447,7 +447,7 @@ public:
 		uint32 n = Pos+Len;
 		assert(n<=m_EnergyList.size());
 		assert(Pipe);
-		for (int i=Pos; i<n;++i)
+		for (uint i=Pos; i<n;++i)
 		{
 			Energy* E = m_EnergyList[i];
 			Pipe->Push_Directly(E);
@@ -471,10 +471,7 @@ public:
 		return e;
 	}
 	
-	//Èç¹ûÒ»¸ö¿Õ¼äÊµÀýÔÚÖ´ÐÐÊ±·¢Éú´íÎó£¬¿ÉÒÔÓÉ´ËÐ´Èë±ØÒªµÄÐÅÏ¢µ½m_Label
-	void PrintLabel(TCHAR* Format, ...);
-
-	/*µÃµ½Ëùº¬ÓÐPIPEµÄ×ÜÊýÄ¿£¬°üÀ¨±¾¹ÜµÀ*/
+	/*ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½PIPEï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Üµï¿½*/
 	int32 GetPipeCount();
 	
 
@@ -483,4 +480,4 @@ public:
 
 }; //namespace ABSTRACT
 
-#endif //  _PIPELINE_H_ 
+#endif //  _PIPELINE_H_                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          

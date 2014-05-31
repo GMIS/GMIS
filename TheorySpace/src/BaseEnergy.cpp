@@ -1,9 +1,9 @@
-#pragma warning(disable:4786)
+
 
 #include "AbstractSpacePool.h"
 #include "BaseEnergy.h"
 #include "ConvertUTF.h"
-
+#include <stdlib.h>
 #include <stdio.h>
 namespace ABSTRACT{
 	
@@ -13,7 +13,7 @@ namespace ABSTRACT{
 		s.append("@0@");
 	};
 	
-	//¶ÔÓÚNULLÀàÐÍ£¬Æä¸ñÊ½Îª£ºtype@0@ Ã»ÓÐlen@data²¿·Ö
+	//ï¿½ï¿½ï¿½ï¿½NULLï¿½ï¿½ï¿½Í£ï¿½ï¿½ï¿½ï¿½Ê½Îªï¿½ï¿½type@0@ Ã»ï¿½ï¿½len@dataï¿½ï¿½ï¿½ï¿½
 	uint32  eNULL::FromString(AnsiString& s,uint32 pos){
 		const char* ch = &s[pos+1];
 		if( *ch == '@' && *(++ch) =='0' && *(++ch) =='@'){
@@ -33,14 +33,14 @@ namespace ABSTRACT{
 	uint32  eINT::FromString(AnsiString& s, uint32 pos){
         int32 start = pos+2;
 
-		//ÕÒµ½²¢¼ì²éÊÇ·ñÎªÕûÊý£»
+		//ï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½Îªï¿½ï¿½ï¿½ï¿½
 		int32 slen = FindInt(s,start,'@');
-		if(slen==0 || slen>2 )return 0;     //³ýÁË×Ö·û´®slen¶¼²»»á>2
+		if(slen==0 || slen>2 )return 0;     //ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½slenï¿½ï¿½ï¿½ï¿½ï¿½ï¿½>2
 
-		//µÃµ½ÕûÊýÎ»Êý(°üº¬¿ÉÄÜµÄ¸ººÅ£©
+		//ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½(ï¿½ï¿½ï¿½ï¿½ÜµÄ¸ï¿½ï¿½Å£ï¿½
 		int32 t = StringToInt(&s[start],slen);
 
-		//µÃµ½Êý¾Ý
+		//ï¿½Ãµï¿½ï¿½ï¿½ï¿½
 		start += slen+1;
 		bool correct;
 		m_Value = RawStringToInt(&s[start],t,correct);
@@ -51,32 +51,32 @@ namespace ABSTRACT{
 	void eFLOAT::ToString(AnsiString& s){
 		char buf[50];
 		uint32 n = sprintf(buf,"%.6f",m_Value);
-		while(buf[--n] == '0'); //È¥µô¶àÓàµÄ0,¼õÉÙÊµ¼Ê´æ´¢ËùÐè×Ö½Ú
+		while(buf[--n] == '0'); //È¥ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½0,ï¿½ï¿½ï¿½ï¿½Êµï¿½Ê´æ´¢ï¿½ï¿½ï¿½ï¿½ï¿½Ö½ï¿½
 		buf[n+1]='\0';
 		PrintString(s,TYPE_FLOAT,n+1,buf);
 	};
 	uint32  eFLOAT::FromString(AnsiString& s,uint32 pos){
         int32 start = pos+2;
 
-		//ÕÒµ½²¢¼ì²éÊÇ·ñÎªÕûÊý£»   @4@23.34@
+		//ï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½Îªï¿½ï¿½ï¿½ï¿½   @4@23.34@
 		int32 slen = FindInt(s,start,'@');
-		if(slen==0 || slen>2 )return 0;     //³ýÁË×Ö·û´®slen¶¼²»»á>2
+		if(slen==0 || slen>2 )return 0;     //ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½slenï¿½ï¿½ï¿½ï¿½ï¿½ï¿½>2
 
-		//µÃµ½doubleÎ»Êý(°üº¬¿ÉÄÜµÄ¸ººÅ£©
+		//ï¿½Ãµï¿½doubleÎ»ï¿½ï¿½(ï¿½ï¿½ï¿½ï¿½ÜµÄ¸ï¿½ï¿½Å£ï¿½
 		int64 t = StringToInt(&s[start],slen);
 
-		//¼ì²é²¢ÕÒµ½¸¡µãÊýµÄÎ»ÖÃ
-		uint32 floatpos =0; //¸¡µãÎ»ÖÃ£¬»ùÓÚÊý×Ö³¤¶È°üÀ¨¿ÉÄÜµÄ¸ººÅ
+		//ï¿½ï¿½é²¢ï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½
+		uint32 floatpos =0; //ï¿½ï¿½ï¿½ï¿½Î»ï¿½Ã£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö³ï¿½ï¿½È°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÜµÄ¸ï¿½ï¿½ï¿½
 		start += slen +1;
 		slen =  FindFloat(s, start,floatpos,'@');
         if(slen==0 || floatpos>20 || slen-floatpos>19)return 0;     
 
-		//µÃµ½Êý¾Ý
+		//ï¿½Ãµï¿½ï¿½ï¿½ï¿½
 		m_Value = StringToFloat(&s[start],t,floatpos);
 		return  start+t-pos;
 	};	
 
-	AnsiString  eSTRING::UTF16TO8(const std::wstring& s){
+	AnsiString  eSTRING::WStoUTF8(const std::wstring& s){
 		AnsiString Value;
 
 		if (s.size()==0)
@@ -87,19 +87,23 @@ namespace ABSTRACT{
 		int32 len = 3 * s.size() + 1;
 		Value.resize(len);
 
-		const UTF16* Start = (const UTF16*)s.c_str();
-		const UTF16* End = Start + s.size();
 		UTF8* DestStart = (UTF8*)(&Value[0]);
 		UTF8* DestEnd = DestStart + len;
-#ifdef WIN32  		
+
+#ifdef WIN32
+		const UTF16* Start = (const UTF16*)s.c_str();
+		const UTF16* End = Start + s.size();
 		ConversionResult ret = ConvertUTF16toUTF8(&Start,End,&DestStart,DestEnd, strictConversion);
 #else
+		const UTF32* Start = (const UTF32*)s.c_str();
+		const UTF32* End = Start + s.size();
+
 		ConversionResult ret = ConvertUTF32toUTF8(&Start,End,&DestStart,DestEnd, strictConversion);
 #endif		
 		if (ret != conversionOK)
 		{
-			//throw std::exception("UFT8 Convert Fail.");ÕâÖÖ¹¤¾ßº¯ÊýÈÓ³öÀýÍâËÆºõÖ»»á¶ÔËÞÖ÷³ÌÐò¹¹³ÉÉ§ÈÅ
-			//¸ÄÎª¸ø³öÌáÊ¾+¿ÉÄÜµÄÂÒÂë
+			//throw std::exception("UFT8 Convert Fail.");ï¿½ï¿½ï¿½Ö¹ï¿½ï¿½ßºï¿½ï¿½ï¿½ï¿½Ó³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æºï¿½Ö»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ò¹¹³ï¿½É§ï¿½ï¿½
+			//ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½Ê¾+ï¿½ï¿½ï¿½Üµï¿½ï¿½ï¿½ï¿½ï¿½
 			
 			Value = "UFT16TO8 Convert Fail:";
 			return Value += (const char*)s.c_str();
@@ -107,7 +111,7 @@ namespace ABSTRACT{
 		return Value.c_str();
 	}
 
-    std::wstring eSTRING::UTF8TO16(const AnsiString& s){
+    std::wstring eSTRING::UTF8toWS(const AnsiString& s){
 		std::wstring Value;
 		if (s.size()==0)
 		{
@@ -118,34 +122,36 @@ namespace ABSTRACT{
 		
 		const  UTF8* Start = (const UTF8*)s.c_str();
 		const  UTF8* End = Start + s.size();
+
+#ifdef WIN32
 		UTF16* DestStart = (UTF16*)(&Value[0]);
 		UTF16* DestEnd = DestStart + s.size();
-		//UTF16* DestStart = buf;
-		//UTF16* DestEnd = DestStart + s.size();
 
-#ifdef WIN32  		
 		ConversionResult ret = ConvertUTF8toUTF16(&Start,End, &DestStart, DestEnd, strictConversion);
 #else
+		UTF32* DestStart = (UTF32*)(&Value[0]);
+		UTF32* DestEnd = DestStart + s.size();
+
 		ConversionResult ret = ConvertUTF8toUTF32(&Start,End, &DestStart, DestEnd, strictConversion);
 #endif		
 		if (ret != conversionOK)
 		{
-			if(ret == sourceIllegal) //¼ÙÉèÎª¶à×Ö½ÚÔÙ³¢ÊÔÒ»´Î
+			if(ret == sourceIllegal) //ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½Ö½ï¿½ï¿½Ù³ï¿½ï¿½ï¿½Ò»ï¿½ï¿½
 			{
 				int n = mbstowcs(NULL,s.c_str(),0);
 				Value.resize(n);
 				setlocale(LC_ALL,"");
-				mbstowcs((TCHAR*)Value.c_str(),s.c_str(),n);
+				mbstowcs((wchar_t*)Value.c_str(),s.c_str(),n);
 				return Value;
 			}else{
-				//throw std::exception("UFT8 Convert Fail."); ÕâÖÖ¹¤¾ßº¯ÊýÈÓ³öÀýÍâËÆºõÖ»»á¶ÔËÞÖ÷³ÌÐò¹¹³ÉÉ§ÈÅ
-				//¸ÄÎª¸ø³öÌáÊ¾+¿ÉÄÜµÄÂÒÂë
+				//throw std::exception("UFT8 Convert Fail."); ï¿½ï¿½ï¿½Ö¹ï¿½ï¿½ßºï¿½ï¿½ï¿½ï¿½Ó³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æºï¿½Ö»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ò¹¹³ï¿½É§ï¿½ï¿½
+				//ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½Ê¾+ï¿½ï¿½ï¿½Üµï¿½ï¿½ï¿½ï¿½ï¿½
 			    Value = _T("UFT8TO16 Convert Fail:");
 				
 				int n = mbstowcs(NULL,s.c_str(),0);
 				tstring s1(n,0);
 				setlocale(LC_ALL,"");
-				mbstowcs((TCHAR*)s1.c_str(),s.c_str(),n);
+				mbstowcs((wchar_t*)s1.c_str(),s.c_str(),n);
 
 				Value.insert(Value.end(),s1.begin(),s1.end());
 				return Value;
@@ -165,26 +171,20 @@ namespace ABSTRACT{
 	}
 
 	void eSTRING::ToString(AnsiString& s){ 
-#ifdef _UNICODE
-		AnsiString Value = UTF16TO8(m_Value);
+		AnsiString Value = WStoUTF8(m_Value);
 		int len = Value.size();
 		const char* pValue = Value.c_str();
         PrintString(s,TYPE_STRING,len,pValue);
-#else
-		int len = m_Value.size();
-		const char* pValue = m_Value.c_str();
-		PrintString(s,TYPE_STRING,len,pValue);
-#endif	
 	};
 
 	uint32  eSTRING::FromString(AnsiString& s,uint32 pos){   
 		int32 start = pos+2;
 
-		//ÕÒµ½²¢¼ì²éÊÇ·ñÎªÕûÊý£»
+		//ï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½Îªï¿½ï¿½ï¿½ï¿½
 		int32 slen = FindInt(s,start,'@');
 		if(slen==0 || slen>20)return 0;     
 
-		//µÃµ½×Ö·û´®³¤¶È
+		//ï¿½Ãµï¿½ï¿½Ö·ï¿½ï¿½ï¿½
 		int32 len = StringToInt(&s[start],slen);
 
 		if (len==0)
@@ -193,17 +193,21 @@ namespace ABSTRACT{
 			return 4;
 		}
 
-		//µÃµ½Êý¾Ý
+		//ï¿½Ãµï¿½ï¿½ï¿½ï¿½
 		start += slen+1;
-#ifdef _UNICODE
+
 		m_Value.resize(len);
 		const  UTF8* Start = (const UTF8*)(s.c_str()+start);
 		const  UTF8* End = Start + len;
+#ifdef WIN32
 		UTF16* DestStart = (UTF16*)(&m_Value[0]);
 		UTF16* DestEnd = DestStart + len;
-#ifdef WIN32  
+
 		ConversionResult ret = ConvertUTF8toUTF16(&Start,End, &DestStart, DestEnd, strictConversion);
-#else   
+#else
+		UTF32* DestStart = (UTF32*)(&m_Value[0]);
+		UTF32* DestEnd = DestStart + len;
+
 		ConversionResult ret = ConvertUTF8toUTF32(&Start,End, &DestStart, DestEnd, strictConversion);
 #endif		
 		if (ret != conversionOK)
@@ -215,10 +219,6 @@ namespace ABSTRACT{
 		tstring::size_type n = m_Value.find_first_of(_T('\0'));
 		m_Value = m_Value.substr(0,n);
 
-#else
-		m_Value.resize(len, '\0');
-		memcpy(&m_Value[0],&s[start],len);
-#endif
 		return  start+len-pos;
 
 	};
@@ -230,11 +230,11 @@ namespace ABSTRACT{
 	uint32  eBLOB::FromString(AnsiString& s, uint32 pos){
 		int32 start = pos+2;
 		
-		//ÕÒµ½²¢¼ì²éÊÇ·ñÎªÕûÊý£»
+		//ï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½Îªï¿½ï¿½ï¿½ï¿½
 		int32 slen = FindInt(s,start,'@');
 		if(slen==0 || slen>20)return 0;     
 		
-		//µÃµ½×Ö·û´®³¤¶È
+		//ï¿½Ãµï¿½ï¿½Ö·ï¿½ï¿½ï¿½
 		int32 len = StringToInt(&s[start],slen);
 		
 		if (len==0)
@@ -243,7 +243,7 @@ namespace ABSTRACT{
 			return 4;
 		}
 		
-		//µÃµ½Êý¾Ý
+		//ï¿½Ãµï¿½ï¿½ï¿½ï¿½
 		start += slen+1;
 		m_Value.resize(len);
 		memcpy(&m_Value[0],&s[start],len);

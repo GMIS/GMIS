@@ -1,15 +1,11 @@
 /*
-* ×ùÎ»Ëø
-* ÔÊĞím¸öÈË¾ºÕùn¸ö×ùÎ»
+* ï¿½ï¿½Î»ï¿½ï¿½
+* ï¿½ï¿½ï¿½ï¿½mï¿½ï¿½ï¿½Ë¾ï¿½ï¿½ï¿½nï¿½ï¿½ï¿½ï¿½Î»
 * author: ZhangHongBing(hongbing75@gmail.com)   
 */
 
 #ifndef _SPACEMUTEX_H__
 #define _SPACEMUTEX_H__
-
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
 
 #include "ABMutex.h"
 #include <deque>
@@ -39,13 +35,13 @@ private:
 	map<void*,SeatMutex*>    m_UseSeatList;
 	deque<SeatMutex*>        m_BlankSeatList; 
 
-	uint32                   m_SeatNum;  //Éè¶¨×ùÎ»×ÜÊı=m_UseSeatList.size()+m_BlankSeatList,default = 2;
+	uint32                   m_SeatNum;  //ï¿½è¶¨ï¿½ï¿½Î»ï¿½ï¿½ï¿½ï¿½=m_UseSeatList.size()+m_BlankSeatList,default = 2;
 
 public:
 	CSpaceMutex();
 	virtual ~CSpaceMutex();
 
-	//×îºÃºÍÊ¹ÓÃµÄÏß³ÌÊıÏàµÈ
+	//ï¿½ï¿½Ãºï¿½Ê¹ï¿½Ãµï¿½ï¿½ß³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	void  SetSeatNum(int32 n){
 		m_SeatNum = n>0? n:1;
 	}
@@ -58,7 +54,7 @@ public:
 		
 		Acquire();
 
-		//Ê×ÏÈ¼ì²éUserÊÇ·ñÒÑ¾­×øÏÂ
+		//ï¿½ï¿½ï¿½È¼ï¿½ï¿½Userï¿½Ç·ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½
         map<void*,SeatMutex*>::iterator it = m_UseSeatList.find(User);
 		if (it != m_UseSeatList.end())
 		{
@@ -67,9 +63,9 @@ public:
 			Seat = m_BlankSeatList.front();
 			m_BlankSeatList.pop_front();
             m_UseSeatList[User] = Seat;
-		}else{ //×ùÎ»»á×ÔÊÊÓ¦Ôö¼Ó
+		}else{ //ï¿½ï¿½Î»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½
 			Seat = CreateSeat();
-			assert(Seat);  //ÕâÖÖÇé¿öÓ¦¸Ã·Ç³£ÉÙ¼û£¬ÒòÎª×ùÎ»Êı»áÓëÏß³ÌÊıÏàµÈ£¬Ä¿Ç°Ã»´¦Àí´ËÀıÍâ
+			assert(Seat);  //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½Ã·Ç³ï¿½ï¿½Ù¼ï¿½ï¿½ï¿½Îªï¿½ï¿½Î»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß³ï¿½ï¿½ï¿½ï¿½ï¿½È£ï¿½Ä¿Ç°Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 			if(Seat==NULL){
 			    Release();
 				return FALSE;
@@ -95,12 +91,12 @@ public:
 		
 		if (sm->RefNum==0)
 		{
-			//¶ÔÓÚ×ÔÊÊÓ¦Ôö¼ÓµÄ×ùÎ»Èç¹û´óÓÚÔ¼¶¨µÄ×ùÎ»Êı£¬Ê¹ÓÃÍê±ÏºóÔòÉ¾³ı
+			//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½Óµï¿½ï¿½ï¿½Î»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½Ïºï¿½ï¿½ï¿½É¾ï¿½ï¿½
 			if (m_UseSeatList.size()+m_BlankSeatList.size()>m_SeatNum)
 			{
 				delete sm;
 			} 
-			else //·ñÔò·ÅÈë¿Õ°××ùÎ»ÁĞ±íµÈ´ıÊ¹ÓÃ
+			else //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ°ï¿½ï¿½ï¿½Î»ï¿½Ğ±ï¿½È´ï¿½Ê¹ï¿½ï¿½
 			{
 				m_BlankSeatList.push_back(sm);
 			}

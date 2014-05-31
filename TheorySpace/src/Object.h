@@ -1,20 +1,16 @@
 /*
 *
-* ObjectÓÃÀ´±í´ïÊÀ½çÖÐ¸ü¸ß¼¶µÄ³éÏóÀà¡£ÓëÒ»°ãMassÊµÀý²»Í¬£¬ObjectµÄÊµÀý
-* ¾ßÓÐµ¥¶ÀµÄÏß³ÌÀ´Ö´ÐÐ×Ô¼ºµÄÐÐÎª£¬Ò²¾ÍÊÇËµËü¾ßÓÐÁË¡°ÉúÎï»îÐÔ¡±£¬µ«ËüÓÖ²»
-* ÄÜ¶ÀÁ¢´æÔÚ£¨±ØÐëÒÀ¸½ÓÚÄ³¸ö½ø³Ì£©
+* Objectï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¸ï¿½ß¼ï¿½ï¿½Ä³ï¿½ï¿½ï¿½ï¿½à¡£ï¿½ï¿½Ò»ï¿½ï¿½MassÊµï¿½ï¿½Í¬ï¿½ï¿½Objectï¿½ï¿½Êµï¿½ï¿½
+* ï¿½ï¿½ï¿½Ðµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß³ï¿½ï¿½ï¿½Ö´ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½Ò²ï¿½ï¿½ï¿½ï¿½Ëµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö²ï¿½
+* ï¿½Ü¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä³ï¿½ï¿½ï¿½ï¿½Ì£ï¿½
 *
-* Í¨³£ÓÃÀ´ÊµÏÖÆä¸÷ÖÖ¡°ÉúÎï×éÖ¯¡±£¬Ò»°ãÓÃ»§ÓÃ²»µ½´ËÀà¡£
+* Í¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¯ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ã»ï¿½ï¿½Ã²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½à¡£
 *
 * author: ZhangHongBing(hongbing75@gmail.com)  
 */
 
 #ifndef _OBJECT_H__
 #define _OBJECT_H__
-
-#if defined(_MSC_VER) && (_MSC_VER >= 1200)
-# pragma once
-#endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
 #include "AbstractSpace.h"
 #include "LockPipe.h"
@@ -26,23 +22,21 @@ namespace ABSTRACT{
 class   Object : public Mass  
 {
 protected:
-
+	tstring          m_Name;
 	volatile bool    m_Alive;
 
-	/*¿ØÖÆÏß³ÌÈÎÎñÑ­»·µÄ¼ä¸ôÊ±¼ä£¬È±Ê¡Îª50ºÁÃë¡£
+	/*ï¿½ï¿½ï¿½ï¿½ï¿½ß³ï¿½ï¿½ï¿½ï¿½ï¿½Ñ­ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½Ê±ï¿½ä£¬È±Ê¡Îª50ï¿½ï¿½ï¿½ë¡£
 	  
-	  ÉèÖÃÕâ¸ö±äÁ¿³ýÁË½µµÍCPUµÄÕ¼ÓÃÂÊ£¬»¹ÒòÎª²»Í¬µÄÈÎÎñ¿ÉÄÜÓÐ²»Í¬µÄÊ±¼äÃô¸Ð¶È£¬
-	  ¾ÍÏóËùÓÐÉúÎïÆ½Ê±¶¯×÷·´Ó¦Ò»°ã£¬µ«Î£¼±Ê±¿ÌÔòÁéÃôºÜ¶àÒ»Ñù¡£
+	  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë½ï¿½ï¿½ï¿½CPUï¿½ï¿½Õ¼ï¿½ï¿½ï¿½Ê£ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½Í¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð²ï¿½Í¬ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½Ð¶È£ï¿½
+	  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦Ò»ï¿½ã£¬ï¿½ï¿½Î£ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü¶ï¿½Ò»ï¿½ï¿½
 
-      GMISÊµÀý×÷Îª»úÆ÷¡°´óÄÔ¡±£¬ÆäÃ¿Ò»¸ö×éÖ¯Ïß³Ì¶¼ÓÐ×Ô¼ºµÄSleepTime,ÏµÍ³Í¨¹ýÕâ¸öÊ±¼äÀ´À´
-	  Ð­µ÷Õû¸öÐÐÎªµÄºÍÐ³£¬±ÈÈçµ±ÊÕµ½µÄÐÅÏ¢À´²»¼°´¦ÀíÊ±£¬ÏµÍ³»áµ÷Ð¡ÐÅÏ¢´¦ÀíÏß³ÌµÄ¼ä¸ôÊ±¼ä£¬
-	  ¶øµ÷´óÐÅÏ¢½ÓÊÜµÄ¼ä¸ôÊ±¼ä¡£Ïà±Èµ÷ÕûÏß³ÌµÄÓÅÏÈ¼¶£¬ÎÒÃÇ¿ÉÒÔÈÃ´óÄÔ¸ù¾Ý¾ßÌåµÄÈÎÎñÌØµã£¬
-	  Í¨¹ý¼òµ¥Ëã·¨À´ÊµÊ±µ÷Õû¸÷¸öÏß³ÌËùÐèµÄSleepTime¡£
+      GMISÊµï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¡ï¿½ï¿½ï¿½ï¿½ï¿½Ã¿Ò»ï¿½ï¿½ï¿½ï¿½Ö¯ï¿½ß³Ì¶ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½SleepTime,ÏµÍ³Í¨ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	  Ð­ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½Äºï¿½Ð³ï¿½ï¿½ï¿½ï¿½ï¿½çµ±ï¿½Õµï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ÏµÍ³ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½ß³ÌµÄ¼ï¿½ï¿½Ê±ï¿½ä£¬
+	  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ÜµÄ¼ï¿½ï¿½Ê±ï¿½ä¡£ï¿½ï¿½Èµï¿½ï¿½ï¿½ï¿½ß³Ìµï¿½ï¿½ï¿½ï¿½È¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç¿ï¿½ï¿½ï¿½ï¿½Ã´ï¿½ï¿½Ô¸ï¿½Ý¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øµã£¬
+	  Í¨ï¿½ï¿½ï¿½ï¿½ã·¨ï¿½ï¿½ÊµÊ±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½SleepTimeï¿½ï¿½
 	*/
 
-    int32			 m_SleepTime ;  //<0±íÊ¾Ö»Ö´ÐÐÒ»´Î
-
-	tstring          m_Name;
+    int32			 m_SleepTime ;  //<0ï¿½ï¿½Ê¾Ö»Ö´ï¿½ï¿½Ò»ï¿½ï¿½
 
 	Object(CTimeStamp* Timer,CAbstractSpacePool* Pool):
 		Mass(Timer,Pool),
@@ -103,11 +97,12 @@ public:
 		return 0;
 	};
 #else
-	static void ObjectDefaultThreadFunc (void* pParam)
+	static void* ObjectDefaultThreadFunc (void* pParam)
 	{
 		Object* This = reinterpret_cast<Object*>(pParam);
 		assert(This != NULL);
 		This->Do(NULL); 
+		return (void*)0;
 	};
 #endif
 };

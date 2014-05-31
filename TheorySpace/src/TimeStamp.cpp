@@ -1,7 +1,6 @@
 // TimeStamp.cpp: implementation of the CTimeStamp class.
 //
 //////////////////////////////////////////////////////////////////////
-#pragma warning (disable:4786)
 
 #include "TimeStamp.h"
 
@@ -57,9 +56,9 @@ int64 CTimeStamp::TimeStamp(){
 		m_LastTime = NewTime;
 		m_LastTimeStamp = m_LastTime+1;
 		t= m_LastTimeStamp;
-	}else // (NewTime<m_LastTime) //¿ÉÄÜÐÞ¸ÄÁËÊ±¼äµ¼ÖÂµ±Ç°Ê±¼ä´Á±ÈÒÑ¾­Ê¹ÓÃµÄ»¹Ð¡
+	}else // (NewTime<m_LastTime) //ï¿½ï¿½ï¿½ï¿½ï¿½Þ¸ï¿½ï¿½ï¿½Ê±ï¿½äµ¼ï¿½Âµï¿½Ç°Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¾ï¿½Ê¹ï¿½ÃµÄ»ï¿½Ð¡
 	{ 
-		t= ++m_LastTimeStamp; //¼ÌÐøÊ¹ÓÃµ±Ç°Ê±¼ä´Á
+		t= ++m_LastTimeStamp; //ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½Ãµï¿½Ç°Ê±ï¿½ï¿½ï¿½
 	}
 
 	m_Mutex->Release();
@@ -120,11 +119,11 @@ int64 CTimeStamp::TimeToInt64(
     int64 T = Date2Days(Year,Month,Day);
 	T -= m_BirthDay;
 
-	//¼ÆËãµÃµ½Ãë
+	//ï¿½ï¿½ï¿½ï¿½Ãµï¿½ï¿½ï¿½
     T *= 86400L;
     T += (Hour * 3600L) + (Minute * 60L) + Second;
 
-    // µÃµ½°ÙÄÉÃë
+    // ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     T *= 10000000L;
 	T += (Milli*10000); //*1000000/100=*10000
 	T += (Micro*10);   //*1000/100 = *10
@@ -188,10 +187,7 @@ tstring CTimeStamp::GetYMD(int64 TimeStamp ){
 	uint32  Nano;
     Int64ToTime(TimeStamp,Year,Month,Day,Hour,Minute,Second,Milli,Micro,Nano);
 
-    TCHAR buffer[30];
-	_stprintf(buffer,_T("%d-%02d-%02d"),Year,Month,Day);
-	tstring s(buffer);
-	return s;
+    return Format1024(_T("%d-%02d-%02d"),Year,Month,Day);
 }
 
 tstring CTimeStamp::GetHMSM(int64 TimeStamp ){
@@ -206,10 +202,7 @@ tstring CTimeStamp::GetHMSM(int64 TimeStamp ){
 	uint32  Nano;
     Int64ToTime(TimeStamp,Year,Month,Day,Hour,Minute,Second,Milli,Micro,Nano);
 
-    TCHAR buffer[30];
-	_stprintf(buffer,_T("%d:%02d:%02d:%.3d"),Hour,Minute,Second,Milli);
-	//std::string s(buffer);
-	return buffer;
+	return Format1024(_T("%d:%02d:%02d:%.3d"),Hour,Minute,Second,Milli);
 }
 tstring CTimeStamp::GetHMS(int64 TimeStamp ){
 	uint32  Year;
@@ -223,10 +216,8 @@ tstring CTimeStamp::GetHMS(int64 TimeStamp ){
 	uint32  Nano;
     Int64ToTime(TimeStamp,Year,Month,Day,Hour,Minute,Second,Milli,Micro,Nano);
 
-    TCHAR buffer[30];
-	_stprintf(buffer,_T("%d:%02d:%02d"),Hour,Minute,Second);
-	tstring s(buffer);
-	return s;
+
+	return Format1024(_T("%d:%02d:%02d"),Hour,Minute,Second);
 }
 
 tstring CTimeStamp::GetYMDHM(int64 TimeStamp ){
@@ -241,11 +232,7 @@ tstring CTimeStamp::GetYMDHM(int64 TimeStamp ){
 	uint32  Nano;
     Int64ToTime(TimeStamp,Year,Month,Day,Hour,Minute,Second,Milli,Micro,Nano);
 
-	TCHAR buffer[100];
-	_stprintf(buffer,_T("%d-%02d-%02d %02d:%02d"),Year,Month,Day,
-		Hour,Minute);
-	tstring s(buffer);
-	return s;
+	return Format1024(_T("%d-%02d-%02d %02d:%02d"),Year,Month,Day,Hour,Minute);
 }
 
 tstring CTimeStamp::GetYMDHMS(int64 TimeStamp ){
@@ -260,11 +247,7 @@ tstring CTimeStamp::GetYMDHMS(int64 TimeStamp ){
 	uint32  Nano;
     Int64ToTime(TimeStamp,Year,Month,Day,Hour,Minute,Second,Milli,Micro,Nano);
 
-	TCHAR buffer[100];
-	_stprintf(buffer,_T("%d-%02d-%02d %d:%02d:%02d"),Year,Month,Day,
-		Hour,Minute,Second);
-	tstring s(buffer);
-	return s;
+	return Format1024(_T("%d-%02d-%02d %d:%02d:%02d"),Year,Month,Day,Hour,Minute,Second);
 }
 
 tstring CTimeStamp::GetFullTime(int64 TimeStamp){
@@ -280,11 +263,7 @@ tstring CTimeStamp::GetFullTime(int64 TimeStamp){
 	uint32  Nano;
     Int64ToTime(TimeStamp,Year,Month,Day,Hour,Minute,Second,Milli,Micro,Nano);
 
-	TCHAR buffer[100];
-	_stprintf(buffer,_T("%d-%02d-%02d %d:%02d:%02d:%.3d"),Year,Month,Day,
-		Hour,Minute,Second,Milli);
-	tstring s(buffer);
-	return s;
+	return Format1024(_T("%d-%02d-%02d %d:%02d:%02d:%.3d"),Year,Month,Day,Hour,Minute,Second,Milli);
 }
 
 int64  CTimeStamp::AddTime(int64 TimeStamp, int32 Milli,int32 Second/*=0*/,int32 Minute/*=0*/,int32 Hour/*=0*/){

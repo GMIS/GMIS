@@ -1,4 +1,4 @@
-#pragma warning(disable:4786)
+
 
 #include "AbstractSpacePool.h"
 #include "Pipeline.h"
@@ -7,37 +7,38 @@
 namespace ABSTRACT{
 
 	ePipeline::ePipeline()
-		: m_Label(),
+		: m_TypeAB(0),
 		  m_EnergyList(),
-		  m_TypeAB(0),
 		  m_Alive(1),
-		  m_ID(0)
+		  m_ID(0),
+		  m_Label()
 	{
 	};
 
 	ePipeline::ePipeline(uint64 ID)
-		: m_Label(),
-		  m_EnergyList(),
-		  m_TypeAB(0),
-		  m_Alive(1),
-		  m_ID(ID)
+	: m_TypeAB(0),
+	  m_EnergyList(),
+	  m_Alive(1),
+	  m_ID(ID),
+	  m_Label()
 	{
 	};
 
-	ePipeline::ePipeline(const TCHAR* Text,uint64 ID /*= 0*/)
-		: m_Label(Text),
-		  m_EnergyList(),
-		  m_TypeAB(0),
-		  m_Alive(1),
-		  m_ID(ID)
+	ePipeline::ePipeline(const wchar_t* Text,uint64 ID /*= 0*/)
+	: m_TypeAB(0),
+	  m_EnergyList(),
+	  m_Alive(1),
+	  m_ID(ID),
+	  m_Label(Text)
 	{
 	};
 
 	ePipeline::~ePipeline(){
 		Clear();
 	};
+
 	void ePipeline::Clone(const ePipeline &C){
-		// ÍêÈ«¸´ÖÆ
+		// ï¿½ï¿½È«ï¿½ï¿½ï¿½ï¿½
 		Clear();
 		ConstEnergyPtr It=C.m_EnergyList.begin();
 		while(It !=C.m_EnergyList.end()){
@@ -60,7 +61,7 @@ namespace ABSTRACT{
 		}
 		C.m_EnergyList.clear();
 
-		// ResetTypeAB();   ÓÉÏµÍ³À´×ö
+		// ResetTypeAB();   ï¿½ï¿½ÏµÍ³ï¿½ï¿½ï¿½ï¿½
 		return *this;
 	}
 
@@ -88,15 +89,6 @@ namespace ABSTRACT{
 		}
 	}
 
-	void ePipeline::PrintLabel(TCHAR* Format, ...){
-		TCHAR Buffer [512] ;
-		va_list ArgList ;		
-		va_start (ArgList, Format) ;
-		_vsntprintf(Buffer, 512, Format, ArgList) ;		
-		va_end (ArgList) ;
-
-		m_Label = Buffer;
-	};
 	int32 ePipeline::GetPipeCount(){
 		EnergyPtr It = m_EnergyList.begin();
 		int32 Count = 1;
@@ -116,60 +108,60 @@ namespace ABSTRACT{
 			e->ToString(data); 
 			It++;
 		}
-        //data.resize(count);  Ã»ÓÐ±ØÒª,ÒòÎªPrintString»á´ÓdataÖÐÈ¡³öÖ¸¶¨ÊýÄ¿countµÄ×Ö·û
+        //data.resize(count);  Ã»ï¿½Ð±ï¿½Òª,ï¿½ï¿½ÎªPrintStringï¿½ï¿½ï¿½dataï¿½ï¿½È¡ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½Ä¿countï¿½ï¿½ï¿½Ö·ï¿½
 		const char* pdata = data.c_str();
 		PrintString(s,TYPE_PIPELINE,m_ID,m_Label,data.size(),pdata);
 	};
 
-	//×¢Òâ£ºÊäÈëµÄ×Ö·û´®¸ñÊ½Îª£ºTYPE_PIPELINE@ID@len@Name@LEN@ type@len@data1type@len@data2 ... type@len@dataN
+	//×¢ï¿½â£ºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½Ê½Îªï¿½ï¿½TYPE_PIPELINE@ID@len@Name@LEN@ type@len@data1type@len@data2 ... type@len@dataN
 	uint32  ePipeline::FromString(AnsiString& s,uint32 pos/*=0*/){ 
 		 Clear();
 
-		 //»ù±¾¼ì²é
+		 //ï¿½ï¿½ï¿½ï¿½
 		 if(s.size()-pos<9 || (s[pos]!='9' && s[pos+1]!='@')){
-			 	throw std::exception("Pipe.FromString() fail.");
+			 	throw _T("Pipe.FromString() fail.");
 		 }
 		 
-		 //ÕÒID
+		 //ï¿½ï¿½ID
 		 uint32 start=pos+2;
 
-		 //ÕÒµ½²¢¼ì²éÊÇ·ñÎªÕûÊý£»  
+		 //ï¿½Òµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½Îªï¿½ï¿½ï¿½ï¿½  
 		 uint32 slen = FindInt(s,start,'@');
 		 if(slen==0 || slen>20){
-			 throw std::exception("Pipe.FromString() fail.");
+			 throw _T("Pipe.FromString() fail.");
 		 }
 		 m_ID = StringToInt(&s[start],slen);
 
-		 //ÕÒm_Lable len
+		 //ï¿½ï¿½m_Lable len
 		 start += slen+1;
 		 slen = FindInt(s,start,'@');
 		 if(slen==0 || slen>20){
-			 throw std::exception("Pipe.FromString() fail.");
+			 throw _T("Pipe.FromString() fail.");
 		 }
 		 uint32 len = StringToInt(&s[start],slen);
          
-		 //µÃµ½ m_Lable
+		 //ï¿½Ãµï¿½ m_Lable
 		 start += slen+1;
 		 string temp = s.substr(start,len);
          eSTRING wLable;
 		 wLable.FromString(temp,0);
 		 m_Label = wLable();
 
-		 //ÕÒÊý¾Ý³¤¶È
+		 //ï¿½ï¿½ï¿½ï¿½Ý³ï¿½ï¿½ï¿½
 		 start += len+1;
 		 slen = FindInt(s,start,'@');
 		 if(slen==0 || slen>20){
-			 throw std::exception("Pipe.FromString() fail."); 
+			 throw _T("Pipe.FromString() fail.");
 		 }
 		 len = StringToInt(&s[start],slen);
 		 
 		 start += slen+1;
 		 if(len ==0)return  start - pos;
          if(len > (s.size()-start)){
-			 throw std::exception("Pipe.FromString() fail.");
+			 throw _T("Pipe.FromString() fail.");
 		 }
 
-		 //½âÎö¸÷ÀàÐÍµÄ×ÓÊý¾Ý
+		 //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Íµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		 uint32 i=start;
 		 len += start;
 		 uint32 n;

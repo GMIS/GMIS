@@ -1,7 +1,6 @@
 // Msg.cpp: implementation of the CMsg class.
 //
 //////////////////////////////////////////////////////////////////////
-#pragma warning (disable:4786)
 
 #include "Msg.h"
 #include "Pipeline.h"
@@ -33,7 +32,7 @@ ePipeline* CreateMsg(int64 MsgID,int64 EventID,ePipeline** ReceiverInfo,ePipelin
 		MsgPtr->Push_Directly(LetterPipe);
 	}
 	
-	//·¢ÐÅÊ±¼ä´ÁÓÉÏµÍ³×Ô¶¯Ìî³ä
+	//ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ÏµÍ³ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½
 	int64 SendTimeStamp = AbstractSpace::CreateTimeStamp();
 	ePipeline* SenderPipe  = new ePipeline(SendTimeStamp);
 	if (!SenderPipe)
@@ -48,7 +47,7 @@ ePipeline* CreateMsg(int64 MsgID,int64 EventID,ePipeline** ReceiverInfo,ePipelin
 }
 
 CMsg::CMsg()
-	:m_bReaded(false),m_MsgPtr(NULL)
+	:m_MsgPtr(NULL),m_bReaded(false)
 {
 
 }
@@ -100,10 +99,6 @@ CMsg::CMsg(ePipeline* Msg):m_MsgPtr(Msg),m_bReaded(false){
 };
 
 
-CMsg::CMsg(CMsg& Msg)
-:m_MsgPtr(Msg.Release()),m_bReaded(false){	
-};
-
 CMsg::~CMsg(){
 	Reset();
 };
@@ -116,51 +111,19 @@ bool CMsg::IsReaded(){
 }
 void CMsg::Reset(ePipeline* Msg /*= 0*/)
 {
-	if(Msg!= m_MsgPtr){
+	if(m_MsgPtr != NULL){
 		delete m_MsgPtr;
-		m_MsgPtr = Msg;
-		m_bReaded = false;
 	}
+	m_MsgPtr = Msg;
+	m_bReaded = false;
+
 };
 
-CMsg& CMsg::operator=(CMsg& Msg){
-	
-	if(this != &Msg){
-		Reset(Msg.Release());
-		m_bReaded = Msg.m_bReaded;
-	}
-	return *this;
-}
-
-CMsg& CMsg::Clone(CMsg& Msg){
-	if(this != &Msg){
-		Reset(NULL);
-		if(Msg.m_MsgPtr){
-			m_MsgPtr = (ePipeline*)Msg.m_MsgPtr->Clone();
-		}
-	}
-	return *this;
-};
 
 ePipeline* CMsg::Release(){
 	ePipeline* temp = m_MsgPtr;
 	m_MsgPtr = NULL;
 	return temp;
-};
-
-
-CMsg CMsg::CreateEmptyBackMsg(int64 MsgID,int64 SenderID){
-	ePipeline* ReceiverInfo = NULL;
-	ePipeline* Letter = NULL;
-	ePipeline* SenderInfo = NULL;
-	ePipeline* NewMsg = CreateMsg(MsgID,GetEventID(),&ReceiverInfo,&Letter,&SenderInfo);
-    if (NewMsg)
-    {
-		ePipeline& Sender = GetSender();
-		*ReceiverInfo << Sender;
-		SenderInfo->PushInt(SenderID);
-    }
-	return CMsg(NewMsg);
 };
 
 

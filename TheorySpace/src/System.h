@@ -1,5 +1,5 @@
 /*
-* ¶ÔÏÖÊµÊÀ½ç×î¸ß²ã´ÎµÄ³éÏó£¬¾ßÓÐÍêÕûµÄÊä³öÊä³öÄÜÁ¦
+* ï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß²ï¿½ÎµÄ³ï¿½ï¿½ó£¬¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 *
 * author: ZhangHongBing(hongbing75@gmail.com)  
 */
@@ -7,9 +7,6 @@
 #ifndef _SYSTEM_H__
 #define _SYSTEM_H__
 
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
 
 #include "Model.h"
 #include <vector>
@@ -53,16 +50,16 @@ public:
 	class CLockedSystemData{
 	protected:
  		CABMutex*				   m_pMutex;
-		int32                      m_MaxNerveWorkerNum;      //ÔÊÐí×î´óÖÐÊàÉñ¾­´¦ÀíÏß³ÌÊýÄ¿£¬default=100
-		int32                      m_NerveMsgMaxNumInPipe;   //Éñ¾­ÖÐÊàÖÐÈç¹û±£Áô³¬¹ý´ËÊýµÄÐÅÏ¢¿¼ÂÇÉú³ÉÐÂµÄ´¦ÀíÏß³Ì,default = 10
-		int64                      m_NerveMsgMaxInterval;    //Éñ¾­ÖÐÊà×î½üÈ¡³öµÄÐÅÏ¢Ê±¼ä³¬¹ý´ËÊý¿¼ÂÇÉú³ÉÐÂµÄ´¦ÀíÏß³Ì,default=10*1000*1000(µ¥Î»ÊÇ°ÙÄÉÃë£¬1Ãë)
-		int32                      m_NerveIdleMaxCount;	     //ÖÐÊàÉñ¾­´¦ÀíÏß³ÌÈç¹û¿ÕÏÐ¼ÆÊý³¬¹ý´ËÊýÔòÍË³ö£¬default=30
+		uint32                     m_MaxNerveWorkerNum;      //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ñ¾­´ï¿½ï¿½ï¿½ï¿½ß³ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½default=100
+		uint32                     m_NerveMsgMaxNumInPipe;   //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÂµÄ´ï¿½ï¿½ï¿½ï¿½ß³ï¿½,default = 10
+		int64                      m_NerveMsgMaxInterval;    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢Ê±ï¿½ä³¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÂµÄ´ï¿½ï¿½ï¿½ï¿½ß³ï¿½,default=10*1000*1000(ï¿½ï¿½Î»ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ë£¬1ï¿½ï¿½)
+		int32                      m_NerveIdleMaxCount;	     //ï¿½ï¿½ï¿½ï¿½ï¿½ñ¾­´ï¿½ï¿½ï¿½ï¿½ß³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë³ï¿½ï¿½ï¿½default=30
 
-		int32                      m_NerveWorkingNum;        //ÕýÔÚ¹¤×÷µÄ£¬Ò²¾ÍÊÇ±»¹¤×÷Âß¼­Õ¼ÓÃµÄ
+		uint32                     m_NerveWorkingNum;        //ï¿½ï¿½ï¿½Ú¹ï¿½ï¿½ï¿½ï¿½Ä£ï¿½Ò²ï¿½ï¿½ï¿½Ç±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß¼ï¿½Õ¼ï¿½Ãµï¿½
 		map<int64,CSystemIOWork*>  m_SystemIOWorkList;  
 		map<int64,CNerveWork*>     m_NerveWorkList;
 
-		list<Object*>              m_DelThreadWorkList;      //µÈ´ý±»ÎïÀíÉ¾³ýµÄÁÐ±í(±ÜÃâÏß³ÌÌå×Ô¼ºÖ´ÐÐ×Ô¼ºµÄdelete),°üÀ¨CSystemIOWorkºÍCNerveWork
+		list<Object*>              m_DelThreadWorkList;      //ï¿½È´ï¿½ï¿½ï¿½ï¿½ï¿½É¾ï¿½ï¿½ï¿½ï¿½Ð±ï¿½(ï¿½ï¿½ï¿½ï¿½ï¿½ß³ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½Ö´ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½delete),ï¿½ï¿½ï¿½ï¿½CSystemIOWorkï¿½ï¿½CNerveWork
 
 		CLockedSystemData(){};
 	public:
@@ -91,11 +88,11 @@ public:
 		int32   AddNerveWork(CNerveWork* Work);
         int32   DeleteNerveWork(int64 ID);
 			
-		bool    RequestCreateNewNerveWork(int32 MsgNum,int64 Interval,uint32& Reason); //·µ»ØÀíÓÉ 
+		bool    RequestCreateNewNerveWork(uint32 MsgNum,int64 Interval,uint32& Reason); //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
 	};
 
-    //´úÌæSystem³õÊ¼»¯ÁÐ±í£¬µ±ÓÃ»§ÊµÀý»¯Ê±³Ð¼Ì´ËÀà¼´¿ÉÔö¼Ó²ÎÊý£¬±ÜÃâ²ÎÊý±íÔ½À´Ô½³¤
+    //ï¿½ï¿½ï¿½ï¿½Systemï¿½ï¿½Ê¼ï¿½ï¿½ï¿½Ð±?ï¿½ï¿½ï¿½Ã»ï¿½Êµï¿½ï¿½Ê±ï¿½Ð¼Ì´ï¿½ï¿½à¼´ï¿½ï¿½ï¿½ï¿½ï¿½Ó²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô½ï¿½ï¿½Ô½ï¿½ï¿½
 	class CSystemInitData:public Model::CModelInitData{
 	public:
 		CLockedSystemData*  m_SystemData;
@@ -108,19 +105,19 @@ public:
 		virtual ~CSystemInitData();
 	};
 
-    friend CSystemIOWork;
-	friend CNerveWork;
+    friend class CSystemIOWork;
+	friend class CNerveWork;
 private:
-	//Ò»°ãÉñ¾­£¬ÖÐÊàÉñ¾­Èç¹û²»Ö±½Ó´¦ÀíÐÅÏ¢¾Í°ÑÐÅÏ¢½»¸øÒ»°ãÉñ¾­£¬È»ºóÓÐ¶àÏß³Ì¸ºÔðÐÅÏ¢µÄ´¦Àí,
+	//Ò»ï¿½ï¿½ï¿½ñ¾­£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö±ï¿½Ó´ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½Í°ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ñ¾­£ï¿½È»ï¿½ï¿½ï¿½Ð¶ï¿½ï¿½ß³Ì¸ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½Ä´ï¿½ï¿½ï¿½,
 	CLockPipe*                      m_Nerve;
 	CLockedLinkerList               m_ClientList;
 	CLockedSystemData*              m_SystemData;
 
 protected:	
 
-	CSpaceMutex*					m_ClientSitMutex;  //Child CLinkerPipe ¹«ÓÃËø
+	CSpaceMutex*					m_ClientSitMutex;  //Child CLinkerPipe ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
-    virtual void		NerveProc(CMsg& Msg)=0;//Ò»°ãÉñ¾­¶ÔÐÅÏ¢µÄ´¦Àíº¯Êý£¬ÓÃ»§ÐèÒª×Ô¼ºÊµÏÖ
+    virtual void		NerveProc(CMsg& Msg)=0;//Ò»ï¿½ï¿½ï¿½ñ¾­¶ï¿½ï¿½ï¿½Ï¢ï¿½Ä´ï¿½ï¿½?ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½Òªï¿½Ô¼ï¿½Êµï¿½ï¿½
 	virtual BOOL		NerveWorkStrategy(int64 NewMsgPushTime,int64 LastMsgPopTime);
 	virtual CNerveWork* CreateNerveWorker(int64 ID,System* Parent,uint32 Reason)=0;
 
@@ -140,7 +137,7 @@ public:
 	CLockedLinkerList*    GetClientLinkerList();
 	CLockedSystemData*    GetSystemData();
 
-	CLinker GetLinker(int64 ID);
+	void GetLinker(int64 ID,CLinker& Linker );
 
     void	     PopNerveMsg(CMsg& Msg);
 	int32		 GetNerveMsgNum();

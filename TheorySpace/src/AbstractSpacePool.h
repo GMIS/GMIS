@@ -1,12 +1,9 @@
 /* author: ZhangHongBing(hongbing75@gmail.com) 
-*  Ò»¸öÄÚ´æ³Ø,²ÉÓÃÐèÔÚ±àÒëÆ÷¶¨Òå _USE_SPACE_POOL
+*  Ò»ï¿½ï¿½ï¿½Ú´ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ _USE_SPACE_POOL
 */
 #ifndef _ABSTRACTSPACEPOOL_H__
 #define _ABSTRACTSPACEPOOL_H__
 
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
 
 #include <map>
 #include <list>
@@ -21,11 +18,12 @@ class CAbstractSpacePool
 {
 protected:
 	CABMutex*   m_Mutex;
+
+	uint32  m_MaxTypeNum;    //default = 20;
+	uint32  m_MaxReserveNum; //default= 1000
+
 	typedef std::list<AbstractSpace*> AbstractSpaceList;
 	std::map<size_t,AbstractSpaceList> m_AbstractSpacePool;
-
-	uint32  m_MaxTypeNum;    //default = 20; 
-	uint32  m_MaxReserveNum; //default= 1000 
 
 public:
 	CAbstractSpacePool(CABMutex* Mutex);

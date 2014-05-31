@@ -1,22 +1,19 @@
 /*
 *author: ZhangHongBing(hongbing75@gmail.com)  
 *  
-* LinkerPipe·â×°ÁËÒ»¸ö²»ÒÀÀµÈÎºÎOSÏµÍ³µÄ´«ÊäÐ­Òé¡£ËüµÄÒªµãÊÇ£º
+* LinkerPipeï¿½ï¿½×°ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îºï¿½OSÏµÍ³ï¿½Ä´ï¿½ï¿½ï¿½Ð­ï¿½é¡£ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½Ç£ï¿½
 *
-*	1)ËùÓÐÐÅÏ¢¿ÉÒÔÓÃePipeline¸ñÊ½±í´ï,ÒÔePipeline¸ñÊ½Ö±½ÓÊ¹ÓÃ
-*	2)Ò»¸öePipelineÒÔ×Ö·û´®ÐÎÊ½·¢³öÈ¥£¬½ÓÊÕ¶ËÔÙÊµÊ±×é×°³ÉePipeline,¶ÔÓÃ»§ÍêÈ«Í¸Ã÷
-*	3)Í¬Ò»¸öLinkerPipeÁ½¶ËÖ§³ÖÇø·Ö±¾µØ²»Í¬µÄ¶Ô»°Õß¡£
-*	4)LinkerPipeÓÐËÞÖ÷£¬ÊÕ·¢×´Ì¬°üÀ¨½á¹û»áÏòËÞÖ÷¹ÜµÀ·¢ÐÅÏ¢£¬ËÞÖ÷Ö»Ðè¸ºÔð´¦Àí´ËÐÅÏ¢¡£
-*	5)Ïß³Ì°²È«¡£
-*	6)Ê¹ÓÃÊ±£¬±ØÐë³Ð¼Ì´ËÀà£¬È»ºóÖØÔØÊµÏÖ¾ßÌåµÄÎïÀí´«Êä·½Ê½¡£
+*	1)ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ePipelineï¿½ï¿½Ê½ï¿½ï¿½ï¿½,ï¿½ï¿½ePipelineï¿½ï¿½Ê½Ö±ï¿½ï¿½Ê¹ï¿½ï¿½
+*	2)Ò»ï¿½ï¿½ePipelineï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½È¥ï¿½ï¿½ï¿½ï¿½ï¿½Õ¶ï¿½ï¿½ï¿½ÊµÊ±ï¿½ï¿½×°ï¿½ï¿½ePipeline,ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½È«Í¸ï¿½ï¿½
+*	3)Í¬Ò»ï¿½ï¿½LinkerPipeï¿½ï¿½ï¿½ï¿½Ö§ï¿½ï¿½ï¿½ï¿½Ö±ï¿½ï¿½Ø²ï¿½Í¬ï¿½Ä¶Ô»ï¿½ï¿½ß¡ï¿½
+*	4)LinkerPipeï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ·ï¿½×´Ì¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Üµï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö»ï¿½è¸ºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½
+*	5)ï¿½ß³Ì°ï¿½È«ï¿½ï¿½
+*	6)Ê¹ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¼Ì´ï¿½ï¿½à£¬È»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½Ö¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½?ï¿½ä·½Ê½ï¿½ï¿½
 */
 
 #ifndef _LINKER_H__
 #define _LINKER_H__
 
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
 
 #include <deque>
 #include <map>
@@ -44,32 +41,32 @@
 
 namespace ABSTRACT{
 
-//Ê¶±ð×´Ì¬
+//Ê¶ï¿½ï¿½×´Ì¬
 #define LINKER_DEL      -2
-#define	LINKER_BAN      -1  //½ûÖ¹
-#define LINKER_INVALID   0  //ÎÞÐ§
+#define	LINKER_BAN      -1  //ï¿½ï¿½Ö¹
+#define LINKER_INVALID   0  //ï¿½ï¿½Ð§
 #define LINKER_STRANGER  1
 #define	LINKER_FRIEND    2
 
-//Êä³öLinkerPipeµÄ¹¤×÷×´Ì¬
+//ï¿½ï¿½ï¿½LinkerPipeï¿½Ä¹ï¿½ï¿½ï¿½×´Ì¬
 enum STATE_OUTPUT_LEVEL{ NORMAL_LEVEL, LIGHT_LEVEL,WEIGHT_LEVEL};
 
-//Êä³ö·Ö¼¶:
+//ï¿½ï¿½ï¿½ï¿½Ö¼ï¿½:
  
-//1 ³£¹æÊä³ö NORMAL_LEVEL
-#define LINKER_COMPILE_ERROR    101  //×°ÅäÐÅÏ¢Ê±·¢ÉúµÄÈÎºÎ´íÎó£¬½øÈë´íÎó½ÓÊÕ×´Ì¬
-#define LINKER_RECEIVE_RESUME   102  //Linker½ÓÊÕ×´Ì¬»Ö¸´£¬ÍË³ö´íÎó½ÓÊÕ×´Ì¬
-#define LINKER_INVALID_ADDRESS  103  //ÎÞ·¨¸ù¾ÝÀ´ÐÅµØÖ·ÕÒµ½±¾µØ¶ÔÓ¦½ÓÊÕÕß
-#define LINKER_ILLEGAL_MSG      104  //½ÓÊÕµ½²»ÊÇÒ»¸öºÏ·¨¸ñÊ½ÐÅÏ¢
+//1 ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ NORMAL_LEVEL
+#define LINKER_COMPILE_ERROR    101  //×°ï¿½ï¿½ï¿½ï¿½Ï¢Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÎºÎ´ï¿½ï¿½ó£¬½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×´Ì¬
+#define LINKER_RECEIVE_RESUME   102  //Linkerï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½Ë³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×´Ì¬
+#define LINKER_INVALID_ADDRESS  103  //ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Åµï¿½Ö·ï¿½Òµï¿½ï¿½ï¿½ï¿½Ø¶ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+#define LINKER_ILLEGAL_MSG      104  //ï¿½ï¿½ï¿½Õµï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ï·ï¿½ï¿½ï¿½Ê½ï¿½ï¿½Ï¢
 
-//2 Çá¶ÈÊä³ö LIGHT_LEVEL
-#define LINKER_PUSH_MSG         200  //Ñ¹ÈëÒ»¸öÐÅÏ¢µÈ´ý·¢ËÍ£¬²¢±¨¸æµ±Ç°·¢ËÍ×´Ì¬
-#define LINKER_MSG_SENDED       201  //Ä³¸öÐÅÏ¢ÒÑ¾­·¢ËÍÍê±Ï
-#define LINKER_MSG_RECEIVED     202  //½ÓÊÕµ½Ä³¸öÐÅÏ¢
+//2 ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ LIGHT_LEVEL
+#define LINKER_PUSH_MSG         200  //Ñ¹ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½È´ï¿½ï¿½Í£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æµ±Ç°ï¿½ï¿½ï¿½ï¿½×´Ì¬
+#define LINKER_MSG_SENDED       201  //Ä³ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+#define LINKER_MSG_RECEIVED     202  //ï¿½ï¿½ï¿½Õµï¿½Ä³ï¿½ï¿½ï¿½ï¿½Ï¢
 
-//3 ÖØ¶ÈÊä³ö WEIGHT_LEVEL
-#define LINKER_RECEIVE_STEP     300  //±¨¸æ½ÓÊÜ½ø¶È²¢¸´ÖÆÊÕµ½µÄÊý¾Ý,ÒÔÃ¿Ò»¸öTYPE_PIPELINEÊý¾ÝÀàÐÍÎªµ¥Î»£¬²»¹ØÐÄÊý¾ÝÖ®¼äµÄ¹ØÏµ£¬µ«Êý¾ÝÖ®¼äµÄ¹ØÏµºÜÈÝÒ×±»ÍÆµ¼³ö
-#define LINKER_SEND_STEP        301  //±¨¸æ·¢ËÍ½ø¶È£¬ÒÔÕû¸öÐÅÏ¢Îªµ¥Î»
+//3 ï¿½Ø¶ï¿½ï¿½ï¿½ï¿½ WEIGHT_LEVEL
+#define LINKER_RECEIVE_STEP     300  //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü½ï¿½È²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½Ã¿Ò»ï¿½ï¿½TYPE_PIPELINEï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½Î»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö®ï¿½ï¿½Ä¹ï¿½Ïµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö®ï¿½ï¿½Ä¹ï¿½Ïµï¿½ï¿½ï¿½ï¿½ï¿½×±ï¿½ï¿½Æµï¿½ï¿½ï¿½
+#define LINKER_SEND_STEP        301  //ï¿½ï¿½ï¿½æ·¢ï¿½Í½ï¿½È£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢Îªï¿½ï¿½Î»
   
 
 enum SendState{ 
@@ -80,7 +77,7 @@ enum SendState{
 	SEND_BREAK
 };
  	
-enum MsgPhase{ //Ò»¸ö×Ö·û´®Á÷±»»¹Ô­³ÉePipeline
+enum MsgPhase{ //Ò»ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô­ï¿½ï¿½ePipeline
 	TYPE_PART,
 	LENGTH_PART,
 	DATA_PART,
@@ -92,7 +89,7 @@ enum MsgPhase{ //Ò»¸ö×Ö·û´®Á÷±»»¹Ô­³ÉePipeline
 
 
 class Model;
-class CLinker;
+//class CLinker;
 class CLinkerPipe;
 
 bool IsEqualAddress(ePipeline& Address1,ePipeline& Address2);
@@ -101,16 +98,16 @@ class CLinkerPipe: protected CLockPipe
 {
 public:
 
-	//ÓÃÓÚÁ÷Ê½´¦Àí½ÓÊÕµ½µÄÐÅÏ¢Ê±±£´æÉÏÏÂÎÄ´¦Àí×´Ì¬¡£
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õµï¿½ï¿½ï¿½ï¿½ï¿½Ï¢Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä´ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½
 	class RevContextInfo{ 
 	public:	
 		MsgPhase         State;           // HeaderStr        
 		int32            DataType;        // |---+---|  
 		AnsiString       HeaderStr;       // type@len@data
 		uint32           DataLen;         //          |--|  <--DataLen
-		AnsiString       Buffer;          // ÒòÎªÊý¾Ý×ÜÊÇ±»±àÒë³É×Ö·û´®ÐÎÊ½
+		AnsiString       Buffer;          // ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½Ê½
 		Energy*          Data;
-		ePipeline*       ParentPipe;      //µ±Ç°ÕýÔÚ½ÓÊÕµÄÐÅÏ¢
+		ePipeline*       ParentPipe;      //ï¿½ï¿½Ç°ï¿½ï¿½ï¿½Ú½ï¿½ï¿½Õµï¿½ï¿½ï¿½Ï¢
 		int32            InfoLen;
 	public:	
 		RevContextInfo(ePipeline* Parent)
@@ -131,8 +128,8 @@ public:
 	};	
 
 
-	//½öÏÞÓÚThreadInputProcºÍThreadOutputProcÊ¹ÓÃ
-	//ÓëCABMutexÏà±È¶àÒ»¸ö±ê¼Çm_bThreadUseµÄÐÐÎª
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ThreadInputProcï¿½ï¿½ThreadOutputProcÊ¹ï¿½ï¿½
+	//ï¿½ï¿½CABMutexï¿½ï¿½È¶ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½m_bThreadUseï¿½ï¿½ï¿½ï¿½Îª
 	class  _CInnerIOLock  
 	{
 	private:
@@ -143,51 +140,51 @@ public:
 		~_CInnerIOLock ();
 	};
 	
-	friend _CInnerIOLock;
-	friend CLinker;
+	friend  class CInnerIOLock;
+	friend  class CLinker;
 private:
-		int32                m_UseCounter;    //ÓÃÓÚLinkerÒýÓÃ¼ÆÊý£¬µ±ÓÐÆäËûÏß³ÌÓÃLinkerÒýÓÃ´ËÀàÊ±£¬±ÜÃâ±»É¾³ý
-		bool                 m_bThreadUse;    //±ê¼ÇÏß³ÌIOº¯ÊýÊÇ·ñÔÚÊ¹ÓÃ´ËPipe£¬±ÜÃâ¶àÏß³ÌÖ´ÐÐÍ¬Ò»¸öIO
+		int32                m_UseCounter;    //ï¿½ï¿½ï¿½ï¿½Linkerï¿½ï¿½ï¿½Ã¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß³ï¿½ï¿½ï¿½Linkerï¿½ï¿½ï¿½Ã´ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½â±»É¾ï¿½ï¿½
+		bool                 m_bThreadUse;    //ï¿½ï¿½ï¿½ï¿½ß³ï¿½IOï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½Ê¹ï¿½Ã´ï¿½Pipeï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß³ï¿½Ö´ï¿½ï¿½Í¬Ò»ï¿½ï¿½IO
 
 protected:
 	
-		int64                m_SourceID;         //ÊÇÐÅÏ¢Ô´ID		
+		int64                m_SourceID;         //ï¿½ï¿½ï¿½ï¿½Ï¢Ô´ID		
     
-		map<int64,ePipeline> m_LocalAddressList; //<SenderID,LocalAdress> SenderID¶ÔÓ¦µÄ±¾µØµØÖ·±í
+		map<int64,ePipeline> m_LocalAddressList; //<SenderID,LocalAdress> SenderIDï¿½ï¿½Ó¦ï¿½Ä±ï¿½ï¿½Øµï¿½Ö·ï¿½ï¿½
 
-		int32                m_RecoType;         //Ê¶±ðÀàÐÍ
+		int32                m_RecoType;         //Ê¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	    
-		bool                 m_bClientLink;      //Listenµ½µÄÁ¬½Ó
+		bool                 m_bClientLink;      //Listenï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		Model*               m_Parent;     
 
 
         STATE_OUTPUT_LEVEL   m_StateOutputLevel;
 
-protected: //·¢ËÍÐÅÏ¢
+protected: //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
 
-		SendState        m_SendState;		//µ±Ç°·¢ËÍ×´Ì¬
-		CMsg             m_CurSendMsg;      //µ±Ç°ÕýÔÚ·¢ËÍµÄÐÅÏ¢
-		int64            m_PendingMsgID;    //µÈ´ý¶Ô·½±¨¸æ·¢ËÍ×´Ì¬µÄÐÅÏ¢£¬Ö»ÓÐ±¨¸æÒÔºó²ÅÄÜ·¢ËÍÐÂÐÅÏ¢¡£
+		SendState        m_SendState;		//ï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½×´Ì¬
+		CMsg             m_CurSendMsg;      //ï¿½ï¿½Ç°ï¿½ï¿½ï¿½Ú·ï¿½ï¿½Íµï¿½ï¿½ï¿½Ï¢
+		int64            m_PendingMsgID;    //ï¿½È´ï¿½Ô·ï¿½ï¿½ï¿½ï¿½æ·¢ï¿½ï¿½×´Ì¬ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½Ö»ï¿½Ð±ï¿½ï¿½ï¿½ï¿½Ôºï¿½ï¿½ï¿½Ü·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½
 		int64            m_PendMsgSenderID;    
         AnsiString       m_SendBuffer;
-		int32            m_SendPos;              //m_CurSenMsg.ContentµÄ×Ö·ûIndex¡£-1±íÊ¾Ã»ÓÐÐèÒª·¢ËÍµÄÐÅÏ¢
+		uint32            m_SendPos;              //m_CurSenMsg.Contentï¿½ï¿½ï¿½Ö·ï¿½Indexï¿½ï¿½-1ï¿½ï¿½Ê¾Ã»ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½Íµï¿½ï¿½ï¿½Ï¢
 
-protected: //½ÓÊÕÐÅÏ¢
+protected: //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
 
-	    ePipeline               m_CurRevMsg;  //ÕýÔÚ×é×°Íê³ÉµÄÐÅÏ¢
+	    ePipeline               m_CurRevMsg;  //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×°ï¿½ï¿½Éµï¿½ï¿½ï¿½Ï¢
 
 		/*
-		 ½ÓÊÜÊý¾ÝµÄÉÏÏÂÎÄ,µ±Ò»´Î¶ÁÈ¡µÄÊý¾Ý²»×ãÓÚÍê³ÉÄ³¸öÊý¾ÝµÄ×é×°Ê±¾ÍÑ¹Èë´Ë¶ÑÕ»£¬µÈ´ý
-		 ÏÂ´Î½ÓÊÕµ½ÐÂÊý¾Ýºó¼ÌÐø×é×°£¬
+		 ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ýµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½Ò»ï¿½Î¶ï¿½È¡ï¿½ï¿½ï¿½ï¿½Ý²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä³ï¿½ï¿½ï¿½ï¿½Ýµï¿½ï¿½ï¿½×°Ê±ï¿½ï¿½Ñ¹ï¿½ï¿½Ë¶ï¿½Õ»ï¿½ï¿½ï¿½È´ï¿½
+		 ï¿½Â´Î½ï¿½ï¿½Õµï¿½ï¿½ï¿½ï¿½ï¿½Ýºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×°ï¿½ï¿½
 		*/
 		deque<RevContextInfo*>  m_ContextStack;  
 		
-		bool                    m_bRevError;    //½ÓÊÕÊý¾ÝÊ±²úÉú´íÎóÎªÕæ >0 =´íÎóºÅ
+		bool                    m_bRevError;    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ >0 =ï¿½ï¿½ï¿½ï¿½ï¿½
 	
-		//µ±½øÈë´íÎó×´Ì¬ºó£¬Ö¸¶¨ºóÐøÊý¾ÝµÄ±£´æ³¤¶È
-		int32                   m_ErrorSaveLen; 
+		//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÝµÄ±ï¿½ï¿½æ³¤ï¿½ï¿½
+		uint32                   m_ErrorSaveLen;
 	
-protected: //ÎÞÐè¼ÓËøµÄº¯Êý
+protected: //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Äºï¿½ï¿½ï¿½
 	bool ReceiverID2LocalAddress(ePipeline& Receiver,ePipeline& LocalAddress);
 	int64 LocalAddress2SenderID(ePipeline& LocalAddress);
 
@@ -195,17 +192,17 @@ protected: //ÎÞÐè¼ÓËøµÄº¯Êý
 	void RevOneMsg(eElectron& E);
 	
 	
-	//µ±½ÓÊÜÊý¾ÝÊ±·¢Éú´íÎó£¬µ÷ÓÃ´Ëº¯ÊýÎªLinker½øÈë´íÎó×´Ì¬×ö×¼±¸
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ó£¬µï¿½ï¿½Ã´Ëºï¿½ï¿½ï¿½ÎªLinkerï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½×¼ï¿½ï¿½
 	void BeginErrorState(RevContextInfo* Info,int32 ErrorType);
 	void EndErrorState(RevContextInfo* Info);
 	
 	void    ClearSendMsgList();
 	Energy* CreateEmptyData(int32 Type);
 
-	//Ö÷ÒªÓÃÓÚÄÚ²¿½ÓÊÕ×´Ì¬µÄÖ±½Ó»Ø¸´,²¢ÇÒÓÅÏÈ·¢ËÍ
+	//ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½Ö±ï¿½Ó»Ø¸ï¿½,ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È·ï¿½ï¿½ï¿½
 	virtual void FeedbackDirectly(ePipeline* Msg);
 
-    //Ô¤ÁôµÄ¼ÓÃÜ½âÃÜ½Ó¿Ú£¬¹©³Ð¼ÌÀàÊ¹ÓÃ,ÕâÀïÎÞÊÓ
+    //Ô¤ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½Ü½ï¿½ï¿½Ü½Ó¿Ú£ï¿½ï¿½ï¿½ï¿½Ð¼ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	virtual ePipeline* Encrypt(ePipeline* Msg){
 		return Msg;
 	};
@@ -213,7 +210,7 @@ protected: //ÎÞÐè¼ÓËøµÄº¯Êý
 		return Msg;
 	};
 protected: 
-	//ÕâÁ½¸ö·Ç¹«¿ªº¯Êý¼ÓÁËËø
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	void   IncreUserNum();
 	void   DecreUserNum();
 
@@ -225,7 +222,7 @@ public:
 	//int32 GetSendState_unlock(){return m_SendState;};
 	//int32 GetSendBufferSize_unlock(){ return m_SendBuffer.size();};
 	//int32 GetSendPos_unlock(){return m_SendPos;};
-public: //¹«¿ªº¯Êý±ØÐë¼ÓËø±£Ö¤Ïß³Ì°²È«£¬Í¬Ê±ÓÖÒª±ÜÃâµÝ¹é¼ÓËø
+public: //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¤ï¿½ß³Ì°ï¿½È«ï¿½ï¿½Í¬Ê±ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½Ý¹ï¿½ï¿½ï¿½ï¿½
 
 	CLinkerPipe(CABMutex* m,Model* Parent,bool bClientLink);
 	CLinkerPipe(CABMutex* m,Model* Parent,bool bClientLink,int64 SourceID,tstring Name);
@@ -247,11 +244,11 @@ public: //¹«¿ªº¯Êý±ØÐë¼ÓËø±£Ö¤Ïß³Ì°²È«£¬Í¬Ê±ÓÖÒª±ÜÃâµÝ¹é¼ÓËø
 	
 	void   Reset();
     
-	void   CloseDialog(int64 LocalID); //É¾³ý´ËID´òÍ·µÄ¶Ô»°µØÖ·
+	void   CloseDialog(int64 LocalID); //É¾ï¿½ï¿½ï¿½IDï¿½ï¿½Í·ï¿½Ä¶Ô»ï¿½ï¿½ï¿½Ö·
  
 	int32  GetWaitToSendMsgNum(){
 		return DataNum();
-	}
+	};
 	int32  GetDialogCount();
 
 	int32  GetRecoType();
@@ -261,38 +258,52 @@ public: //¹«¿ªº¯Êý±ØÐë¼ÓËø±£Ö¤Ïß³Ì°²È«£¬Í¬Ê±ÓÖÒª±ÜÃâµÝ¹é¼ÓËø
 
     bool   IOBusy(){
 		return m_bThreadUse;
-	}
+	};
 
 	SendState GetSendState();
 
 	virtual int64 PushMsgToSend(CMsg& Msg,bool bUrgence=FALSE);
 
-	//Í£Ö¹µ±Ç°ÐÅÏ¢µÄ´«ËÍ£¬ÔÚË¼Ð÷ÖÐµ÷ÓÃ´Ëº¯Êý±ØÐëÏÈLock Linker
+	//Í£Ö¹ï¿½ï¿½Ç°ï¿½ï¿½Ï¢ï¿½Ä´ï¿½ï¿½Í£ï¿½ï¿½ï¿½Ë¼ï¿½ï¿½ï¿½Ðµï¿½ï¿½Ã´Ëºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Lock Linker
 	void BreakSend();   
 
 	void SwitchDebugMode(bool open);
 	void SetDebugStep(int32 Step);
 
 
-    //ÓÃ»§ÔÚÕâÀïÊµÏÖ¾ßÌåµÄIO´¦Àí£¬ÓÉËÞÖ÷Ïß³Ìµ÷ÓÃ
+    //ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Êµï¿½Ö¾ï¿½ï¿½ï¿½ï¿½IOï¿½ï¿½ï¿½?ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß³Ìµï¿½ï¿½ï¿½
 	virtual bool  ThreadIOWorkProc(char* Buffer,uint32 BufSize) =0;
 };
 
-//Éè¼Æ´ËÀàµÄÄ¿µÄÖ÷ÒªÊÇ¹ÜÀíLinkerPipeµÄÉú´æÆÚ£¬µ±LinkerPipeÒª±»É¾³ýÊ±£¬Èç¹ûÆäËûÏß³ÌÕýÔÚÊ¹ÓÃLinkerPipe£¬
-//Ôò¿ÉÒÔÍ¨¹ý´ËÉè¼Æ±ÜÃâÌáÇ°delete
+//ï¿½ï¿½Æ´ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½Òªï¿½Ç¹ï¿½ï¿½ï¿½LinkerPipeï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ú£ï¿½ï¿½ï¿½LinkerPipeÒªï¿½ï¿½É¾ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß³ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½LinkerPipeï¿½ï¿½
+//ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½ï¿½ï¿½ï¿½Æ±ï¿½ï¿½ï¿½ï¿½ï¿½Ç°delete
 class CLinker{
-	friend CLinker;
+//	friend  class CLinker;
 private:
     CLinkerPipe* m_Ptr;
-	CLinker():m_Ptr(NULL){};
+
+
+	CLinker(const CLinker& Linker)
+	:m_Ptr(NULL){
+		assert(0);
+	};
+	CLinker& operator=(const CLinker& Linker){
+		assert(0);
+		return *this;
+	};
 public:
+	CLinker()
+    :m_Ptr(NULL){
+	};
 	CLinker(CLinkerPipe* LinkerPipe);
-	CLinker(CLinker& Linker);
-	CLinker& operator=(CLinker& Linker);
 	~CLinker();
+
+	void Reset(CLinkerPipe* LinkerPipe);
+	CLinkerPipe* Release();
+
 	CLinkerPipe& operator()();
 	bool IsValid();
-	const ePipeline& GetCompileData()const;//ÓÃÓÚ¹Û²ìLinkerPipeµ±Ç°ÕýÔÚ×é×°ÖÐµÄÊý¾Ý
+	const ePipeline& GetCompileData()const;//ï¿½ï¿½ï¿½Ú¹Û²ï¿½LinkerPipeï¿½ï¿½Ç°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×°ï¿½Ðµï¿½ï¿½ï¿½ï¿½
 };
 
 } // namespace ABSTRACT

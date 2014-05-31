@@ -6,44 +6,43 @@
 #ifndef _TYPEDEF_H
 #define _TYPEDEF_H
 
-#if defined(_MSC_VER) && (_MSC_VER >= 1200)
-# pragma once
-#endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
 #include <assert.h>
 #include <string>
 #include <vector>
-#include <tchar.h>
 #include <iostream> 
 #include <sstream> 
 #include <map>
 #include <list>
+#include <stdio.h>
 
 #ifdef _WIN32
+
+#define UNICODE
+#define _UNICODE
 #define  WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#include <tchar.h>
 #pragma warning(disable : 4786)
 
 #else
 #include <sys/types.h>
+#include <string.h>
+#include <stdarg.h>
+#include <wchar.h>
+
 typedef int  BOOL;
 #define TRUE  1
 #define FALSE 0
+#define SOCKET_ERROR -1
+#define _T(x) L##x
 #endif
 
 
 
 typedef std::string  AnsiString;
+typedef std::wstring tstring;
 
-#ifdef   _UNICODE  
-#define   tstring   std::wstring  
-#define   tcout     std::wcout
-#define   tstringstream  std::wstringstream
-#else  
-#define   tstring   std::string  
-#define   tcout     std::cout
-#define   tstringstream  std::stringstream
-#endif   
 
 
 namespace ABSTRACT{
@@ -76,43 +75,43 @@ const float EPSINON = 0.00001f;
 #define atoint64(buf)  _atoi64(buf)
 #define SLEEP_MILLI(n)  Sleep(n)
 #else
-#define int64toa(t,buf) sprintf(buf,"%lld",t)
-#define uint64toa(t,buf) sprintf(buf,"%llu",t)
-#define atoint64(buf)  atoll(buf)
-#define SLEEP_MILLI(n)  usleep(n*1000)
+#define int64toa(t,buf) ::sprintf(buf,"%lld",t)
+#define uint64toa(t,buf) ::sprintf(buf,"%llu",t)
+#define atoint64(buf)  ::atoll(buf)
+#define SLEEP_MILLI(n)  ::usleep(n*1000)
 #endif
 
 /////////////////////////////////////////////////////
 
 
-/* ¶¨Òå»ù±¾Êý¾ÝÀàÐÍÊ¶±ðID
+/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¶ï¿½ï¿½ID
 
-  ÎªÁËÄÜ½øÐÐ»ù±¾µÄÊý¾ÝÀàÐÍ¼ì²é£¬ÎÒÃÇÓÃÃ¿4¸öbit±í´ïÒ»ÖÖÊý¾ÝÀàÐÍ£¬ÕâÑù
-  ¾ÍÏÞ¶¨ÁËÊý¾ÝÀàÐÍµÄ×ÜÊýÎª16ÖÖ£¬ÊÇ·ñ¹»ÓÃÈ¡¾öÓëÄã°ÑÊý¾ÝÀàÐÍ·ÖµÄ¶àÏ¸£¬
-  Êµ¼ÊÉÏ¶ÔÓÚFinal C¶ÔÊý¾ÝÀàÐÍµÄÀí½âÓ¦¸ÃÒÔÉç»áÒâÒåÎªÖ÷£¬±ÈÈç²»ÐèÒªÔÙ¹Ø
-  ÐÄ³¤ÕûÊýºÍ¶ÌÕûÊý£¬¿ÉÒÔÍ³Ò»ÓÃ64Î»ÕûÊýºÍ64¸¡µãÊýÀ´´¦ÀíÊýÑ§¼ÆËã¡£µ«¾ßÌå
-  ÈçºÎ·ÖÅäÊý¾ÝÀàÐÍ»¹ÐèÒª¿¼ÂÇÕû¸öÏµÍ³µÄÊý¾ÝÓ¦ÓÃÇé¿ö£¬±ÈÈç°ÑÈýÎ¬µã»òÈýÎ¬
-  Ä£ÐÍÊý¾ÝÒ²×÷Îªµ¥¶ÀµÄÊý¾ÝÀàÐÍ£¬Ä¿Ç°ÔÝÊ±²ÉÓÃCÓïÑÔµÄ·ÖÀà£¬
+  Îªï¿½ï¿½ï¿½Ü½ï¿½ï¿½Ð»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼ï¿½é£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã¿4ï¿½ï¿½bitï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í£ï¿½ï¿½ï¿½ï¿½ï¿½
+  ï¿½ï¿½ï¿½Þ¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Íµï¿½ï¿½ï¿½ï¿½ï¿½Îª16ï¿½Ö£ï¿½ï¿½Ç·ï¿½ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í·ÖµÄ¶ï¿½Ï¸ï¿½ï¿½
+  Êµï¿½ï¿½ï¿½Ï¶ï¿½ï¿½ï¿½Final Cï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Íµï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ç²»ï¿½ï¿½Òªï¿½Ù¹ï¿½
+  ï¿½Ä³ï¿½ï¿½ï¿½ï¿½ï¿½Í¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í³Ò»ï¿½ï¿½64Î»ï¿½ï¿½ï¿½ï¿½ï¿½64ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ§ï¿½ï¿½ï¿½ã¡£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+  ï¿½ï¿½Î·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í»ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÏµÍ³ï¿½ï¿½ï¿½ï¿½ï¿½Ó¦ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î¬ï¿½ï¿½ï¿½ï¿½ï¿½Î¬
+  Ä£ï¿½ï¿½ï¿½ï¿½ï¿½Ò²ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í£ï¿½Ä¿Ç°ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½ÔµÄ·ï¿½ï¿½à£¬
   
-  WARNING: Èç¹ûÒªÐÞ¸Ä´Ë´¦¶¨Òå±ØÐëÍ¬Ê±ÐÞ¸ÄÆäËü²¿·Ö, ²Î¼ûeAddtion.h
+  WARNING: ï¿½ï¿½ï¿½Òªï¿½Þ¸Ä´Ë´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¬Ê±ï¿½Þ¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½Î¼ï¿½eAddtion.h
 */
 
 typedef enum  ENERGY_TYPE {
-    TYPE_NULL     =    0,  //ÔÚÊ¶±ðÄÜÁ¿ËõÐ´Ê±ÄÜÓëNULLÓÐËùÇø±ð
+    TYPE_NULL     =    0,  //ï¿½ï¿½Ê¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð´Ê±ï¿½ï¿½ï¿½ï¿½NULLï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     TYPE_INT      =    1,
     TYPE_FLOAT    =    2,
     TYPE_STRING   =    3,
     TYPE_PIPELINE =    4, 
 	TYPE_BLOB     =    5,
-    TYPE_USER     =    6,  //ÓÃ»§¶¨ÒåµÄÌØÊâÊý¾ÝÀàÐÍ      
-	TYPE_END      =    16  //½áÊø¶¨Òå
+    TYPE_USER     =    6,  //ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½      
+	TYPE_END      =    16  //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 }eType;
 
 #define BASETYPE(TypeID) (TypeID==TYPE_INT || TypeID==TYPE_FLOAT)
 /*
-  ÀàÐÍËõÐ´£¬Ã¿4¸öbit±í´ïÒ»ÖÖEnergy Type£¬ÕâÑùÒ»¸ö32Î»ÎÞ·ûºÅÕûÊý¿ÉÒÔ
-  Ò»´Î±íÊ¾8¸öÊý¾ÝµÄÀàÐÍ¼°Æä´æ´¢Ë³Ðò¡£Ëü½«ÆðµÄ×÷ÓÃ½«ÀàËÆÓëCÓïÑÔº¯Êý
-  ÀïµÄ²ÎÊý¼ì²é¡£Çë²Î¿´ePipeline.h
+  ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð´ï¿½ï¿½Ã¿4ï¿½ï¿½bitï¿½ï¿½ï¿½Ò»ï¿½ï¿½Energy Typeï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½32Î»ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+  Ò»ï¿½Î±ï¿½Ê¾8ï¿½ï¿½ï¿½ï¿½Ýµï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ï¿½æ´¢Ë³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Cï¿½ï¿½ï¿½Ôºï¿½ï¿½ï¿½
+  ï¿½ï¿½Ä²ï¿½ï¿½ï¿½ï¿½é¡£ï¿½ï¿½Î¿ï¿½ePipeline.h
 */
 class  TypeAB {
 public:
@@ -148,14 +147,14 @@ public:
 	};
 
 
-	/*µÃµ½Ö¸¶¨Î»ÖÃ[0-7]µÄÊý¾ÝÀàÐÍ*/
+	/*ï¿½Ãµï¿½Ö¸ï¿½ï¿½Î»ï¿½ï¿½[0-7]ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½*/
 	eType operator [](uint32 pos){
 		assert(pos<8);
 		uint32 mask = 0xF0000000 >> (pos*4);
         return (eType)(mask & m_TypeAB);
 	}
 
-	/*Ñ°ÕÒÊý¾ÝÀàÐÍ£¬·µ»ØÆäÎ»ÖÃ Ã»ÓÐÕÒµ½Ôò·µ»Ø-1£»*/
+	/*Ñ°ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î»ï¿½ï¿½ Ã»ï¿½ï¿½ï¿½Òµï¿½ï¿½ò·µ»ï¿½-1ï¿½ï¿½*/
 	int32 Find(eType t){
 		uint32 mask  = 0xF0000000;
 		for(int i=0; i<8; i++)
@@ -166,7 +165,22 @@ public:
 	}
 };
 
-//Á´½ÓµÄCÔËÐÐÊ±¿âDLLÀàÐÍ,Ä¿Ç°Ö»°üº¬winÆ½Ì¨£¬ÆäËûÆ½Ì¨¿ÉÒÔ¼ÌÐøÌí¼Ó
+tstring Format1024(const wchar_t* Format, ...){
+		const int32 size = 1024;
+	    wchar_t Buffer[size] ;
+		va_list ArgList ;
+		va_start (ArgList, Format) ;
+#ifdef _WIN32
+		_vsntprintf(Buffer, 1024, Format, ArgList) ;
+#else
+		vswprintf(Buffer,1024,Format,ArgList);
+#endif
+		va_end (ArgList) ;
+
+		return tstring(Buffer);
+	};
+
+//ï¿½ï¿½ï¿½Óµï¿½Cï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½DLLï¿½ï¿½ï¿½ï¿½,Ä¿Ç°Ö»ï¿½ï¿½winÆ½Ì¨ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ½Ì¨ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 enum DLL_TYPE{
 	DLL_INVALID = 0,
 	DLL_VC6  = 60,

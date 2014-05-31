@@ -8,15 +8,10 @@
 
 #include "Typedef.h"
 
-#if _MSC_VER > 1000
-#pragma once
-#endif // _MSC_VER > 1000
-
-
 namespace ABSTRACT{
 
 
-//Í¨ÓÃ×î»ù±¾Ô¤¶¨Òå
+//Í¨ï¿½ï¿½ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½ï¿½ï¿½
 
 #define  SYSTEM_SOURCE   0
 #define  DEFAULT_DIALOG  0
@@ -25,16 +20,16 @@ namespace ABSTRACT{
 #define  SPACE_SOURCE        1
 #define  SPACE_SOURCE_READY -1
 
-#define  MSG_BASE           127282417797660000
-#define  MSG_WHO_ARE_YOU    MSG_BASE+1
-#define  MSG_BROADCAST_MSG  MSG_BASE+2
-#define  MSG_LINKER_ERROR   MSG_BASE+3
+#define  MSG_BASE           127282417797660000ULL
+#define  MSG_WHO_ARE_YOU    MSG_BASE+1ULL
+#define  MSG_BROADCAST_MSG  MSG_BASE+2ULL
+#define  MSG_LINKER_ERROR   MSG_BASE+3ULL
 
 
 /*  
 
 =============
- MSG¸ñÊ½£º
+ MSGï¿½ï¿½Ê½ï¿½ï¿½
   ePipeline{   //m_ID = SourceID
     ePipeline  //ReceiverInfo  m_ID = EventTimeStamp
 	ePipeline  //Letter        m_ID = MsgID
@@ -50,44 +45,43 @@ namespace ABSTRACT{
     Msg.GetLetter().PushString("Hello");
     m_Ouput->PushToSend(Msg); 
 
-×¢Òâ£º¼òµ¥µÄÈÃMsg.Receiver()=Msg.Sender()»áµ¼ÖÂEventID´íÎó
+×¢ï¿½â£ºï¿½òµ¥µï¿½ï¿½ï¿½Msg.Receiver()=Msg.Sender()ï¿½áµ¼ï¿½ï¿½EventIDï¿½ï¿½ï¿½ï¿½
 */  
 
 class ePipeline;
 
-//·µ»ØÊÕĞÅµØÖ·£¬·¢ĞÅµØÖ·ºÍ¿Õ°×µÄĞÅÓÉÓÃ»§ÌîĞ´
+//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Åµï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½Åµï¿½Ö·ï¿½Í¿Õ°×µï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½Ğ´
 ePipeline* CreateMsg(int64 MsgID,int64 EventID,ePipeline** ReceiverInfo,ePipeline** Letter,ePipeline** SenderInfo);
 
 class CMsg{
+private:
+	CMsg(const CMsg& Msg){
+		assert(0);
+	};
+	CMsg& operator=(const CMsg& Msg){
+		assert(0);
+		return *this;
+	}
 protected:
 	ePipeline*  m_MsgPtr;
-	bool        m_bReaded; //ÒÑ¶Á¹ı£¬Ö»ÒªÊ¹ÓÃGetLetter()ÔòÉèÖÃÎªtrue,È±Ê¡Îªfalse
+	bool        m_bReaded; //ï¿½Ñ¶ï¿½ï¿½ï¿½Ö»ÒªÊ¹ï¿½ï¿½GetLetter()ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îªtrue,È±Ê¡Îªfalse
 public:
 	CMsg();
-	//ÏµÍ³ÈÎºÎÒ»¸ö¶Ô»°Ö÷¶¯·¢ĞÅ¸øÍâ²¿£¨ÊÕĞÅµØÖ·Îª¶Ô·½È±Ê¡µÄÏµÍ³¶Ô»°£©
-	CMsg(int64 MsgID,int64 SenderID,int64 EventID); //EventIDÈç¹û²»Ê¹ÓÃÔòÎª0£¬µ«ÕâÀï²»ÉèÖÃÈ±Ê¡Öµ=0£¬ÒÔÃâºÍÏÂÃæ¹¹Ôìº¯Êı»ìÏı
-	//ÏµÍ³ÄÚ²¿Ò»¸ö¶Ô»°¸øÁíÒ»¸ö¶Ô»°·¢ĞÅ
+	//ÏµÍ³ï¿½Îºï¿½Ò»ï¿½ï¿½ï¿½Ô»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å¸ï¿½ï¿½â²¿ï¿½ï¿½ï¿½ï¿½ï¿½Åµï¿½Ö·Îªï¿½Ô·ï¿½È±Ê¡ï¿½ï¿½ÏµÍ³ï¿½Ô»ï¿½ï¿½ï¿½
+	CMsg(int64 MsgID,int64 SenderID,int64 EventID); //EventIDï¿½ï¿½ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½Îª0ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï²»ï¿½ï¿½ï¿½ï¿½È±Ê¡Öµ=0ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½æ¹¹ï¿½ìº¯ï¿½ï¿½ï¿½ï¿½ï¿½
+	//ÏµÍ³ï¿½Ú²ï¿½Ò»ï¿½ï¿½ï¿½Ô»ï¿½ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ô»ï¿½ï¿½ï¿½ï¿½ï¿½
 	CMsg(int64 ReceiverID,int64 MsgID,int64 SenderID,int64 EventID); 
-	CMsg(ePipeline& Receiver,int64 MsgID,int64 EventID); //ÒÔÏµÍ³ÃûÒå¸øÖ¸¶¨µØÖ··¢ĞÅ
+	CMsg(ePipeline& Receiver,int64 MsgID,int64 EventID); //ï¿½ï¿½ÏµÍ³ï¿½ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½
 
 	CMsg(ePipeline* Msg);	
-	CMsg(CMsg& Msg);
 	virtual ~CMsg();	
 	
 	bool IsValid();
-	bool IsReaded();  //Ö»ÒªÊ¹ÓÃ¹ıGetLetter()ÔòÉèÖÃ·µ»Øtrue
+	bool IsReaded();  //Ö»ÒªÊ¹ï¿½Ã¹ï¿½GetLetter()ï¿½ï¿½ï¿½ï¿½ï¿½Ã·ï¿½ï¿½ï¿½true
 
 	void Reset(ePipeline* Msg = 0);	
 	ePipeline* Release();
 	
-	CMsg& operator=(CMsg& Msg);
-
-	//CMsgÀàËÆAutoPtr£¬Ö»ÓĞÕâ¸öº¯ÊıÊÇÍêÈ«²úÉúÒ»¸öÏàÍ¬µÄ
-	CMsg& Clone(CMsg& Msg);
-
-	//¸ù¾İµ±Ç°ĞÅÏ¢µÄµØÖ·ºÍEventIDÉú³ÉÒ»¸ö¿ÕµÄ»Ø¸´ĞÅÏ¢
-	CMsg CreateEmptyBackMsg(int64 MsgID,int64 SenderID);
-
 	ePipeline& GetMsg();
 
 	ePipeline& GetReceiver();

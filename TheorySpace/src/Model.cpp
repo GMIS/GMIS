@@ -1,8 +1,7 @@
-#pragma warning(disable:4786)
+
 
 #include "Model.h"
 #include "LinkerPipe.h"
-#include "format.h"
 
 namespace ABSTRACT{
 
@@ -43,16 +42,16 @@ bool Model::CLockedLinkerList::DeleteLinker(int64 ID)
 	return false;
 }
 
-CLinker	Model::CLockedLinkerList::GetLinker(int64 ID)   
+void Model::CLockedLinkerList::GetLinker(int64 ID,CLinker& Linker)
 {
 	CLock lk(m_pMutex);
 	map<int64,CLinkerPipe*>::iterator it = m_LinkerList.find(ID);
 	if(it != m_LinkerList.end()){
 		CLinkerPipe* LinkerPtr = it->second;
-		return CLinker(LinkerPtr);;
-		
-	}	
-	return CLinker(NULL);
+		Linker.Reset(LinkerPtr);
+	}else{
+		Linker.Reset(NULL);
+	}
 }
 int32  Model::CLockedLinkerList::GetLinkerNum(){
 	CLock lk(m_pMutex);
@@ -105,11 +104,12 @@ void Model::CLockedLinkerList::DeleteAllLinker(){
 	} 
 }
 	
-CLinker Model::CLockedLinkerList::GetNextLinker(int64 SourceID){
+void Model::CLockedLinkerList::GetNextLinker(int64 SourceID,CLinker& Linker){
 	CLock lk(m_pMutex);
 	if (m_LinkerList.size()==0)
 	{
-		return CLinker(NULL);
+		Linker.Reset(NULL);
+		return;
 	};
 	
 	map<int64,CLinkerPipe*>::iterator it;
@@ -121,41 +121,44 @@ CLinker Model::CLockedLinkerList::GetNextLinker(int64 SourceID){
 		
 		it = m_LinkerList.find(SourceID);
 		if(it == m_LinkerList.end()){
-			return CLinker(NULL);
+			Linker.Reset(NULL);
+			return;
 		}
 		
 		it++;
 		if (it == m_LinkerList.end())
 		{
-			return CLinker(NULL);
+			Linker.Reset(NULL);
+			return;
 		}
 		
 	}
 	
-	//ºöÂÔÒÑ¾­±ê¼ÇÉ¾³ýµÄLinker£¬²¢Êµ¼ÊÉ¾³ýËü
-	CLinkerPipe* Linker = it->second;
+	//ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½É¾ï¿½ï¿½ï¿½Linkerï¿½ï¿½ï¿½ï¿½Êµï¿½ï¿½É¾ï¿½ï¿½ï¿½ï¿½
+	CLinkerPipe* LinkPipe = it->second;
 	
-	int32 LinkerType = Linker->GetRecoType(); 
+	int32 LinkerType = LinkPipe->GetRecoType();
 	while (LinkerType < LINKER_STRANGER)
 	{
-		if (LinkerType == LINKER_DEL && Linker->GetUserNum()==0)
+		if (LinkerType == LINKER_DEL && LinkPipe->GetUserNum()==0)
 		{
-			it = m_LinkerList.erase(it);
-			Linker->Close();
-			delete Linker;
-			Linker = NULL;
+			m_LinkerList.erase(it++);
+			LinkPipe->Close();
+			delete LinkPipe;
+			LinkPipe = NULL;
 		}else{		
 			it++;
 		}
 		if (it == m_LinkerList.end())
 		{
-			return CLinker(NULL);
+			Linker.Reset(NULL);
+			return;
 		}else{
-			Linker = it->second;
-			LinkerType = Linker->GetRecoType();
+			LinkPipe = it->second;
+			LinkerType = LinkPipe->GetRecoType();
 		}
 	}
-	return CLinker(Linker);
+	Linker.Reset(LinkPipe);
 };
 
 //CIOWork
@@ -175,22 +178,24 @@ bool Model::CModelIOWork::Do(Energy* E){
 	try
 	{
 #endif	
-		while(m_Alive){
+	CLinker Linker;
+	while(m_Alive){
 			int64 SourceID = 0;
 			
 			CLockedLinkerList* LinkerList = m_Parent->GetSuperiorLinkerList();
-			CLinker Linker = LinkerList->GetNextLinker(SourceID);
 			
+			LinkerList->GetNextLinker(SourceID,Linker);
+
 			char buf[BUFFER_SIZE];
 			while (m_Alive && Linker.IsValid())
 			{
 				SourceID = Linker().GetSourceID();
-				//ÓëServerIO
+				//ï¿½ï¿½ServerIO
 				if (!Linker().IOBusy())
 				{
 					Linker().ThreadIOWorkProc(buf,BUFFER_SIZE);
 				}
-				Linker = LinkerList->GetNextLinker(SourceID);
+				LinkerList->GetNextLinker(SourceID,Linker);
 			}
 			
 			SLEEP_MILLI(20);
@@ -253,10 +258,10 @@ bool Model::CCentralNerveWork::Do(Energy* E){
 	
 				int n = LockedData->GetNerveMaxIdleCount();
 				
-				if ( m_IdleCount > n ) //È±Ê¡´óÔ¼1000ºÁÃëÎÞÐÅÏ¢¿É´¦ÀíÔòÍË³ö
+				if ( m_IdleCount > n ) //È±Ê¡ï¿½ï¿½Ô¼1000ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½É´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë³ï¿½
 				{
 					int WorkNum = LockedData->GetCentralNerveWorkNum();
-					if(WorkNum>1){ //×îµÍÏÞ¶È±£ÁôÒ»¸ö
+					if(WorkNum>1){ //ï¿½ï¿½ï¿½ï¿½Þ¶È±ï¿½ï¿½ï¿½Ò»ï¿½ï¿½
 						if(m_Parent->IsAlive()){
 							ePipeline Data;
 							Data.PushInt(--WorkNum);
@@ -297,7 +302,7 @@ Model::CLockedModelData::CLockedModelData(CABMutex* mutex)
 	assert(m_pMutex);
 	m_MaxNerveWorkerNum    = 20;
 	m_NerveMsgMaxNumInPipe = 10;
-	m_NerveMsgMaxInterval  = 10*1000*1000; //1Ãë
+	m_NerveMsgMaxInterval  = 10*1000*1000; //1ï¿½ï¿½
 	m_NerveIdleMaxCount    = 50;
 	m_NerveWorkingNum      = 0;
 };
@@ -348,7 +353,7 @@ bool Model::CLockedModelData::Activation(){
 }
 
 void Model::CLockedModelData::Dead(){
-//	CLock lk(m_pMutex);work->Dead()»áµ÷ÓÃCLockedModelData£¬Òý·¢Ç¶Ì×ËÀËø
+//	CLock lk(m_pMutex);work->Dead()ï¿½ï¿½ï¿½ï¿½ï¿½CLockedModelDataï¿½ï¿½ï¿½ï¿½Ç¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
 	map<int64,CModelIOWork*>::iterator ita = m_ModelIOWorkList.begin();
 	while (ita != m_ModelIOWorkList.end())
@@ -476,7 +481,7 @@ int32    Model::CLockedModelData::DeleteCentralNerveWork(int64 ID){
 	return m_CentralNerveWorkList.size();
 }
 
- bool Model::CLockedModelData::RequestCreateNewCentralNerveWork(int32 MsgNum,int64 Interval,uint32& Reason){
+ bool Model::CLockedModelData::RequestCreateNewCentralNerveWork(uint32 MsgNum,int64 Interval,uint32& Reason){
 	
 	CLock lk(m_pMutex);		
 	if (m_CentralNerveWorkList.size() == m_MaxNerveWorkerNum)
@@ -484,11 +489,11 @@ int32    Model::CLockedModelData::DeleteCentralNerveWork(int64 ID){
 		Reason =  REASON_LIMIT;
 		return FALSE;
 	}	
-	else if (MsgNum > m_NerveMsgMaxNumInPipe)//µ±Ç°ÐÅÏ¢ÊýÄ¿³¬¹ýÖ¸¶¨ÊýÄ¿ÔòÆôÓÃÐÂÏß³Ì
+	else if (MsgNum > m_NerveMsgMaxNumInPipe)//ï¿½ï¿½Ç°ï¿½ï¿½Ï¢ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß³ï¿½
 	{
 		Reason = REASON_MSG_TOO_MUCH;
 		return TRUE;
-	}else if(Interval> m_NerveMsgMaxInterval){ //³¬¹ýÖ¸¶¨¼ä¸ôÊ±¼äÃ»ÓÐÈ¡³öÐÂÐÅÏ¢À´´¦ÀíÔòÆôÓÃÐÂÏß³Ì
+	}else if(Interval> m_NerveMsgMaxInterval){ //ï¿½ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Ã»ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß³ï¿½
 		Reason = REASON_TIME_OUT;
 		return TRUE;
 	}else if (m_NerveWorkingNum == m_CentralNerveWorkList.size())
@@ -521,9 +526,9 @@ int32    Model::CLockedModelData::DeleteCentralNerveWork(int64 ID){
  
 Model::Model(CModelInitData* InitData)
 :Object(InitData->m_Timer,InitData->m_Pool),
-m_ModelData(InitData->m_ModelData),
-m_SuperiorList(InitData->m_ModelListMutex),
 m_CentralNerve(InitData->m_CentralNerve),
+m_SuperiorList(InitData->m_ModelListMutex),
+m_ModelData(InitData->m_ModelData),
 m_LogFlag(0)
 {
 	m_Name = InitData->m_Name;
@@ -588,10 +593,10 @@ BOOL  Model::CentralNerveWorkStrategy(int64 NewMsgPushTime,int64 LastMsgPopTime)
 	Data.PushInt(n);
 	NotifySysState(MNOTIFY_CENTRAL_NERVE_MSG_NUM,&Data);
 	
-	int64 t = NewMsgPushTime-LastMsgPopTime; //×ª»»³ÉÃë
+	int64 t = NewMsgPushTime-LastMsgPopTime; //×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 	
-	if(LastMsgPopTime==0){	//µÚÒ»¸ö		
-		CCentralNerveWork* CentralNerveWork = CreateCentralNerveWorker(0,this,REASON_MSG_TOO_MUCH); //µÚÒ»µÄIDÉèÖÃÎª0
+	if(LastMsgPopTime==0){	//ï¿½ï¿½Ò»ï¿½ï¿½		
+		CCentralNerveWork* CentralNerveWork = CreateCentralNerveWorker(0,this,REASON_MSG_TOO_MUCH); //ï¿½ï¿½Ò»ï¿½ï¿½IDï¿½ï¿½ï¿½ï¿½Îª0
 		if (CentralNerveWork && CentralNerveWork->Activation())
 		{
 			int n = m_ModelData->AddCentralNerveWork(CentralNerveWork);
@@ -608,14 +613,14 @@ BOOL  Model::CentralNerveWorkStrategy(int64 NewMsgPushTime,int64 LastMsgPopTime)
 			return FALSE;
 		}
 	}
-	else if(m_Alive){//Èç¹ûÖÐÊàÉñ¾­ÀïÓÐ³¬¹ý10¸öÒÔÉÏÐÅÏ¢»òÕß³¬¹ý2ÃëÖÓÃ»ÓÐÈ¡³öÐÂÐÅÏ¢À´´¦ÀíÔòÆôÓÃÐÂÏß³Ì
+	else if(m_Alive){//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð³ï¿½ï¿½ï¿½10ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ß³ï¿½ï¿½ï¿½2ï¿½ï¿½ï¿½ï¿½Ã»ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß³ï¿½
 		uint32 Reason ;
 		bool ret = m_ModelData->RequestCreateNewCentralNerveWork(n,t,Reason);
 		if (!ret)
 		{
 			if (Reason == REASON_LIMIT)
 			{
-				//Í¨ÖªÒÑ¾­´ïµ½×î´óÏÞÖÆ
+				//Í¨Öªï¿½Ñ¾ï¿½ï¿½ïµ½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 				NotifySysState(MNOTIFY_CENTRAL_NERVE_THREAD_LIMIT,NULL);
 			}
 			return FALSE;
@@ -665,7 +670,7 @@ void  Model::PushCentralNerveMsg(CMsg& Msg,bool bUrgenceMsg){
 		tstring MsgStr = MsgID2Str(MsgID);
 		if (MsgStr != _T("MSG_EVENT_TICK"))
 		{
-			tstring s = tformat(_T("Central nerve push msg: %s EventID:%I64ld MsgNum:%d,CreateNewThread:%d"),MsgStr.c_str(),EventID,m_CentralNerve->DataNum(),ret);
+			tstring s = Format1024(_T("Central nerve push msg: %s EventID:%I64ld MsgNum:%d,CreateNewThread:%d"),MsgStr.c_str(),EventID,m_CentralNerve->DataNum(),ret);
 			OutputLog(LOG_MSG_CENTRL_NERVE_PUSH,s.c_str());
 		}
 	}
