@@ -61,7 +61,7 @@ namespace BASESPACE{
 			}
 		}
 
-		Pipe->PrintLabel(_T("%I64ld Error: %s and %s can't make addition(+) operator!"),m_ID,TYPENAME(TypeA),TYPENAME(TypeB));
+		Pipe->GetLabel()=Format1024(_T("%I64ld Error: %s and %s can't make addition(+) operator!"),m_ID,TYPENAME(TypeA),TYPENAME(TypeB));
 		return false;
 	}
     
@@ -119,7 +119,7 @@ namespace BASESPACE{
 			}
 		}
 
-		Pipe->PrintLabel(_T("%I64ld Error: %s and %s can't make subtraction(-) operator!"),m_ID,TYPENAME(TypeA),TYPENAME(TypeB));
+		Pipe->GetLabel()=Format1024(_T("%I64ld Error: %s and %s can't make subtraction(-) operator!"),m_ID,TYPENAME(TypeA),TYPENAME(TypeB));
 		
 		return false;
 	}
@@ -177,7 +177,7 @@ namespace BASESPACE{
 				return true;
 			}
 		}
-		Pipe->PrintLabel(_T("%I64ld Error: %s and %s can't make Multiplication(*) operator!"),m_ID,TYPENAME(TypeA),TYPENAME(TypeB));
+		Pipe->GetLabel()=Format1024(_T("%I64ld Error: %s and %s can't make Multiplication(*) operator!"),m_ID,TYPENAME(TypeA),TYPENAME(TypeB));
 		
 		return false;
 	}
@@ -235,7 +235,7 @@ namespace BASESPACE{
 				return true;
 			}
 		}
-		Pipe->PrintLabel(_T("%I64ld Error: %s and %s can't make division(/) operator!"),m_ID,TYPENAME(TypeA),TYPENAME(TypeB));
+		Pipe->GetLabel()=Format1024(_T("%I64ld Error: %s and %s can't make division(/) operator!"),m_ID,TYPENAME(TypeA),TYPENAME(TypeB));
 		return false;
 		
 	}
@@ -294,7 +294,7 @@ namespace BASESPACE{
 				return true;
 			}
 		}
-		Pipe->PrintLabel(_T("%I64ld Error: %s and %s can't make modulus(%) operator!"),m_ID,TYPENAME(TypeA),TYPENAME(TypeB));
+		Pipe->GetLabel()=Format1024(_T("%I64ld Error: %s and %s can't make modulus(%) operator!"),m_ID,TYPENAME(TypeA),TYPENAME(TypeB));
 		return false;
 	};
 	//////////////////////////////////////////////////////////////////////////

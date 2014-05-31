@@ -7,12 +7,9 @@
 #ifndef _MATHEMATICALOPERATOR_H__
 #define _MATHEMATICALOPERATOR_H__
 
-#if defined(_MSC_VER) && (_MSC_VER >= 1200)
-# pragma once
-#endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
-#include "AbstractSpace.h"
-#include "Pipeline.h"
+#include "../../TheorySpace/src/AbstractSpace.h"
+#include "../../TheorySpace/src/Pipeline.h"
 
 namespace BASESPACE{
 	

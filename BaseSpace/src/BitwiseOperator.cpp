@@ -24,7 +24,7 @@ namespace BASESPACE{
 		uint32 TypeA = DataA.EnergyType();
 		uint32 TypeB = DataB.EnergyType();
         
-		//Ö»ÔÊÐí32Î»ÕûÊý»òÎÞ·ûºÅÕûÊý×ö´ËÔËËã
+		//Ö»ï¿½ï¿½ï¿½ï¿½32Î»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		if(TypeA == TYPE_INT &&      
 			TypeB == TYPE_INT){
 			*(uint64*)(DataA.Value()) =(*(uint64*)(DataA.Value())) & (*(uint64*)(DataB.Value()));
@@ -32,7 +32,7 @@ namespace BASESPACE{
 			return true;		
 		}	
 		
-		Pipe->PrintLabel(_T("%I64ld Error: %s and %d can't make bitwise AND(|) operator!"),m_ID,TYPENAME(TypeA),TYPENAME(TypeB));
+		Pipe->GetLabel() = Format1024(_T("%I64ld Error: %s and %d can't make bitwise AND(|) operator!"),m_ID,TYPENAME(TypeA),TYPENAME(TypeB));
 		return false;	
 	};
 
@@ -55,7 +55,7 @@ namespace BASESPACE{
 			return true;
 		}	
 		
-		Pipe->PrintLabel(_T("%I64ld Error: %s can't make bitwise NOT(~) operator!"),m_ID,TYPENAME(TypeA));
+		Pipe->GetLabel() = Format1024(_T("%I64ld Error: %s can't make bitwise NOT(~) operator!"),m_ID,TYPENAME(TypeA));
 		return false;
 	}
 	
@@ -75,7 +75,7 @@ namespace BASESPACE{
 		uint32 TypeA = DataA.EnergyType();
 		uint32 TypeB = DataB.EnergyType();
 		
-		//Ö»ÔÊÐí32Î»ÕûÊý»òÎÞ·ûºÅÕûÊý×ö´ËÔËËã,Êä³öÊý¾ÝµÄÀàÐÍµÈÍ¬ÓëµÚÒ»¸öÊý¾Ý
+		//Ö»ï¿½ï¿½ï¿½ï¿½32Î»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½,ï¿½ï¿½ï¿½ï¿½ï¿½Ýµï¿½ï¿½ï¿½ï¿½Íµï¿½Í¬ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½
 		if(TypeA == TYPE_INT  &&      
 			TypeB == TYPE_INT ){
 			*(uint64*)(DataA.Value()) =(*(uint64*)(DataA.Value())) | (*(uint64*)(DataB.Value()));
@@ -83,7 +83,7 @@ namespace BASESPACE{
 			return true;
 		}	
 		
-		Pipe->PrintLabel(_T("%I64ld Error: %s and %s can't make bitwise OR(|) operator!"),m_ID,TYPENAME(TypeA),TYPENAME(TypeB));
+		Pipe->GetLabel() = Format1024(_T("%I64ld Error: %s and %s can't make bitwise OR(|) operator!"),m_ID,TYPENAME(TypeA),TYPENAME(TypeB));
 		return false;
 	}
 		
@@ -103,7 +103,7 @@ namespace BASESPACE{
 		uint32 TypeA = DataA.EnergyType();
 		uint32 TypeB = DataB.EnergyType();
 		
-		//Ö»ÔÊÐí32Î»ÕûÊý»òÎÞ·ûºÅÕûÊý×ö´ËÔËËã
+		//Ö»ï¿½ï¿½ï¿½ï¿½32Î»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		if(TypeA==TYPE_INT  &&      
 			TypeB == TYPE_INT){
 			*(uint64*)(DataA.Value()) =(*(uint64*)(DataA.Value())) ^ (*(uint64*)(DataB.Value()));
@@ -112,7 +112,7 @@ namespace BASESPACE{
 			
 		}	
 		
-		Pipe->PrintLabel(_T("%I64ld Error: %s and %s can't make bitwise XOR(^) operator!"),m_ID,TYPENAME(TypeA),TYPENAME(TypeB));
+		Pipe->GetLabel() = Format1024(_T("%I64ld Error: %s and %s can't make bitwise XOR(^) operator!"),m_ID,TYPENAME(TypeA),TYPENAME(TypeB));
 		return false;
 	}
 	
@@ -132,7 +132,7 @@ namespace BASESPACE{
 		uint32 TypeA = DataA.EnergyType();
 		uint32 TypeB = DataB.EnergyType();
 		
-		//Ö»ÔÊÐí32Î»ÕûÊý»òÎÞ·ûºÅÕûÊý×ö´ËÔËËã
+		//Ö»ï¿½ï¿½ï¿½ï¿½32Î»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		if(TypeA==TYPE_INT  &&      
 			TypeB == TYPE_INT){
 			*(uint64*)(DataA.Value()) =(*(uint64*)(DataA.Value())) << (*(uint64*)(DataB.Value()));
@@ -140,7 +140,7 @@ namespace BASESPACE{
 			return true;
 		}	
 		
-		Pipe->PrintLabel(_T("%I64ld Error: %s and %s can't make left shift(<<) operator!"),m_ID,TYPENAME(TypeA),TYPENAME(TypeB));
+		Pipe->GetLabel() = Format1024(_T("%I64ld Error: %s and %s can't make left shift(<<) operator!"),m_ID,TYPENAME(TypeA),TYPENAME(TypeB));
 		return false;
 	}
 	
@@ -160,14 +160,14 @@ namespace BASESPACE{
 		uint32 TypeA = DataA.EnergyType();
 		uint32 TypeB = DataB.EnergyType();
 		
-		//Ö»ÔÊÐí32Î»ÕûÊý»òÎÞ·ûºÅÕûÊý×ö´ËÔËËã
+		//Ö»ï¿½ï¿½ï¿½ï¿½32Î»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Þ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		if(TypeA==TYPE_INT  &&      
 			TypeB == TYPE_INT){
 			*(uint64*)(DataA.Value()) =(*(uint64*)(DataA.Value())) >> (*(uint64*)(DataB.Value()));
 			Pipe->Push_Directly(DataA.Release());
 			return true;
 		}	
-		Pipe->PrintLabel(_T("%I64ld Error: %s and %s can't make right shift(>>) operator!"),m_ID,TYPENAME(TypeA),TYPENAME(TypeB));
+		Pipe->GetLabel() = Format1024(_T("%I64ld Error: %s and %s can't make right shift(>>) operator!"),m_ID,TYPENAME(TypeA),TYPENAME(TypeB));
 		return false;
 	}
 }

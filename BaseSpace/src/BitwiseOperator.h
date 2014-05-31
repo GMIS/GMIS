@@ -6,14 +6,11 @@
 #ifndef _BITWISEOPERATOR_H__
 #define _BITWISEOPERATOR_H__
 
-#if defined(_MSC_VER) && (_MSC_VER >= 1200)
-# pragma once
-#endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
-#include "AbstractSpace.h"
-#include "Pipeline.h"
+#include "../../TheorySpace/src/AbstractSpace.h"
+#include "../../TheorySpace/src/Pipeline.h"
 
-namespace BASESPACE{
+namespace BASESPACE {
 	
 	class  CBitwise_AND : public Mass  
 	{
@@ -25,9 +22,9 @@ namespace BASESPACE{
 		virtual tstring      GetName(){ return _T("CBitwise_AND");};
 		
 	
-		/* ÓÉÓÚint32ºÍuint32¶¼¿ÉÒÔ×ö´ËÔËËã£¬Òò´ËÕâÀïÔÊĞí½ÓÊÜÈÎºÎÀàĞÍÊı¾İ£¬
-		   µ«ÄÚ²¿»á¼ì²é²Ù×÷ÊıÊÇ·ñÎª32Î»ÕûÊı£¬·ñÔò·µ»Øfalse
-		   ÒÔÏÂ²Ù×÷ÀàËÆ¡£
+		/* ï¿½ï¿½ï¿½ï¿½int32ï¿½ï¿½uint32ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ã£¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îºï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½İ£ï¿½
+		   ï¿½ï¿½ï¿½Ú²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç·ï¿½Îª32Î»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ò·µ»ï¿½false
+		   ï¿½ï¿½ï¿½Â²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¡ï¿½
 		*/
 
 		virtual TypeAB  GetTypeAB(){ return 0x00000000;} 

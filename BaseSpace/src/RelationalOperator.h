@@ -6,12 +6,9 @@
 #ifndef _RELATIONALOPERATOR_H__
 #define _RELATIONALOPERATOR_H__
 
-#include "AbstractSpace.h"
-#include "Pipeline.h"
+#include "../../TheorySpace/src/AbstractSpace.h"
+#include "../../TheorySpace/src/Pipeline.h"
 
-#if defined(_MSC_VER) && (_MSC_VER >= 1200)
-# pragma once
-#endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
 namespace BASESPACE{
 
@@ -27,7 +24,7 @@ namespace BASESPACE{
 		virtual bool Do(Energy* E);
 	};	
 
-	// 考虑把函数指针集成到运算中，匹配函数也可以集成，这样任何数据只要有匹配函数都可以被操作。
+	// 锟斤拷锟角把猴拷锟斤拷指锟诫集锟缴碉拷锟斤拷锟斤拷锟叫ｏ拷匹锟戒函锟斤拷也锟斤拷锟皆硷拷锟缴ｏ拷锟斤拷锟斤拷锟轿猴拷锟斤拷锟街灰拷锟狡ワ拷浜拷锟斤拷锟皆憋拷锟斤拷锟斤拷锟斤拷
 	/////////////////////////////////////////////////////////////
 	class  CGreaterThan : public Mass 
 	{
@@ -53,7 +50,7 @@ namespace BASESPACE{
 	};
 	
 	
-	// 考虑把函数指针集成到运算中，匹配函数也可以集成，这样任何数据只要有匹配函数都可以被操作。
+	// 锟斤拷锟角把猴拷锟斤拷指锟诫集锟缴碉拷锟斤拷锟斤拷锟叫ｏ拷匹锟戒函锟斤拷也锟斤拷锟皆硷拷锟缴ｏ拷锟斤拷锟斤拷锟轿猴拷锟斤拷锟街灰拷锟狡ワ拷浜拷锟斤拷锟皆憋拷锟斤拷锟斤拷锟斤拷
 	/////////////////////////////////////////////////////////////
 	class  CLessThan : public Mass 
 	{
@@ -68,7 +65,7 @@ namespace BASESPACE{
 	};
 	
 		
-	// 考虑把函数指针集成到运算中，匹配函数也可以集成，这样任何数据只要有匹配函数都可以被操作。
+	// 锟斤拷锟角把猴拷锟斤拷指锟诫集锟缴碉拷锟斤拷锟斤拷锟叫ｏ拷匹锟戒函锟斤拷也锟斤拷锟皆硷拷锟缴ｏ拷锟斤拷锟斤拷锟轿猴拷锟斤拷锟街灰拷锟狡ワ拷浜拷锟斤拷锟皆憋拷锟斤拷锟斤拷锟斤拷
 	/////////////////////////////////////////////////////////////
 	class  CLessThanOrEqual : public Mass 
 	{

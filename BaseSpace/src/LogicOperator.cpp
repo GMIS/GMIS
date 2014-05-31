@@ -58,7 +58,7 @@ namespace BASESPACE{
 			return true;
 		}
 		
-		Pipe->PrintLabel(_T("%I64ld Error: %s and %s can't make '&&' operator!"),m_ID,TYPENAME(TypeA),TYPENAME(TypeB));
+		Pipe->GetLabel()=Format1024(_T("%I64ld Error: %s and %s can't make '&&' operator!"),m_ID,TYPENAME(TypeA),TYPENAME(TypeB));
 		return false;
 	}
 	
@@ -80,7 +80,7 @@ namespace BASESPACE{
 			return true;
 		}
 
-		Pipe->PrintLabel(_T("%I64ld Error: %s can't make '!' operator!"),m_ID,TYPENAME(TypeA));
+		Pipe->GetLabel()=Format1024(_T("%I64ld Error: %s can't make '!' operator!"),m_ID,TYPENAME(TypeA));
 		return false;
 	}
 	bool CLogical_OR::Do(Energy* E)
@@ -106,7 +106,7 @@ namespace BASESPACE{
 			return true;
 		}
 		
-		Pipe->PrintLabel(_T("%I64ld Error: %s and %s can't make '||' operator!"),m_ID,TYPENAME(TypeA),TYPENAME(TypeB));
+		Pipe->GetLabel()=Format1024(_T("%I64ld Error: %s and %s can't make '||' operator!"),m_ID,TYPENAME(TypeA),TYPENAME(TypeB));
 		return false;
 	}
 };

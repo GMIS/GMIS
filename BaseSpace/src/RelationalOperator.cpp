@@ -24,7 +24,7 @@ namespace BASESPACE{
 		Pipe->Pop(&DataA);
 		Pipe->Pop(&DataB);
 		
-		//NOTE:Á½¸öÊý±È½ÏÒÔºó£¬×÷Îª½á¹ûµÄÊý¾ÝAµÄÀàÐÍ½«¸Ä±äÎªINT32
+		//NOTE:ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È½ï¿½ï¿½Ôºï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½ï¿½ï¿½Í½ï¿½ï¿½Ä±ï¿½ÎªINT32
 		uint32 TypeA = DataA.EnergyType();
 		uint32 TypeB = DataB.EnergyType();
 
@@ -79,7 +79,7 @@ namespace BASESPACE{
 			}	
 		}
 		
-		Pipe->PrintLabel(_T("%I64ld Error: %s and %s can't make '==' operator!"),m_ID,TYPENAME(TypeA),TYPENAME(TypeB));
+		Pipe->GetLabel()=Format1024(_T("%I64ld Error: %s and %s can't make '==' operator!"),m_ID,TYPENAME(TypeA),TYPENAME(TypeB));
 		return false;
 	}
 	
@@ -97,7 +97,7 @@ namespace BASESPACE{
 		Pipe->Pop(&DataA);
 		Pipe->Pop(&DataB);
 		
-		//NOTE:Á½¸öÊý±È½ÏÒÔºó£¬×÷Îª½á¹ûµÄÊý¾ÝAµÄÀàÐÍ½«¸Ä±äÎªINT32
+		//NOTE:ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È½ï¿½ï¿½Ôºï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½ï¿½ï¿½Í½ï¿½ï¿½Ä±ï¿½ÎªINT32
 		uint32 TypeA = DataA.EnergyType();
 		uint32 TypeB = DataB.EnergyType();
 		
@@ -140,7 +140,7 @@ namespace BASESPACE{
 			}
 		}
 		
-		Pipe->PrintLabel(_T("%I64ld Error: %s and %s can't make '>' operator!"),m_ID,TYPENAME(TypeA),TYPENAME(TypeB));
+		Pipe->GetLabel()=Format1024(_T("%I64ld Error: %s and %s can't make '>' operator!"),m_ID,TYPENAME(TypeA),TYPENAME(TypeB));
 		return false;
 	}
 	
@@ -158,7 +158,7 @@ namespace BASESPACE{
 		Pipe->Pop(&DataA);
 		Pipe->Pop(&DataB);
 		
-		//NOTE:Á½¸öÊý±È½ÏÒÔºó£¬×÷Îª½á¹ûµÄÊý¾ÝAµÄÀàÐÍ½«¸Ä±äÎªINT32
+		//NOTE:ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È½ï¿½ï¿½Ôºï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½ï¿½ï¿½Í½ï¿½ï¿½Ä±ï¿½ÎªINT32
 		uint32 TypeA = DataA.EnergyType();
 		uint32 TypeB = DataB.EnergyType();
 		
@@ -201,7 +201,7 @@ namespace BASESPACE{
 			}
 		}
 		
-		Pipe->PrintLabel(_T("%I64ld Error: %s and %s can't make '>=' operator!"),m_ID,TYPENAME(TypeA),TYPENAME(TypeB));
+		Pipe->GetLabel()=Format1024(_T("%I64ld Error: %s and %s can't make '>=' operator!"),m_ID,TYPENAME(TypeA),TYPENAME(TypeB));
 		return false;
 	}
 	
@@ -219,7 +219,7 @@ namespace BASESPACE{
 		Pipe->Pop(&DataA);
 		Pipe->Pop(&DataB);
 		
-		//NOTE:Á½¸öÊý±È½ÏÒÔºó£¬×÷Îª½á¹ûµÄÊý¾ÝAµÄÀàÐÍ½«¸Ä±äÎªINT32
+		//NOTE:ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È½ï¿½ï¿½Ôºï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½ï¿½ï¿½Í½ï¿½ï¿½Ä±ï¿½ÎªINT32
 		uint32 TypeA = DataA.EnergyType();
 		uint32 TypeB = DataB.EnergyType();
 		
@@ -262,7 +262,7 @@ namespace BASESPACE{
 			}
 		}
 		
-		Pipe->PrintLabel(_T("%I64ld Error: %s and %s can't make '<' operator!"),m_ID,TYPENAME(TypeA),TYPENAME(TypeB));
+		Pipe->GetLabel()=Format1024(_T("%I64ld Error: %s and %s can't make '<' operator!"),m_ID,TYPENAME(TypeA),TYPENAME(TypeB));
 		return false;
 	}
 	
@@ -280,7 +280,7 @@ namespace BASESPACE{
 		Pipe->Pop(&DataA);
 		Pipe->Pop(&DataB);
 		
-		//NOTE:Á½¸öÊý±È½ÏÒÔºó£¬×÷Îª½á¹ûµÄÊý¾ÝAµÄÀàÐÍ½«¸Ä±äÎªINT32
+		//NOTE:ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È½ï¿½ï¿½Ôºï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½ï¿½ï¿½Í½ï¿½ï¿½Ä±ï¿½ÎªINT32
 		uint32 TypeA = DataA.EnergyType();
 		uint32 TypeB = DataB.EnergyType();
 		
@@ -323,7 +323,7 @@ namespace BASESPACE{
 			}
 		}
 		
-		Pipe->PrintLabel(_T("%I64ld Error: %s and %s can't make '<=' operator!"),m_ID,TYPENAME(TypeA),TYPENAME(TypeB));
+		Pipe->GetLabel()=Format1024(_T("%I64ld Error: %s and %s can't make '<=' operator!"),m_ID,TYPENAME(TypeA),TYPENAME(TypeB));
 		return false;
 	}
 	
@@ -341,7 +341,7 @@ namespace BASESPACE{
 		Pipe->Pop(&DataA);
 		Pipe->Pop(&DataB);
 		
-		//NOTE:Á½¸öÊý±È½ÏÒÔºó£¬×÷Îª½á¹ûµÄÊý¾ÝAµÄÀàÐÍ½«¸Ä±äÎªINT32
+		//NOTE:ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È½ï¿½ï¿½Ôºï¿½ï¿½ï¿½Îªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Aï¿½ï¿½ï¿½ï¿½ï¿½Í½ï¿½ï¿½Ä±ï¿½ÎªINT32
 		uint32 TypeA = DataA.EnergyType();
 		uint32 TypeB = DataB.EnergyType();
 		
@@ -396,7 +396,7 @@ namespace BASESPACE{
 			}	
 		}
 		
-		Pipe->PrintLabel(_T("%I64ld Error: %s and %s can't make '==' operator!"),m_ID,TYPENAME(TypeA),TYPENAME(TypeB));
+		Pipe->GetLabel()=Format1024(_T("%I64ld Error: %s and %s can't make '==' operator!"),m_ID,TYPENAME(TypeA),TYPENAME(TypeB));
 		return false;
 	}
 }//namespace ZHB
