@@ -41,7 +41,7 @@ void CUserTimeStamp::GetSystemTime(
 	){
 
 	using namespace boost::gregorian;
-    using namespace boost::posix_time;
+        using namespace boost::posix_time;
 
 	ptime pt0 = microsec_clock::universal_time();
     
