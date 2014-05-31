@@ -25,31 +25,22 @@ using namespace ABSTRACT;
 class CUserSpaceMutex: public CSpaceMutex
 {
 private:
-#ifdef WIN32
+
     CRITICAL_SECTION  m_Mutex;                    
-#else
-    pthread_mutex_t   m_Mutex;      
-#endif      
 	
 public:
 	CUserSpaceMutex();
 	virtual ~CUserSpaceMutex();
 	
     virtual void Acquire(){
-#ifdef WIN32
+
 		::EnterCriticalSection(&m_Mutex);
-#else
-		(void)pthread_mutex_lock(&m_Mutex);
-#endif
 	};
 	
 	
 	virtual void Release(){
-#ifdef WIN32
-		::LeaveCriticalSection(&m_Mutex);
-#else
-		pthread_mutex_unlock(&m_Mutex);
-#endif	
+
+		pthread_mutex_unlock(&m_Mutex);	
 	};
 	
 	virtual SeatMutex* CreateSeat();
