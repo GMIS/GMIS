@@ -8,7 +8,6 @@
 #include "UserMutex.h"
 #include "UserSpaceMutex.h"
 #include "Msg.h"
-#include "format.h"
 #include "Model.h"
 #include "UserSystem.h"
 #include "AbstractSpacePool.h"
@@ -177,7 +176,7 @@ uint32 CUserLinkerPipe::ThreadOutputProc(char* Buffer,uint32 BufSize){
 		}
 	}
 	else{
-		int32 n = m_SendBuffer.size() - m_SendPos; //还剩多少数据没有发送	
+		uint32 n = m_SendBuffer.size() - m_SendPos; //还剩多少数据没有发送	
 		if(n>0){
 			--BufSize;
 			uint32 SendSize = (n > BufSize)?BufSize:n;
@@ -388,7 +387,7 @@ bool CUserConnectLinkerPipe::Init(tstring& error){
     
 	if(Ret == SOCKET_ERROR){
 		int ErrorCode = WSAGetLastError();
-		error = tformat(_T("Connect Fail: Internal socket error[code:%d]."),ErrorCode);
+		error = Format1024(_T("Connect Fail: Internal socket error[code:%d]."),ErrorCode);
 		return FALSE;
 	}
 	
@@ -397,7 +396,7 @@ bool CUserConnectLinkerPipe::Init(tstring& error){
 	{	//正常
 		int ErrorCode = WSAGetLastError();
 		if (ErrorCode != WSAEWOULDBLOCK){
-			error = tformat( _T("Connect Fail: Internal socket error[code:%d]."),ErrorCode);
+			error = Format1024( _T("Connect Fail: Internal socket error[code:%d]."),ErrorCode);
 			return FALSE;
 		}
 		
@@ -523,7 +522,7 @@ bool CUserAcceptLinkerPipe::Init(tstring& error){
 	
 	if(m_Socket==INVALID_SOCKET){
 		int ErrorCode = WSAGetLastError();
-        error = tformat(_T("Listen Fail: Internal socket error[code:%d]."),ErrorCode);
+        error = Format1024(_T("Listen Fail: Internal socket error[code:%d]."),ErrorCode);
 
 		return FALSE;
 	}
@@ -563,7 +562,7 @@ void CUserAcceptLinkerPipe::Accept(){
 		}
 		else{
 			int ErrorCode = WSAGetLastError();
-			tstring s = tformat(_T("Listen Fail: Accept() failed [code:%d]"),ErrorCode);
+			tstring s = Format1024(_T("Listen Fail: Accept() failed [code:%d]"),ErrorCode);
 			CMsg Msg(m_SourceID,DEFAULT_DIALOG,MSG_LINKER_ERROR,DEFAULT_DIALOG);
 			Msg.GetLetter().PushInt(m_SourceID);
 			Msg.GetLetter().PushString(s);		

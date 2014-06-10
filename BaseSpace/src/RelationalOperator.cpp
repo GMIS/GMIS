@@ -24,7 +24,7 @@ namespace BASESPACE{
 		Pipe->Pop(&DataA);
 		Pipe->Pop(&DataB);
 		
-		//NOTE:������Ƚ��Ժ���Ϊ�������A�����ͽ��ı�ΪINT32
+		//NOTE:两个数比较以后，作为结果的数据A的类型将改变为INT32
 		uint32 TypeA = DataA.EnergyType();
 		uint32 TypeB = DataB.EnergyType();
 
@@ -41,7 +41,7 @@ namespace BASESPACE{
 			{
 				float64 f = DataB.Float64();
                 
-				int64 b = f;
+				int64 b = (int64)f;
 
 				Pipe->PushInt(a==b?1:0);
 				return true;
@@ -53,7 +53,7 @@ namespace BASESPACE{
 			{
 				int64 t = DataB.Int64();
 				
-                float64 b = t;
+                float64 b = (float64)t;
 				a = a-b;
 				Pipe->PushInt((a >= - EPSINON) && (a <= EPSINON)?1:0);
 				return true;
@@ -97,7 +97,7 @@ namespace BASESPACE{
 		Pipe->Pop(&DataA);
 		Pipe->Pop(&DataB);
 		
-		//NOTE:������Ƚ��Ժ���Ϊ�������A�����ͽ��ı�ΪINT32
+		//NOTE:两个数比较以后，作为结果的数据A的类型将改变为INT32
 		uint32 TypeA = DataA.EnergyType();
 		uint32 TypeB = DataB.EnergyType();
 		
@@ -114,7 +114,7 @@ namespace BASESPACE{
 			{
 				float64 f = DataB.Float64();
                 
-				int64 b = f;
+				int64 b = (int64)f;
 				
 				Pipe->PushInt(a>b?1:0);
 				return true;
@@ -126,7 +126,7 @@ namespace BASESPACE{
 			{
 				int64 t = DataB.Int64();
 				
-                float64 b = t;
+                float64 b = (float64)t;
 
 				Pipe->PushInt(a>b?1:0);
 				return true;
@@ -158,7 +158,7 @@ namespace BASESPACE{
 		Pipe->Pop(&DataA);
 		Pipe->Pop(&DataB);
 		
-		//NOTE:������Ƚ��Ժ���Ϊ�������A�����ͽ��ı�ΪINT32
+		//NOTE:两个数比较以后，作为结果的数据A的类型将改变为INT32
 		uint32 TypeA = DataA.EnergyType();
 		uint32 TypeB = DataB.EnergyType();
 		
@@ -175,7 +175,7 @@ namespace BASESPACE{
 			{
 				float64 f = DataB.Float64();
                 
-				int64 b = f;
+				int64 b = (int64)f;
 				
 				Pipe->PushInt(a>=b?1:0);
 				return true;
@@ -187,7 +187,7 @@ namespace BASESPACE{
 			{
 				int64 t = DataB.Int64();
 				
-                float64 b = t;
+                float64 b = (float64)t;
 				
 				Pipe->PushInt(a>=b?1:0);
 				return true;
@@ -219,7 +219,7 @@ namespace BASESPACE{
 		Pipe->Pop(&DataA);
 		Pipe->Pop(&DataB);
 		
-		//NOTE:������Ƚ��Ժ���Ϊ�������A�����ͽ��ı�ΪINT32
+		//NOTE:两个数比较以后，作为结果的数据A的类型将改变为INT32
 		uint32 TypeA = DataA.EnergyType();
 		uint32 TypeB = DataB.EnergyType();
 		
@@ -236,7 +236,7 @@ namespace BASESPACE{
 			{
 				float64 f = DataB.Float64();
                 
-				int64 b = f;
+				int64 b = (int64)f;
 				
 				Pipe->PushInt(a<b?1:0);
 				return true;
@@ -248,7 +248,7 @@ namespace BASESPACE{
 			{
 				int64 t = DataB.Int64();
 				
-                float64 b = t;
+                float64 b = (float64)t;
 				
 				Pipe->PushInt(a<b?1:0);
 				return true;
@@ -280,7 +280,7 @@ namespace BASESPACE{
 		Pipe->Pop(&DataA);
 		Pipe->Pop(&DataB);
 		
-		//NOTE:������Ƚ��Ժ���Ϊ�������A�����ͽ��ı�ΪINT32
+		//NOTE:两个数比较以后，作为结果的数据A的类型将改变为INT32
 		uint32 TypeA = DataA.EnergyType();
 		uint32 TypeB = DataB.EnergyType();
 		
@@ -297,7 +297,7 @@ namespace BASESPACE{
 			{
 				float64 f = DataB.Float64();
                 
-				int64 b = f;
+				int64 b = (int64)f;
 				
 				Pipe->PushInt(a<=b?1:0);
 				return true;
@@ -309,7 +309,7 @@ namespace BASESPACE{
 			{
 				int64 t = DataB.Int64();
 				
-                float64 b = t;
+                float64 b = (float64)t;
 				
 				Pipe->PushInt(a<=b?1:0);
 				return true;
@@ -341,7 +341,7 @@ namespace BASESPACE{
 		Pipe->Pop(&DataA);
 		Pipe->Pop(&DataB);
 		
-		//NOTE:������Ƚ��Ժ���Ϊ�������A�����ͽ��ı�ΪINT32
+		//NOTE:两个数比较以后，作为结果的数据A的类型将改变为INT32
 		uint32 TypeA = DataA.EnergyType();
 		uint32 TypeB = DataB.EnergyType();
 		
@@ -358,7 +358,7 @@ namespace BASESPACE{
 			{
 				float64 f = DataB.Float64();
                 
-				int64 b = f;
+				int64 b = (int64)f;
 				
 				Pipe->PushInt(a!=b?1:0);
 				return true;
@@ -370,7 +370,7 @@ namespace BASESPACE{
 			{
 				int64 t = DataB.Int64();
 				
-                float64 b = t;
+                float64 b = (float64)t;
 				a = a-b;
 				Pipe->PushInt((a >= - EPSINON) && (a <= EPSINON)?0:1);
 				return true;

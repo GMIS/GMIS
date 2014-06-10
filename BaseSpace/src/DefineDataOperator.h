@@ -7,9 +7,6 @@
 #ifndef _DEFINEDATAOPERATOR_H_
 #define _DEFINEDATAOPERATOR_H_
 
-#if defined(_MSC_VER) && (_MSC_VER >= 1200)
-# pragma once
-#endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
 #include "AbstractSpace.h"
 #include <stdio.h>

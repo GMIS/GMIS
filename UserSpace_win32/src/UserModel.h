@@ -13,6 +13,7 @@
 
 #include "Model.h"
 
+
 class CUserModel: public Model{
 public:
 	class CUserModelIOWork: public Model::CModelIOWork{

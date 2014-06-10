@@ -528,7 +528,8 @@ void CUserSystem::ConnectTimeoutHandler(const boost::system::error_code& error, 
 	}
 	
 	CLockedLinkerList* LinkerList = GetSuperiorLinkerList();
-	CLinker Linker = LinkerList->GetLinker(cp->m_ID);
+	CLinker Linker;
+	LinkerList->GetLinker(cp->m_ID,Linker);
 	if (Linker.IsValid()) //已经连接
 	{
 		cp->m_TimeCount = 0;

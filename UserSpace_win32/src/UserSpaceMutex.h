@@ -40,7 +40,7 @@ public:
 	
 	virtual void Release(){
 
-		pthread_mutex_unlock(&m_Mutex);	
+		::LeaveCriticalSection(&m_Mutex);
 	};
 	
 	virtual SeatMutex* CreateSeat();

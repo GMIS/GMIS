@@ -59,9 +59,6 @@
     <ClInclude Include="src\Typedef.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\FORMAT.H">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\AbstractSpace.cpp">
@@ -95,9 +92,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\TimeStamp.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\FORMAT.CPP">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

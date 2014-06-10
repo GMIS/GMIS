@@ -4,8 +4,7 @@
 #pragma  warning(disable:4786)
 
 #include "UserSystem.h"
-#include "format.h"
-//#include "MsgList.h"
+#include <process.h>
 
 //CUserModelIOWork
 //////////////////////////////////////////////////////////////////////////

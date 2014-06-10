@@ -16,7 +16,6 @@
     <ClInclude Include="src\AbstractSpacePool.h" />
     <ClInclude Include="src\BaseEnergy.h" />
     <ClInclude Include="src\ConvertUTF.h" />
-    <ClInclude Include="src\FORMAT.H" />
     <ClInclude Include="src\LinkerPipe.h" />
     <ClInclude Include="src\LockPipe.h" />
     <ClInclude Include="src\Model.h" />
@@ -34,7 +33,6 @@
     <ClCompile Include="src\AbstractSpacePool.cpp" />
     <ClCompile Include="src\BaseEnergy.cpp" />
     <ClCompile Include="src\ConvertUTF.cpp" />
-    <ClCompile Include="src\FORMAT.CPP" />
     <ClCompile Include="src\LinkerPipe.cpp" />
     <ClCompile Include="src\Model.cpp" />
     <ClCompile Include="src\Msg.cpp" />
