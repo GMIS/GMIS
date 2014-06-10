@@ -211,7 +211,7 @@ void CUserSystem::CUserLockedSystemData::DelAcceptor(int32 Port){
 		return;
 	} 
 	CUserLinkerPipe* Acceptor = it->second;
-	Acceptor->Close(); //»áÒý·¢Ò»¸öLinker´íÎó£¬Í¨ÖªÏµÍ³É¾³ýÊµ¼ÊµÄCUserLinkerPipe
+	Acceptor->Close(); //ä¼šå¼•å‘ä¸€ä¸ªLinkeré”™è¯¯ï¼Œé€šçŸ¥ç³»ç»Ÿåˆ é™¤å®žé™…çš„CUserLinkerPipe
     m_AcceptorList.erase(it);
 };
 
@@ -311,7 +311,7 @@ bool CUserSystem::Connect(int64 ID,AnsiString Address,int32 Port,int32 TimeOut,t
 		};
 	}
 
-	//Èç¹ûÃ»ÓÐ´¦ÀíÏß³ÌÔòÉú³ÉÒ»¸ö
+	//å¦‚æžœæ²¡æœ‰å¤„ç†çº¿ç¨‹åˆ™ç”Ÿæˆä¸€ä¸ª
 	CLockedModelData* ModelData = GetModelData();
 	if (ModelData->GetIOWorkNum()<m_nCPU*2)
 	{
@@ -349,7 +349,7 @@ bool CUserSystem::OpenPort(int32 Port,tstring& error,bool bIP6){
 	CLockedLinkerList* ClientList = GetClientLinkerList();
 	ClientList->AddLinker(Acceptor);
 
-	//Èç¹ûÃ»ÓÐ´¦ÀíÏß³ÌÔòÉú³ÉÒ»¸ö
+	//å¦‚æžœæ²¡æœ‰å¤„ç†çº¿ç¨‹åˆ™ç”Ÿæˆä¸€ä¸ª
     if (SystemData->GetIOWorkNum()<m_nCPU*2)
     {
 		int64 ID = CreateTimeStamp();

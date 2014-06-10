@@ -74,7 +74,7 @@ protected:
 	virtual void NotifySysState(int64 NotifyID,ePipeline* Data = NULL);
 
     virtual void NerveProc(CMsg& Msg){
-		//һ���񾭶���Ϣ�Ĵ��?���û���Ҫ�Լ�ʵ��
+		//一般神经对信息的处理函数，用户需要自己实现
 	};
 	
 	virtual System::CNerveWork* CreateNerveWorker(int64 ID,System* Parent,uint32 Reason);
@@ -85,14 +85,14 @@ public:
 	virtual bool Activation();
 	virtual void Dead();
 
-	//����ͬʱ���Ӷ������������ַ�Ͷ˿���ͬ�����
+	//允许同时连接多个服务器，地址和端口相同则忽略
 	bool Connect(int64 ID,AnsiString Address,int32 Port,int32 TimeOut,tstring& error,bool bBlock);
 
-	//��һ���˿ڲ�listen,����ͬʱ�򿪶��ض˿ڣ��˿��ظ������
+	//打开一个端口并listen,允许同时打开多重端口，端口重复则忽略
 	bool OpenPort(int32 Port,tstring& error,bool bIP6);
     void ClosePort(int32 Port);
 
-	//����Accept()
+	//用于Accept()
 	CUserLinkerPipe* CreateClientLinkerPipe();
 
 };

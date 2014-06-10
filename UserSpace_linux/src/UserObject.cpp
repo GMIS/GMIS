@@ -1,4 +1,4 @@
-// UserObject.cpp: implementation of the CUserObject class.
+﻿// UserObject.cpp: implementation of the CUserObject class.
 //
 //////////////////////////////////////////////////////////////////////
 

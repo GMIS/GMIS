@@ -61,7 +61,7 @@ bool   CUserLinkerPipe::IsValid(){
 
 void   CUserLinkerPipe::Close(){
 	if(IsValid()){
-		long s = m_Socket; //¿ÉÄÜÏß³ÌÕýÔÚÑ­»·¼ì²ém_Socket
+		long s = m_Socket; //å¯èƒ½çº¿ç¨‹æ­£åœ¨å¾ªçŽ¯æ£€æŸ¥m_Socket
         m_Socket =INVALID_SOCKET;
 		closesocket(s);
 		CLinkerPipe::Close();
@@ -90,14 +90,14 @@ uint32 CUserLinkerPipe::ThreadInputProc(char* Buffer,uint32 BufSize){
 	return RevBytes;
 }
 
-//´Óm_OutputPortÖÐÈ¡³öÐÅÏ¢£¬±àÒë³É×Ö·û´®ÐÎÊ½×¼±¸Êä³ö
+//ä»Žm_OutputPortä¸­å–å‡ºä¿¡æ¯ï¼Œç¼–è¯‘æˆå­—ç¬¦ä¸²å½¢å¼å‡†å¤‡è¾“å‡º
 uint32 CUserLinkerPipe::ThreadOutputProc(char* Buffer,uint32 BufSize){
 	
 	uint32 SendBytes =0;
 	
 	if(m_SendState == WAIT_MSG ){
 		
-		//×¼±¸·¢ËÍÒ»¸öÐÂµÄÐÅÏ¢
+		//å‡†å¤‡å‘é€ä¸€ä¸ªæ–°çš„ä¿¡æ¯
 		ePipeline* Msg = NULL;	
 		
 		if (m_UrgenceMsg.Size())
@@ -112,12 +112,12 @@ uint32 CUserLinkerPipe::ThreadOutputProc(char* Buffer,uint32 BufSize){
 		}
 		
 		int64 MsgID = Msg->GetID();
-		if(MsgID>100){ //²»ÊÇ·´À¡ÐÅÏ¢
+		if(MsgID>100){ //ä¸æ˜¯åé¦ˆä¿¡æ¯
 			ePipeline* Letter = GET_LETTER(Msg);
 			MsgID = Letter->GetID();
 		}
 		
-		if(MsgID<100){  //ÄÚ²¿¿ØÖÆÐÅÏ¢ÔÚÈÎºÎÊ±ºò¶¼¿ÉÒÔ·¢ËÍ
+		if(MsgID<100){  //å†…éƒ¨æŽ§åˆ¶ä¿¡æ¯åœ¨ä»»ä½•æ—¶å€™éƒ½å¯ä»¥å‘é€
 			eElectron E;
 			if (m_UrgenceMsg.Size())
 			{
@@ -131,7 +131,7 @@ uint32 CUserLinkerPipe::ThreadOutputProc(char* Buffer,uint32 BufSize){
 			m_CurSendMsg.Reset(Msg);
 			
 			if(MsgID == LINKER_RESET)
-			{   //ÒªÇóÏò¶Ô·½·¢½ÓÊÕÖØÖÃÐÅÏ¢
+			{   //è¦æ±‚å‘å¯¹æ–¹å‘æŽ¥æ”¶é‡ç½®ä¿¡æ¯
 				while(m_SendBuffer.size()<ERROR_RESUME_LENGTH)m_SendBuffer += '@';
 				m_SendState = SEND_RESET; 
 				m_SendPos = 0;				
@@ -146,7 +146,7 @@ uint32 CUserLinkerPipe::ThreadOutputProc(char* Buffer,uint32 BufSize){
 				
 			}	
 		}
-		else if ( m_PendingMsgID == NULL) //Ö»ÓÐÎ´¾öÏûÏ¢±»»Ø¸´ºó²ÅÄÜ¼ÌÐø·¢ËÍÐÂÏûÏ¢
+		else if ( m_PendingMsgID == NULL) //åªæœ‰æœªå†³æ¶ˆæ¯è¢«å›žå¤åŽæ‰èƒ½ç»§ç»­å‘é€æ–°æ¶ˆæ¯
 		{
 			eElectron E;
 			if (m_UrgenceMsg.Size())
@@ -176,7 +176,7 @@ uint32 CUserLinkerPipe::ThreadOutputProc(char* Buffer,uint32 BufSize){
 		}
 	}
 	else{
-		uint32 n = m_SendBuffer.size() - m_SendPos; //»¹Ê£¶àÉÙÊý¾ÝÃ»ÓÐ·¢ËÍ	
+		uint32 n = m_SendBuffer.size() - m_SendPos; //è¿˜å‰©å¤šå°‘æ•°æ®æ²¡æœ‰å‘é€	
 		if(n>0){
 			--BufSize;
 			uint32 SendSize = (n > BufSize)?BufSize:n;
@@ -187,7 +187,7 @@ uint32 CUserLinkerPipe::ThreadOutputProc(char* Buffer,uint32 BufSize){
 				return 1;
 			}
 						
-			m_SendPos += SendBytes; //ÒòÎªÊÇ·Ç×èÈû£¬Êµ¼ÊËÍ³öµÄ¿ÉÄÜ¸úÔ¤¼ÆËÍ³öµÄ²»Ò»Ñù 	
+			m_SendPos += SendBytes; //å› ä¸ºæ˜¯éžé˜»å¡žï¼Œå®žé™…é€å‡ºçš„å¯èƒ½è·Ÿé¢„è®¡é€å‡ºçš„ä¸ä¸€æ · 	
 
 			ePipeline Data;
 			Data.PushInt(m_PendingMsgID);
@@ -221,7 +221,7 @@ bool  CUserLinkerPipe::PhysicalRev(char* Buf,uint32 BufSize, uint32& RevLen, uin
 	
 	FD_SET(m_Socket, &ReadFDs);
 	
-	timeval TimeOut;  //ÉèÖÃ1ÃëÖÓµÄ¼ä¸ô
+	timeval TimeOut;  
 	TimeOut.tv_sec = 0; 
 	TimeOut.tv_usec = 50;
 	
@@ -245,7 +245,7 @@ bool  CUserLinkerPipe::PhysicalRev(char* Buf,uint32 BufSize, uint32& RevLen, uin
 				return FALSE;
 			}
 			
-			if(nRead == 0)   //Á¬½ÓÒÑ¾­¹Ø±Õ
+			if(nRead == 0)   //è¿žæŽ¥å·²ç»å…³é—­
 			{ 
 				int nError = WSAGetLastError();
 				m_RecoType = LINKER_INVALID;
@@ -262,7 +262,7 @@ bool  CUserLinkerPipe::PhysicalRev(char* Buf,uint32 BufSize, uint32& RevLen, uin
 			RevLen = nRead;
 		}	
 	}
-	else if (ret == SOCKET_ERROR ) { //ÍË³ö
+	else if (ret == SOCKET_ERROR ) { //é€€å‡º
 		int nError = WSAGetLastError();
 		
 		m_RecoType = LINKER_INVALID;
@@ -288,7 +288,7 @@ bool  CUserLinkerPipe::PhysicalSend(char* Buf,uint32 BufSize, uint32& SendLen, u
 	
     FD_SET(m_Socket, &WriteFDs);		
 	
-	timeval TimeOut;  //ÉèÖÃ1ÃëÖÓµÄ¼ä¸ô£¬ÊÇ·ñÍ×µ±£¿ÒÔºóÔÙ¿¼ÂÇ
+	timeval TimeOut;  
 	TimeOut.tv_sec = 0; 
 	TimeOut.tv_usec = 50;
 	
@@ -316,7 +316,7 @@ bool  CUserLinkerPipe::PhysicalSend(char* Buf,uint32 BufSize, uint32& SendLen, u
             Buf[SendLen]= '\0';
 		}
 	}
-	else if (ret == SOCKET_ERROR ) { //ÍË³ö
+	else if (ret == SOCKET_ERROR ) { //é€€å‡º
 		int nError = WSAGetLastError();
 
 		m_RecoType = LINKER_INVALID;
@@ -381,8 +381,8 @@ bool CUserConnectLinkerPipe::Init(tstring& error){
 	Server.sin_family=AF_INET;
 	Server.sin_port=htons(m_Port);
 	
-	//°Ñm_SocketSelf¸ÄÎª·Ç×èÈû,ÒÔ±ãÄÜ¼ì²âÁ¬½Ó³¬Ê±
-	unsigned long ul = 1; //ÉèÖÃÎª·Ç×èÈû
+	//æŠŠm_SocketSelfæ”¹ä¸ºéžé˜»å¡ž,ä»¥ä¾¿èƒ½æ£€æµ‹è¿žæŽ¥è¶…æ—¶
+	unsigned long ul = 1; //è®¾ç½®ä¸ºéžé˜»å¡ž
 	int Ret = ioctlsocket(m_Socket,FIONBIO,(unsigned long*)&ul);
     
 	if(Ret == SOCKET_ERROR){
@@ -393,7 +393,7 @@ bool CUserConnectLinkerPipe::Init(tstring& error){
 	
 	int ret = connect(m_Socket,(struct sockaddr*)&Server,sizeof(Server));
 	if(ret==SOCKET_ERROR)
-	{	//Õý³£
+	{	//æ­£å¸¸
 		int ErrorCode = WSAGetLastError();
 		if (ErrorCode != WSAEWOULDBLOCK){
 			error = Format1024( _T("Connect Fail: Internal socket error[code:%d]."),ErrorCode);
@@ -414,7 +414,7 @@ bool CUserConnectLinkerPipe::BlockConnect(tstring& error)
 		FD_ZERO(&WriteFDs);		
 		FD_SET(m_Socket, &WriteFDs);		
 		
-		timeval TimeOut;  //ÉèÖÃ1ÃëÖÓµÄ¼ä¸ô£¬
+		timeval TimeOut;  
 		TimeOut.tv_sec = 1; 
 		TimeOut.tv_usec = 0;
 		
@@ -428,7 +428,7 @@ bool CUserConnectLinkerPipe::BlockConnect(tstring& error)
 				return TRUE;
 			}
 		}
-		else if (ret == SOCKET_ERROR) { //ÍË³ö
+		else if (ret == SOCKET_ERROR) { //é€€å‡º
 			error = _T("Connect Fail: Internal socket error.");	
 			return FALSE;
 		}
@@ -449,7 +449,7 @@ void CUserConnectLinkerPipe::Connect(){
 	FD_ZERO(&WriteFDs);		
 	FD_SET(m_Socket, &WriteFDs);		
 	
-	timeval TimeOut;  //ÉèÖÃ1ÃëÖÓµÄ¼ä¸ô£¬
+	timeval TimeOut;  //è®¾ç½®1ç§’é’Ÿçš„é—´éš”ï¼Œ
 	TimeOut.tv_sec = 1; 
 	TimeOut.tv_usec = 0;
 	
@@ -463,7 +463,7 @@ void CUserConnectLinkerPipe::Connect(){
 			return ;
 		}
 	}
-	else if (ret == SOCKET_ERROR) { //ÍË³ö
+	else if (ret == SOCKET_ERROR) { //é€€å‡º
 		tstring s = _T("Connect Fail: Internal socket error.");
 		CMsg Msg(MSG_LINKER_ERROR,DEFAULT_DIALOG,0);
 		Msg.GetLetter().PushInt(m_SourceID);
@@ -542,7 +542,7 @@ bool CUserAcceptLinkerPipe::Init(tstring& error){
 		return FALSE;
 	}
 	
-	unsigned long ul = 1; //ul·ÇÁãÔòÉèÖÃÎª·Ç×èÈû
+	unsigned long ul = 1; //uléžé›¶åˆ™è®¾ç½®ä¸ºéžé˜»å¡ž
 	Ret = ioctlsocket(m_Socket,FIONBIO,(unsigned long*)&ul);
 	assert(Ret != SOCKET_ERROR);
 	
@@ -571,7 +571,7 @@ void CUserAcceptLinkerPipe::Accept(){
 		}
 	}
 		
-	unsigned long ul = 1; //ul·ÇÁãÔòÉèÖÃÎª·Ç×èÈû
+	unsigned long ul = 1; //uléžé›¶åˆ™è®¾ç½®ä¸ºéžé˜»å¡ž
 	int Ret = ioctlsocket(Client,FIONBIO,(unsigned long*)&ul);
 	assert(Ret != SOCKET_ERROR);
 	
@@ -591,8 +591,8 @@ void CUserAcceptLinkerPipe::Accept(){
 	System::CLockedLinkerList* ClientList= System->GetClientLinkerList();
 	ClientList->AddLinker(Linker);
 	
-	/*ÏÈ²»Ã¦²úÉúÏÔÊ½¶Ô»°£¬¶øÊÇÒªÇó¶Ô·½·¢ËÍÈÏÖ¤ÐÅÏ¢£¬ÈÏÖ¤ºó²ÅÉú³É¶ÔÓ¦µÄ¶Ô»°£¨ÕâÑù¿ÉÒÔ°ÑÎïÀíÁ¬½ÓµÄ´¦ÀíÏÞÖÆÔÚUserSystem£©
-		  ÓÉÓÚÒÑ¾­¼ÓÈëÁËÁ¬½Ó±í£¬´ËÊ±Á¬½Ó´¦ÓÚÄ°ÉúÈË×´Ì¬£¬Ñ­»·¶ÁÈ¡Ê±Èç¹û³¬¹ýÒ»¶¨Ê±¼äÃ»ÓÐ¸Ä±ä×´Ì¬ÔòÉ¾³ý
+	/*å…ˆä¸å¿™äº§ç”Ÿæ˜¾å¼å¯¹è¯ï¼Œè€Œæ˜¯è¦æ±‚å¯¹æ–¹å‘é€è®¤è¯ä¿¡æ¯ï¼Œè®¤è¯åŽæ‰ç”Ÿæˆå¯¹åº”çš„å¯¹è¯ï¼ˆè¿™æ ·å¯ä»¥æŠŠç‰©ç†è¿žæŽ¥çš„å¤„ç†é™åˆ¶åœ¨UserSystemï¼‰
+		  ç”±äºŽå·²ç»åŠ å…¥äº†è¿žæŽ¥è¡¨ï¼Œæ­¤æ—¶è¿žæŽ¥å¤„äºŽé™Œç”ŸäººçŠ¶æ€ï¼Œå¾ªçŽ¯è¯»å–æ—¶å¦‚æžœè¶…è¿‡ä¸€å®šæ—¶é—´æ²¡æœ‰æ”¹å˜çŠ¶æ€åˆ™åˆ é™¤
 		  tstring s = tformat(_T("The new linker(%s) coming in"),Linker->GetLabel().c_str());
 		  OutSysInfo(s);
 		  

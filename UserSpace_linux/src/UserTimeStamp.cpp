@@ -1,4 +1,4 @@
-// UserTimeStamp.cpp: implementation of the CUserTimeStamp class.
+﻿// UserTimeStamp.cpp: implementation of the CUserTimeStamp class.
 //
 //////////////////////////////////////////////////////////////////////
 

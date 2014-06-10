@@ -44,9 +44,9 @@ public:
 	virtual bool  ThreadIOWorkProc(char* Buffer,uint32 BufSize);
 
 private:
-	//返回实际处理的字节数
+	//杩斿洖瀹為檯澶勭悊鐨勫瓧鑺傛暟
 	uint32 ThreadInputProc(char* Buffer,uint32 BufSize);
-	//从m_OutputPort中取出信息，编译成字符串形式准备输出
+	//浠巑_OutputPort涓彇鍑轰俊鎭紝缂栬瘧鎴愬瓧绗︿覆褰㈠紡鍑嗗杈撳嚭
     uint32 ThreadOutputProc(char* Buffer,uint32 BufSize);
 
 	bool  PhysicalRev(char* Buf,uint32 BufSize, uint32& RevLen, uint32 flag=0);
@@ -54,7 +54,7 @@ private:
 		
 };
 
-//具有主动连接功能
+//鍏锋湁涓诲姩杩炴帴鍔熻兘
 class CUserConnectLinkerPipe:public CUserLinkerPipe
 {
 	SUPPORT_ABSTRACT_SAPCE_POOL(CUserConnectLinkerPipe);
@@ -76,7 +76,7 @@ private:
 
 };
 
-//具有Accept功能
+//鍏锋湁Accept鍔熻兘
 class CUserAcceptLinkerPipe:public CUserLinkerPipe{
 	SUPPORT_ABSTRACT_SAPCE_POOL(CUserAcceptLinkerPipe);
 

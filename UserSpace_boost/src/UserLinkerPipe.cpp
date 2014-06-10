@@ -78,7 +78,7 @@ void   CUserLinkerPipe::Close(){
 
 void CUserLinkerPipe::FeedbackDirectly(ePipeline* Msg){
 	m_UrgenceMsg.Push_Directly(Msg);
-	//Í¶µÝÒ»¸ö¿ÕµÄÒì²½·¢ËÍ
+	//æŠ•é€’ä¸€ä¸ªç©ºçš„å¼‚æ­¥å‘é€
 	char buf[1];
 	m_Socket->async_write_some(boost::asio::buffer((void*)buf,0),boost::bind(&CUserLinkerPipe::SendHandler,this,boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
@@ -86,7 +86,7 @@ void CUserLinkerPipe::FeedbackDirectly(ePipeline* Msg){
 int64 CUserLinkerPipe::PushMsgToSend(CMsg& Msg,bool bUrgence){	
 	int64 ID = CLinkerPipe::PushMsgToSend(Msg,bUrgence);
 
-	//Í¶µÝÒ»¸ö¿ÕµÄÒì²½·¢ËÍ
+	//æŠ•é€’ä¸€ä¸ªç©ºçš„å¼‚æ­¥å‘é€
 	char* buf[1];
 	m_Socket->async_write_some(boost::asio::buffer((void*)buf,0),boost::bind(&CUserLinkerPipe::SendHandler,this,boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 	return ID;
@@ -158,7 +158,7 @@ void CUserLinkerPipe::SendHandler(const boost::system::error_code& error, std::s
 			m_CurSendMsg.Reset();		
 		}	
 		else{
-			int32 n = m_SendBuffer.size() - m_SendPos; //»¹Ê£¶àÉÙÊý¾ÝÃ»ÓÐ·¢ËÍ	
+			int32 n = m_SendBuffer.size() - m_SendPos; //è¿˜å‰©å¤šå°‘æ•°æ®æ²¡æœ‰å‘é€	
 			assert(n>0);
 			void* buf = (void*)(m_SendBuffer.c_str()+m_SendPos);					
 			m_Socket->async_write_some(boost::asio::buffer(buf,n),boost::bind(&CUserLinkerPipe::SendHandler,this,boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));			
@@ -167,7 +167,7 @@ void CUserLinkerPipe::SendHandler(const boost::system::error_code& error, std::s
 	
 	if(m_SendState == WAIT_MSG ){
 		
-		//×¼±¸·¢ËÍÒ»¸öÐÂµÄÐÅÏ¢
+		//å‡†å¤‡å‘é€ä¸€ä¸ªæ–°çš„ä¿¡æ¯
 		ePipeline* Msg = NULL;	
 		
 		if (m_UrgenceMsg.Size())
@@ -182,12 +182,12 @@ void CUserLinkerPipe::SendHandler(const boost::system::error_code& error, std::s
 		}
 		
 		int64 MsgID = Msg->GetID();
-		if(MsgID>100){ //²»ÊÇ·´À¡ÐÅÏ¢
+		if(MsgID>100){ //ä¸æ˜¯åé¦ˆä¿¡æ¯
 			ePipeline* Letter = GET_LETTER(Msg);
 			MsgID = Letter->GetID();
 		}
 		
-		if(MsgID<100){  //ÄÚ²¿¿ØÖÆÐÅÏ¢ÔÚÈÎºÎÊ±ºò¶¼¿ÉÒÔ·¢ËÍ
+		if(MsgID<100){  //å†…éƒ¨æŽ§åˆ¶ä¿¡æ¯åœ¨ä»»ä½•æ—¶å€™éƒ½å¯ä»¥å‘é€
 			eElectron E;
 			if (m_UrgenceMsg.Size())
 			{
@@ -201,7 +201,7 @@ void CUserLinkerPipe::SendHandler(const boost::system::error_code& error, std::s
 			m_CurSendMsg.Reset(Msg);
 			
 			if(MsgID == LINKER_RESET)
-			{   //ÒªÇóÏò¶Ô·½·¢½ÓÊÕÖØÖÃÐÅÏ¢
+			{   //è¦æ±‚å‘å¯¹æ–¹å‘æŽ¥æ”¶é‡ç½®ä¿¡æ¯
 				while(m_SendBuffer.size()<ERROR_RESUME_LENGTH)m_SendBuffer += '@';
 				m_SendState = SEND_RESET; 
 				m_SendPos = 0;
@@ -216,7 +216,7 @@ void CUserLinkerPipe::SendHandler(const boost::system::error_code& error, std::s
 			}			
 			m_Socket->async_write_some(boost::asio::buffer((void*)m_SendBuffer.c_str(),m_SendBuffer.size()),boost::bind(&CUserLinkerPipe::SendHandler,this,boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));			
 		}
-		else if ( m_PendingMsgID == NULL) //Ö»ÓÐÎ´¾öÏûÏ¢±»»Ø¸´ºó²ÅÄÜ¼ÌÐø·¢ËÍÐÂÏûÏ¢
+		else if ( m_PendingMsgID == NULL) //åªæœ‰æœªå†³æ¶ˆæ¯è¢«å›žå¤åŽæ‰èƒ½ç»§ç»­å‘é€æ–°æ¶ˆæ¯
 		{
 			eElectron E;
 			if (m_UrgenceMsg.Size())
@@ -245,7 +245,7 @@ void CUserLinkerPipe::SendHandler(const boost::system::error_code& error, std::s
 
 			m_Socket->async_write_some(boost::asio::buffer((void*)m_SendBuffer.c_str(),m_SendBuffer.size()),boost::bind(&CUserLinkerPipe::SendHandler,this,boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));			
 		}else{
-			//Í¶µÝÒ»¸ö¿ÕµÄÒì²½·¢ËÍ,µÈ´ýÎ´¾öÐÅÏ¢½áÊø
+			//æŠ•é€’ä¸€ä¸ªç©ºçš„å¼‚æ­¥å‘é€,ç­‰å¾…æœªå†³ä¿¡æ¯ç»“æŸ
 			char* buf[1];
 			m_Socket->async_write_some(boost::asio::buffer((void*)buf,0),boost::bind(&CUserLinkerPipe::SendHandler,this,boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 		}

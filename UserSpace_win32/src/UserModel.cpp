@@ -178,7 +178,7 @@ bool CUserModel::Connect(int64 ID,AnsiString Address,int32 Port,int32 TimeOut,ts
 		CLockedLinkerList* ServerList = GetSuperiorLinkerList();
 		ServerList->AddLinker(ConLinkerPipe);
 	}
-	//Èç¹ûÃ»ÓÐ´¦ÀíÏß³ÌÔòÉú³ÉÒ»¸ö
+	//å¦‚æžœæ²¡æœ‰å¤„ç†çº¿ç¨‹åˆ™ç”Ÿæˆä¸€ä¸ª
 	CLockedModelData* ModelData = GetModelData();
 	if (ModelData->GetIOWorkNum()<m_nCPU*2)
 	{

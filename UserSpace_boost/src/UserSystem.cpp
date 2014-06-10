@@ -26,7 +26,7 @@ bool CUserSystem::CUserModelIOWork::Activation()
 		delete m_Thread;
 		m_Thread = NULL;
 	};
-	m_Alive = TRUE; //ÏÈÉèÖÃÎªTRUE,±ÜÃâÏß³Ìº¯Êý×Ô¶¯ÍË³ö
+	m_Alive = TRUE; //å…ˆè®¾ç½®ä¸ºTRUE,é¿å…çº¿ç¨‹å‡½æ•°è‡ªåŠ¨é€€å‡º
 	m_Thread = new boost::thread(ObjectDefaultThreadFunc,this);
 	m_Alive = m_Thread?TRUE:FALSE;
 	return m_Alive;
@@ -66,7 +66,7 @@ bool CUserSystem::CUserModelIOWork::Do(Energy* E){
 	}
 	
 	CLockedModelData* LockedData = m_Parent->GetModelData();
-	LockedData->DeleteIOWork(m_ID); //×¢Òâ£ºÓÉÓÚÊÇ×ÔÉ¾³ý£¬´ËÐÐÓ¦×÷Îª×îºóÒ»ÐÐ
+	LockedData->DeleteIOWork(m_ID); //æ³¨æ„ï¼šç”±äºŽæ˜¯è‡ªåˆ é™¤ï¼Œæ­¤è¡Œåº”ä½œä¸ºæœ€åŽä¸€è¡Œ
 	m_Alive = FALSE;
 	return TRUE;
 };
@@ -341,7 +341,7 @@ void CUserSystem::Dead(){
 	
 	System::Dead();	
 
-	CLockedLinkerList* SuperiorList = GetSuperiorLinkerList(); //±ØÐëÔÚstop()ºóÊÖ¹¤É¾³ý£¬·ñÔòm_IOService±»Îö¹¹ºóÔÙ×Ô¶¯Îö¹¹É¾³ýsocketµ¼ÖÂ´íÎó
+	CLockedLinkerList* SuperiorList = GetSuperiorLinkerList(); //å¿…é¡»åœ¨stop()åŽæ‰‹å·¥åˆ é™¤ï¼Œå¦åˆ™m_IOServiceè¢«æžæž„åŽå†è‡ªåŠ¨æžæž„åˆ é™¤socketå¯¼è‡´é”™è¯¯
 	SuperiorList->DeleteAllLinker();
 
 	CLockedLinkerList* ClientList = GetClientLinkerList();
@@ -378,7 +378,7 @@ bool CUserSystem::OpenPort(int32 Port,tstring& error,bool bIP6){
 	SystemData->AddAcceptor(this,Port,bIP6);
 
 
-	//Èç¹ûÃ»ÓÐ´¦ÀíÏß³ÌÔòÉú³ÉÒ»¸ö
+	//å¦‚æžœæ²¡æœ‰å¤„ç†çº¿ç¨‹åˆ™ç”Ÿæˆä¸€ä¸ª
 	if (SystemData->GetIOWorkNum()<m_nCPU*2)
     {
 		int64 ID = CreateTimeStamp();
@@ -402,7 +402,7 @@ void CUserSystem::ClosePort(int32 Port){
 void  CUserSystem::NotifySysState(int64 NotifyID,ePipeline* Data /*= NULL*/){
 
 	if(MNOTIFY_IO_WORK_THREAD_CLOSE == NotifyID){
-/*		int64 ID = Data->PopInt64(); ÒÑ¾­ÓÐÏß³Ì×Ô¼ºÍê³É
+/*		int64 ID = Data->PopInt64(); å·²ç»æœ‰çº¿ç¨‹è‡ªå·±å®Œæˆ
 		CLockedModelData* ModelData = GetModelData();
 		ModelData->DeleteIOWork(ID);
 */	}else if (SNOTIFY_IO_WORK_THREAD_CLOSE == NotifyID){
@@ -423,7 +423,7 @@ bool CUserSystem::Connect(int64 ID,AnsiString Address,int32 Port,int32 TimeOut,t
 	
 	boost::shared_ptr<ConnectPair> cp(new ConnectPair(ID,m_IOService,TimeOut));
 	
-	if (bBlock) //µÈµ½Á¬½Ó³É¹¦ºóÔÙ·µ»Ø
+	if (bBlock) //ç­‰åˆ°è¿žæŽ¥æˆåŠŸåŽå†è¿”å›ž
 	{
 		boost::system::error_code ec;
 		cp->m_pSocket->connect(ep,ec);
@@ -446,7 +446,7 @@ bool CUserSystem::Connect(int64 ID,AnsiString Address,int32 Port,int32 TimeOut,t
 		
 	}
 	
-	//Èç¹ûÃ»ÓÐ´¦ÀíÏß³ÌÔòÉú³ÉÒ»¸ö
+	//å¦‚æžœæ²¡æœ‰å¤„ç†çº¿ç¨‹åˆ™ç”Ÿæˆä¸€ä¸ª
 	CLockedModelData* ModelData = GetModelData();
 	if (ModelData->GetIOWorkNum()<m_nCPU*2)
 	{
@@ -484,8 +484,8 @@ void CUserSystem::AcceptHandler(const boost::system::error_code& error, boost::s
 
 	Linker->AttachSocket(ap->m_pSocket);	
 	
-	/*ÏÈ²»Ã¦²úÉúÏÔÊ½¶Ô»°£¬¶øÊÇÒªÇó¶Ô·½·¢ËÍÈÏÖ¤ÐÅÏ¢£¬ÈÏÖ¤ºó²ÅÉú³É¶ÔÓ¦µÄ¶Ô»°£¨ÕâÑù¿ÉÒÔ°ÑÎïÀíÁ¬½ÓµÄ´¦ÀíÏÞÖÆÔÚUserSystem£©
-		ÓÉÓÚÒÑ¾­¼ÓÈëÁËÁ¬½Ó±í£¬´ËÊ±Á¬½Ó´¦ÓÚÄ°ÉúÈË×´Ì¬£¬Ñ­»·¶ÁÈ¡Ê±Èç¹û³¬¹ýÒ»¶¨Ê±¼äÃ»ÓÐ¸Ä±ä×´Ì¬ÔòÉ¾³ý
+	/*å…ˆä¸å¿™äº§ç”Ÿæ˜¾å¼å¯¹è¯ï¼Œè€Œæ˜¯è¦æ±‚å¯¹æ–¹å‘é€è®¤è¯ä¿¡æ¯ï¼Œè®¤è¯åŽæ‰ç”Ÿæˆå¯¹åº”çš„å¯¹è¯ï¼ˆè¿™æ ·å¯ä»¥æŠŠç‰©ç†è¿žæŽ¥çš„å¤„ç†é™åˆ¶åœ¨UserSystemï¼‰
+		ç”±äºŽå·²ç»åŠ å…¥äº†è¿žæŽ¥è¡¨ï¼Œæ­¤æ—¶è¿žæŽ¥å¤„äºŽé™Œç”ŸäººçŠ¶æ€ï¼Œå¾ªçŽ¯è¯»å–æ—¶å¦‚æžœè¶…è¿‡ä¸€å®šæ—¶é—´æ²¡æœ‰æ”¹å˜çŠ¶æ€åˆ™åˆ é™¤
 		tstring s = tformat(_T("The new linker(%s) coming in"),Linker->GetLabel().c_str());
 		OutSysInfo(s);
 		  
@@ -520,7 +520,7 @@ void CUserSystem::ConnectHandler(const boost::system::error_code& error, boost::
 void CUserSystem::ConnectTimeoutHandler(const boost::system::error_code& error, boost::shared_ptr<ConnectPair> cp){
 	if (error)
 	{
-		cp->m_pSocket->close(); //Ó¦¸Ã»áÒý·¢´íÎó£¬×Ô¶¯×ªÏò´íÎó´¦Àí	
+		cp->m_pSocket->close(); //åº”è¯¥ä¼šå¼•å‘é”™è¯¯ï¼Œè‡ªåŠ¨è½¬å‘é”™è¯¯å¤„ç†	
 		ePipeline Data;
 		NotifySysState(MNOTIFY_CONNECT_FAIL,&Data);
 		cp->m_TimeCount = 0;
@@ -530,7 +530,7 @@ void CUserSystem::ConnectTimeoutHandler(const boost::system::error_code& error, 
 	CLockedLinkerList* LinkerList = GetSuperiorLinkerList();
 	CLinker Linker;
 	LinkerList->GetLinker(cp->m_ID,Linker);
-	if (Linker.IsValid()) //ÒÑ¾­Á¬½Ó
+	if (Linker.IsValid()) //å·²ç»è¿žæŽ¥
 	{
 		cp->m_TimeCount = 0;
 		return;	

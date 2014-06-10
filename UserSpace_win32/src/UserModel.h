@@ -51,7 +51,7 @@ public:
 	virtual bool Activation();
 	virtual void Dead();
 
-	//允许同时连接多个服务器，地址和端口相同则忽略
+	//鍏佽鍚屾椂杩炴帴澶氫釜鏈嶅姟鍣紝鍦板潃鍜岀鍙ｇ浉鍚屽垯蹇界暐
 	bool Connect(int64 ID,AnsiString Address,int32 Port,int32 TimeOut,tstring& error,bool bBlock);
 
 };

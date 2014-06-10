@@ -123,7 +123,7 @@ protected:
 	virtual void  NotifySysState(int64 NotifyID,ePipeline* Data = NULL);
 	
 	virtual void NerveProc(CMsg& Msg){
-		//Ò»°ãÉñ¾­¶ÔĞÅÏ¢µÄ´¦Àíº¯Êı£¬ÓÃ»§ĞèÒª×Ô¼ºÊµÏÖ
+		//ä¸€èˆ¬ç¥ç»å¯¹ä¿¡æ¯çš„å¤„ç†å‡½æ•°ï¼Œç”¨æˆ·éœ€è¦è‡ªå·±å®ç°
 	};
 
 	virtual System::CNerveWork* CreateNerveWorker(int64 ID,System* Parent,uint32 Reason);
@@ -135,15 +135,15 @@ public:
 	virtual bool Activation();
 	virtual void Dead();
 
-	//ÔÊĞíÍ¬Ê±Á¬½Ó¶à¸ö·şÎñÆ÷£¬µØÖ·ºÍ¶Ë¿ÚÏàÍ¬ÔòºöÂÔ
+	//å…è®¸åŒæ—¶è¿æ¥å¤šä¸ªæœåŠ¡å™¨ï¼Œåœ°å€å’Œç«¯å£ç›¸åŒåˆ™å¿½ç•¥
 	bool Connect(int64 ID,AnsiString Address,int32 Port,int32 TimeOut,tstring& error,bool bBlock);
 
-	//´ò¿ªÒ»¸ö¶Ë¿Ú²¢listen,ÔÊĞíÍ¬Ê±´ò¿ª¶àÖØ¶Ë¿Ú£¬¶Ë¿ÚÖØ¸´ÔòºöÂÔ
+	//æ‰“å¼€ä¸€ä¸ªç«¯å£å¹¶listen,å…è®¸åŒæ—¶æ‰“å¼€å¤šé‡ç«¯å£ï¼Œç«¯å£é‡å¤åˆ™å¿½ç•¥
 	bool OpenPort(int32 Port,tstring& error,bool bIP6);
     void ClosePort(int32 Port);
 
 	
-//ÓÃÓÚAccept()
+//ç”¨äºAccept()
 	CUserLinkerPipe* CreateClientLinkerPipe();
 
 };

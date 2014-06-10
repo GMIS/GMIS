@@ -1,4 +1,4 @@
-// UserSpaceMutex.cpp: implementation of the CUserSpaceMutex class.
+﻿// UserSpaceMutex.cpp: implementation of the CUserSpaceMutex class.
 //
 //////////////////////////////////////////////////////////////////////
 

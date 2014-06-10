@@ -1,4 +1,4 @@
-// UserSpacePool.cpp: implementation of the CUserSpacePool class.
+﻿// UserSpacePool.cpp: implementation of the CUserSpacePool class.
 //
 //////////////////////////////////////////////////////////////////////
 

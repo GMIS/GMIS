@@ -1,4 +1,4 @@
-// UserMutex.cpp: implementation of the CUserMutex class.
+﻿// UserMutex.cpp: implementation of the CUserMutex class.
 //
 //////////////////////////////////////////////////////////////////////
 

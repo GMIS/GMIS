@@ -24,15 +24,15 @@ class CUserLinkerPipe : public CLinkerPipe
 	SUPPORT_ABSTRACT_SAPCE_POOL(CUserLinkerPipe);
 protected:
 	bool					 m_bDeleteMutex;
-	AnsiString               m_RevBuf;  //default=1024,Êµ¼ÊÉÏÕâ¸öÓ¦¸Ã¿ÉÒÔ×î¿ªÊ¼Ö»Ğè256ÉõÖÁ¸üÉÙ£¬È»ºó¸ù¾İĞÅÏ¢´óĞ¡¶ø¶¯Ì¬µ÷Õû
+	AnsiString               m_RevBuf;  //default=1024,å®é™…ä¸Šè¿™ä¸ªåº”è¯¥å¯ä»¥æœ€å¼€å§‹åªéœ€256ç”šè‡³æ›´å°‘ï¼Œç„¶åæ ¹æ®ä¿¡æ¯å¤§å°è€ŒåŠ¨æ€è°ƒæ•´
 	boost::shared_ptr<ip::tcp::socket> m_Socket;
 public:
 	CUserLinkerPipe(Model* Parent,int64 SourceID,tstring Name); 
-	CUserLinkerPipe(CSpaceMutex* Mutex,Model* Parent,int64 SourceID); //ÓÃÓÚCONNECT server
+	CUserLinkerPipe(CSpaceMutex* Mutex,Model* Parent,int64 SourceID); //ç”¨äºCONNECT server
 
 	virtual ~CUserLinkerPipe();
 
-	void  AttachSocket(boost::shared_ptr<ip::tcp::socket>& Socket); //°ó¶¨Í¬Ê±¿ªÊ¼·¢ÆğÒ»¸öÒì²½¶Á
+	void  AttachSocket(boost::shared_ptr<ip::tcp::socket>& Socket); //ç»‘å®šåŒæ—¶å¼€å§‹å‘èµ·ä¸€ä¸ªå¼‚æ­¥è¯»
 	boost::shared_ptr<ip::tcp::socket> GetSocket();
 
 	virtual bool   IsValid();
@@ -43,7 +43,7 @@ public:
 private: 
 	virtual void FeedbackDirectly(ePipeline* Msg);
 
-	virtual bool  ThreadIOWorkProc(char* Buffer,uint32 BufSize){ return TRUE;}; //·ÏÆú²»ÓÃ
+	virtual bool  ThreadIOWorkProc(char* Buffer,uint32 BufSize){ return TRUE;}; //åºŸå¼ƒä¸ç”¨
 
 	void RevHandler(const boost::system::error_code& error, std::size_t bytes_transferred );
 	void SendHandler(const boost::system::error_code& error, std::size_t bytes_transferred );
