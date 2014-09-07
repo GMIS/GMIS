@@ -479,8 +479,14 @@ namespace ABSTRACT{
 		NotifySysState(SNOTIFY_NERVE_MSG_NUM,&Data);
 
 		if(LastMsgPopTime==0){	//第一个的ID规定为0		
-			CNerveWork* NerveWork = CreateNerveWorker(0,this,REASON_MSG_TOO_MUCH);
-			if (NerveWork && NerveWork->Activation())
+			CNerveWork* NerveWork = CreateNerveWorker(0,this,REASEON_ALWAYS);
+			if (!NerveWork){
+				assert(0);
+				OutputLog(LOG_TIP,_T("Create first Nerver thread fail,Please reboot it"));
+				return FALSE;
+			}
+			
+			if(NerveWork->Activation())
 			{
 				int n = m_SystemData->AddNerveWork(NerveWork);
 				ePipeline Data;
@@ -493,6 +499,9 @@ namespace ABSTRACT{
 				{
 					delete NerveWork;
 				}
+				assert(0);
+				OutputLog(LOG_TIP,_T("Create first Nerver thread fail,Please reboot it"));
+
 				NotifySysState(SNOTIFY_NERVE_THREAD_FAIL,NULL);
 			}
 			return FALSE;
@@ -513,26 +522,28 @@ namespace ABSTRACT{
 			return FALSE;
 		}
 
-		if (m_Alive)
-		{
-			CNerveWork* NerveWork = CreateNerveWorker(NewMsgPushTime,this,Reason);
-			if (NerveWork && NerveWork->Activation())
-			{
-				int n =m_SystemData->AddNerveWork(NerveWork);
-				ePipeline Data;
-				Data.PushInt(n);
-				Data.PushInt(NerveWork->m_ID);
-				NotifySysState(SNOTIFY_NERVE_THREAD_JOIN,&Data);
-				return TRUE;
-			}else{
-				if(NerveWork){
-					delete NerveWork;
-				}
-				NotifySysState(SNOTIFY_NERVE_THREAD_FAIL,NULL);
-			}
-
+		
+		CNerveWork* NerveWork = CreateNerveWorker(NewMsgPushTime,this,Reason);
+		if (!NerveWork){
+			return FALSE;
 		}
-
+			
+		if(NerveWork->Activation())
+		{
+			int n =m_SystemData->AddNerveWork(NerveWork);
+			ePipeline Data;
+			Data.PushInt(n);
+			Data.PushInt(NerveWork->m_ID);
+			NotifySysState(SNOTIFY_NERVE_THREAD_JOIN,&Data);
+			return TRUE;
+		}else{
+			if(NerveWork){
+				delete NerveWork;
+			}
+			assert(0);
+			OutputLog(LOG_TIP,_T("Create Nerver thread fail,Please reboot it"));
+			NotifySysState(SNOTIFY_NERVE_THREAD_FAIL,NULL);
+		}
 		return FALSE;
 	}
 

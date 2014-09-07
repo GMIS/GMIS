@@ -45,8 +45,8 @@ typedef int  BOOL;
 
 
 
-#define AnsiString  std::string  
-#define tstring     std::wstring 
+typedef std::string  AnsiString;
+#define tstring      std::wstring 
 
 
 

@@ -54,7 +54,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <TargetName>$(ProjectName)_debug</TargetName>
     <ExecutablePath>$(ExecutablePath)</ExecutablePath>
-    <IncludePath>D:\boost;$(IncludePath);..\TheorySapce\src</IncludePath>
+    <IncludePath>D:\boost;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>D:\boost;$(IncludePath);..\TheorySapce\src</IncludePath>

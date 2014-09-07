@@ -61,11 +61,12 @@ enum Log_Flag{
 #define MNOTIFY_EXCEPTION_OCCURRED          10007
 #define MNOTIFY_ILLEGAL_MSG                 10008
 
-#define REASON_REFUSE       0x0000
-#define REASON_TIME_OUT     0x0001
-#define REASON_MSG_TOO_MUCH 0x0002
-#define REASON_LIMIT        0x0003
-#define REASON_WORKER_BUSY  0X0004
+#define REASEON_ALWAYS      0x0000
+#define REASON_REFUSE       0x0002
+#define REASON_TIME_OUT     0x0003
+#define REASON_MSG_TOO_MUCH 0x0004
+#define REASON_LIMIT        0x0005
+#define REASON_WORKER_BUSY  0X0006
 ///////////////////////////////////////////////////////////////////////////
 
 

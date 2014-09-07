@@ -596,8 +596,14 @@ BOOL  Model::CentralNerveWorkStrategy(int64 NewMsgPushTime,int64 LastMsgPopTime)
 	int64 t = NewMsgPushTime-LastMsgPopTime; //转换成秒
 	
 	if(LastMsgPopTime==0){	//第一个	
-		CCentralNerveWork* CentralNerveWork = CreateCentralNerveWorker(0,this,REASON_MSG_TOO_MUCH); //第一的ID设置为0
-		if (CentralNerveWork && CentralNerveWork->Activation())
+		CCentralNerveWork* CentralNerveWork = CreateCentralNerveWorker(0,this,REASEON_ALWAYS); //第一的ID设置为0
+		if (!CentralNerveWork)
+		{
+			assert(0);
+			OutputLog(LOG_TIP,_T("Create first centtral Nerver thread fail,Please reboot it"));
+			return FALSE;
+		}
+		if (CentralNerveWork->Activation())
 		{
 			int n = m_ModelData->AddCentralNerveWork(CentralNerveWork);
 			ePipeline Data;
@@ -609,11 +615,14 @@ BOOL  Model::CentralNerveWorkStrategy(int64 NewMsgPushTime,int64 LastMsgPopTime)
 			if(CentralNerveWork){
 				delete CentralNerveWork;
 			}
+			assert(0);
+			OutputLog(LOG_TIP,_T("Create first centtral Nerver thread fail,Please reboot it"));
+
 			NotifySysState(MNOTIFY_CENTRAL_NERVE_THREAD_FAIL,NULL);
 			return FALSE;
 		}
 	}
-	else if(m_Alive){//如果中枢神经里有超过10个以上信息或者超过2秒钟没有取出新信息来处理则启用新线程
+	else{//如果中枢神经里有超过10个以上信息或者超过2秒钟没有取出新信息来处理则启用新线程
 		uint32 Reason ;
 		bool ret = m_ModelData->RequestCreateNewCentralNerveWork(n,t,Reason);
 		if (!ret)
@@ -627,7 +636,11 @@ BOOL  Model::CentralNerveWorkStrategy(int64 NewMsgPushTime,int64 LastMsgPopTime)
 		}
 		
 		CCentralNerveWork* CentralNerveWork = CreateCentralNerveWorker(NewMsgPushTime,this,Reason);
-		if (CentralNerveWork && CentralNerveWork->Activation())
+		if (!CentralNerveWork)
+		{
+			return FALSE;
+		}
+		if (CentralNerveWork->Activation())
 		{
 			int n =m_ModelData->AddCentralNerveWork(CentralNerveWork);
 			ePipeline Data;
