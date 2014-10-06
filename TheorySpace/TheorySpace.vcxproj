@@ -25,6 +25,7 @@
     <ClInclude Include="src\SpaceMutex.h" />
     <ClInclude Include="src\System.h" />
     <ClInclude Include="src\TheorySpace.h" />
+    <ClInclude Include="src\ThinDataTransProtocal.h" />
     <ClInclude Include="src\TimeStamp.h" />
     <ClInclude Include="src\Typedef.h" />
   </ItemGroup>
@@ -39,6 +40,7 @@
     <ClCompile Include="src\Pipeline.cpp" />
     <ClCompile Include="src\SpaceMutex.cpp" />
     <ClCompile Include="src\System.cpp" />
+    <ClCompile Include="src\ThinDataTransProtocal.cpp" />
     <ClCompile Include="src\TimeStamp.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
