@@ -181,7 +181,7 @@ void CUserSystem::CUserLockedSystemData::DelAcceptor(int32 Port){
 		return;
 	} 
 	CUserLinkerPipe* Acceptor = it->second;
-	Acceptor->Close(); //会引发一个Linker错误，通知系统删除实际的CUserLinkerPipe
+	Acceptor->Close(); //A Linker error is thrown that tells the system to delete the actual CUserLinkerPipe
     m_AcceptorList.erase(it);
 };
 
@@ -267,7 +267,7 @@ bool CUserSystem::Connect(int64 ID,AnsiString Address,int32 Port,int32 TimeOut,t
 		};
 	}
 
-	//如果没有处理线程则生成一个
+	//if no thread to handle this connection, create new one
 	CLockedModelData* ModelData = GetModelData();
 	if (ModelData->GetIOWorkNum()<m_nCPU*2)
 	{
@@ -305,7 +305,7 @@ bool CUserSystem::OpenPort(int32 Port,tstring& error,bool bIP6){
 	CLockedLinkerList* ClientList = GetClientLinkerList();
 	ClientList->AddLinker(Acceptor);
 
-	//如果没有处理线程则生成一个
+	//if no thread to handle this task, create new one
     if (SystemData->GetIOWorkNum()<m_nCPU*2)
     {
 		int64 ID = CreateTimeStamp();

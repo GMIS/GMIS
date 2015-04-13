@@ -56,9 +56,9 @@ int64 CTimeStamp::TimeStamp(){
 		m_LastTime = NewTime;
 		m_LastTimeStamp = m_LastTime+1;
 		t= m_LastTimeStamp;
-	}else // (NewTime<m_LastTime) //可能修改了时间导致当前时间戳比已经使用的还小
+	}else // (NewTime<m_LastTime) 
 	{ 
-		t= ++m_LastTimeStamp; //继续使用当前时间戳
+		t= ++m_LastTimeStamp; 
 	}
 
 	m_Mutex->Release();
@@ -119,11 +119,11 @@ int64 CTimeStamp::TimeToInt64(
     int64 T = Date2Days(Year,Month,Day);
 	T -= m_BirthDay;
 
-	//计算得到秒
+	//get seconds
     T *= 86400L;
     T += (Hour * 3600L) + (Minute * 60L) + Second;
 
-    // 得到百纳秒
+    // get hundred nanosecond
     T *= 10000000L;
 	T += (Milli*10000); //*1000000/100=*10000
 	T += (Micro*10);   //*1000/100 = *10

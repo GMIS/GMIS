@@ -46,7 +46,7 @@ public:
 	virtual bool Activation();
 	virtual void Dead();
 
-	//允许同时连接多个服务器，地址和端口相同则忽略
+	//Allows to connect several servers at same time, if address and port are the same then ignore
 	bool Connect(int64 ID,AnsiString Address,int32 Port,int32 TimeOut,tstring& error,bool bBlock);
 
 };

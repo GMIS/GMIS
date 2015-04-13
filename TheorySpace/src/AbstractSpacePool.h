@@ -1,6 +1,6 @@
 /* author: ZhangHongBing(hongbing75@gmail.com) 
-*  一个内存池,启用需定义 _USE_SPACE_POOL
-*  使用参考BaseEnergy.h
+*  a memory pool, define _USE_SPACE_POOL before using
+*  referto BaseEnergy.h
 */
 #ifndef _ABSTRACTSPACEPOOL_H__
 #define _ABSTRACTSPACEPOOL_H__
@@ -68,4 +68,4 @@ public:
 #endif
 
 }
-#endif // !defined(AFX_ABSTRACTSPACEPOOL_H__ACA10151_B6DE_4878_B340_F135ADFF5924__INCLUDED_)
+#endif // !defined  _ABSTRACTSPACEPOOL_H__

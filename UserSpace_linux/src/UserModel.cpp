@@ -142,7 +142,7 @@ bool CUserModel::Connect(int64 ID,AnsiString Address,int32 Port,int32 TimeOut,ts
 		CLockedLinkerList* ServerList = GetSuperiorLinkerList();
 		ServerList->AddLinker(ConLinkerPipe);
 	}
-	//如果没有处理线程则生成一个
+	//if there is not thread to handle, create new one
 	CLockedModelData* ModelData = GetModelData();
 	if (ModelData->GetIOWorkNum()<m_nCPU*2)
 	{

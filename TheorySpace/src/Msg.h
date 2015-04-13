@@ -11,7 +11,7 @@
 namespace ABSTRACT{
 
 
-//通用最基本预定义
+//General and basic predefined
 
 #define  SYSTEM_SOURCE   0
 #define  DEFAULT_DIALOG  0
@@ -29,7 +29,7 @@ namespace ABSTRACT{
 /*  
 
 =============
- MSG格式：
+ MSG format：
   ePipeline{   //m_ID = SourceID
     ePipeline  //ReceiverInfo  m_ID = EventTimeStamp
 	ePipeline  //Letter        m_ID = MsgID
@@ -45,12 +45,11 @@ namespace ABSTRACT{
     Msg.GetLetter().PushString("Hello");
     m_Ouput->PushToSend(Msg); 
 
-注意：简单的让Msg.Receiver()=Msg.Sender()会导致EventID错误
+Note: That simply let Msg.Receiver () =Msg.Sender ()  will cause the EventID error
 */  
 
 class ePipeline;
 
-//返回收信地址，发信地址和空白的信由用户填写
 ePipeline* CreateMsg(int64 MsgID,int64 EventID,ePipeline** ReceiverInfo,ePipeline** Letter,ePipeline** SenderInfo);
 
 class CMsg{
@@ -64,20 +63,20 @@ private:
 	}
 protected:
 	ePipeline*  m_MsgPtr;
-	bool        m_bReaded; //已读过，只要使用GetLetter()则设置为true,缺省为false
-public:
+	bool        m_bReaded; //readed，just using the GetLetter () will  set it to true, default is false
 	CMsg();
-	//系统任何一个对话主动发信给外部（收信地址为对方缺省的系统对话）
-	CMsg(int64 MsgID,int64 SenderID,int64 EventID); //EventID如果不使用则为0，但这里不设置缺省值=0，以免和下面构造函数混淆
-	//系统内部一个对话给另一个对话发信
+	//For sending Letter to external (default address  is the system dialog of remote end)
+	CMsg(int64 MsgID,int64 SenderID,int64 EventID); 
+	//For a dialog send message to other dialog in local system 
 	CMsg(int64 ReceiverID,int64 MsgID,int64 SenderID,int64 EventID); 
-	CMsg(ePipeline& Receiver,int64 MsgID,int64 EventID); //以系统名义给指定地址发信
+
+	CMsg(ePipeline& Receiver,int64 MsgID,int64 EventID); //System send message to child dialog
 
 	CMsg(ePipeline* Msg);	
 	virtual ~CMsg();	
 	
 	bool IsValid();
-	bool IsReaded();  //只要使用过GetLetter()则设置返回true
+	bool IsReaded();  
 
 	void Reset(ePipeline* Msg = 0);	
 	ePipeline* Release();
@@ -103,4 +102,4 @@ public:
 
 } //namespace
 
-#endif // !defined(AFX_MSG_H__A04A1CB0_212A_482F_8D0D_9851512911F8__INCLUDED_)
+#endif // !defined(_MSG_H__)

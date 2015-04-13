@@ -34,13 +34,13 @@ private:
 	map<void*,SeatMutex*>    m_UseSeatList;
 	deque<SeatMutex*>        m_BlankSeatList; 
 
-	uint32                   m_SeatNum;  //设定座位总数=m_UseSeatList.size()+m_BlankSeatList,default = 2;
+	uint32                   m_SeatNum;  //Set total number of seats = m_UseSeatList.size()+m_BlankSeatList,default = 2;
 
 public:
 	CSpaceMutex();
 	virtual ~CSpaceMutex();
 
-	//最好和使用的线程数相等
+	//It best  equal to the number of threads
 	void  SetSeatNum(int32 n){
 		m_SeatNum = n>0? n:1;
 	}
@@ -53,7 +53,7 @@ public:
 		
 		Acquire();
 
-		//首先检查User是否已经坐下
+		//First check whether the User has sat down
         map<void*,SeatMutex*>::iterator it = m_UseSeatList.find(User);
 		if (it != m_UseSeatList.end())
 		{
@@ -62,9 +62,9 @@ public:
 			Seat = m_BlankSeatList.front();
 			m_BlankSeatList.pop_front();
             m_UseSeatList[User] = Seat;
-		}else{ //座位会自适应增加
+		}else{ //Adaptive increase in seats
 			Seat = CreateSeat();
-			assert(Seat);  //这种情况应该非常少见，因为座位数会与线程数相等，目前没处理此例外
+			assert(Seat);  //This situation should be very rare, because the number of seats should be equal to the number of threads, so this exception no need to handle currently
 			if(Seat==NULL){
 			    Release();
 				return FALSE;
@@ -90,12 +90,12 @@ public:
 		
 		if (sm->RefNum==0)
 		{
-			//对于自适应增加的座位如果大于约定的座位数，使用完毕后则删除
+			//The increased  seat ,if it is greater than the number of appointed seats, will be  deleted after used 
 			if (m_UseSeatList.size()+m_BlankSeatList.size()>m_SeatNum)
 			{
 				delete sm;
 			} 
-			else //否则放入空白座位列表等待使用
+			else //Or put it into a list of empty seats to  wait for use 
 			{
 				m_BlankSeatList.push_back(sm);
 			}

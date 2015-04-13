@@ -13,7 +13,7 @@ namespace ABSTRACT{
 		s.append("@0@");
 	};
 	
-	//对于NULL类型，其格式为：type@0@ 没有len@data部分
+	//For NUll Type,the form is: type@0@, without len@data part
 	uint32  eNULL::FromString(AnsiString& s,uint32 pos){
 		const char* ch = &s[pos+1];
 		if( *ch == '@' && *(++ch) =='0' && *(++ch) =='@'){
@@ -33,14 +33,14 @@ namespace ABSTRACT{
 	uint32  eINT::FromString(AnsiString& s, uint32 pos){
         int32 start = pos+2;
 
-		//找到并检查是否为整数；
+		//find and check for integer ;
 		int32 slen = FindInt(s,start,'@');
-		if(slen==0 || slen>2 )return 0;     //除了字符串slen都不会>2
+		if(slen==0 || slen>2 )return 0;     //slen always <=2 except string data
 
-		//得到整数位数(包含可能的负号）
+		//Get integer digits ( including possible negative sign )
 		int32 t = StringToInt(&s[start],slen);
 
-		//得到数据
+		//get data
 		start += slen+1;
 		bool correct;
 		m_Value = RawStringToInt(&s[start],t,correct);
@@ -51,7 +51,7 @@ namespace ABSTRACT{
 	void eFLOAT::ToString(AnsiString& s){
 		char buf[50];
 		uint32 n = sprintf(buf,"%.6f",m_Value);
-		while(buf[--n] == '0'); //去掉多余的0,减少实际存储所需字节
+		while(buf[--n] == '0'); //Remove "0", to reduce the actual storage bytes
 		buf[n+1]='\0';
 		PrintString(s,TYPE_FLOAT,n+1,buf);
 	};
@@ -60,18 +60,17 @@ namespace ABSTRACT{
 
 		//找到并检查是否为整数；   @4@23.34@
 		int32 slen = FindInt(s,start,'@');
-		if(slen==0 || slen>2 )return 0;     //除了字符串slen都不会>2
-
-		//得到double位数(包含可能的负号）
+		if(slen==0 || slen>2 )return 0;     
+		
+		//Get double digits ( including possible negative sign )
 		int64 t = StringToInt(&s[start],slen);
 
-		//检查并找到浮点数的位置
+		//Check and find the float position
 		uint32 floatpos =0; //浮点位置，基于数字长度包括可能的负号
 		start += slen +1;
 		slen =  FindFloat(s, start,floatpos,'@');
         if(slen==0 || floatpos>20 || slen-floatpos>19)return 0;     
 
-		//得到数据
 		m_Value = StringToFloat(&s[start],t,floatpos);
 		return  start+t-pos;
 	};	

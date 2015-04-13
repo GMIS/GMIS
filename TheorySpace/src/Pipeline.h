@@ -1,11 +1,15 @@
 /*
-*ePipeline用来给其他空间实例提供统一的数据输入输出管道。
-*可以理解为一根电线，由于所有数据都被约束在ePipeline里，每一个数据使用后就象电流里
-*的电子会自动消失，因此这里没有其它语言所面临的内存回收难题。
+*ePipeline is similar to a piece of wire provides unified data input and output channel for other Mass instances.
 *
+*The data is like an electrons in ePipeline, deleted and disappeared automatically after use.It avoids C++ garbage problem.
+*
+*ePipeline itself can also be used as a data type that supports nested itself, so you can use it to express arbitrary data structures.
+*
+*Through serializing as string, ePipeline can be easily implement cross-domain transfer and storage.
+
 * author: ZhangHongBing(hongbing75@gmail.com)   
 */
-
+	
 #ifndef _PIPELINE_H_ 
 #define _PIPELINE_H_ 
 
@@ -97,8 +101,6 @@ public:
 };
 
 
-//ePipeline的数据原则上是先进先出，不鼓励随机读写
-
 class  ePipeline : public Energy  
 {
 	SUPPORT_ABSTRACT_SAPCE_POOL(ePipeline);
@@ -108,14 +110,15 @@ public:
  	typedef deque<Energy*>::const_iterator  ConstEnergyPtr;
 //    friend class ePipeline;
 protected:
-	TypeAB          m_TypeAB;     //数据类型缩写，一次可以同时处理前8个数据
+	TypeAB          m_TypeAB;     //Data type abbreviation,one can express the first 8 data type
 	EnergyList      m_EnergyList;
 
-	bool            m_Alive;      //FALSE表示断开此管道,一般总是为TRUE，一般只作为内部使用
+	bool            m_Alive;      //FALSE for breaking this pipe, generally always TRUE, , only for internal use
 
 public:
     uint64          m_ID;       
-	tstring         m_Label;      //用户自己根据需要填充和解释m_Label,default通常为ePipeline name     
+	tstring         m_Label;      //Users filled it for their needs,default usually is ePipeline name.
+     
 
 public:
 	ePipeline();
@@ -131,7 +134,7 @@ public:
 
 
 
-    //把一个管道里的数据转移到本管道末尾，原管道将失去所有的数据。  
+    //Transfers the data in a pipe to the end of this pipe, the C pipe will lose all data.  
 	ePipeline& operator << (ePipeline& C);
 
 	virtual eType EnergyType(){ return TYPE_PIPELINE;};	 	
@@ -141,7 +144,7 @@ public:
 	void UndeleteClear(){
 		m_EnergyList.clear();
 	};
-    // 完全复制
+    // Full replication
     void Clone(const ePipeline &C);
   
 	int  Size(){ return m_EnergyList.size();};  
@@ -152,57 +155,93 @@ public:
 	tstring&    GetLabel(){ return m_Label;};
 	void        SetLabel(const wchar_t* Text){ m_Label=Text;};
 
-	//本管道失效，目前只用于系统内部
+	//Disable this pipe
 	void Break(){ m_Alive = FALSE;};
 
 	bool IsAlive(){ return m_Alive;};
     void Reuse(){ m_Alive = TRUE;};
 
-	//这表明ePipeline本身也被看作是一种复合数据类型，同样可以被传递。
 	void*  Value()const { return (void *)this;};
     Energy* Clone(){ return new ePipeline(*this);};   
     
 
 	/*
-	 Pipeline也是一种基本数据类型，因此它也将被转换成基本的 type@IDlen@ID@Lablelen@Lable@len@data格式，
-	 注意，它别其他数据类型多一个ID项目，其他数据成员将被忽略。
-	  
-	 由于Pipeline装载的都是其他数据，因此在data部分的格式为：
+	 ePipeline is one of the basic data types, so it can also be converted into the following format:
+	  type@IDlen@ID@Lablelen@Lable@len@data
+
+     Note that it has a extra member ID.
+     Due to the Pipeline save all other data, the format of the data section is :
+ 
 	     type@id@len@type@len@data1 ... type@len@dataN
 		             |-------------DATA--------------|  
-	 另外管道是可以嵌套的。
+		             
+	 ePipeline can be nested.
 
-	 注意：本格式只是暂定，将来有可能改变。
+	 This format is only tentative and may be changed in the future.
 	*/
 	void ToString(AnsiString& s);
 
-	//注意：输入的字符串格式为：TYPE_PIPELINE@ID@LEN@type@len@data1type@len@data2 ... type@len@dataN
+	//Note: the inputted string format is: TYPE_PIPELINE@ID@LEN@type@len@data1type@len@data2 ... type@len@dataN
 	uint32  FromString(AnsiString& s,uint32 pos=0);		
 	
 	/*
-	  通常在管道流入某一个空间实例之前，系统自动调用此函数来检查
-	  是否和空间实例的TypeAB()接口一致，相当于完成C语言的参数检查
-	  除非参数超过8个或有特殊要求，否则用户不必再自己检查ePipeline里
-	  的数据是否合法。
+	Before the pipe flowed into a Mass instance, the system will automatically call this function to check
+    the type abbreviation whether is consistent with the instance required,
+    which is equal to the parameter checking in C language.
+    Unless the parameter is more than eight or have special requirements,
+    users no longer have to do same thing by themself	
 	*/
 	TypeAB GetTypeAB(){return m_TypeAB;};
-
-	void  SetTypeAB(uint32 t){ m_TypeAB = t;};
+	void   SetTypeAB(uint32 t){ m_TypeAB = t;};
 
 	/*
-	  重新设置前8个数据的类型缩写,管道保存的数据改变以后都应该调用
-	  这个函数以确保它正确流如入下一个空间实例，这项工作也是由系统自动
-	  完成的，但它只能帮你检查前8个，你要取出的数据超过8个，那你就需要
-	  自己调用此函数然后检查随后的8个数据是否合法。
+	  Reset the type abbreviation of first eight data. 
+	  It should be called when the data of ePipeline have been changed 
+	  so that it correctly flow into the next Mass instance, 
+	  usually this work can be carried out by the system automatically 
+	  but it only help you check the first eight, 
+	  if you want to use the data more than 8, 
+	  then you need to check it by yourself.
 	*/
     void AutoTypeAB();
 
 	bool  HasTypeAB(uint32 t){
 	    AutoTypeAB();
-		return (t&m_TypeAB) == t;
+		uint32 n =t&0xf0000000;
+		if(n==0)return true;
+		if(n!=(m_TypeAB & 0xf0000000))return false;
+	
+		n=t&0x0f000000;
+		if(n==0)return true;
+		if(n!=(m_TypeAB & 0x0f000000))return false;
+
+		n=t&0x00f00000;
+		if(n==0)return true;
+		if(n!=(m_TypeAB & 0x00f00000))return false;
+
+		n=t&0x000f0000;
+		if(n==0)return true;
+		if(n!=(m_TypeAB & 0x000f0000))return false;
+
+		n=t&0x0000f000;
+		if(n==0)return true;
+		if(n!=(m_TypeAB & 0x0000f000))return false;
+
+		n=t&0x00000f00;
+		if(n==0)return true;
+		if(n!=(m_TypeAB & 0x00000f00))return false;
+
+		n=t&0x000000f0;
+		if(n==0)return true;
+		if(n!=(m_TypeAB & 0x000000f0))return false;
+
+		n=t&0x0000000f;
+		if(n==0)return true;
+		if(n!=(m_TypeAB & 0x0000000f))return false;
+
+		return true;
 	};
 
-	//往管道里写入一个数据，它克隆目标数据,而不破坏原数据
 	void Push_Copy(Energy* Data){
 		Energy* New = Data->Clone();
 		m_EnergyList.push_back(New);
@@ -267,7 +306,7 @@ public:
         m_EnergyList.push_back(Data);   
 	};
 
-	//以std::string为载体处理二进制数据
+	//Stored binary data in std::string 
 	void PushBlob(const AnsiString& Value){
 		eBLOB* Data = new eBLOB(Value.c_str(),Value.size());
 		assert(Data);
@@ -290,8 +329,7 @@ public:
 	};
 		
 	/*
-      它让一个auto_ptr来取出数据，你可以使用eElectron对象来泛指任何数据
-	  也可以使用它的派生类eData<class T>,从而避免处理类型转换
+      eElectron is a auto_ptr
     */
 	void Pop(eElectron* Data){	
 		assert(m_EnergyList.size() != 0);  
@@ -348,7 +386,7 @@ public:
 		e = NULL;
 	}
 
-	//以std::string为载体存储二进制数据
+	//Stored binary data in std::string 
 	void PopBlob(AnsiString& Blob){
 		assert(m_EnergyList.size() != 0);  
 		Energy* e = m_EnergyList.front();
@@ -372,10 +410,10 @@ public:
 
 		
 	/*
-	  ePipeline其实相当于一个C语言中的struct，只不过其数据长度和内容可以动态改变
-	  有时我们需要把它当作一个固定结构而查看起特定的数据。
+	  Here ePipeline is equivalent to a c struct, except that its length and content can be dynamically changed.
+	  Sometimes we need to treat it as a fixed structure and view specific data.
 
-      我们可以通过一个enum{DATA1=0,...}定义数据保存次序,然后象结构一样访问其数据成员
+	  We can use a enum{DATA1=0, ...} to define the data order, and then access the data like a structure member
 	*/
 	
 	Energy* GetEnergy(uint32 Pos)
@@ -388,7 +426,7 @@ public:
 		if(m_EnergyList.size()==0)return NULL;
 		return m_EnergyList.back();
 	}
-	void* GetData(uint32 Pos)  //曾考虑使用模板，不过还是程序员显式的转换更好，至少他不得不思考一下自己将要操作的是什么类型的数据
+	void* GetData(uint32 Pos)  
 	{
 		assert(Pos<m_EnergyList.size());
 		Energy* Data = m_EnergyList[Pos];
@@ -413,7 +451,7 @@ public:
 		m_EnergyList.insert(m_EnergyList.begin()+Pos,1,E);
 	}
 
-	//插入管道将失去数据
+	//Inserted pipes will lose data
 	void InsertEnergy(uint32 Pos,ePipeline& Pipe)
 	{
 		assert(Pos<=m_EnergyList.size());
@@ -469,7 +507,7 @@ public:
 	}
 	
 	/*
-	得到所含有PIPE的总数目，包括本管道
+	Get the total number of child pipe, including this pipe
 	*/
 	int32 GetPipeCount();
 	

@@ -1,10 +1,9 @@
 /*
 *author: ZhangHongBing(hongbing75@gmail.com)  
 *  
-* 对ePipeline的封装，可以看作是一个用于多线程安全队列
-* 用来缓存输入输出信息。
+* A encapsulation of ePipeline can be used as a thread safe queue for caching the input and output data
 *
-* 自带一个紧急数据管道，如果紧急数据管道有数据则优先使用
+* With an emergency data pipeline, if there are emergency data will be gived priority to process
 */
 
 #ifndef _CLockPIPE_H
@@ -27,9 +26,9 @@ class   CLockPipe: public ePipeline
 {
 
 protected:
-	CABMutex*            m_Mutex;       //确保线程安全
+	CABMutex*            m_Mutex;       // To ensure thread safe
 	ePipeline            m_UrgenceMsg;
-	int64                m_LastPopTimeStamp; //最后取出信息的时间戳
+	int64                m_LastPopTimeStamp;
 public:	
 
 	CLockPipe(CABMutex* m,const wchar_t* Name=_T("Unkown"),uint64 ID=0)
@@ -39,8 +38,6 @@ public:
 		 m_LastPopTimeStamp(0)
 	{};
 	virtual ~CLockPipe(){
-//		CLock lk(m_Mutex);  由于m_Mutex是后期决定的，可能被承继类提前删除而失效
-//      m_UrgenceMsg.Clear();
 	};
 
 	int64 GetLastPopTimeStamp(){
@@ -71,7 +68,7 @@ public:
 		Pipe.Push_Copy(&m_UrgenceMsg);
 		Pipe.Push_Copy(this);
 	}
-	//注意：输入的字符串格式为：type@len{type@len@data1,type@len@data2 ... type@len@dataN}
+	//the string format is：type@len{type@len@data1,type@len@data2 ... type@len@dataN}
 	uint32   FromString(AnsiString& s,uint32 pos=0){ 
 		CLock lk(m_Mutex,this);
 
@@ -92,8 +89,7 @@ public:
 		return n;
 	}
     /*
-	往CCLockPipe里写的数据必须是ePipeline
-	NOTE: 由于使用Push_Directly,所以Data必须取自堆
+	Note: because using Push_Directly(),so the Data must be from memory heap
 	*/
 	int64 Push(ePipeline* Data){
 		assert(Data != NULL);
@@ -102,7 +98,7 @@ public:
 		return m_LastPopTimeStamp--; 
 	};
 	
-	//紧急数据会被优先取出
+	//the emergency data will be gived priority to process
 	int64 PushUrgence(ePipeline* Data){
 		assert(Data != NULL);
 		CLock lk(m_Mutex,this);
@@ -135,7 +131,7 @@ public:
 		Msg.Reset(NULL);
 	}
     /*
-      NOTE: 数据可能无效，用户必须自己检查
+      NOTE: the data may not be valid, users must check it before use
    
 	eData<ePipeline> Pop(){	
 		CLock lk(m_Mutex);		

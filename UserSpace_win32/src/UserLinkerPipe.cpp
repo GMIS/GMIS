@@ -61,7 +61,7 @@ bool   CUserLinkerPipe::IsValid(){
 
 void   CUserLinkerPipe::Close(){
 	if(IsValid()){
-		long s = m_Socket; //可能线程正在循环检查m_Socket
+		long s = m_Socket; //Maybe the thread is looping and  checking m_Socket
         m_Socket =INVALID_SOCKET;
 		closesocket(s);
 		CLinkerPipe::Close();
@@ -90,14 +90,13 @@ uint32 CUserLinkerPipe::ThreadInputProc(char* Buffer,uint32 BufSize){
 	return RevBytes;
 }
 
-//从m_OutputPort中取出信息，编译成字符串形式准备输出
 uint32 CUserLinkerPipe::ThreadOutputProc(char* Buffer,uint32 BufSize){
 	
 	uint32 SendBytes =0;
 	
 	if(m_SendState == WAIT_MSG ){
 		
-		//准备发送一个新的信息
+		//Preparing to send a new message
 		ePipeline* Msg = NULL;	
 		
 		if (m_UrgenceMsg.Size())
@@ -112,12 +111,12 @@ uint32 CUserLinkerPipe::ThreadOutputProc(char* Buffer,uint32 BufSize){
 		}
 		
 		int64 MsgID = Msg->GetID();
-		if(MsgID>100){ //不是反馈信息
+		if(MsgID>100){ //Not the feedback msg
 			ePipeline* Letter = GET_LETTER(Msg);
 			MsgID = Letter->GetID();
 		}
 		
-		if(MsgID<100){  //内部控制信息在任何时候都可以发送
+		if(MsgID<100){  //Internal control msg can  send at any time
 			eElectron E;
 			if (m_UrgenceMsg.Size())
 			{
@@ -131,7 +130,7 @@ uint32 CUserLinkerPipe::ThreadOutputProc(char* Buffer,uint32 BufSize){
 			m_CurSendMsg.Reset(Msg);
 			
 			if(MsgID == LINKER_RESET)
-			{   //要求向对方发接收重置信息
+			{   //Send a resetting msg to each other
 				while(m_SendBuffer.size()<ERROR_RESUME_LENGTH)m_SendBuffer += '@';
 				m_SendState = SEND_RESET; 
 				m_SendPos = 0;				
@@ -146,7 +145,7 @@ uint32 CUserLinkerPipe::ThreadOutputProc(char* Buffer,uint32 BufSize){
 				
 			}	
 		}
-		else if ( m_PendingMsgID == NULL) //只有未决消息被回复后才能继续发送新消息
+		else if ( m_PendingMsgID == NULL) //Only after the pending message get a reply  to continue sending new messages
 		{
 			eElectron E;
 			if (m_UrgenceMsg.Size())
@@ -176,7 +175,7 @@ uint32 CUserLinkerPipe::ThreadOutputProc(char* Buffer,uint32 BufSize){
 		}
 	}
 	else{
-		uint32 n = m_SendBuffer.size() - m_SendPos; //还剩多少数据没有发送	
+		uint32 n = m_SendBuffer.size() - m_SendPos; 
 		if(n>0){
 			--BufSize;
 			uint32 SendSize = (n > BufSize)?BufSize:n;
@@ -187,9 +186,7 @@ uint32 CUserLinkerPipe::ThreadOutputProc(char* Buffer,uint32 BufSize){
 				return 1;
 			}
 						
-			m_SendPos += SendBytes; //因为是非阻塞，实际送出的可能跟预计送出的不一样 	
-
-			ePipeline Data;
+			m_SendPos += SendBytes; 
 			Data.PushInt(m_PendingMsgID);
 			Data.PushInt(m_SendBuffer.size());
 			Data.PushInt(m_SendPos);
@@ -245,7 +242,7 @@ bool  CUserLinkerPipe::PhysicalRev(char* Buf,uint32 BufSize, uint32& RevLen, uin
 				return FALSE;
 			}
 			
-			if(nRead == 0)   //连接已经关闭
+			if(nRead == 0)   //has connected
 			{ 
 				int nError = WSAGetLastError();
 				m_RecoType = LINKER_INVALID;
@@ -262,7 +259,7 @@ bool  CUserLinkerPipe::PhysicalRev(char* Buf,uint32 BufSize, uint32& RevLen, uin
 			RevLen = nRead;
 		}	
 	}
-	else if (ret == SOCKET_ERROR ) { //退出
+	else if (ret == SOCKET_ERROR ) { //exit
 		int nError = WSAGetLastError();
 		
 		m_RecoType = LINKER_INVALID;
@@ -316,7 +313,7 @@ bool  CUserLinkerPipe::PhysicalSend(char* Buf,uint32 BufSize, uint32& SendLen, u
             Buf[SendLen]= '\0';
 		}
 	}
-	else if (ret == SOCKET_ERROR ) { //退出
+	else if (ret == SOCKET_ERROR ) { //exit
 		int nError = WSAGetLastError();
 
 		m_RecoType = LINKER_INVALID;
@@ -381,8 +378,8 @@ bool CUserConnectLinkerPipe::Init(tstring& error){
 	Server.sin_family=AF_INET;
 	Server.sin_port=htons(m_Port);
 	
-	//把m_SocketSelf改为非阻塞,以便能检测连接超时
-	unsigned long ul = 1; //设置为非阻塞
+
+	unsigned long ul = 1; 
 	int Ret = ioctlsocket(m_Socket,FIONBIO,(unsigned long*)&ul);
     
 	if(Ret == SOCKET_ERROR){
@@ -393,7 +390,7 @@ bool CUserConnectLinkerPipe::Init(tstring& error){
 	
 	int ret = connect(m_Socket,(struct sockaddr*)&Server,sizeof(Server));
 	if(ret==SOCKET_ERROR)
-	{	//正常
+	{	//normal
 		int ErrorCode = WSAGetLastError();
 		if (ErrorCode != WSAEWOULDBLOCK){
 			error = Format1024( _T("Connect Fail: Internal socket error[code:%d]."),ErrorCode);
@@ -428,7 +425,7 @@ bool CUserConnectLinkerPipe::BlockConnect(tstring& error)
 				return TRUE;
 			}
 		}
-		else if (ret == SOCKET_ERROR) { //退出
+		else if (ret == SOCKET_ERROR) { //exit
 			error = _T("Connect Fail: Internal socket error.");	
 			return FALSE;
 		}
@@ -449,7 +446,7 @@ void CUserConnectLinkerPipe::Connect(){
 	FD_ZERO(&WriteFDs);		
 	FD_SET(m_Socket, &WriteFDs);		
 	
-	timeval TimeOut;  //设置1秒钟的间隔，
+	timeval TimeOut;  
 	TimeOut.tv_sec = 1; 
 	TimeOut.tv_usec = 0;
 	
@@ -463,7 +460,7 @@ void CUserConnectLinkerPipe::Connect(){
 			return ;
 		}
 	}
-	else if (ret == SOCKET_ERROR) { //退出
+	else if (ret == SOCKET_ERROR) { //exit
 		tstring s = _T("Connect Fail: Internal socket error.");
 		CMsg Msg(MSG_LINKER_ERROR,DEFAULT_DIALOG,0);
 		Msg.GetLetter().PushInt(m_SourceID);
@@ -542,7 +539,7 @@ bool CUserAcceptLinkerPipe::Init(tstring& error){
 		return FALSE;
 	}
 	
-	unsigned long ul = 1; //ul非零则设置为非阻塞
+	unsigned long ul = 1; 
 	Ret = ioctlsocket(m_Socket,FIONBIO,(unsigned long*)&ul);
 	assert(Ret != SOCKET_ERROR);
 	
@@ -571,7 +568,7 @@ void CUserAcceptLinkerPipe::Accept(){
 		}
 	}
 		
-	unsigned long ul = 1; //ul非零则设置为非阻塞
+	unsigned long ul = 1; 
 	int Ret = ioctlsocket(Client,FIONBIO,(unsigned long*)&ul);
 	assert(Ret != SOCKET_ERROR);
 	

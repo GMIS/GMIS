@@ -24,7 +24,7 @@ bool CUserModel::CUserModelIOWork::Activation()
 		delete m_Thread;
 		m_Thread = NULL;
 	};
-	m_Alive = TRUE; //先设置为TRUE,避免线程函数自动退出
+	m_Alive = TRUE; //First set to TRUE  to avoid thread function automatically exits
 	m_Thread = new boost::thread(ObjectDefaultThreadFunc,this);
 	m_Alive = m_Thread?TRUE:FALSE;
 	return m_Alive;
@@ -120,7 +120,7 @@ bool CUserModel::CUserCentralNerveWork::IsAlive(){
 CUserModel::ConnectPair::ConnectPair(int64 ID,boost::asio::io_service&  IOService,int32 TimeOut)
 :m_ID(ID),m_TimeCount(TimeOut),
 m_pSocket(new boost::asio::ip::tcp::socket(IOService)),
-m_Timer(IOService,boost::posix_time::seconds(1)) //1秒为间隔
+m_Timer(IOService,boost::posix_time::seconds(1)) //1 second
 {
 	
 }
@@ -168,9 +168,7 @@ void CUserModel::Dead(){
 
 	Model::Dead();
 	
-	CLockedLinkerList* List = GetSuperiorLinkerList(); //必须在stop()后手工删除，否则m_IOService被析构后再自动析构删除socket导致错误
-	List->DeleteAllLinker();
-
+	CLockedLinkerList* List = GetSuperiorLinkerList(); //You must manually delete  after stop (),  otherwise when the m_IOService destructed , it will occur an error to destruct the socket 
 	if(m_Thread){
 		m_Thread->join();
 	}
@@ -203,7 +201,7 @@ bool CUserModel::Connect(int64 ID,AnsiString Address,int32 Port,int32 TimeOut,ts
 	
 	boost::shared_ptr<ConnectPair> cp(new ConnectPair(ID,m_IOService,TimeOut));
 	
-	if (bBlock) //等到连接成功后再返回
+	if (bBlock) //Wait until the connection is successfully then return
 	{
 		boost::system::error_code ec;
 		cp->m_pSocket->connect(ep,ec);
@@ -226,7 +224,7 @@ bool CUserModel::Connect(int64 ID,AnsiString Address,int32 Port,int32 TimeOut,ts
 
 	}
 
-	//如果没有处理线程则生成一个
+	//If there is no thread to handle, generates a new
 	CLockedModelData* ModelData = GetModelData();
 	if (ModelData->GetIOWorkNum()<m_nCPU*2)
 	{
@@ -263,7 +261,7 @@ void CUserModel::ConnectHandler(const boost::system::error_code& error, boost::s
 void CUserModel::ConnectTimeoutHandler(const boost::system::error_code& error, boost::shared_ptr<ConnectPair> cp){
 	if (error)
 	{
-		cp->m_pSocket->close(); //应该会引发错误，自动转向错误处理	
+		cp->m_pSocket->close(); //It should trigger an error so that automatic trun to error handling
 		ePipeline Data;
 		NotifySysState(MNOTIFY_CONNECT_FAIL,&Data);
 		cp->m_TimeCount = 0;
@@ -273,7 +271,7 @@ void CUserModel::ConnectTimeoutHandler(const boost::system::error_code& error, b
 	CLockedLinkerList* LinkerList = GetSuperiorLinkerList();
 	CLinker Linker;
 	LinkerList->GetLinker(cp->m_ID,Linker);
-	if (Linker.IsValid()) //已经连接
+	if (Linker.IsValid()) //has conneted
 	{
 		cp->m_TimeCount = 0;
 		return;	

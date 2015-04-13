@@ -2,7 +2,8 @@
 /*
 * author: ZhangHongBing(hongbing75@gmail.com)  
 *  
-* 根基类，采用能量-质量的观点构建，由此实例成万物
+*
+* root base class with inspirations from energy-mass viewpoint, instance it to get everything
 */
 
 
@@ -93,7 +94,7 @@ public:
     #define  IsDataType(ch)    (ch>47 && ch<54)
 
 private: 
-	//对于能量空间此函数几乎不用，弱化为私有  
+	//hardly use for the Energy class' instances,so weakened it as private 
     //virtual bool   Do(AbstractSpace* Other){ return true;};
 public:
 	Energy(){};
@@ -104,10 +105,9 @@ public:
 	virtual Energy*  Clone(){ return NULL;};
 	virtual void*    Value()const = 0;
 	
-	//返回写入s中的字符数
     virtual void  ToString(AnsiString& s) = 0;  
 	
-	//返回s中本次处理的字符数 
+	//returns the number of written chars in s
 	virtual uint32  FromString(AnsiString& s,uint32 pos=0) = 0; 
 
 public:
@@ -117,54 +117,53 @@ public:
 	virtual tstring      GetName(){ return GetTypeName(EnergyType());}
 
 		
-	/*序列化:
+	/* Serialization:
+	the ToString () and FromString ()  are in charge of the serialization of data.
 
-    Energy的ToString()和FromString()实际执行的是数据的序列化。
+	String used here to store data,the benefits include directly reading ,flexible using,no need to consider hardware differences, and adapting a variety of situations,but disadvantage is that the efficiency slightly lower than using streams of bytes.
 
-	这里采用字符串方式，好处是可以直接看懂，灵活，不需要考虑硬件差别，能适应各种情况，
-	缺点是效率比字节流稍低。
+	For Tostring () function,the converted text format are: type@Len@data
 
-	对于Tostring()函数,转换成文字后的格式通常为: type@len@data
-	其中: type为能量类型的缩写, 由于基本能量类型不超过16个,所以可以用一个16进制字符表示
-	      data为数据内容,同样使用字符串来表示.
-		  len为data字符串长度	 
+	Where: 
+	Type is the abbreviation of energy type, as the type amount does not exceed 16, so you can actually use a 16 hexadecimal character to represent it
+	Data for the data content, and also use a string to represent.
+	Len for string data length
 
-	对于FromString(string& s)函数,它根据上述格式的描述把data部分转换成具体的数据。
-	
-	 参见Energy实例。
-    */
+	For FromString (string& s) function, which  converted the text to a specific data according to the above format description.
 
-	/*在字符串s加入数据类型为type，长度为len，数据为data结合成一种数据格式：type@len@data
+	See also Energy class instances.
+	*/
+
+	/*Serialize data to string, format:type@len@data
 	*/
 	static void  PrintString(AnsiString& s,int32 type,uint32 datalen, const char* data);
 
-	/*同上，只不过数据格式改为：type@ID@NameLen@Name@len@data 用于ePipeline
+	/*ditto, but the format: type@ID@NameLen@Name@len@data, mainly for ePipeline
 	*/
 	static void PrintString(AnsiString& s,int32 type,int64 ID,tstring Name,uint32 datalen, const char* data);
     
 
-    /*把在字符串s的len个字符转换为整数 注意：必须确保格式正确，并且len<=20;
+    /*Convert len chars of the string s to an integer, Note: must ensure that the format is correct an len<20
 	*/
 	static int64 StringToInt(const char* s, uint32 len);
 
-	/*同上，已知字符串长度，但没有经过格式检查，len必须小于20
-	  返回整数，如果错误correct = false 否则 true
+	/*ditto, but without format checking,if there is any error the correct=false or true
 	*/
 	static int64 RawStringToInt(const char* s, uint32 len,bool& correct);
 	uint64 RawStringToUInt(const char* s, uint32 len,bool& correct);
 
 
-    /*必须已经确认s格式正确，并且检查小数点后数字len<=6;
+    /*must ensure the string s' format is correct,and the digits of decimal point must <= 6
 	*/
 	float64 StringToFloat(const char* s, uint32 len,int32 floatpoint);
 
-	/*从s的pos位置开始查找每一个字符，检查其为整数，以字符@结束，最后返回数字长度,0为错误
+	/*Starting from the pos of s to check each char,finds whether there is any integer occurred until encounters '@',returns the integer length or 0
 	*/
 	int32 FindInt(AnsiString& s,uint32 pos, char ch='@');
 
-	/*同上，找到并检查浮点数，返回数字长度，并把浮点位置保存在floatpos里
+	/*ditto, finds the float and return its length, the decimal point position will be save in DecimalPos
 	*/
-	int32 FindFloat(AnsiString& s, uint32 pos, uint32& floatpos,char ch='@');
+	int32 FindFloat(AnsiString& s, uint32 pos, uint32& DecimalPos,char ch='@');
 };
 
 
@@ -187,11 +186,7 @@ protected:
 	AbstractSpace(Timer,Pool)
 	{
 	}
-
-	/*同样弱化为受保护的，原因是质量体通常不与质量体直接相互作用
-	  而是间接通过能量来进行，因此用BOOL Do(Energy* E) = 0 替代
-	*/
-
+	//hardly use for the mass class' instances,so weakened it as private 
     //virtual bool  Do(AbstractSpace* Other){ return true;};
 public:
 	int64    m_ID;
@@ -206,12 +201,13 @@ public:
     virtual Energy*  ToEnergy(); 
 	virtual bool     FromEnergy(Energy* E); 
 
-	/*质量与能量的相互作用
-	 从程序员的观点来看，Do类似于一个统一形式的任意C函数，参数由E提供。
+	/*The interaction between mass and energy,but from a programmer's point of view,
+	 Do(Energy* E) like a unified form of arbitrary c functions whose parameters provided by E
 	*/
 	virtual bool Do(Energy* E)=0;  
 
-	/*mass类所能接受的能量类型缩写（即参数表），参见此类的具体实例和Pipeline.h
+	/*returns the energies abbreviation(the parameters list) that the mass can accept,
+	 reference to the specific instance of this class and Pipeline.h
 	*/
 	virtual TypeAB   GetTypeAB()=0;  
 };

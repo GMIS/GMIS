@@ -17,9 +17,11 @@ namespace ABSTRACT{
 // define eNULL
 ////////////////////////////////////////////////////////////////
 /*
-eNULL用来确保一个质量体输入输出数据的可测性，
-比如，如果一个Mass的实例规定了要输出3个数据，那么即使它没有3个有意义的输出
-也必须使用eNULL来填充，否则后续Mass实例取用ePipeline里的数据时将陷入混乱
+eNULL can be used to ensure the input and output data's testability of a Mass
+For example, if a Mass instance need to output three data, even if it is not many data,
+it can use eNULL to replace,otherwise next Mass instance will fall into uncertainty 
+when it get data from ePipeline
+
 */
 
 class  eNULL : public Energy
@@ -113,20 +115,21 @@ public:
 	void* Value()const{return (void*)&m_Value;};
 	Energy*  Clone(){return (new eSTRING(m_Value));};
 
-	//注意：为了统一不管m_Value是否unicode将被转换成utf8格式
+	//Note: it will be convert into utf8,no matter whether the m_Value is unicode
 	void ToString(AnsiString& s);
-	//同样s被视为utf8格式
+	
+	//supposing the string s was utf8
 	uint32  FromString(AnsiString& s,uint32 pos=0);
 
 	static AnsiString  WStoUTF8(const std::wstring& s);
 
-     //如果s不是utf8，也会尝试在default codepage使用mbstowcs
+    //if s is not utf8, it will try to use mbstowcs with default codepage 
 	static std::wstring UTF8toWS(const AnsiString& s);
 
 };
 
 
-//以std::string为载体处理二进制数据
+//using std::string as carrier to handle binary data
 ////////////////////////////////////////////////////////////////
 
 class  eBLOB : public Energy 
@@ -148,9 +151,10 @@ public:
 
 	Energy*  Clone(){return new eBLOB(m_Value.c_str(),m_Value.size());};
 	
-	//注意：为了统一不管m_Value是否unicode将被转换成utf8格式
+	//Note: it will be convert into utf8,no matter whether the m_Value is unicode
 	void ToString(AnsiString& s);
-	//同样s被视为utf8格式
+	
+	//supposing the string s was utf8
 	uint32  FromString(AnsiString& s,uint32 pos);
 };
 

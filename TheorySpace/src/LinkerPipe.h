@@ -1,14 +1,15 @@
 /*
 *author: ZhangHongBing(hongbing75@gmail.com)  
 *  
-* LinkerPipe封装了一个不依赖任何OS系统的传输协议。它的要点是：
-*
-*1)所有信息可以用ePipeline格式表达,以ePipeline格式直接使用
-*2)一个ePipeline以字符串形式发出去，接收端再实时组装成ePipeline,对用户完全透明
-*3)同一个LinkerPipe两端支持区分本地不同的对话者。
-*4)LinkerPipe有宿主，收发状态包括结果会向宿主管道发信息，宿主只需负责处理此信息。线程安全。
-*5)使用时，必须承继此类，然后重载实现具体的物理传输方式。
+*The LinkerPipe encapsulates a transport protocol that does not rely on any OS system. 
+*Its main points are :
+*1)All data can be expressed and directly using in ePipeline format
+*2)It is completely transparent to users when a ePipeline sent or received
+*3)Both ends of the same LinkerPipe can distinguish the different local interlocutors.
+*4)LinkerPipe has a host,the data sending and receiving state, including the received data,all is as a message transfer to host for handling. it is thread safe.
+*5)When used, this class must be inherited and overloading to implement specific physical transmission methods.
 */
+
 
 #ifndef _LINKER_H__
 #define _LINKER_H__
@@ -40,32 +41,31 @@
 
 namespace ABSTRACT{
 
-//识别状态
+//identification State
 #define LINKER_DEL      -2
-#define	LINKER_BAN      -1  //禁止
-#define LINKER_INVALID   0  //无效
+#define	LINKER_BAN      -1  
+#define LINKER_INVALID   0  
 #define LINKER_STRANGER  1
 #define	LINKER_FRIEND    2
 
-//输出LinkerPipe的工作状态
 enum STATE_OUTPUT_LEVEL{ NORMAL_LEVEL, LIGHT_LEVEL,WEIGHT_LEVEL};
 
-//输出分级:
+//output level:
  
-//1 常规输出 NORMAL_LEVEL
-#define LINKER_COMPILE_ERROR    101  //装配信息时发生的任何错误，进入错误接收状态
-#define LINKER_RECEIVE_RESUME   102  //Linker接收状态恢复，退出错误接收状态
-#define LINKER_INVALID_ADDRESS  103  //无法根据来信地址找到本地对应接收者
-#define LINKER_ILLEGAL_MSG      104  //接收到不是一个合法格式信息
+//1 NORMAL_LEVEL
+#define LINKER_COMPILE_ERROR    101  //If there is any error occured when a received string data being compiled into a ePipeline
+#define LINKER_RECEIVE_RESUME   102  //Inform the linker to exit the error state and start receiving information
+#define LINKER_INVALID_ADDRESS  103  
+#define LINKER_ILLEGAL_MSG      104  
 
-//2 轻度输出 LIGHT_LEVEL
-#define LINKER_PUSH_MSG         200  //压入一个信息等待发送，并报告当前发送状态
-#define LINKER_MSG_SENDED       201  //某个信息已经发送完毕
-#define LINKER_MSG_RECEIVED     202  //接收到某个信息
+//2 LIGHT_LEVEL
+#define LINKER_PUSH_MSG         200  //Pushes a message waiting to be sent and reports the current delivery status
+#define LINKER_MSG_SENDED       201  //A message has been sent
+#define LINKER_MSG_RECEIVED     202  //A message has been received
 
-//3 重度输出 WEIGHT_LEVEL
-#define LINKER_RECEIVE_STEP     300  //报告接受进度并复制收到的数据,以每一个TYPE_PIPELINE数据类型为单位，不关心数据之间的关系，但数据之间的关系很容易被推导出
-#define LINKER_SEND_STEP        301  //报告发送进度，以整个信息为单位
+//3 WEIGHT_LEVEL
+#define LINKER_RECEIVE_STEP     300  //Report receiving progress and data,in each TYPE_PIPELINE data type as a unit 
+#define LINKER_SEND_STEP        301  //Report Sending progress,in all bytes of message as a unit
   
 
 enum SendState{ 
@@ -76,7 +76,7 @@ enum SendState{
 	SEND_BREAK
 };
  	
-enum MsgPhase{ //一个字符串流被还原成ePipeline
+enum MsgPhase{ 
 	TYPE_PART,
 	LENGTH_PART,
 	DATA_PART,
@@ -97,16 +97,16 @@ class CLinkerPipe: protected CLockPipe
 {
 public:
 
-	//用于流式处理接收到的信息时保存上下文处理状态。
+	//save the context when receiving based on the stream
 	class RevContextInfo{ 
 	public:	
 		MsgPhase         State;           // HeaderStr        
 		int32            DataType;        // |---+---|  
 		AnsiString       HeaderStr;       // type@len@data
 		uint32           DataLen;         //          |--|  <--DataLen
-		AnsiString       Buffer;          // 因为数据总是被编译成字符串形式
+		AnsiString       Buffer;          //the ePipeline always is converted into string to transfer
 		Energy*          Data;
-		ePipeline*       ParentPipe;      //当前正在接收的信息
+		ePipeline*       ParentPipe;      //stored the temp result when string stream be converted into ePipeline
 		int32            InfoLen;
 	public:	
 		RevContextInfo(ePipeline* Parent)
@@ -127,8 +127,8 @@ public:
 	};	
 
 
-	//仅限于ThreadInputProc和ThreadOutputProc使用
-	//与_CInnerLock相比多一个标记m_bThreadUse的行为
+	//Use is limited to ThreadInputProc and ThreadOutputProc
+	//Compared with the _CInnerLock,there is a m_bThreadUse
 	class  _CInnerIOLock  
 	{
 	private:
@@ -142,48 +142,48 @@ public:
 	friend  class CInnerIOLock;
 	friend  class CLinker;
 private:
-		int32                m_UseCounter;    //用于Linker引用计数，当有其他线程用Linker引用此类时，避免被删除
-		bool                 m_bThreadUse;    //标记线程IO函数是否在使用此Pipe，避免多线程执行同一个IO
+		int32                m_UseCounter;    //For Linker reference counting, when there are other threads to use it to avoid being deleted
+		bool                 m_bThreadUse;    //marked whether there was a thread has used the IO func of this class, to avoid a few theads use same IO func at same time
 
 protected:
 	
-		int64                m_SourceID;         //是信息源ID	
+		int64                m_SourceID;         
     
-		map<int64,ePipeline> m_LocalAddressList; //<SenderID,LocalAdress> SenderID对应的本地地址表
+		map<int64,ePipeline> m_LocalAddressList; //<SenderID,LocalAdress>  the local address table that SenderID corresponded
 
-		int32                m_RecoType;         //识别类型
+		int32                m_RecoType;         //LINKER_STRANGER or LINKER_FRIEND?
 	    
-		bool                 m_bClientLink;      //Listen到的连接
+		bool                 m_bClientLink;      //whether is the listened link
 		Model*               m_Parent;     
 
 
         STATE_OUTPUT_LEVEL   m_StateOutputLevel;
 
-protected: //发送信息
+protected: //send message
 
-		SendState        m_SendState;		//当前发送状态
-		CMsg             m_CurSendMsg;      //当前正在发送的信息
-		int64            m_PendingMsgID;    //等待对方报告发送状态的信息，只有报告以后才能发送新信息。
+		SendState        m_SendState;		
+		CMsg             m_CurSendMsg;      
+		int64            m_PendingMsgID;    //The ID of message that waiting for remote end to report receiving state,Only after a report can be sent the new one.
 		int64            m_PendMsgSenderID;    
         AnsiString       m_SendBuffer;
-		uint32            m_SendPos;              //m_CurSenMsg.Content的字符Index。-1表示没有需要发送的信息
+		uint32           m_SendPos;         //the char index of m_CurSenMsg.Content.-1 means no message need to sent
 
-protected: //接收信息
+protected: //receive message
 
-	    ePipeline               m_CurRevMsg;  //正在组装完成的信息
+	    ePipeline               m_CurRevMsg;  //the message that is compiling 
 
 		/*
-		 接受数据的上下文,当一次读取的数据不足于完成某个数据的组装时就压入此堆栈，等待
-		 下次接收到新数据后继续组装，
+		 The receiving context list, when a string stream is not sufficient to compile into a ePipeline completely, 
+		 it pushs the context in the list for waiting next stream.
 		*/
 		deque<RevContextInfo*>  m_ContextStack;  
 		
-		bool                    m_bRevError;    //接收数据时产生错误为真 >0 =错误号
+		bool                    m_bRevError;    // >0 = error ID
 	
-		//当进入错误状态后，指定后续数据的保存长度
-		uint32                   m_ErrorSaveLen;
+		//The specify length that system continue to receive the data when it has gone into error state
+		uint32                  m_ErrorSaveLen;
 	
-protected: //无需加锁的函数
+protected: //below functions no need to lock (for thead safe) 
 	bool ReceiverID2LocalAddress(ePipeline& Receiver,ePipeline& LocalAddress);
 	int64 LocalAddress2SenderID(ePipeline& LocalAddress);
 
@@ -191,17 +191,17 @@ protected: //无需加锁的函数
 	void RevOneMsg(eElectron& E);
 	
 	
-	//当接受数据时发生错误，调用此函数为Linker进入错误状态做准备
+	//call this func to go into error state,if there was a error occured when receiving data
 	void BeginErrorState(RevContextInfo* Info,int32 ErrorType);
 	void EndErrorState(RevContextInfo* Info);
 	
 	void    ClearSendMsgList();
 	Energy* CreateEmptyData(int32 Type);
 
-	//主要用于内部接收状态的直接回复,并且优先发送
+	//Mainly used for internal send a direct reply that will be preferentially sended
 	virtual void FeedbackDirectly(ePipeline* Msg);
 
-    //预留的加密解密接口，供承继类使用,这里无视
+    //Reserved for encryption and decryption interface, use by the inherited class, here ignored
 	virtual ePipeline* Encrypt(ePipeline* Msg){
 		return Msg;
 	};
@@ -209,7 +209,7 @@ protected: //无需加锁的函数
 		return Msg;
 	};
 protected: 
-	//这两个非公开函数加了锁
+	//These two private functions has put a lock
 	void   IncreUserNum();
 	void   DecreUserNum();
 
@@ -221,8 +221,8 @@ public:
 	//int32 GetSendState_unlock(){return m_SendState;};
 	//int32 GetSendBufferSize_unlock(){ return m_SendBuffer.size();};
 	//int32 GetSendPos_unlock(){return m_SendPos;};
-public: //公开函数必须加锁保证线程安全，同时又要避免递归加锁
-
+public: 
+	//Below public functions must be locked to ensure thread safe, but also avoiding recursive lock
 	CLinkerPipe(CABMutex* m,Model* Parent,bool bClientLink);
 	CLinkerPipe(CABMutex* m,Model* Parent,bool bClientLink,int64 SourceID,tstring Name);
 	virtual ~CLinkerPipe();
@@ -243,8 +243,7 @@ public: //公开函数必须加锁保证线程安全，同时又要避免递归�
 	
 	void   Reset();
     
-	void   CloseDialog(int64 LocalID); //删除此ID打头的对话地址
- 
+	void   CloseDialog(int64 LocalID); //delete the dialog that begin with LocalID
 	int32  GetWaitToSendMsgNum(){
 		return DataNum();
 	};
@@ -263,19 +262,19 @@ public: //公开函数必须加锁保证线程安全，同时又要避免递归�
 
 	virtual int64 PushMsgToSend(CMsg& Msg,bool bUrgence=FALSE);
 
-	//停止当前信息的传送，在思绪中调用此函数必须先Lock Linker
+	//Stop send current message, must be locked  before calling it
 	void BreakSend();   
 
 	void SwitchDebugMode(bool open);
 	void SetDebugStep(int32 Step);
 
-
-    //用户在这里实现具体的IO处理，由宿主线程调用
+    //To achieve specific IO processing here, called by host thread
 	virtual bool  ThreadIOWorkProc(char* Buffer,uint32 BufSize) =0;
 };
 
-//设计此类的目的主要是管理LinkerPipe的生存期，当LinkerPipe要被删除时，如果其他线程正在使用LinkerPipe，
-//则可以通过此设计避免提前delete
+
+//The goal of designing this class is to manage the lifetime of LinkerPipe,
+//a LinkerPipe will be avoided to delete if another thread is using it.
 class CLinker{
 //	friend  class CLinker;
 private:
@@ -302,7 +301,7 @@ public:
 
 	CLinkerPipe& operator()();
 	bool IsValid();
-	const ePipeline& GetCompileData()const;//用于观察LinkerPipe当前正在组装中的数据
+	const ePipeline& GetCompileData()const;//used to view currently assembling data 
 };
 
 } // namespace ABSTRACT

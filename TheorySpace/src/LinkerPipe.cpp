@@ -1,4 +1,4 @@
-// CLinkerPipe.cpp: implementation of the CCLinkerPipe class.
+﻿// CLinkerPipe.cpp: implementation of the CCLinkerPipe class.
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -370,7 +370,7 @@ namespace ABSTRACT{
 				{
 					//	Info->HeaderStr += ch;
 					
-					// ch ->[0-9] ���� ���ܳ���10λ����				
+					// ch ->[0-9] 				
 					if(isdigit(ch) && Info->Buffer.size() < Info->DataLen)
 					{
 						Info->Buffer += ch;
@@ -515,7 +515,7 @@ namespace ABSTRACT{
  
 			if (RevResult == RECEIVE_ERROR)
 			{						
-				//�ȷ���һ�����ý�����Ϣ���Ա�Է��ܴӴ������״̬�»ָ�
+				
 				ePipeline*  Pipe = new ePipeline((uint64)LINKER_RESET);
 
                 ePipeline Info;

@@ -7,7 +7,7 @@
 
 int  TDTP_INT_ToString(char* Buf, int BufSize,int WritePos,int   Data){
 	
-	if(WritePos==0){ //注意：信息是固定长度，先在前面写入长度值
+	if(WritePos==0){ //Note: msg is a fixed-length, first write the length value in the front
 		memset(Buf,0,BufSize);
 		Buf[WritePos++] = '@';
 		int n = sprintf(Buf+1,"%d@",BufSize);
@@ -82,7 +82,7 @@ int  TDTP_FLOAT_ToString(char* Buf, int BufSize,int WritePos,double Data){
 	}
 
 	char tmp1[80];
-	//int len = sprintf(tmp1,"%.6f",Data); 嵌入式不支持
+	//int len = sprintf(tmp1,"%.6f",Data); Embedded is not supported
 	int len = Float2Str(Data,tmp1,80);
 
 	char tmp[80];
@@ -147,7 +147,7 @@ int  TDTP_GetFrameSize(char* Buf,int BufSize){
 int  TDTP_INT_FromString(char* Buf,int BufSize,int ReadPos,int&  Data){
 	assert(ReadPos<BufSize);
 
-	if (ReadPos==0) //忽略帧头
+	if (ReadPos==0) //Ignore frame header
 	{
 		int i=1;
 		while (i<BufSize)
@@ -163,7 +163,7 @@ int  TDTP_INT_FromString(char* Buf,int BufSize,int ReadPos,int&  Data){
 
 	int len=0;
 	
-	//首先对比type
+	//First compare type
 	int i=ReadPos+1;
 	if (Buf[ReadPos] != TDTP_TYPE_INT_C || Buf[i] !='@')
 	{
@@ -171,7 +171,7 @@ int  TDTP_INT_FromString(char* Buf,int BufSize,int ReadPos,int&  Data){
 	}
 
 	
-	//获取数据长度
+	//Gets the length of the data
 	ReadPos = i+1;
 	i = ReadPos;
 	while (i<BufSize)
@@ -189,7 +189,7 @@ int  TDTP_INT_FromString(char* Buf,int BufSize,int ReadPos,int&  Data){
 		i++;
 	}
 
-	//获取实际的整数值
+	//Gets the actual integer value
 	ReadPos = i+1;
 	len = ReadPos+len;
 	if (len > BufSize){
@@ -205,7 +205,7 @@ int  TDTP_INT_FromString(char* Buf,int BufSize,int ReadPos,int&  Data){
 int  TDTP_FLOAT_FromString(char* Buf,int BufSize,int ReadPos,double& Data){
 	assert(ReadPos<BufSize);
 
-	if (ReadPos==0) //忽略帧头
+	if (ReadPos==0) //Ignore frame header
 	{
 		int i=1;
 		while (i<BufSize)
@@ -221,7 +221,7 @@ int  TDTP_FLOAT_FromString(char* Buf,int BufSize,int ReadPos,double& Data){
 
 	int len  =0;
 
-	//首先对比type
+	//First compare type
 	int i=ReadPos+1;
 
 	if (Buf[ReadPos] != TDTP_TYPE_FLOAT_C || Buf[i] !='@')
@@ -229,7 +229,7 @@ int  TDTP_FLOAT_FromString(char* Buf,int BufSize,int ReadPos,double& Data){
 		return 0;
 	}
 
-	//获取数据长度
+	//Gets the length of the data
 	ReadPos = i+1;
 	i = ReadPos;
 	while (i<BufSize)
@@ -247,7 +247,7 @@ int  TDTP_FLOAT_FromString(char* Buf,int BufSize,int ReadPos,double& Data){
 		i++;
 	}
 
-	//获取实际的小数值
+	//Gets the actual float value
 	ReadPos = i+1;
 	len = ReadPos+len;
 	if (len > BufSize){
@@ -263,7 +263,7 @@ int  TDTP_FLOAT_FromString(char* Buf,int BufSize,int ReadPos,double& Data){
 
 int  TDTP_STR_FromString(char* Buf,int BufSize,int ReadPos,char* str,int strlen){
 	assert(ReadPos<BufSize);
-	if (ReadPos==0) //忽略帧头
+	if (ReadPos==0) 
 	{
 		int i=1;
 		while (i<BufSize)
@@ -278,7 +278,7 @@ int  TDTP_STR_FromString(char* Buf,int BufSize,int ReadPos,char* str,int strlen)
 	}
 	int len  =0;
 
-	//首先对比type
+	//First compare type
 	int i=ReadPos+1;
 
 	if (Buf[ReadPos] != TDTP_TYPE_STRING_C || Buf[i] !='@')
@@ -287,7 +287,7 @@ int  TDTP_STR_FromString(char* Buf,int BufSize,int ReadPos,char* str,int strlen)
 	}
 
 
-	//获取数据长度
+	//Gets the length of the data
 	ReadPos = i+1;
 	i = ReadPos;
 	while (i<BufSize)

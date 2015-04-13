@@ -211,7 +211,7 @@ void CUserSystem::CUserLockedSystemData::DelAcceptor(int32 Port){
 		return;
 	} 
 	CUserLinkerPipe* Acceptor = it->second;
-	Acceptor->Close(); //会引发一个Linker错误，通知系统删除实际的CUserLinkerPipe
+	Acceptor->Close(); //A Linker error is thrown that tells the system to delete the actual CUserLinkerPipe
     m_AcceptorList.erase(it);
 };
 

@@ -7,7 +7,11 @@
 namespace BASESPACE{
 	
 
-
+	/* 
+			Because both of Int32 and UInt32 can be doing this operation, so it allows to accept any type of data,
+			But will check whether the operand is a 32-bit integer, otherwise returns false
+			Following similar
+	*/
     bool CBitwise_AND::Do(Energy* E)
 	{
 		ePipeline* Pipe = (ePipeline*)E;
@@ -24,7 +28,7 @@ namespace BASESPACE{
 		uint32 TypeA = DataA.EnergyType();
 		uint32 TypeB = DataB.EnergyType();
         
-		//只允许32位整数或无符号整数做此运算
+		//Allows only 32-bit integers or unsigned integer to do this
 		if(TypeA == TYPE_INT &&      
 			TypeB == TYPE_INT){
 			*(uint64*)(DataA.Value()) =(*(uint64*)(DataA.Value())) & (*(uint64*)(DataB.Value()));
@@ -75,7 +79,7 @@ namespace BASESPACE{
 		uint32 TypeA = DataA.EnergyType();
 		uint32 TypeB = DataB.EnergyType();
 		
-		//只允许32位整数或无符号整数做此运算,输出数据的类型等同与第一个数据
+		//Allows only 32-bit integers or unsigned integer to do this,the output data type is synonymous with first data
 		if(TypeA == TYPE_INT  &&      
 			TypeB == TYPE_INT ){
 			*(uint64*)(DataA.Value()) =(*(uint64*)(DataA.Value())) | (*(uint64*)(DataB.Value()));
@@ -103,7 +107,7 @@ namespace BASESPACE{
 		uint32 TypeA = DataA.EnergyType();
 		uint32 TypeB = DataB.EnergyType();
 		
-		//只允许32位整数或无符号整数做此运算
+		//llows only 32-bit integers or unsigned integer to do this
 		if(TypeA==TYPE_INT  &&      
 			TypeB == TYPE_INT){
 			*(uint64*)(DataA.Value()) =(*(uint64*)(DataA.Value())) ^ (*(uint64*)(DataB.Value()));
@@ -132,7 +136,7 @@ namespace BASESPACE{
 		uint32 TypeA = DataA.EnergyType();
 		uint32 TypeB = DataB.EnergyType();
 		
-		//只允许32位整数或无符号整数做此运算
+		//llows only 32-bit integers or unsigned integer to do this
 		if(TypeA==TYPE_INT  &&      
 			TypeB == TYPE_INT){
 			*(uint64*)(DataA.Value()) =(*(uint64*)(DataA.Value())) << (*(uint64*)(DataB.Value()));
@@ -160,7 +164,7 @@ namespace BASESPACE{
 		uint32 TypeA = DataA.EnergyType();
 		uint32 TypeB = DataB.EnergyType();
 		
-		//只允许32位整数或无符号整数做此运算
+		//llows only 32-bit integers or unsigned integer to do this
 		if(TypeA==TYPE_INT  &&      
 			TypeB == TYPE_INT){
 			*(uint64*)(DataA.Value()) =(*(uint64*)(DataA.Value())) >> (*(uint64*)(DataB.Value()));
