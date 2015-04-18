@@ -78,7 +78,6 @@ void   CUserLinkerPipe::Close(){
 
 void CUserLinkerPipe::FeedbackDirectly(ePipeline* Msg){
 	m_UrgenceMsg.Push_Directly(Msg);
-	//投递一个空的异步发送
 	char buf[1];
 	m_Socket->async_write_some(boost::asio::buffer((void*)buf,0),boost::bind(&CUserLinkerPipe::SendHandler,this,boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
@@ -86,7 +85,6 @@ void CUserLinkerPipe::FeedbackDirectly(ePipeline* Msg){
 int64 CUserLinkerPipe::PushMsgToSend(CMsg& Msg,bool bUrgence){	
 	int64 ID = CLinkerPipe::PushMsgToSend(Msg,bUrgence);
 
-	//投递一个空的异步发送
 	char* buf[1];
 	m_Socket->async_write_some(boost::asio::buffer((void*)buf,0),boost::bind(&CUserLinkerPipe::SendHandler,this,boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 	return ID;
@@ -158,7 +156,7 @@ void CUserLinkerPipe::SendHandler(const boost::system::error_code& error, std::s
 			m_CurSendMsg.Reset();		
 		}	
 		else{
-			int32 n = m_SendBuffer.size() - m_SendPos; //还剩多少数据没有发送	
+			int32 n = m_SendBuffer.size() - m_SendPos; 	
 			assert(n>0);
 			void* buf = (void*)(m_SendBuffer.c_str()+m_SendPos);					
 			m_Socket->async_write_some(boost::asio::buffer(buf,n),boost::bind(&CUserLinkerPipe::SendHandler,this,boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));			
@@ -167,7 +165,7 @@ void CUserLinkerPipe::SendHandler(const boost::system::error_code& error, std::s
 	
 	if(m_SendState == WAIT_MSG ){
 		
-		//准备发送一个新的信息
+		//Preparing to send a new message
 		ePipeline* Msg = NULL;	
 		
 		if (m_UrgenceMsg.Size())
@@ -182,12 +180,12 @@ void CUserLinkerPipe::SendHandler(const boost::system::error_code& error, std::s
 		}
 		
 		int64 MsgID = Msg->GetID();
-		if(MsgID>100){ //不是反馈信息
+		if(MsgID>100){ //Not the feedback
 			ePipeline* Letter = GET_LETTER(Msg);
 			MsgID = Letter->GetID();
 		}
 		
-		if(MsgID<100){  //内部控制信息在任何时候都可以发送
+		if(MsgID<100){  //Internal control msg can  send at any time
 			eElectron E;
 			if (m_UrgenceMsg.Size())
 			{
@@ -201,7 +199,7 @@ void CUserLinkerPipe::SendHandler(const boost::system::error_code& error, std::s
 			m_CurSendMsg.Reset(Msg);
 			
 			if(MsgID == LINKER_RESET)
-			{   //要求向对方发接收重置信息
+			{   //Send a resetting msg to each other
 				while(m_SendBuffer.size()<ERROR_RESUME_LENGTH)m_SendBuffer += '@';
 				m_SendState = SEND_RESET; 
 				m_SendPos = 0;
@@ -216,7 +214,7 @@ void CUserLinkerPipe::SendHandler(const boost::system::error_code& error, std::s
 			}			
 			m_Socket->async_write_some(boost::asio::buffer((void*)m_SendBuffer.c_str(),m_SendBuffer.size()),boost::bind(&CUserLinkerPipe::SendHandler,this,boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));			
 		}
-		else if ( m_PendingMsgID == NULL) //只有未决消息被回复后才能继续发送新消息
+		else if ( m_PendingMsgID == NULL) //Only after the pending message get a reply  to continue sending new messages
 		{
 			eElectron E;
 			if (m_UrgenceMsg.Size())
@@ -245,7 +243,7 @@ void CUserLinkerPipe::SendHandler(const boost::system::error_code& error, std::s
 
 			m_Socket->async_write_some(boost::asio::buffer((void*)m_SendBuffer.c_str(),m_SendBuffer.size()),boost::bind(&CUserLinkerPipe::SendHandler,this,boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));			
 		}else{
-			//投递一个空的异步发送,等待未决信息结束
+			//sends an empty msg to wait for the end of sending the pending msg
 			char* buf[1];
 			m_Socket->async_write_some(boost::asio::buffer((void*)buf,0),boost::bind(&CUserLinkerPipe::SendHandler,this,boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 		}

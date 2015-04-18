@@ -132,7 +132,7 @@ namespace ABSTRACT{
 		 }
 		 m_ID = StringToInt(&s[start],slen);
 
-		 //找m_Lable len
+		 //Get m_Lable len
 		 start += slen+1;
 		 slen = FindInt(s,start,'@');
 		 if(slen==0 || slen>20){
@@ -140,14 +140,14 @@ namespace ABSTRACT{
 		 }
 		 uint32 len = StringToInt(&s[start],slen);
          
-		 //得到 m_Lable
+		 //Get m_Lable
 		 start += slen+1;
 		 string temp = s.substr(start,len);
          eSTRING wLable;
 		 wLable.FromString(temp,0);
 		 m_Label = wLable();
 
-		 //找数据长度
+		 //Get Data length
 		 start += len+1;
 		 slen = FindInt(s,start,'@');
 		 if(slen==0 || slen>20){
@@ -161,7 +161,7 @@ namespace ABSTRACT{
 			 throw _T("Pipe.FromString() fail.");
 		 }
 
-		 //解析各类型的子数据
+		 //Get Child Data
 		 uint32 i=start;
 		 len += start;
 		 uint32 n;

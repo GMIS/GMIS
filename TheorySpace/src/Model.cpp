@@ -258,10 +258,10 @@ bool Model::CCentralNerveWork::Do(Energy* E){
 	
 				int n = LockedData->GetNerveMaxIdleCount();
 				
-				if ( m_IdleCount > n ) //缺省大约1000毫秒无信息可处理则退出
+				if ( m_IdleCount > n ) //Default exit if 1000 milliseconds  without information can be handled 
 				{
 					int WorkNum = LockedData->GetCentralNerveWorkNum();
-					if(WorkNum>1){ //至少保留一个
+					if(WorkNum>1){ //reserve one at least
 						if(m_Parent->IsAlive()){
 							ePipeline Data;
 							Data.PushInt(--WorkNum);
@@ -489,11 +489,11 @@ int32    Model::CLockedModelData::DeleteCentralNerveWork(int64 ID){
 		Reason =  REASON_LIMIT;
 		return FALSE;
 	}	
-	else if (MsgNum > m_NerveMsgMaxNumInPipe)//当前信息数目超过指定数目则启用新线程
+	else if (MsgNum > m_NerveMsgMaxNumInPipe)//when Current message number exceeded a specified number,start new thread
 	{
 		Reason = REASON_MSG_TOO_MUCH;
 		return TRUE;
-	}else if(Interval> m_NerveMsgMaxInterval){ //超过指定间隔时间没有取出新信息来处理则启用新线程
+	}else if(Interval> m_NerveMsgMaxInterval){ //when exceeded specified interval, there is no  message  be  popped to handled, create  new thread
 		Reason = REASON_TIME_OUT;
 		return TRUE;
 	}else if (m_NerveWorkingNum == m_CentralNerveWorkList.size())
@@ -593,11 +593,17 @@ BOOL  Model::CentralNerveWorkStrategy(int64 NewMsgPushTime,int64 LastMsgPopTime)
 	Data.PushInt(n);
 	NotifySysState(MNOTIFY_CENTRAL_NERVE_MSG_NUM,&Data);
 	
-	int64 t = NewMsgPushTime-LastMsgPopTime; //转换成秒
+	int64 t = NewMsgPushTime-LastMsgPopTime; //convert into second
 	
-	if(LastMsgPopTime==0){	//第一个	
-		CCentralNerveWork* CentralNerveWork = CreateCentralNerveWorker(0,this,REASON_MSG_TOO_MUCH); //第一的ID设置为0
-		if (CentralNerveWork && CentralNerveWork->Activation())
+	if(LastMsgPopTime==0){	//First ID is 0	
+		CCentralNerveWork* CentralNerveWork = CreateCentralNerveWorker(0,this,REASEON_ALWAYS); 
+		if (!CentralNerveWork)
+		{
+			assert(0);
+			OutputLog(LOG_TIP,_T("Create first centtral Nerver thread fail,Please reboot it"));
+			return FALSE;
+		}
+		if (CentralNerveWork->Activation())
 		{
 			int n = m_ModelData->AddCentralNerveWork(CentralNerveWork);
 			ePipeline Data;
@@ -609,25 +615,31 @@ BOOL  Model::CentralNerveWorkStrategy(int64 NewMsgPushTime,int64 LastMsgPopTime)
 			if(CentralNerveWork){
 				delete CentralNerveWork;
 			}
+			assert(0);
+			OutputLog(LOG_TIP,_T("Create first centtral Nerver thread fail,Please reboot it"));
+
 			NotifySysState(MNOTIFY_CENTRAL_NERVE_THREAD_FAIL,NULL);
 			return FALSE;
 		}
 	}
-	else if(m_Alive){//如果中枢神经里有超过10个以上信息或者超过2秒钟没有取出新信息来处理则启用新线程
+	else{//If more than 10 messages in the central nerve or there is message waiting for being handled more than 2 seconds, create a new thread
 		uint32 Reason ;
 		bool ret = m_ModelData->RequestCreateNewCentralNerveWork(n,t,Reason);
 		if (!ret)
 		{
 			if (Reason == REASON_LIMIT)
 			{
-				//通知已经达到最大限制
 				NotifySysState(MNOTIFY_CENTRAL_NERVE_THREAD_LIMIT,NULL);
 			}
 			return FALSE;
 		}
 		
 		CCentralNerveWork* CentralNerveWork = CreateCentralNerveWorker(NewMsgPushTime,this,Reason);
-		if (CentralNerveWork && CentralNerveWork->Activation())
+		if (!CentralNerveWork)
+		{
+			return FALSE;
+		}
+		if (CentralNerveWork->Activation())
 		{
 			int n =m_ModelData->AddCentralNerveWork(CentralNerveWork);
 			ePipeline Data;

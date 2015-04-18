@@ -42,7 +42,7 @@ namespace ABSTRACT{
 
 			if (m_Parent->IsAlive()) 
 			{
-				assert(0); //这种情况可能性很小
+				assert(0); //This situation is very unlikely
 				ePipeline Data;
 				Data.PushInt(m_ID);
 				m_Parent->NotifySysState(SNOTIFY_IO_WORK_THREAD_CLOSE,&Data);
@@ -95,12 +95,12 @@ namespace ABSTRACT{
 					LockedData->DecreNerveWorkCount();
 				}else{
 					m_IdleCount++;
-					if (m_IdleCount>LockedData->GetNerveMaxIdleCount()) //大约600毫秒无信息可处理则退出
+					if (m_IdleCount>LockedData->GetNerveMaxIdleCount()) //Around 600 milliseconds to exit if without information can be handled
 					{
 						int n = LockedData->GetNerveWorkNum();
 						int n1 = LockedData->GetBusyNerveWorkNum();
 
-						if (n-n1 == 1 )//至少保留一个空闲
+						if (n-n1 == 1 )//Keep at least one free
 						{
 							m_IdleCount = 0;
 						}else{
@@ -318,7 +318,7 @@ namespace ABSTRACT{
 		return m_NerveWorkList.size();
 	}
 
-	bool  System::CLockedSystemData::RequestCreateNewNerveWork(uint32 MsgNum,int64 Interval,uint32& Reason) //返回理由
+	bool  System::CLockedSystemData::RequestCreateNewNerveWork(uint32 MsgNum,int64 Interval,uint32& Reason) 
 	{
 		CLock lk(m_pMutex);
 
@@ -327,15 +327,15 @@ namespace ABSTRACT{
 			Reason =  REASON_LIMIT;
 			return FALSE;
 		}
-		else if (m_NerveWorkingNum == m_NerveWorkList.size()) //全部被占用
+		else if (m_NerveWorkingNum == m_NerveWorkList.size()) //All be occupied
 		{			
 			Reason = REASON_MSG_TOO_MUCH;
 			return TRUE;
-		}else if (MsgNum > m_NerveMsgMaxNumInPipe) //当前信息数目超过指定数目则启用新线程
+		}else if (MsgNum > m_NerveMsgMaxNumInPipe) ////when Current message number exceeded a specified number,start new thread
 		{
 			Reason = REASON_MSG_TOO_MUCH;
 			return TRUE;
-		}else if(Interval> m_NerveMsgMaxInterval){ //超过指定间隔时间没有取出新信息来处理则启用新线程
+		}else if(Interval> m_NerveMsgMaxInterval){ //when exceeded specified interval, there is no  message  be  popped to handled, create  new thread
 			Reason = REASON_TIME_OUT;
 			return TRUE;
 		}else {
@@ -478,9 +478,15 @@ namespace ABSTRACT{
 		Data.PushInt(n);
 		NotifySysState(SNOTIFY_NERVE_MSG_NUM,&Data);
 
-		if(LastMsgPopTime==0){	//第一个的ID规定为0		
-			CNerveWork* NerveWork = CreateNerveWorker(0,this,REASON_MSG_TOO_MUCH);
-			if (NerveWork && NerveWork->Activation())
+		if(LastMsgPopTime==0){	//First ID is 0		
+			CNerveWork* NerveWork = CreateNerveWorker(0,this,REASEON_ALWAYS);
+			if (!NerveWork){
+				assert(0);
+				OutputLog(LOG_TIP,_T("Create first Nerver thread fail,Please reboot it"));
+				return FALSE;
+			}
+			
+			if(NerveWork->Activation())
 			{
 				int n = m_SystemData->AddNerveWork(NerveWork);
 				ePipeline Data;
@@ -493,6 +499,9 @@ namespace ABSTRACT{
 				{
 					delete NerveWork;
 				}
+				assert(0);
+				OutputLog(LOG_TIP,_T("Create first Nerver thread fail,Please reboot it"));
+
 				NotifySysState(SNOTIFY_NERVE_THREAD_FAIL,NULL);
 			}
 			return FALSE;
@@ -500,39 +509,41 @@ namespace ABSTRACT{
 
 		int64 t = NewMsgPushTime-LastMsgPopTime;
 
-		//如果中枢神经里有超过10个以上信息或者超过2秒钟没有取出新信息来处理则启用新线程
+		//If more than 10 messages in the central nerve or there is message waiting for being handled more than 2 seconds, create a new thread
 		uint32 Reason ;
 		bool ret = m_SystemData->RequestCreateNewNerveWork(n,t,Reason);
 		if (!ret)
 		{
 			if (Reason == REASON_LIMIT)
 			{
-				//通知已经达到最大限制
+				
 				NotifySysState(SNOTIFY_NERVE_THREAD_LIMIT,NULL);
 			}
 			return FALSE;
 		}
 
-		if (m_Alive)
-		{
-			CNerveWork* NerveWork = CreateNerveWorker(NewMsgPushTime,this,Reason);
-			if (NerveWork && NerveWork->Activation())
-			{
-				int n =m_SystemData->AddNerveWork(NerveWork);
-				ePipeline Data;
-				Data.PushInt(n);
-				Data.PushInt(NerveWork->m_ID);
-				NotifySysState(SNOTIFY_NERVE_THREAD_JOIN,&Data);
-				return TRUE;
-			}else{
-				if(NerveWork){
-					delete NerveWork;
-				}
-				NotifySysState(SNOTIFY_NERVE_THREAD_FAIL,NULL);
-			}
-
+		
+		CNerveWork* NerveWork = CreateNerveWorker(NewMsgPushTime,this,Reason);
+		if (!NerveWork){
+			return FALSE;
 		}
-
+			
+		if(NerveWork->Activation())
+		{
+			int n =m_SystemData->AddNerveWork(NerveWork);
+			ePipeline Data;
+			Data.PushInt(n);
+			Data.PushInt(NerveWork->m_ID);
+			NotifySysState(SNOTIFY_NERVE_THREAD_JOIN,&Data);
+			return TRUE;
+		}else{
+			if(NerveWork){
+				delete NerveWork;
+			}
+			assert(0);
+			OutputLog(LOG_TIP,_T("Create Nerver thread fail,Please reboot it"));
+			NotifySysState(SNOTIFY_NERVE_THREAD_FAIL,NULL);
+		}
 		return FALSE;
 	}
 

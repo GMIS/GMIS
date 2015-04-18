@@ -1,11 +1,10 @@
 /*
 *
-* Object用来表达世界中更高级的抽象类。与一般Mass实例不同，Object的实例
-*  具有单独的线程来执行自己的行为，也就是说它具有了“生物活性”，但它又不
-*  能独立存在（必须依附于某个进程）
+* Object is a more advanced abstract class to represente the world. 
+* Different from the orginary Mass instance, the object instance has a separate * thread to perform its behavior, meaning that it has a "biologically active", 
+* but it does not able to exist independently (must be attached to a process)
 *  
-*  通常用来实现其各种“生物组织”，一般用户用不到此类。
-*
+* Usually to implement a variety of "tissue", and general users don't need this * class.
 * author: ZhangHongBing(hongbing75@gmail.com)  
 */
 
@@ -25,18 +24,17 @@ protected:
 	tstring          m_Name;
 	volatile bool    m_Alive;
 
-	/*控制线程任务循环的间隔时间，缺省为50毫秒。
-	  
-	  设置这个变量除了降低CPU的占用率，还因为不同的任务可能有不同的时间敏感度，
-	  就象所有生物平时动作反应一般，但危急时刻则灵敏很多一样。
+	/*
+	Control the loop interval of threads func, default is 50 milliseconds	  
 
-      GMIP实例作为机器“大脑”，其每一个组织线程都有自己的SleepTime,系统通过这个时间来来
-	  协调整个行为的和谐，比如当收到的信息来不及处理时，系统会调小信息处理线程的间隔时间，
-	  而调大信息接受的间隔时间。相比调整线程的优先级，我们可以让大脑根据具体的任务特点，
-	  通过简单算法来实时调整各个线程所需的SleepTime。
+	Set this variable in addition to lower CPU occupy rate, but also because different tasks may have different 
+	time-sensitive, like in emergency the reaction capability of animals  is more effective than peace time.
+
+	GMIS instance as the brain of robot, each "tissue" thread of it has its own SleepTime,the system adjust this time
+	to coordinate the entire behaviors that are more harmony.For example, when there is not enough time to handle the recieved messages, tthe system will decrease the interval of message processing thread and increase the interval of 	message receiving thread.Compared with adjust the thread priority,using an algorithm that depend on the specific 	task,we can adjust the SleepTime of each thread in real-time to achieve same goal.
 	*/
 
-    int32			 m_SleepTime ;  //<0表示只执行一次
+    int32			 m_SleepTime ;  //<0 means only executing
 
 	Object(CTimeStamp* Timer,CAbstractSpacePool* Pool):
 		Mass(Timer,Pool),

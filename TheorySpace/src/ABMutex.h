@@ -2,7 +2,7 @@
 *author: ZhangHongBing(hongbing75@gmail.com)        
 * 
 * 
-* 由于Mutex与具体实现系统相关，这里定义一个虚接口，以方便体系设计
+* Here just define a virtual interface due to the Mutex implementation is dependent on the specific operating system.
 */
 #ifndef  _ABMUTEX_H__
 #define  _ABMUTEX_H__
@@ -21,17 +21,17 @@ public:
 
     virtual void Acquire()
 	{
-		//请根据自己的系统实现此函数
+		//Please reimplement this function according to the specific operating system
 		assert(0);
 	}; 
 
     virtual void Release()	
 	{
-		//请根据自己的系统实现此函数
+		//Please reimplement this function according to the specific operating system
 		assert(0);
 	}
 
-	//用于共用锁须重载，参见SpaceMutex.h
+	//Share lock, overload it before using,see SpaceMutex.h 
 	virtual bool AcquireThis(void* user){
 		Acquire();
 		return TRUE;

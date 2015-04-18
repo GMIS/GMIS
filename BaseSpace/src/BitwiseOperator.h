@@ -21,11 +21,6 @@ namespace BASESPACE {
 
 		virtual tstring      GetName(){ return _T("CBitwise_AND");};
 		
-	
-		/* 由于int32和uint32都可以做此运算，因此这里允许接受任何类型数据，
-		   但内部会检查操作数是否为32位整数，否则返回false
-		   以下操作类似。
-		*/
 
 		virtual TypeAB  GetTypeAB(){ return 0x00000000;} 
 		virtual bool Do(Energy* E);

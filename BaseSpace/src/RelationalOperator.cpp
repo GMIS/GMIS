@@ -24,7 +24,7 @@ namespace BASESPACE{
 		Pipe->Pop(&DataA);
 		Pipe->Pop(&DataB);
 		
-		//NOTE:两个数比较以后，作为结果的数据A的类型将改变为INT32
+		//NOTE: Comparing the two numbers, and as a result whose type will be changed  to INT
 		uint32 TypeA = DataA.EnergyType();
 		uint32 TypeB = DataB.EnergyType();
 
@@ -97,7 +97,7 @@ namespace BASESPACE{
 		Pipe->Pop(&DataA);
 		Pipe->Pop(&DataB);
 		
-		//NOTE:两个数比较以后，作为结果的数据A的类型将改变为INT32
+		//NOTE: Comparing the two numbers, and as a result whose type will be changed  to INT
 		uint32 TypeA = DataA.EnergyType();
 		uint32 TypeB = DataB.EnergyType();
 		
@@ -158,7 +158,7 @@ namespace BASESPACE{
 		Pipe->Pop(&DataA);
 		Pipe->Pop(&DataB);
 		
-		//NOTE:两个数比较以后，作为结果的数据A的类型将改变为INT32
+		//NOTE:Comparing the two numbers, and as a result whose type will be changed  to INT
 		uint32 TypeA = DataA.EnergyType();
 		uint32 TypeB = DataB.EnergyType();
 		
@@ -219,7 +219,7 @@ namespace BASESPACE{
 		Pipe->Pop(&DataA);
 		Pipe->Pop(&DataB);
 		
-		//NOTE:两个数比较以后，作为结果的数据A的类型将改变为INT32
+		//NOTE:Comparing the two numbers, and as a result whose type will be changed  to INT
 		uint32 TypeA = DataA.EnergyType();
 		uint32 TypeB = DataB.EnergyType();
 		
@@ -280,7 +280,7 @@ namespace BASESPACE{
 		Pipe->Pop(&DataA);
 		Pipe->Pop(&DataB);
 		
-		//NOTE:两个数比较以后，作为结果的数据A的类型将改变为INT32
+		//NOTE:Comparing the two numbers, and as a result whose type will be changed  to INT
 		uint32 TypeA = DataA.EnergyType();
 		uint32 TypeB = DataB.EnergyType();
 		
@@ -341,7 +341,7 @@ namespace BASESPACE{
 		Pipe->Pop(&DataA);
 		Pipe->Pop(&DataB);
 		
-		//NOTE:两个数比较以后，作为结果的数据A的类型将改变为INT32
+		//NOTE:Comparing the two numbers, and as a result whose type will be changed  to INT
 		uint32 TypeA = DataA.EnergyType();
 		uint32 TypeB = DataB.EnergyType();
 		

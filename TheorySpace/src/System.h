@@ -1,5 +1,5 @@
 /*
-* 用于实现最高等级的实例
+* Used to implement the highest Mass' instance
 *
 * author: ZhangHongBing(hongbing75@gmail.com)  
 */
@@ -50,17 +50,17 @@ public:
 	class CLockedSystemData{
 	protected:
  		CABMutex*				   m_pMutex;
-		uint32                     m_MaxNerveWorkerNum;      //允许最大中枢神经处理线程数目，default=100
-		uint32                     m_NerveMsgMaxNumInPipe;   //神经中枢中如果保留超过此数的信息考虑生成新的处理线程,default = 10
-		int64                      m_NerveMsgMaxInterval;    //神经中枢最近取出的信息时间超过此数考虑生成新的处理线程,default=10*1000*1000(单位是百纳秒，1秒)
-		int32                      m_NerveIdleMaxCount;	     //中枢神经处理线程如果空闲计数超过此数则退出，default=30
+		uint32                     m_MaxNerveWorkerNum;      //Allowed maximum number of central nervous system processing threads，default=20
+		uint32                     m_NerveMsgMaxNumInPipe;   //If more than this amount of messages were not handled,considering to generate a new processing thread,default = 10
+		int64                      m_NerveMsgMaxInterval;    //if the time interval  of the last popped message was greater than this number,considering to generate a new processing thread,default=10*1000*1000(the unit is hundred of nanoseconds, or 1 second)
+		int32                      m_NerveIdleMaxCount;	     //If the count of idle threads exceeded this number, the extra thread will be exit，default=30
 
-		uint32                     m_NerveWorkingNum;        //正在工作的，也就是被工作逻辑占用的
+		uint32                     m_NerveWorkingNum;        //Number of threads used by task logic
 		map<int64,CSystemIOWork*>  m_SystemIOWorkList;  
 		map<int64,CNerveWork*>     m_NerveWorkList;
 
-		list<Object*>              m_DelThreadWorkList;      //等待被物理删除的列表(避免线程体自己执行自己的delete),包括CSystemIOWork和CNerveWork
-
+		list<Object*>              m_DelThreadWorkList;      //Pointer list waiting to be physically deleted ( avoiding the thread delete itself), including ModelIOWork and CentralNerveWork
+		CLockedModelData(){};
 		CLockedSystemData(){};
 	public:
 		CLockedSystemData(CABMutex* mutex);
@@ -88,11 +88,11 @@ public:
 		int32   AddNerveWork(CNerveWork* Work);
         int32   DeleteNerveWork(int64 ID);
 			
-		bool    RequestCreateNewNerveWork(uint32 MsgNum,int64 Interval,uint32& Reason); //返回理由
+		bool    RequestCreateNewNerveWork(uint32 MsgNum,int64 Interval,uint32& Reason); 
 
 	};
 
-    //代替System初始化列表，当用户实例化时承继此类即可增加参数，避免参数表越来越长
+    //For System initialization,  we can add parameters through inheriting this class to  avoid the parameter table too longer
 	class CSystemInitData:public Model::CModelInitData{
 	public:
 		CLockedSystemData*  m_SystemData;
@@ -108,16 +108,16 @@ public:
     friend class CSystemIOWork;
 	friend class CNerveWork;
 private:
-	//一般神经，中枢神经如果不直接处理信息就把信息交给一般神经，然后有多线程负责信息的处理,
+	//Some messages if the central nerve system does not handle , just leave it to nerve processing
 	CLockPipe*                      m_Nerve;
 	CLockedLinkerList               m_ClientList;
 	CLockedSystemData*              m_SystemData;
 
 protected:	
 
-	CSpaceMutex*					m_ClientSitMutex;  //Child CLinkerPipe 公用锁
+	CSpaceMutex*					m_ClientSitMutex;  //Child CLinkerPipe common lock
 
-    virtual void		NerveProc(CMsg& Msg)=0;//一般神经对信息的处理函数，用户需要自己实现
+    virtual void		NerveProc(CMsg& Msg)=0;//General nerve message processing function that need users to implement
 	virtual BOOL		NerveWorkStrategy(int64 NewMsgPushTime,int64 LastMsgPopTime);
 	virtual CNerveWork* CreateNerveWorker(int64 ID,System* Parent,uint32 Reason)=0;
 
@@ -146,4 +146,4 @@ public:
 
 } //namespace ABSTRACT
 
-#endif // !defined(AFX_SYSTEM_H__C57907E3_4F12_11DA_8739_F810D83B8278__INCLUDED_)
+#endif // !defined(_SYSTEM_H__)

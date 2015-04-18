@@ -45,8 +45,8 @@ typedef int  BOOL;
 
 
 
-#define AnsiString  std::string  
-#define tstring     std::wstring 
+typedef std::string  AnsiString;
+#define tstring      std::wstring 
 
 
 
@@ -89,34 +89,30 @@ const float EPSINON = 0.00001f;
 /////////////////////////////////////////////////////
 
 
-/* 定义基本数据类型识别ID
+/* Defines the base data type ID
 
-  为了能进行基本的数据类型检查，我们用每4个bit表达一种数据类型，这样
-  就限定了数据类型的总数为16种，是否够用取决与你把数据类型分的多细，
-  实际上对于Final C对数据类型的理解应该以社会意义为主，比如不需要再关
-  心长整数和短整数，可以统一用64位整数和64浮点数来处理数学计算。但具体
-  如何分配数据类型还需要考虑整个系统的数据应用情况，比如把三维点或三维
-  模型数据也作为单独的数据类型，目前暂时采用C语言的分类，
+  For base data type checking ,we use 4 bit to express a data type, so the total is 16
   
-  WARNING: 如果要修改此处定义必须同时修改其它部分, 参见eAddtion.h
+  WARNING: If you want to modify the definition here,you  must also modify other parts, see eAddtion.h
 */
 typedef enum  ENERGY_TYPE {
-    TYPE_NULL     =    0,  //在识别能量缩写时能与NULL有所区别
+    TYPE_NULL     =    0,  
     TYPE_INT      =    1,
     TYPE_FLOAT    =    2,
     TYPE_STRING   =    3,
     TYPE_PIPELINE =    4, 
 	TYPE_BLOB     =    5,
-    TYPE_USER     =    6,  //用户定义的特殊数据类型       
-	TYPE_END      =    16  //结束定义
+    TYPE_USER     =    6,  //Special user-defined data type    
+	TYPE_END      =    16 
 }eType;
 
 #define BASETYPE(TypeID) (TypeID==TYPE_INT || TypeID==TYPE_FLOAT)
 
 /*
-  类型缩写，每4个bit表达一种Energy Type，这样一个32位无符号整数可以
-  一次表示8个数据的类型及其存储顺序。它将起的作用将类似与C语言函数
-  里的参数检查。请参看ePipeline.h
+  Type abbreviations, each 4 bit express one Energy Type,
+  so a 32-bit unsigned integer can express 8 data types and their order. 
+  It will play a role similar to the c functions parameter checking. 
+  Please refer to ePipeline.h
  
 */
 
@@ -154,16 +150,12 @@ public:
 	};
 
 
-	/*得到指定位置[0-7]的数据类型*/
 	eType operator [](uint32 pos){
 		assert(pos<8);
 		uint32 mask = 0xF0000000 >> (pos*4);
         return (eType)(mask & m_TypeAB);
 	}
 
-	/*
-	寻找数据类型，返回其位置 没有找到则返回-1；
-	*/
 	int32 Find(eType t){
 		uint32 mask  = 0xF0000000;
 		for(int i=0; i<8; i++)
@@ -176,7 +168,6 @@ public:
 
 tstring Format1024(const wchar_t* Format, ...);
 
-//链接的C运行时库DLL类型
 enum DLL_TYPE{
 	DLL_INVALID = 0,
 	DLL_VC6  = 60,

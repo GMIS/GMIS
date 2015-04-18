@@ -24,27 +24,27 @@ class CUserLinkerPipe : public CLinkerPipe
 	SUPPORT_ABSTRACT_SAPCE_POOL(CUserLinkerPipe);
 protected:
 	bool					 m_bDeleteMutex;
-	AnsiString               m_RevBuf;  //default=1024,实际上这个应该可以最开始只需256甚至更少，然后根据信息大小而动态调整
+	AnsiString               m_RevBuf;  //default=1024,actually this should be able to start only 256 or less, then adjust dynamically based on the data size
 	boost::shared_ptr<ip::tcp::socket> m_Socket;
 public:
 	CUserLinkerPipe(Model* Parent,int64 SourceID,tstring Name); 
-	CUserLinkerPipe(CSpaceMutex* Mutex,Model* Parent,int64 SourceID); //用于CONNECT server
+	CUserLinkerPipe(CSpaceMutex* Mutex,Model* Parent,int64 SourceID); //used for to connect server
 
 	virtual ~CUserLinkerPipe();
 
-	void  AttachSocket(boost::shared_ptr<ip::tcp::socket>& Socket); //绑定同时开始发起一个异步读
+	void  AttachSocket(boost::shared_ptr<ip::tcp::socket>& Socket); 
 	boost::shared_ptr<ip::tcp::socket> GetSocket();
 
 	virtual bool   IsValid();
 	virtual void   Close();
 	
+
+	virtual bool  ThreadIOWorkProc(char* Buffer,uint32 BufSize){ return TRUE;}; //discard
+
 	virtual int64  PushMsgToSend(CMsg& Msg,bool bUrgence=FALSE);
 	
 private: 
 	virtual void FeedbackDirectly(ePipeline* Msg);
-
-	virtual bool  ThreadIOWorkProc(char* Buffer,uint32 BufSize){ return TRUE;}; //废弃不用
-
 	void RevHandler(const boost::system::error_code& error, std::size_t bytes_transferred );
 	void SendHandler(const boost::system::error_code& error, std::size_t bytes_transferred );
 };

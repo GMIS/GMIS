@@ -51,7 +51,7 @@ namespace ABSTRACT{
 	};
 	
 
-    const char*  Energy::BaseEnergyChar= "0123456";  //用于数字-字符串转换 
+    const char*  Energy::BaseEnergyChar= "0123456";  //For number-string conversion
 
 	const wchar_t*  Energy::BaseEnergyName[] = {
                      _T("TYPE_NULL"),        // = 0,   	                 
@@ -68,11 +68,15 @@ namespace ABSTRACT{
 	    assert(type<TYPE_END);
 		return BaseEnergyName[type];
 	}
-/*用查表法来实现字符串向数字的转换，不知道能加快多少，加法运算比乘法应该更有效率
-  inttable[a][b]  a为十进制的位数，b为此位上的值       
+/*
+convert the string into number with table checking method, 
+I don't know How much it can accelerate,
+but the addition operation should be more efficiency than  multiplication.
+
+inttable[a][b]  a is the decimal digits, b is the values on the position      
 */
 	const int64 Energy::INTTABLE[21][10]={
-		  {0,0,0,0,0,0,0,0,0,0},      //����
+		  {0,0,0,0,0,0,0,0,0,0},      
 		  {0,1,2,3,4,5,6,7,8,9},
 		 {-1,10,20,30,40,50,60,70,80,90},
 		 {-1,100,200,300,400,500,600,700,800,900},
@@ -102,7 +106,7 @@ namespace ABSTRACT{
 		 {-2.0,0.0001,0.0002,0.0003,0.0004,0.0005,0.0006,0.0007,0.0008,0.0009},
 		 {-2.0,0.00001,0.00002,0.00003,0.00004,0.00005,0.00006,0.00007,0.00008,0.00009},
 		 {-2.0,0.000001,0.000002,0.000003,0.000004,0.000005,0.000006,0.000007,0.000008,0.000009},
-          //以下未用，目前不知道是否有必要为特殊计算保留
+          //Unused below, at present, I don't know whether there is a need to reserve for some special calculation
 		 {-2.0,0.0000001,0.0000002,0.0000003,0.0000004,0.0000005,0.0000006,0.0000007,0.0000008,0.0000009},
 		 {-2.0,0.00000001,0.00000002,0.00000003,0.00000004,0.00000005,0.00000006,0.00000007,0.00000008,0.00000009},
 		 {-2.0,0.000000001,0.000000002,0.000000003,0.000000004,0.000000005,0.000000006,0.000000007,0.000000008,0.000000009},
@@ -163,7 +167,7 @@ namespace ABSTRACT{
 				
 		eSTRING temp(Name);
         AnsiString AnsiName;
-		temp.ToString(AnsiName); //如果Name是unicode则通过此方式转换成utf8
+		temp.ToString(AnsiName); //convert into utf8
 		
 #ifdef _WIN32
 		::sprintf_s(buf2,"%d",AnsiName.size());
@@ -278,7 +282,7 @@ namespace ABSTRACT{
 	};
 	
 	
-	//从s的pos位置开始查找每一个字符，检查其为整数，以字符@结束，最后返回数字长度,0为错误
+	//starting from pos, finds each char,checking whether there is an integer with the char '@' end, and finally returns the length of integer, 0 is an error
 	int32 Energy::FindInt(AnsiString& s,uint32 pos, char ch /*='@'*/)
 	{
 		int32 len =0;
@@ -302,7 +306,7 @@ namespace ABSTRACT{
 	}
 	
 	//同上，找到并检查浮点数，返回数字长度，并把浮点位置保存在floatpos里
-	int32 Energy::FindFloat(AnsiString& s, uint32 pos, uint32& floatpos,char ch /*='@'*/)
+	int32 Energy::FindFloat(AnsiString& s, uint32 pos, uint32& DecimalPos,char ch /*='@'*/)
 	{
 		int32 len = 0;
 		if(s[pos] == '-'){ ++pos; ++len;}; //注意：不允许正数前有'+'号
@@ -317,12 +321,12 @@ namespace ABSTRACT{
 			}
 			else if(s[i] == ch){
 				if(i==pos)return 0;
-				if(!floatpoint)floatpos = len; //没有找到小数点则等同于小数点在最后
+				if(!floatpoint)DecimalPos = len; //没有找到小数点则等同于小数点在最后
 				return len;
 			}
 			else if(s[i]=='.'){      //1.234
 				if(!floatpoint){
-					floatpos = i-pos;
+					DecimalPos = i-pos;
 					floatpoint = TRUE;
 					++len;
 				}
