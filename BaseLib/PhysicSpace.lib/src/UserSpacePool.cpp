@@ -1,0 +1,24 @@
+// UserSpacePool.cpp: implementation of the CUserSpacePool class.
+//
+//////////////////////////////////////////////////////////////////////
+
+#include "UserSpacePool.h"
+
+//////////////////////////////////////////////////////////////////////
+// Construction/Destruction
+//////////////////////////////////////////////////////////////////////
+
+CUserSpacePool::CUserSpacePool()
+:CABSpacePool(NULL)
+{
+	m_Mutex = new CUserMutex;
+}
+
+CUserSpacePool::~CUserSpacePool()
+{
+   if (m_Mutex)
+   {
+	   delete m_Mutex;
+	   m_Mutex = NULL;
+   }
+}

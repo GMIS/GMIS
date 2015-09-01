@@ -1,0 +1,283 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Chinese (P.R.C.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+#ifdef _WIN32
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+#pragma code_page(936)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_MAINFRAME           ICON    DISCARDABLE     "res\\Main.ico"
+IDI_CAPACITOR           ICON    DISCARDABLE     "res\\CAPACITOR.ICO"
+IDI_INDUCTOR            ICON    DISCARDABLE     "res\\INDUCTOR.ICO"
+IDI_LOGIC               ICON    DISCARDABLE     "res\\Logic.ICO"
+IDI_EARTH               ICON    DISCARDABLE     "res\\earth globe.ico"
+IDI_CONTAINER           ICON    DISCARDABLE     "res\\нд╪Ч╪п.ico"
+IDI_PEOPLE              ICON    DISCARDABLE     "res\\unblock.ico"
+IDI_ROOM                ICON    DISCARDABLE     "res\\д╬це.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_TEMPLOGICMENU MENU DISCARDABLE 
+BEGIN
+    POPUP "TempLogicMenu"
+    BEGIN
+        MENUITEM "&Select As Globle Logic ",    ID_SELECT_LOGIC
+        MENUITEM SEPARATOR
+    END
+END
+
+IDR_OUTPUT MENU DISCARDABLE 
+BEGIN
+    POPUP "Output"
+    BEGIN
+        MENUITEM "&Copy",                       ID_OUTPUT_COPY
+        MENUITEM "C&lear",                      ID_OUTPUT_CLEAR
+        MENUITEM "&Save As File",               ID_OUTPUT_SAVE
+    END
+END
+
+IDR_LOGICVIEW MENU DISCARDABLE 
+BEGIN
+    POPUP "LogicView"
+    BEGIN
+        MENUITEM "Delete &Logic",               ID_DELETELOGIC
+        MENUITEM "Delete &Task",                ID_DELETETASK
+        MENUITEM SEPARATOR
+        MENUITEM "&Clearn All",                 ID_CLEAR_LOGICVIEW
+        MENUITEM SEPARATOR
+        MENUITEM "Refresh",                     ID_LOGICREFRESH
+    END
+END
+
+IDR_TEMPOBJECTMENU MENU DISCARDABLE 
+BEGIN
+    POPUP "TempObjectMenu"
+    BEGIN
+        MENUITEM "Set As Global Object",        ID_SET_GLOABALOBJECT
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_INPUTEDIT DIALOG DISCARDABLE  0, 0, 120, 34
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 10, "System"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,16,20,35,11
+    PUSHBUTTON      "Cancel",IDCANCEL,64,20,34,11
+    EDITTEXT        IDC_INPUTEDIT,46,5,66,12,ES_AUTOHSCROLL | ES_WANTRETURN
+    LTEXT           "Input Name:",IDC_STATIC,4,6,39,10
+END
+
+IDD_NEWCONNECT DIALOG DISCARDABLE  0, 0, 102, 34
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Goto Space"
+FONT 10, "System"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,11,19,31,11
+    PUSHBUTTON      "Cancel",IDCANCEL,59,19,31,11
+    CONTROL         "IPAddress1",IDC_NEWIP,"SysIPAddress32",WS_TABSTOP,7,1,
+                    86,14
+END
+
+IDD_SETACCOUNT DIALOG DISCARDABLE  0, 0, 145, 123
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Create Your Space"
+FONT 10, "System"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,14,99,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,77,99,50,14
+    LTEXT           "User Name",IDC_NAME2,13,11,38,9
+    LTEXT           "Password",IDC_PASSWORD2,13,27,35,12
+    LTEXT           "Confirm",IDC_CONFIRM2,13,44,35,11
+    EDITTEXT        IDC_SETNAME,53,9,78,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_SETPASSWORD,53,25,78,12,ES_PASSWORD | ES_AUTOHSCROLL
+    EDITTEXT        IDC_SETCONFIRM,53,41,78,12,ES_PASSWORD | ES_AUTOHSCROLL
+    GROUPBOX        "",IDC_GROUP,5,0,134,91
+    LTEXT           "Local Sapce Name",IDC_CONFIRM2,13,59,64,11
+    EDITTEXT        IDC_LOCALNAME,77,58,54,12,ES_AUTOHSCROLL
+    LTEXT           "Outer Space IP",IDC_CONFIRM2,13,74,50,11
+    CONTROL         "IPAddress1",IDC_OUTER_IP,"SysIPAddress32",WS_DISABLED | 
+                    WS_TABSTOP,66,73,65,12
+END
+
+IDD_PASSWORD DIALOG DISCARDABLE  20, 20, 103, 55
+STYLE DS_MODALFRAME | DS_CENTER | DS_CENTERMOUSE | WS_POPUP | WS_VISIBLE | 
+    WS_CAPTION | WS_SYSMENU
+CAPTION "Password Required"
+FONT 8, "System"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,11,40,33,12,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,58,40,33,12
+    EDITTEXT        IDC_SETNAME,43,7,52,12,ES_AUTOHSCROLL
+    LTEXT           "Name",IDC_NAME1,7,10,20,8
+    LTEXT           "Password",IDC_PASSWORD1,7,24,33,8
+    GROUPBOX        "",IDC_GROUP1,3,0,97,37
+    EDITTEXT        IDC_EDITPASSWORD,43,22,52,12,ES_PASSWORD
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_INPUTEDIT, DIALOG
+    BEGIN
+        LEFTMARGIN, 1
+        RIGHTMARGIN, 117
+        BOTTOMMARGIN, 31
+    END
+
+    IDD_NEWCONNECT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 94
+        BOTTOMMARGIN, 30
+    END
+
+    IDD_SETACCOUNT, DIALOG
+    BEGIN
+        LEFTMARGIN, 2
+        RIGHTMARGIN, 141
+        TOPMARGIN, 2
+        BOTTOMMARGIN, 118
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_NAVIBAR             BITMAP  DISCARDABLE     "res\\Navibar.bmp"
+IDB_CEILING             BITMAP  DISCARDABLE     "res\\ceiling.BMP"
+IDB_DOOR                BITMAP  DISCARDABLE     "res\\door.BMP"
+IDB_METAL               BITMAP  DISCARDABLE     "res\\metal.bmp"
+IDB_ROOMWALL            BITMAP  DISCARDABLE     "res\\roomwall.BMP"
+IDB_WALL                BITMAP  DISCARDABLE     "res\\Wall.bmp"
+IDB_FLOOR               BITMAP  DISCARDABLE     "res\\floor.bmp"
+#endif    // Chinese (P.R.C.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_ROOM MENU PRELOAD DISCARDABLE 
+BEGIN
+    POPUP "&Room"
+    BEGIN
+        MENUITEM "&Import Object",              ID_ROOM_IMPORTOBJECT
+        MENUITEM "&Export Object",              ID_ROOM_EXPORTFILE
+        MENUITEM "&Delete Object",              ID_ROOM_DELETE
+        MENUITEM SEPARATOR
+        MENUITEM "&Select Object",              ID_ROOM_SELECTOBJECT
+        MENUITEM SEPARATOR
+        MENUITEM "Create Child &Room",          ID_ROOM_CREATEROOM
+    END
+END
+
+IDR_RICHEDITMENU MENU DISCARDABLE 
+BEGIN
+    POPUP "Menu"
+    BEGIN
+        MENUITEM "&Send",                       ID_MENU_SEND
+        MENUITEM SEPARATOR
+        MENUITEM "Cu&t",                        ID_MENU_CUT
+        MENUITEM "&Copy",                       ID_MENU_COPY
+        MENUITEM "&Paste",                      ID_MENU_PASTE
+        MENUITEM SEPARATOR
+        MENUITEM "T&hink ",                     ID_MENU_THINK
+        MENUITEM "&Analyse",                    ID_MENU_ANALYSE
+        MENUITEM "Clea&r",                      ID_CLEAR_THINK
+    END
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
