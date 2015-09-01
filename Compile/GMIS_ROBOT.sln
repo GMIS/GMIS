@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Brain", "..\Robot\Brain.lib\Brain.vcxproj", "{E61FD3FC-39A7-F48C-359F-315B1AC9D322}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GMIS_WIN", "..\Robot\GMIS_win.exe\GMIS_WIN.vcxproj", "{8514DA79-EDF5-DB57-582E-8A865EFE8A70}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+		Template|Win32 = Template|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E61FD3FC-39A7-F48C-359F-315B1AC9D322}.Debug|Win32.ActiveCfg = Debug|Win32
+		{E61FD3FC-39A7-F48C-359F-315B1AC9D322}.Debug|Win32.Build.0 = Debug|Win32
+		{E61FD3FC-39A7-F48C-359F-315B1AC9D322}.Release|Win32.ActiveCfg = Release|Win32
+		{E61FD3FC-39A7-F48C-359F-315B1AC9D322}.Release|Win32.Build.0 = Release|Win32
+		{E61FD3FC-39A7-F48C-359F-315B1AC9D322}.Template|Win32.ActiveCfg = Template|Win32
+		{E61FD3FC-39A7-F48C-359F-315B1AC9D322}.Template|Win32.Build.0 = Template|Win32
+		{8514DA79-EDF5-DB57-582E-8A865EFE8A70}.Debug|Win32.ActiveCfg = Debug|Win32
+		{8514DA79-EDF5-DB57-582E-8A865EFE8A70}.Debug|Win32.Build.0 = Debug|Win32
+		{8514DA79-EDF5-DB57-582E-8A865EFE8A70}.Release|Win32.ActiveCfg = Release|Win32
+		{8514DA79-EDF5-DB57-582E-8A865EFE8A70}.Release|Win32.Build.0 = Release|Win32
+		{8514DA79-EDF5-DB57-582E-8A865EFE8A70}.Template|Win32.ActiveCfg = Template|Win32
+		{8514DA79-EDF5-DB57-582E-8A865EFE8A70}.Template|Win32.Build.0 = Template|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,156 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Template|Win32">
+      <Configuration>Template</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <SccProjectName />
+    <SccLocalPath />
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Template|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Template|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LibraryPath>D:\work\GMIS\GMIS_BASE\TheorySapce\bin\VC10\Release;D:\work\GMIS\GMIS_BASE\BaseSpace\bin\VC10\Release;D:\work\GMIS\GMIS_BASE\UserSpace_boost\bin\VC10\Release;D:\work\GMIS\GMIS_SPACE\VirtualSpace\bin\VC10\Release;D:\work\GMIS\GMIS_SPACE\VisualSpace\bin\VC10\Release;D:\work\GMIS\GMIS_SHARE\win3party\bin\VC10\Release;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <TargetName>$(ProjectName)_debug</TargetName>
+    <IncludePath>D:\poco-1.6.0\Net\include;D:\poco-1.6.0\Foundation\include;D:\work\GMIS\World\VirtualSpace.lib\src;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\boost\bin\vc10\lib;$(LibraryPath)</LibraryPath>
+    <OutDir>$(SolutionDir)bin\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)obj\$(ProjectName)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <StringPooling>true</StringPooling>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <Optimization>Disabled</Optimization>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;NDEBUG;UNICODE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ResourceCompile>
+      <Culture>0x0804</Culture>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Bscmake>
+    <Lib>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <FunctionLevelLinking>false</FunctionLevelLinking>
+      <Optimization>Disabled</Optimization>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <WarningLevel>Level3</WarningLevel>
+      <MinimalRebuild>true</MinimalRebuild>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <PreprocessorDefinitions>_DEBUG;WIN32;_CRT_SECURE_NO_DEPRECATE;_LIB;USING_POCO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+    </ClCompile>
+    <ResourceCompile>
+      <Culture>0x0804</Culture>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Bscmake>
+    <Lib>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="src\BitwiseOperator.cpp" />
+    <ClCompile Include="src\Brain.cpp" />
+    <ClCompile Include="src\Brain_Init.cpp" />
+    <ClCompile Include="src\BrainDialogMsgProc.cpp" />
+    <ClCompile Include="src\BrainElementMsgProc.cpp" />
+    <ClCompile Include="src\BrainMemory.cpp" />
+    <ClCompile Include="src\BrainObject.cpp" />
+    <ClCompile Include="src\BrainRequestProc.cpp" />
+    <ClCompile Include="src\BrainTask.cpp" />
+    <ClCompile Include="src\Element.cpp" />
+    <ClCompile Include="src\LogicElement.cpp" />
+    <ClCompile Include="src\LogicOperator.cpp" />
+    <ClCompile Include="src\LogicThread.cpp" />
+    <ClCompile Include="src\LogicThread_BrainWork.cpp" />
+    <ClCompile Include="src\LogicThread_Forecast.cpp" />
+    <ClCompile Include="src\LogicThread_Learn.cpp" />
+    <ClCompile Include="src\LogicThread_Think.cpp" />
+    <ClCompile Include="src\MathematicalOperator.cpp" />
+    <ClCompile Include="src\NotifyMsgProc.cpp" />
+    <ClCompile Include="src\RelationalOperator.cpp" />
+    <ClCompile Include="src\TaskDialog.cpp" />
+    <ClCompile Include="src\TaskDialogFindProc.cpp" />
+    <ClCompile Include="src\TaskDialogMemProc.cpp" />
+    <ClCompile Include="src\TaskDialogMsgProc.cpp" />
+    <ClCompile Include="src\TextAnalyse.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\BitwiseOperator.h" />
+    <ClInclude Include="src\Brain.h" />
+    <ClInclude Include="src\Brain_Init.h" />
+    <ClInclude Include="src\BrainMemory.h" />
+    <ClInclude Include="src\BrainObject.h" />
+    <ClInclude Include="src\BrainTask.h" />
+    <ClInclude Include="src\DefineDataOperator.h" />
+    <ClInclude Include="src\Element.h" />
+    <ClInclude Include="src\GUIMsgDefine.h" />
+    <ClInclude Include="src\InstinctDefine.h" />
+    <ClInclude Include="src\LogicElement.h" />
+    <ClInclude Include="src\LogicOperator.h" />
+    <ClInclude Include="src\LogicThread.h" />
+    <ClInclude Include="src\MathematicalOperator.h" />
+    <ClInclude Include="src\MsgList.h" />
+    <ClInclude Include="src\NotifyMsgDef.h" />
+    <ClInclude Include="src\RelationalOperator.h" />
+    <ClInclude Include="src\RobotMsgDefine.h" />
+    <ClInclude Include="src\TaskDialog.h" />
+    <ClInclude Include="src\TextAnalyse.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
