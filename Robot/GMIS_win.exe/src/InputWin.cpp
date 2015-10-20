@@ -13,7 +13,7 @@
 #include "LinkerView.h"
 #include "MsgList.h"
 #include "resource.h"
-#include "TaskDialog.h"
+#include "LogicDialog.h"
 
 #pragma  comment(lib, "imm32.lib")
 

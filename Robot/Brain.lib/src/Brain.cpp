@@ -9,12 +9,12 @@
 #include "Msg.h"
 #include "BrainObject.h"
 #include "LogicThread.h"
-#include "BrainTask.h"
+#include "LogicTask.h"
 #include "NotifyMsgDef.h"
-#include "TaskDialog.h"
+#include "LogicDialog.h"
 #include "GUIMsgDefine.h"
+#include "BrainWebsocket.h"
 
-//CArm  CBrain::m_LeftArm;
 
 void CreateBrainMsg(CMsg& NewMsg,ePipeline& Receiver,ePipeline& MsgData,int64 EventID){
 	assert(MsgData.GetID() !=0);
@@ -34,7 +34,7 @@ void CreateBrainMsg(CMsg& NewMsg,int64 ReceiverID,ePipeline& Msg,int64 EventID){
 
 
 
-void CNotifyState::Notify(CTaskDialog* Dialog){	
+void CNotifyState::Notify(CLogicDialog* Dialog){	
 	Dialog->m_Brain->NoitfyDialogState(Dialog,this);
     assert(Size()==0);
 }
@@ -66,35 +66,35 @@ CBrain::CLockedBrainData::~CLockedBrainData(){
 	}
     m_LogicThreadPool.clear();
 
-	map<int64,CBrainTask*>::iterator  It_int64_braintask = m_LogicTaskList.begin();
+	map<int64,CLogicTask*>::iterator  It_int64_braintask = m_LogicTaskList.begin();
 	while (It_int64_braintask != m_LogicTaskList.end())
 	{
-		CBrainTask* Task = It_int64_braintask->second;
+		CLogicTask* Task = It_int64_braintask->second;
 		delete Task;
 		It_int64_braintask++;
 	}
 	m_LogicTaskList.clear();
 	
-	deque<CBrainTask*>::iterator It_braintask = m_LogicTaskPool.begin();  
+	deque<CLogicTask*>::iterator It_braintask = m_LogicTaskPool.begin();  
 	while(It_braintask != m_LogicTaskPool.end()){
-		CBrainTask* Task = *It_braintask;
+		CLogicTask* Task = *It_braintask;
 		delete Task;
 		It_braintask++;
 	}
 	m_LogicTaskPool.clear();
 
-	map<int64,CTaskDialog*>::iterator  It_int64_taskdialog = m_DialogList.begin();
+	map<int64,CLogicDialog*>::iterator  It_int64_taskdialog = m_DialogList.begin();
 	while (It_int64_taskdialog != m_DialogList.end())
 	{
-		CTaskDialog* Dialog = It_int64_taskdialog->second;
+		CLogicDialog* Dialog = It_int64_taskdialog->second;
 		delete Dialog;
 		It_int64_taskdialog++;
 	}
 	m_DialogList.clear();
 	
-	deque<CTaskDialog*>::iterator It_taskdialog = m_DialogPool.begin();  
+	deque<CLogicDialog*>::iterator It_taskdialog = m_DialogPool.begin();  
 	while(It_taskdialog != m_DialogPool.end()){
-		CTaskDialog* Dialog = *It_taskdialog;
+		CLogicDialog* Dialog = *It_taskdialog;
 		delete Dialog;
 		It_taskdialog++;
 	}
@@ -210,49 +210,49 @@ void  CBrain::CLockedBrainData::SetLogicThreadUser(int64 ThreadID,int64 UserID){
 }
 
 
-CBrainTask*   CBrain::CLockedBrainData::CreateLogicTask(int64 UserID,int64 TaskID/*=0*/){
+CLogicTask*   CBrain::CLockedBrainData::CreateLogicTask(int64 UserID,int64 TaskID/*=0*/){
 	if (TaskID==0)
 	{
 		TaskID = AbstractSpace::CreateTimeStamp();
 	}
 
 	CLock lk(&m_BrainMutex);
-	deque<CBrainTask*>::iterator it = m_LogicTaskPool.begin();
+	deque<CLogicTask*>::iterator it = m_LogicTaskPool.begin();
 	if (it != m_LogicTaskPool.end())
 	{   
-		CBrainTask* Task = *it;
+		CLogicTask* Task = *it;
 		m_LogicTaskList[TaskID] = Task;
         Task->Reset(TaskID,UserID);
 		m_LogicTaskPool.pop_front();
 		return Task;
 	}
 
-	CBrainTask* Task = new CBrainTask(TaskID,UserID);
+	CLogicTask* Task = new CLogicTask(TaskID,UserID);
     m_LogicTaskList[TaskID] = Task;
 	return Task;
 };
 
-CBrainTask* CBrain::CLockedBrainData::GetLogicTask(int64 TaskID,bool bRequirLock /*= true*/){
+CLogicTask* CBrain::CLockedBrainData::GetLogicTask(int64 TaskID,bool bRequirLock /*= true*/){
 	if (!bRequirLock)
 	{
-		map<int64,CBrainTask*>::iterator it = m_LogicTaskList.find(TaskID);
+		map<int64,CLogicTask*>::iterator it = m_LogicTaskList.find(TaskID);
 		assert(it != m_LogicTaskList.end());
-		CBrainTask* Task =  it->second;
+		CLogicTask* Task =  it->second;
 		return Task;
 	}
     CLock lk(&m_BrainMutex);
-	map<int64,CBrainTask*>::iterator it = m_LogicTaskList.find(TaskID);
+	map<int64,CLogicTask*>::iterator it = m_LogicTaskList.find(TaskID);
 	assert(it != m_LogicTaskList.end());
-    CBrainTask* Task =  it->second;
+    CLogicTask* Task =  it->second;
 	return Task;
 };
 
 void  CBrain::CLockedBrainData::DeleteLogicTask(int64 TaskID){
 	
 	CLock lk(&m_BrainMutex);
-	map<int64,CBrainTask*>::iterator it = m_LogicTaskList.find(TaskID);
+	map<int64,CLogicTask*>::iterator it = m_LogicTaskList.find(TaskID);
 	assert(it != m_LogicTaskList.end());
-    CBrainTask* LogicTask =  it->second;
+    CLogicTask* LogicTask =  it->second;
     LogicTask->Reset(0,-1);
     m_LogicTaskList.erase(it);
 	m_LogicTaskPool.push_back(LogicTask);
@@ -264,39 +264,46 @@ void  CBrain::CLockedBrainData::SetLogicTaskUser(int64 TaskID,int64 UserID){
 		return;
 	}
 	CLock lk(&m_BrainMutex);
-	map<int64,CBrainTask*>::iterator it = m_LogicTaskList.find(TaskID);
+	map<int64,CLogicTask*>::iterator it = m_LogicTaskList.find(TaskID);
 	assert(it != m_LogicTaskList.end());
     if(it == m_LogicTaskList.end())return;
-	CBrainTask* Task =  it->second;
+	CLogicTask* Task =  it->second;
 	Task->m_UserDialogID = UserID;
 }
 
-
-void CBrain::CLockedBrainData::AddGuiSourceID(int64 ID){
+void   CBrain::CLockedBrainData::AddLoginUserID(int64 ID){
 	CLock lk(&m_BrainMutex);
-	m_GuiSourceList.insert(ID);
-};
-
-bool CBrain::CLockedBrainData::IsAllowedSourceID(int64 ID){
-	if (ID == SYSTEM_SOURCE)
-	{
-		return true;
+	list<int64>::iterator it = find(m_LoginUserIDList.begin(),m_LoginUserIDList.end(),ID);
+	if(it != m_LoginUserIDList.end()){
+		m_LoginUserIDList.push_back(ID);
 	}
+}
+void   CBrain::CLockedBrainData::DelLoginUserID(int64 ID){
 	CLock lk(&m_BrainMutex);
-	set<int64>::iterator it = m_GuiSourceList.find(ID);
-	return it != m_GuiSourceList.end();
+	list<int64>::iterator it = find(m_LoginUserIDList.begin(),m_LoginUserIDList.end(),ID);
+	if(it != m_LoginUserIDList.end()){
+		m_LoginUserIDList.erase(it);
+	}
+}
+void   CBrain::CLockedBrainData::GetLogicUserList(vector<int64>& UserIDList){
+	CLock lk(&m_BrainMutex);
+	UserIDList.clear();
+	//UserIDList = m_LoginUserIDList;
 }
 
-CTaskDialog* CBrain::CLockedBrainData::CreateNewDialog(CBrain* Frame,int64 SourceID,int64 DialogID,int64 ParentDialogID,
+
+
+
+CLogicDialog* CBrain::CLockedBrainData::CreateNewDialog(CBrain* Frame,int64 SourceID,int64 DialogID,int64 ParentDialogID,
 						  tstring SourceName,tstring DialogName,DIALOG_TYPE Type,int64 OutputSourceID,TASK_OUT_TYPE TaskType
 						  )
 {
 
-	CTaskDialog* NewDialog = NULL;
+	CLogicDialog* NewDialog = NULL;
 	CLock lk(&m_BrainMutex);
-	deque<CTaskDialog*>::iterator it = m_DialogPool.begin();
+	deque<CLogicDialog*>::iterator it = m_DialogPool.begin();
 	while(it != m_DialogPool.end()){
-		CTaskDialog* Old = *it;
+		CLogicDialog* Old = *it;
 		if (Old->GetSysProcNum()==0){
 			NewDialog = Old;
 			NewDialog->Reset(Frame,SourceID,DialogID,ParentDialogID,SourceName,DialogName,Type,OutputSourceID,TaskType);
@@ -308,7 +315,7 @@ CTaskDialog* CBrain::CLockedBrainData::CreateNewDialog(CBrain* Frame,int64 Sourc
 
 	if (NewDialog==NULL)
 	{
-		NewDialog = new CTaskDialog(Frame,SourceID,DialogID,ParentDialogID,SourceName,DialogName,Type,OutputSourceID,TaskType);
+		NewDialog = new CLogicDialog(Frame,SourceID,DialogID,ParentDialogID,SourceName,DialogName,Type,OutputSourceID,TaskType);
 		if (NewDialog == NULL)
 		{
 			return NULL;
@@ -321,10 +328,10 @@ CTaskDialog* CBrain::CLockedBrainData::CreateNewDialog(CBrain* Frame,int64 Sourc
 	return NewDialog;
 }
 
-CTaskDialog* CBrain::CLockedBrainData::GetDialog(int64 DialogID){
+CLogicDialog* CBrain::CLockedBrainData::GetDialog(int64 DialogID){
 	CLock lk(&m_BrainMutex);
-	CTaskDialog* Dialog = NULL;
-	map<int64,CTaskDialog*>::iterator it = m_DialogList.find(DialogID);
+	CLogicDialog* Dialog = NULL;
+	map<int64,CLogicDialog*>::iterator it = m_DialogList.find(DialogID);
 	if (it != m_DialogList.end())
 	{
 		Dialog =  it->second;
@@ -336,10 +343,10 @@ CTaskDialog* CBrain::CLockedBrainData::GetDialog(int64 DialogID){
 
 void   CBrain::CLockedBrainData::DeleteDialog(int64 DialogID){
 	CLock lk(&m_BrainMutex);
-	map<int64,CTaskDialog*>::iterator it= m_DialogList.find(DialogID);
+	map<int64,CLogicDialog*>::iterator it= m_DialogList.find(DialogID);
 	if (it != m_DialogList.end())
 	{
-		CTaskDialog* Dialog = it->second;
+		CLogicDialog* Dialog = it->second;
 		
 		Dialog->SetTaskState(TASK_DELELTE);
 		Dialog->NotifyTaskState();
@@ -353,10 +360,10 @@ void   CBrain::CLockedBrainData::DeleteDialog(int64 DialogID){
 
 void CBrain::CLockedBrainData::DeleteAllDialog(){
 	CLock lk(&m_BrainMutex);
-	map<int64,CTaskDialog*>::iterator it= m_DialogList.begin();
+	map<int64,CLogicDialog*>::iterator it= m_DialogList.begin();
 	while (it != m_DialogList.end())
 	{
-		CTaskDialog* Dialog = it->second;
+		CLogicDialog* Dialog = it->second;
 		Dialog->SetTaskState(TASK_DELELTE);
 		m_DialogPool.push_back(Dialog);
 		it->second = NULL;
@@ -366,10 +373,10 @@ void CBrain::CLockedBrainData::DeleteAllDialog(){
 int   CBrain::CLockedBrainData::DeleteDialogOfSource(int64 SourceID){
 	CLock lk(&m_BrainMutex);
 	int n=0;
-	map<int64,CTaskDialog*>::iterator it= m_DialogList.begin();
+	map<int64,CLogicDialog*>::iterator it= m_DialogList.begin();
 	while (it != m_DialogList.end())
 	{
-		CTaskDialog* Dialog = it->second;
+		CLogicDialog* Dialog = it->second;
 		
 		if (Dialog->m_SourceID == SourceID)
 		{
@@ -394,14 +401,14 @@ void  CBrain::CLockedBrainData::GetFocusDialogData(int64 SourceID,int64 DialogID
 		TaskID = SourceID;
 	}
 	
-	map<int64,CTaskDialog*>::iterator it = m_DialogList.find(TaskID);
+	map<int64,CLogicDialog*>::iterator it = m_DialogList.find(TaskID);
 	assert(it != m_DialogList.end());
 	if (it == m_DialogList.end())
 	{
 		return ;
 	}
 	
-	CTaskDialog* Dialog = it->second;	
+	CLogicDialog* Dialog = it->second;	
 	assert(Dialog!=NULL);
 	
 	//首先装入最后20个对话数据
@@ -526,14 +533,14 @@ void  CBrain::CLockedBrainData::GetMoreLog(int64 SourceID, int64 DialogID,int64 
 		TaskID = SourceID;
 	}
 	
-	map<int64,CTaskDialog*>::iterator it = m_DialogList.find(TaskID);
+	map<int64,CLogicDialog*>::iterator it = m_DialogList.find(TaskID);
 	assert(it != m_DialogList.end());
 	if (it == m_DialogList.end())
 	{
 		return ;
 	}
 	
-	CTaskDialog* Dialog = it->second;	
+	CLogicDialog* Dialog = it->second;	
 	assert(Dialog!=NULL);
 	
 	ePipeline ItemList;	
@@ -577,8 +584,8 @@ void  CBrain::CLockedBrainData::GetMoreLog(int64 SourceID, int64 DialogID,int64 
 void CBrain::CLockedBrainData::GetAllDialogListInfo(ePipeline& LinkerInfo){
 	CLock lk(&m_BrainMutex);	
 
-	CTaskDialog* Dialog = NULL;
-	map<int64,CTaskDialog*>::iterator it = m_DialogList.begin();
+	CLogicDialog* Dialog = NULL;
+	map<int64,CLogicDialog*>::iterator it = m_DialogList.begin();
 	while (it != m_DialogList.end())
 	{
 		Dialog =  it->second;
@@ -586,7 +593,7 @@ void CBrain::CLockedBrainData::GetAllDialogListInfo(ePipeline& LinkerInfo){
 		int64 DialogID = Dialog->m_DialogID;
 		int64 ParentID = Dialog->m_ParentDialogID;
 		tstring& Name  = Dialog->m_DialogName;
-		int32 Type = Dialog->m_SpaceType;
+		int32 Type = Dialog->m_DialogType;
 		
 		LinkerInfo.PushInt(SourceID);
 		LinkerInfo.PushInt(DialogID);
@@ -613,7 +620,7 @@ void CBrain::CLockedBrainData::BrainIdleProc(CBrain* Brain){
 	   {
 		   CLogicThread* Think = it->second;
 		   int64 DialogID = Think->m_UserDialogID;
-		   map<int64,CTaskDialog*>::iterator it1 = m_DialogList.find(DialogID);
+		   map<int64,CLogicDialog*>::iterator it1 = m_DialogList.find(DialogID);
 		   if (it1 == m_DialogList.end())
 		   {
 			   it = m_LogicThreadList.erase(it);
@@ -626,7 +633,7 @@ void CBrain::CLockedBrainData::BrainIdleProc(CBrain* Brain){
 			   }
 			   continue;
 		   }
-		   CTaskDialog* Dilaog = it1->second;
+		   CLogicDialog* Dilaog = it1->second;
 		   if(Dilaog->m_ThinkID != Think->m_ID){
 			   it = m_LogicThreadList.erase(it);
 			   Think->Reset(0,-1);
@@ -644,10 +651,10 @@ void CBrain::CLockedBrainData::BrainIdleProc(CBrain* Brain){
 
 	//检查Task的有效性，无效的则归还给内存池
 	if(m_LogicTaskList.size() > m_DialogList.size() ){
-		map<int64,CBrainTask*>::iterator it = m_LogicTaskList.begin();
+		map<int64,CLogicTask*>::iterator it = m_LogicTaskList.begin();
 		while (it != m_LogicTaskList.end())
 		{
-			CBrainTask* Task = it->second;
+			CLogicTask* Task = it->second;
 			int64 DialogID = Task->m_UserDialogID;
 
 			if (Task->m_UserDialogID == 1 ) //这种情况表明被临时逻辑占用
@@ -655,7 +662,7 @@ void CBrain::CLockedBrainData::BrainIdleProc(CBrain* Brain){
 				it++;
 				continue;
 			}
-			map<int64,CTaskDialog*>::iterator it1 = m_DialogList.find(DialogID);
+			map<int64,CLogicDialog*>::iterator it1 = m_DialogList.find(DialogID);
 			if (it1 == m_DialogList.end())
 			{
 				it = m_LogicTaskList.erase(it);
@@ -668,7 +675,7 @@ void CBrain::CLockedBrainData::BrainIdleProc(CBrain* Brain){
 				}
 				continue;
 			}
-			CTaskDialog* Dilaog = it1->second;
+			CLogicDialog* Dilaog = it1->second;
 			if(Dilaog->m_TaskID != Task->m_ID){
 				it = m_LogicTaskList.erase(it);
 				Task->Reset(0,-1);
@@ -685,10 +692,10 @@ void CBrain::CLockedBrainData::BrainIdleProc(CBrain* Brain){
 	}
 	
 	//限制DialogPool大小
-	deque<CTaskDialog*>::iterator it = m_DialogPool.begin();
+	deque<CLogicDialog*>::iterator it = m_DialogPool.begin();
 	while (it != m_DialogPool.end() && m_DialogPool.size()>20) //暂停pool大小为20
 	{
-		CTaskDialog* Dialog = *it;
+		CLogicDialog* Dialog = *it;
 		if (Dialog->GetSysProcNum()==0)
 		{
 			delete Dialog;
@@ -705,7 +712,7 @@ void  CBrain::CLockedBrainData::GetBrainInfo(ePipeline& Info){
 	m_EventMutex.Acquire();
 	int EventNum = m_EventList.size();
 	m_EventMutex.Release();
-	
+
 
 	m_BrainMutex.Acquire();
     int DialogNum = m_DialogList.size();
@@ -717,7 +724,7 @@ void  CBrain::CLockedBrainData::GetBrainInfo(ePipeline& Info){
 	int TaskNum = m_LogicTaskList.size();
 	int TaskPoolSize = m_LogicTaskPool.size();
 
-	int GuiNum = m_GuiSourceList.size();
+	int GuiNum = 0;//m_OrganList.size();
     m_BrainMutex.Release();
     
 
@@ -730,6 +737,8 @@ void  CBrain::CLockedBrainData::GetBrainInfo(ePipeline& Info){
 	Info.PushInt(TaskPoolSize);
 	Info.PushInt(GuiNum);
 }
+
+
 void CBrain::CLockedBrainData::EventProc(CBrain* Brain){
     if (m_bCheckEvent) //避免多个线程同时处理此函数
     {
@@ -765,13 +774,13 @@ void CBrain::CLockedBrainData::EventProc(CBrain* Brain){
 					CMsg Msg(Address,MSG_EVENT_TICK,it->first);
 					Msg.GetLetter().PushInt(NewTimeStamp);
 					
-					Brain->PushNerveMsg(Msg);
+					Brain->PushNerveMsg(Msg,false,true);
 				}else{ //对于外部事件，由于地址指向外部，所以TICK只能发往事件对应的对话
 					int64 DialogID = it->first;
 					CMsg Msg(DialogID,MSG_EVENT_TICK,DEFAULT_DIALOG,it->first);
 					Msg.GetLetter().PushInt(NewTimeStamp);
 					
-					Brain->PushNerveMsg(Msg);
+					Brain->PushNerveMsg(Msg,false,true);
 				}
 				it++;
 			} 
@@ -782,7 +791,7 @@ void CBrain::CLockedBrainData::EventProc(CBrain* Brain){
 				{
 					int64 DialogID = *(int64*)Address.GetData(0);
 					
-					CTaskDialog* Dialog = GetDialog(DialogID);
+					CLogicDialog* Dialog = GetDialog(DialogID);
 					
 					if (!Dialog )
 					{	
@@ -797,7 +806,7 @@ void CBrain::CLockedBrainData::EventProc(CBrain* Brain){
 						{				
 							int64 EventID = it->first;
 							
-							CTaskDialog* Dlg = GetDialog(EventID);
+							CLogicDialog* Dlg = GetDialog(EventID);
 							if (Dlg)
 							{
 								CNotifyState nf(NOTIFY_DIALOG_LIST);
@@ -818,7 +827,7 @@ void CBrain::CLockedBrainData::EventProc(CBrain* Brain){
 				else
 				{
 					int64 DialogID = it->first;
-					CTaskDialog* Dialog = GetDialog(DialogID);
+					CLogicDialog* Dialog = GetDialog(DialogID);
 					if (!Dialog)
 					{
 						//如果事件没有反馈对象，那么事件本身所对应的对话就应该停止，然后被删除
@@ -827,7 +836,7 @@ void CBrain::CLockedBrainData::EventProc(CBrain* Brain){
 						
 						CMsg Msg;
 						CreateBrainMsg(Msg,it->first,ChildMsg,0);
-						Brain->PushNerveMsg(Msg);
+						Brain->PushNerveMsg(Msg,false,true);
 						
 						it = m_EventList.erase(it);	
 						continue;
@@ -871,9 +880,9 @@ Energy*  CBrain::CLockedBrainData::ToEnergy(){
 
 	CLock lk(&m_BrainMutex);
 	ePipeline DialogList;
-	map<int64,CTaskDialog*>::iterator it = m_DialogList.begin();
+	map<int64,CLogicDialog*>::iterator it = m_DialogList.begin();
 	while(it != m_DialogList.end()){
-		CTaskDialog* Dialog = it->second;
+		CLogicDialog* Dialog = it->second;
 	    bool ret = Dialog->SuspendTask();
 		assert(ret);
 		if (!ret)
@@ -925,7 +934,7 @@ bool  CBrain::CLockedBrainData::FromEnergy(CBrain* Brain,Energy* E){
 		{
 			continue;
 		}
-		CTaskDialog* Dialog =  CreateNewDialog(Brain,SourceID,DialogID,0,_T(""),_T(""),DIALOG_SYSTEM_MAIN,0,TASK_OUT_DEFAULT);
+		CLogicDialog* Dialog =  CreateNewDialog(Brain,SourceID,DialogID,0,_T(""),_T(""),DIALOG_SYSTEM_MAIN,0,TASK_OUT_DEFAULT);
 		bool ret = Dialog->FromEnergy(p);
 		if (!ret)
 		{
@@ -941,24 +950,29 @@ bool  CBrain::CLockedBrainData::FromEnergy(CBrain* Brain,Energy* E){
 //CBrain
 //////////////////////////////////////////////////////////////////////
 
-CBrain::CBrain(CSystemInitData* InitData)
-:System(InitData)
+CBrain::CBrain(CUserTimer* Timer,CUserSpacePool* Pool)
+:System(Timer,Pool)
 {
 	m_CurDebugTimeStamp = 0;
 	m_LogFlag = 0;
+	m_GUI_WebServer = NULL;
+	m_LongTermMemory.Open();
 
-	m_Account.Name = _T("");
-	m_Account.Password = _T("");
-	m_Account.CrypText = _T("");
-	m_Account.ip = 0;
-
+	AnsiString AccountList = m_LongTermMemory.GetSystemItem(SYS_ACCOUNT);
+	uint32 pos=0;
+	m_UserAccountList.FromString(AccountList,pos);
 }
 
 
 
 CBrain::~CBrain()
 {
-	CBrainMemory::Close();
+	m_LongTermMemory.Close();
+	if(m_GUI_WebServer){
+		m_GUI_WebServer->stopAll(true);
+		delete m_GUI_WebServer;
+		m_GUI_WebServer = NULL;
+	}
 }
 
 tstring CBrain::MsgID2Str(int64 MsgID){
@@ -1006,11 +1020,30 @@ bool CBrain::Activation(){
 
 //	m_LeftArm.OpenSerialPort("COM3");
 
+	m_GUI_WebServer= new HTTPServer(new BrainRequestHandlerFactory(this),80);
+	m_GUI_WebServer->start();
+
+	//从长期记忆中恢复大脑当前场景
+	AnsiString DialogInfo = CBrainMemory::GetSystemItem(SYS_DIALOG);
+	//DialogInfo=""; //仅用于测试时忽略
+	if (DialogInfo.size())
+	{
+		ePipeline Pipe;
+		uint32 pos=0;
+		if(Pipe.FromString(DialogInfo,pos) && FromEnergy(&Pipe))
+		{	
+			OutputLog(LOG_TIP,_T("Retrieve Brain Logic Scene...OK"));
+		}else{
+			OutputLog(LOG_TIP,_T("Retrieve Brain Logic Scene...Fail"));
+		}
+	}
+
+
 	CLockedBrainData* LockedData = GetBrainData();
-	CTaskDialog* Dialog = LockedData->GetDialog(DEFAULT_DIALOG); 
+	CLogicDialog* Dialog = LockedData->GetDialog(DEFAULT_DIALOG); 
 	if (!Dialog)
 	{
-		Dialog = LockedData->CreateNewDialog(this,SYSTEM_SOURCE,DEFAULT_DIALOG,0,_T("You"),_T("System"),DIALOG_SYSTEM_MAIN,0,TASK_OUT_DEFAULT);
+		Dialog = LockedData->CreateNewDialog(this,SYSTEM_SOURCE,DEFAULT_DIALOG,0,_T("You"),_T("System(Local)"),DIALOG_SYSTEM_MAIN,0,TASK_OUT_DEFAULT);
 		if (!Dialog)
 		{
 			m_ErrorInfo = _T("系统对话生成失败");
@@ -1022,10 +1055,7 @@ bool CBrain::Activation(){
 		LocalAddress.PushInt(DEFAULT_DIALOG);
 		LockedData->PushBrainEvent(0,ExePipe,LocalAddress);
 	}
-		
-	CMsg Msg(MSG_INIT_BRAIN,DEFAULT_DIALOG,0);	
-	Dialog->SendMsg(Msg,LOCAL);
-		
+	
 	return true;
 }
 
@@ -1034,7 +1064,7 @@ void CBrain::Dead(){
 
 	if(m_Alive == FALSE)return;
 
-//	m_LeftArm.CloseSerialPort();
+	m_GUI_WebServer->stop();
 
 	Energy* E = NULL; 
 	ePipeline* Pipe = NULL;
@@ -1055,8 +1085,6 @@ void CBrain::Dead(){
 	}
 	System::Dead();
 	WSACleanup();
-
-
 }
 
 
@@ -1124,7 +1152,94 @@ void  CBrain::SendMsgToGUI(int64 GuiID,CMsg& GuiMsg){
 
 }
 
+int CBrain::GetUserAccountNum(){
+	return m_UserAccountList.Size();
+}
 
+bool CBrain::Login(int64 SourceID,tstring UserName, tstring CrypStr)
+{
+	DIALOG_TYPE DialogType =  VerifyUser(UserName,CrypStr);
+	if (DialogType != DIALOG_SYSTEM_MAIN) return false;
+
+	GetBrainData()->AddLoginUserID(SourceID);
+
+	CLogicDialog* Dialog = m_BrainData.GetDialog(DEFAULT_DIALOG);
+
+	//初始化当前对话列表，对方收到后会请求得到焦点对话的数据
+	CNotifyState nf(NOTIFY_BRAIN_INIT);
+	nf.PushInt(INIT_DIALOG_LIST);
+	nf.PushInt(SourceID);
+	nf.Notify(Dialog);
+	return true;
+};
+
+void CBrain::CheckMemory(){
+	CMsg Msg(MSG_INIT_BRAIN,DEFAULT_DIALOG,0);	
+	PushCentralNerveMsg(Msg,false ,false);
+		
+}
+
+void CBrain::RegisterUserAccount(tstring Name,tstring CrypStr,DIALOG_TYPE DialogType){
+	bool bChanged = false;
+	//修改
+	for(uint32 i=0; i<m_UserAccountList.Size();i++){
+		ePipeline* Item = (ePipeline*)m_UserAccountList.GetData(i);
+		tstring srcName = *(tstring*)Item->GetData(0);
+		if (srcName == Name)
+		{
+			tstring srcCrypText = *(tstring*)Item->GetData(1);
+			if (srcCrypText == CrypStr)
+			{
+				int64& Type = *(int64*)Item->GetData(2);
+				if(DialogType != Type){
+					Type = DialogType;
+					bChanged = true;
+				}
+			}
+		}
+	}
+
+	if (!bChanged)
+	{
+		ePipeline NewItem;
+		NewItem.PushString(Name);
+		NewItem.PushString(CrypStr);
+		NewItem.PushInt(DialogType);
+		m_UserAccountList.PushPipe(NewItem);
+	}
+
+	AnsiString SaveText;
+	m_UserAccountList.ToString(SaveText);
+	if (SaveText.size())
+	{
+		CBrainMemory::SetSystemItem(SYS_ACCOUNT,SaveText);
+	}
+}
+
+
+DIALOG_TYPE CBrain::VerifyUser(tstring Name,tstring Cryptograhp){
+	
+    for(uint32 i=0; i<m_UserAccountList.Size();i++){
+		ePipeline* Item = (ePipeline*)m_UserAccountList.GetData(i);
+		tstring srcName = *(tstring*)Item->GetData(0);
+		if (srcName == Name)
+		{
+			tstring srcCrypText = *(tstring*)Item->GetData(1);
+			if (srcCrypText == Cryptograhp)
+			{
+				int64 DialogType = *(int64*)Item->GetData(2);
+				return (DIALOG_TYPE)DialogType;
+			}
+		}
+	}
+	return DIALOG_NULL;
+}
+
+CWebsocketLinkerPipe* CBrain::CreateWebSocketLinkerPipe(const WebSocket& ws){
+	int64 SourceID = CreateTimeStamp();
+	CWebsocketLinkerPipe* Linker = new CWebsocketLinkerPipe(&m_ClientSitMutex,this,SourceID,ws);
+	return Linker;
+}
 
 //继承的接口
 //////////////////////////////////////////////////////////
@@ -1141,14 +1256,12 @@ bool CBrain::Do(Energy* E){
 	ePipeline* Pipe = (ePipeline*)E;
 	CMsg Msg(Pipe);
 
-
-
 	int64 DialogID = Msg.GetReceiverID();
 
 	if (DialogID == DEFAULT_DIALOG)//中枢神经只处理缺省对话
 	{
 		DialogID = Msg.GetSourceID();  //缺省对话的实际ID是其信息源ID
-		CTaskDialog* Dialog = m_BrainData.GetDialog(DialogID);
+		CLogicDialog* Dialog = m_BrainData.GetDialog(DialogID);
 
 		if(Dialog){
 			Dialog->Do(Msg);  
@@ -1162,13 +1275,10 @@ bool CBrain::Do(Energy* E){
 				Dialog->Do(Msg);  
 			}
 		}
-
 	}else{ 
 		//其他信息转向子神经处理，避免中枢神经阻塞
-		PushNerveMsg(Msg);
+		PushNerveMsg(Msg,false,false);
 	}
-
-
 	return TRUE;
 }
 
@@ -1181,23 +1291,23 @@ void CBrain::NerveProc(CMsg& Msg){
 	int64 DialogID = Msg.GetReceiverID();
 	
 
-	CTaskDialog* Dialog = m_BrainData.GetDialog(DialogID);
+	CLogicDialog* Dialog = m_BrainData.GetDialog(DialogID);
 	
 	if(Dialog){
 		Dialog->Do(Msg);
 	}else{
 		int64 MsgID = Msg.GetMsgID();
-		tstring MsgStr = MsgID2Str(MsgID);
+		tstring MsgIDName = MsgID2Str(MsgID);
 		if (MsgID == MSG_FROM_BRAIN)
 		{
 			ePipeline& Letter = Msg.GetLetter();
 			int64 ChildMsgID = Letter.PopInt();
-			tstring s = Format1024(_T("Dialog[%I64d] not exist! %s:%I64d losted"),DialogID,MsgStr.c_str(),ChildMsgID);
+			tstring s = Format1024(_T("Dialog[%I64d] not exist! %s:%I64d losted"),DialogID,MsgIDName.c_str(),ChildMsgID);
 			OutSysInfo(s);
 		} 
 		else
 		{
-			tstring s = Format1024(_T("Dialog[%I64d] not exist! %s losted"),DialogID,MsgStr.c_str());
+			tstring s = Format1024(_T("Dialog[%I64d] not exist! %s losted"),DialogID,MsgIDName.c_str());
 			OutSysInfo(s);
 
 		}
@@ -1255,7 +1365,7 @@ void CBrain::SendMsgToSpace(CMsg& Msg){
 }
 
 
-void CBrain::ConnectSpace(CTaskDialog* Dialog,tstring& ip){
+void CBrain::ConnectSpace(CLogicDialog* Dialog,tstring& ip){
 
 	int32 GuiID = LOCAL_GUI;
 	ePipeline Receiver;
@@ -1263,7 +1373,7 @@ void CBrain::ConnectSpace(CTaskDialog* Dialog,tstring& ip){
 	Receiver.PushInt(Dialog->m_DialogID);
 	
 	//////////////////////////////////////////////////////////////////////////	
-	_ACCOUNT* ac = GetAccount();
+
 	CLinker Linker;
 	GetLinker(SPACE_SOURCE,Linker);	
 	if(Linker.IsValid()){
@@ -1287,7 +1397,7 @@ void CBrain::ConnectSpace(CTaskDialog* Dialog,tstring& ip){
 	
 	
 	//设置一个新对话
-	CTaskDialog* NewDialog = LockedData->CreateNewDialog(this,SPACE_SOURCE,DEFAULT_DIALOG,0,_T("Wait connect.."),_T("You"),DIALOG_OTHER_MAIN,LOCAL_GUI,TASK_OUT_DEFAULT);	
+	CLogicDialog* NewDialog = LockedData->CreateNewDialog(this,SPACE_SOURCE,DEFAULT_DIALOG,0,_T("Wait connect.."),_T("You"),DIALOG_OTHER_MAIN,LOCAL_GUI,TASK_OUT_DEFAULT);	
 	
 	tstring Error;
 	AnsiString ip1 = WStoUTF8(ip);		
@@ -1325,7 +1435,7 @@ void CBrain::OutSysInfo(tstring s){
 }
 
 void CBrain::OutSysInfo(const TCHAR* Text){
-	CTaskDialog* Dialog = m_BrainData.GetDialog(SYSTEM_SOURCE);
+	CLogicDialog* Dialog = m_BrainData.GetDialog(SYSTEM_SOURCE);
 	
 	if(!Dialog)return; 
 	
@@ -1348,7 +1458,7 @@ void CBrain::OutSysInfo(const TCHAR* Text){
 
 
 void CBrain::OutSysStatus(ePipeline& Data){
-	CTaskDialog* Dialog = m_BrainData.GetDialog(SYSTEM_SOURCE);
+	CLogicDialog* Dialog = m_BrainData.GetDialog(SYSTEM_SOURCE);
 	if(!Dialog)return; 
 	
 	CNotifyState nf(NOTIFY_DIALOG_OUTPUT);
@@ -1358,7 +1468,7 @@ void CBrain::OutSysStatus(ePipeline& Data){
 };
 
 
-bool CBrain::RunExportObject(CTaskDialog* Dialog,CMsg* Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
+bool CBrain::RunExportObject(CLogicDialog* Dialog,CMsg* Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
 	
 	int64 EventID = Msg->GetEventID();
 	CLockedBrainData* BrainData = GetBrainData();

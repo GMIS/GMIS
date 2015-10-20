@@ -3,6 +3,31 @@
 #include <math.h>
 #include "TaskDialog.h"
 #include "ThinDataTransProtocal.h"
+
+
+/*机械臂
+void Calculate(int dx, int dy, double& a1, double& a2)
+{
+	const double pi = 3.14159;
+	double x = 0.09;
+	double y = 0.05;
+
+	x +=dx;
+	y +=dy;
+
+	double m_L1 = 0.15;
+	double m_L2 = 0.22;
+	double  n = (-(x*x +y*y)+m_L1*m_L1+m_L2*m_L2)/(2*m_L1*m_L2);
+	assert(n>=-1.0f && n<=1.0f);
+	a2 = pi - acos(n);
+
+	a1 = atan(y/x) -atan(m_L2*sin(a2)/(m_L1+m_L2*cos(a2)));
+
+	a1 = a1*180/pi;
+	a2 = a2*180/pi;
+}
+*/
+
 CArm::CArm(){
 	
 	m_ID = 0;

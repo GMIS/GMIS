@@ -4,7 +4,7 @@
 #pragma warning(disable: 4786)
 
 
-#include "TaskDialog.h"
+#include "LogicDialog.h"
 #include "LogicThread.h"
 #include "InstinctDefine.h"
 

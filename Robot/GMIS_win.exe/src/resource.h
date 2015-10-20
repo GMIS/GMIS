@@ -1,6 +1,6 @@
-﻿//{{NO_DEPENDENCIES}}
-// Microsoft Developer Studio generated include file.
-// Used by ZSIR.rc
+//{{NO_DEPENDENCIES}}
+// Microsoft Visual C++ generated include file.
+// Used by GMIS.rc
 //
 #define IDD_NEWCONNECT                  101
 #define IDI_MAINFRAME                   102

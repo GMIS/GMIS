@@ -23,6 +23,7 @@
 #define SNOTIFY_LISTEN_FAIL                 20005
 #define SNOTIFY_IO_WORK_THREAD_CLOSE        20006
 
+
 namespace PHYSIC{
 
 class  System : public Model  
@@ -73,7 +74,7 @@ public:
 
 	class CLockedSystemData{
 	protected:
- 		CABMutex*				   m_pMutex;
+ 		CUserMutex				   m_Mutex;
 		uint32                     m_MaxNerveWorkerNum;      //Allowed maximum number of central nervous system processing threads，default=20
 		uint32                     m_NerveMsgMaxNumInPipe;   //If more than this amount of messages were not handled,considering to generate a new processing thread,default = 10
 		int64                      m_NerveMsgMaxInterval;    //if the time interval  of the last popped message was greater than this number,considering to generate a new processing thread,default=10*1000*1000(the unit is hundred of nanoseconds, or 1 second)
@@ -84,14 +85,10 @@ public:
 		map<int64,CNerveWork*>     m_NerveWorkList;
 		map<int32,CNetListenWork*> m_AcceptorList;
 
-		list<Object*>              m_DelThreadWorkList;      //Pointer list waiting to be physically deleted ( avoiding the thread delete itself), including ModelIOWork and CentralNerveWork
-		CLockedSystemData(){};
+		bool                       m_bClosed;	
 	public:
-		CLockedSystemData(CABMutex* mutex);
+		CLockedSystemData();
 		virtual ~CLockedSystemData();
-
-		virtual bool Activation();
-		virtual void Dead();
 
 		void    IncreNerveWorkCount();
         void    DecreNerveWorkCount();
@@ -111,39 +108,31 @@ public:
 		
 		int32   AddNerveWork(CNerveWork* Work);
         int32   DeleteNerveWork(int64 ID);
-			
+		
+
 		bool    RequestCreateNewNerveWork(uint32 MsgNum,int64 Interval,uint32& Reason); 
 
 		CNetListenWork* FindAcceptor(int32 Port);
 		void  AddAcceptor(int32 Port,CNetListenWork* Acceptor);
 		void  DelAcceptor(int32 Port);
 		void  DelAllAcceptor();
-	};
 
-    //For System initialization,  we can add parameters through inheriting this class to  avoid the parameter table too longer
-	class CSystemInitData:public Model::CModelInitData{
-	public:
-		CLockedSystemData*  m_SystemData;
-		CABMutex*		    m_SystemListMutex;
-		CSpaceMutex*		m_ClientSitMutex;
-		CLockPipe*          m_Nerve;
-		
-	public:
-		CSystemInitData();
-		virtual ~CSystemInitData();
+		void    CloseAllWorkThread(); //include CSystemIOWork CNerveWork CNetListenWork
 	};
 
     friend class CSystemIOWork;
 	friend class CNerveWork;
 private:
 	//Some messages if the central nerve system does not handle , just leave it to nerve processing
-	CLockPipe*                      m_Nerve;
+	CUserMutex                      m_NerveMutex;
+	CLockPipe                       m_Nerve;
+
 	CLockedLinkerList               m_ClientList;
-	CLockedSystemData*              m_SystemData;
+	CLockedSystemData               m_SystemData;
 
 protected:	
 
-	CSpaceMutex*					m_ClientSitMutex;  //Child CLinkerPipe common lock
+	CSpaceMutex 					m_ClientSitMutex;  //Child CLinkerPipe common lock
 
     virtual void		NerveProc(CMsg& Msg){;//General nerve message processing function that need users to implement
 	
@@ -154,13 +143,13 @@ protected:
 
 	//used for Accept()
 	CUserLinkerPipe* CreateClientLinkerPipe();
-
+	
 	virtual void BroadcastMsg(set<int64>& SourceList,int64 BCS_ID,ePipeline& MsgData);
 	
 	virtual void NotifySysState(int64 NotifyID,ePipeline* Data = NULL);
 
 public:
-	System(CSystemInitData* InitData);
+	System(CUserTimer* Timer,CUserSpacePool* Pool);
 	virtual MASS_TYPE  MassType(){ return MASS_SYSTEM;};
 	virtual ~System();
 	
@@ -176,7 +165,8 @@ public:
     void	     PopNerveMsg(CMsg& Msg);
 	int32		 GetNerveMsgNum();
 	void		 GetNerveMsgList(ePipeline& Pipe);
-	void		 PushNerveMsg(CMsg& Msg,bool bUrgenceMsg=FALSE);
+	//bDirectly meant directly return when the msg pushed the queue without checking and starting work thread
+	void		 PushNerveMsg(CMsg& Msg,bool bUrgenceMsg,bool bDirectly);
 
 	//Allows to connect several servers at same time, if address and port were the same then to ignore
 	bool Connect(int64 ID,AnsiString Address,int32 Port,int32 TimeOut,tstring& error,bool bBlock);

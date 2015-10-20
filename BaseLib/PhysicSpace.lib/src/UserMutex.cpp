@@ -29,7 +29,7 @@ void CUserMutex::Acquire(){
 #if defined(USING_POCO)
 #ifdef _DEBUG
 try{
-	m_Mutex.lock(1000);
+	m_Mutex.lock(5000);
 }
 catch(TimeoutException& e){
 	AnsiString s = e.displayText();

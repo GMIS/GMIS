@@ -270,7 +270,21 @@ public:
 	void SetDebugStep(int32 Step);
 
     //To achieve specific IO processing here, called by host thread
-	virtual bool  ThreadIOWorkProc(char* Buffer,uint32 BufSize) =0;
+	virtual bool  ThreadIOWorkProc(char* Buffer,uint32 BufSize);
+
+protected:
+	//Returns the number of bytes actually processed
+	uint32 InputProc(char* Buffer,uint32 BufSize);
+	uint32 OutputProc(char* Buffer,uint32 BufSize);
+
+
+	//should be implement later by user according to actual conditions
+	virtual bool  PhysicalRev(char* Buf,uint32 BufSize, uint32& RevLen, uint32 flag=0){
+		return false;
+	}
+	virtual bool  PhysicalSend(char* Buf,uint32 BufSize, uint32& SendLen, uint32 flag=0){
+		return false;
+	};
 };
 
 

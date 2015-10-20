@@ -51,7 +51,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <TargetName>$(ProjectName)_debug</TargetName>
     <IncludePath>D:\poco-1.6.0\Net\include;D:\poco-1.6.0\Foundation\include;D:\work\GMIS\World\VirtualSpace.lib\src;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\boost\bin\vc10\lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>D:\poco-1.6.0\lib;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)bin\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)obj\$(ProjectName)\$(Configuration)\</IntDir>
   </PropertyGroup>
@@ -87,7 +87,7 @@
       <WarningLevel>Level3</WarningLevel>
       <MinimalRebuild>true</MinimalRebuild>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <PreprocessorDefinitions>_DEBUG;WIN32;_CRT_SECURE_NO_DEPRECATE;_LIB;USING_POCO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;WIN32;_CRT_SECURE_NO_DEPRECATE;_LIB;USING_POCO;POCO_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
     </ClCompile>
     <ResourceCompile>
@@ -104,13 +104,14 @@
   <ItemGroup>
     <ClCompile Include="src\BitwiseOperator.cpp" />
     <ClCompile Include="src\Brain.cpp" />
+    <ClCompile Include="src\BrainWebsocket.cpp" />
     <ClCompile Include="src\Brain_Init.cpp" />
     <ClCompile Include="src\BrainDialogMsgProc.cpp" />
     <ClCompile Include="src\BrainElementMsgProc.cpp" />
     <ClCompile Include="src\BrainMemory.cpp" />
     <ClCompile Include="src\BrainObject.cpp" />
     <ClCompile Include="src\BrainRequestProc.cpp" />
-    <ClCompile Include="src\BrainTask.cpp" />
+    <ClCompile Include="src\LogicTask.cpp" />
     <ClCompile Include="src\Element.cpp" />
     <ClCompile Include="src\LogicElement.cpp" />
     <ClCompile Include="src\LogicOperator.cpp" />
@@ -122,19 +123,20 @@
     <ClCompile Include="src\MathematicalOperator.cpp" />
     <ClCompile Include="src\NotifyMsgProc.cpp" />
     <ClCompile Include="src\RelationalOperator.cpp" />
-    <ClCompile Include="src\TaskDialog.cpp" />
-    <ClCompile Include="src\TaskDialogFindProc.cpp" />
-    <ClCompile Include="src\TaskDialogMemProc.cpp" />
-    <ClCompile Include="src\TaskDialogMsgProc.cpp" />
+    <ClCompile Include="src\LogicDialog.cpp" />
+    <ClCompile Include="src\LogicDialogFindProc.cpp" />
+    <ClCompile Include="src\LogicDialogMemProc.cpp" />
+    <ClCompile Include="src\LogicDialogMsgProc.cpp" />
     <ClCompile Include="src\TextAnalyse.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\BitwiseOperator.h" />
     <ClInclude Include="src\Brain.h" />
+    <ClInclude Include="src\BrainWebsocket.h" />
     <ClInclude Include="src\Brain_Init.h" />
     <ClInclude Include="src\BrainMemory.h" />
     <ClInclude Include="src\BrainObject.h" />
-    <ClInclude Include="src\BrainTask.h" />
+    <ClInclude Include="src\LogicTask.h" />
     <ClInclude Include="src\DefineDataOperator.h" />
     <ClInclude Include="src\Element.h" />
     <ClInclude Include="src\GUIMsgDefine.h" />
@@ -147,7 +149,7 @@
     <ClInclude Include="src\NotifyMsgDef.h" />
     <ClInclude Include="src\RelationalOperator.h" />
     <ClInclude Include="src\RobotMsgDefine.h" />
-    <ClInclude Include="src\TaskDialog.h" />
+    <ClInclude Include="src\LogicDialog.h" />
     <ClInclude Include="src\TextAnalyse.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

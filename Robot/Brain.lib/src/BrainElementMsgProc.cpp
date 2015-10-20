@@ -3,9 +3,9 @@
 #include "Brain.h"
 #include "GUIMsgDefine.h"
 #include "BrainObject.h"
-#include "TaskDialog.h"
+#include "LogicDialog.h"
 
-MsgProcState CBrain::ElementMsgProc(CTaskDialog* Dialog,CElement* Elt,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
+MsgProcState CBrain::ElementMsgProc(CLogicDialog* Dialog,CElement* Elt,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
 	int64 MsgID = Msg.GetMsgID();
 
 	switch(MsgID){
@@ -36,7 +36,7 @@ MsgProcState CBrain::ElementMsgProc(CTaskDialog* Dialog,CElement* Elt,int32 Chil
 }
 
 
-MsgProcState CBrain::OnEltTaskControl(CTaskDialog* Dialog,CElement* Elt,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
+MsgProcState CBrain::OnEltTaskControl(CLogicDialog* Dialog,CElement* Elt,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
 	int64 EventID = Msg.GetEventID();
 	
 	ePipeline& Letter = Msg.GetLetter();
@@ -52,7 +52,7 @@ MsgProcState CBrain::OnEltTaskControl(CTaskDialog* Dialog,CElement* Elt,int32 Ch
 			{				
 				Dialog->SetWorkMode(WORK_TASK);
 
-				CBrainTask* Task = Dialog->GetTask();
+				CLogicTask* Task = Dialog->GetTask();
 				bool ret = Dialog->RegisterLogic(Task);
 				if (!ret)
 				{
@@ -152,7 +152,7 @@ MsgProcState CBrain::OnEltTaskControl(CTaskDialog* Dialog,CElement* Elt,int32 Ch
 	return CONTINUE_TASK;
 }
 
-MsgProcState CBrain::OnEltInsertLogic(CTaskDialog* Dialog,CElement* Elt,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
+MsgProcState CBrain::OnEltInsertLogic(CLogicDialog* Dialog,CElement* Elt,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
 
 	int64 EventID = Msg.GetEventID();
 
@@ -162,7 +162,7 @@ MsgProcState CBrain::OnEltInsertLogic(CTaskDialog* Dialog,CElement* Elt,int32 Ch
 
 	CLocalLogicCell* lg = Dialog->FindLogic(InsertLogicName);
 	
-	CBrainTask* LogicTask = NULL;
+	CLogicTask* LogicTask = NULL;
 	if(lg == NULL) {				
 		ExePipe.m_Label = Format1024(_T("Error: Not find Local logic[%s]"),InsertLogicName.c_str());
 		ExePipe.SetID(RETURN_ERROR);
@@ -171,7 +171,7 @@ MsgProcState CBrain::OnEltInsertLogic(CTaskDialog* Dialog,CElement* Elt,int32 Ch
 		ePipeline& rLetter = rMsg.GetLetter();
 		rLetter.PushPipe(ExePipe);	
 		
-		Dialog->m_Brain->PushCentralNerveMsg(rMsg);	
+		Dialog->m_Brain->PushCentralNerveMsg(rMsg,false,false);	
 
 		ExePipe.Break(); //不在继续处理,并返回系统
 		return RETURN_DIRECTLY; 
@@ -184,7 +184,7 @@ MsgProcState CBrain::OnEltInsertLogic(CTaskDialog* Dialog,CElement* Elt,int32 Ch
 		ePipeline& rLetter = rMsg.GetLetter();
 		rLetter.PushPipe(ExePipe);	
 		
-		Dialog->m_Brain->PushCentralNerveMsg(rMsg);	
+		Dialog->m_Brain->PushCentralNerveMsg(rMsg,false,false);	
 
 		ExePipe.Break(); //不在继续处理,并返回系统
 		return RETURN_DIRECTLY; 
@@ -192,7 +192,7 @@ MsgProcState CBrain::OnEltInsertLogic(CTaskDialog* Dialog,CElement* Elt,int32 Ch
 		LogicTask = &lg->m_Task;	
 	}
 	
-	CBrainTask* Task = Dialog->GetTask();
+	CLogicTask* Task = Dialog->GetTask();
 	ePipeline LogicPipe(LogicTask->m_LogicData);
 		
 	CElement* E  = Task->CompileSentence(Dialog,InsertLogicName,&LogicPipe);
@@ -207,7 +207,7 @@ MsgProcState CBrain::OnEltInsertLogic(CTaskDialog* Dialog,CElement* Elt,int32 Ch
 		ePipeline& rLetter = rMsg.GetLetter();
 		rLetter.PushPipe(ExePipe);	
 		
-		Dialog->m_Brain->PushCentralNerveMsg(rMsg);	
+		Dialog->m_Brain->PushCentralNerveMsg(rMsg,false,false);	
 		
 		ExePipe.Break(); //不在继续处理,并返回系统
 		return RETURN_DIRECTLY; 
@@ -257,13 +257,13 @@ MsgProcState CBrain::OnEltInsertLogic(CTaskDialog* Dialog,CElement* Elt,int32 Ch
 	CMsg rMsg(MSG_TASK_FEEDBACK,0,EventID);		
 	ePipeline& rLetter = rMsg.GetLetter();
 	rLetter.PushPipe(ExePipe);	
-	Dialog->m_Brain->PushCentralNerveMsg(rMsg);		
+	Dialog->m_Brain->PushCentralNerveMsg(rMsg,false,false);		
 
 	ExePipe.Break(); //不在继续处理,并返回系统
 	return RETURN_DIRECTLY; 
 };
 
-MsgProcState CBrain::OnEltRemoveLogic(CTaskDialog* Dialog,CElement* Elt,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
+MsgProcState CBrain::OnEltRemoveLogic(CLogicDialog* Dialog,CElement* Elt,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
 	int64 EventID = Msg.GetEventID();
 	
 	ePipeline& Letter = Msg.GetLetter();
@@ -286,7 +286,7 @@ MsgProcState CBrain::OnEltRemoveLogic(CTaskDialog* Dialog,CElement* Elt,int32 Ch
 		CMsg rMsg(MSG_TASK_FEEDBACK,0,EventID);		
 		ePipeline& rLetter = rMsg.GetLetter();
 		rLetter.PushPipe(ExePipe);	
-		Dialog->m_Brain->PushCentralNerveMsg(rMsg);		
+		Dialog->m_Brain->PushCentralNerveMsg(rMsg,false,false);		
 
 		ExePipe.Break(); //不在继续处理,并返回系统
 		return RETURN_DIRECTLY; 
@@ -306,7 +306,7 @@ MsgProcState CBrain::OnEltRemoveLogic(CTaskDialog* Dialog,CElement* Elt,int32 Ch
 
 	if (Dialog->m_LogicItemTree.Size())
 	{
-		CBrainTask* Task = Dialog->GetTask();
+		CLogicTask* Task = Dialog->GetTask();
 		Dialog->m_LogicItemTree.Clear();
 		Task->GetDebugItem(Dialog->m_LogicItemTree);
 
@@ -323,14 +323,14 @@ MsgProcState CBrain::OnEltRemoveLogic(CTaskDialog* Dialog,CElement* Elt,int32 Ch
 	CMsg rMsg(MSG_TASK_FEEDBACK,0,EventID);		
 	ePipeline& rLetter = rMsg.GetLetter();
 	rLetter.PushPipe(ExePipe);	
-	Dialog->m_Brain->PushCentralNerveMsg(rMsg);		
+	Dialog->m_Brain->PushCentralNerveMsg(rMsg,false,false);		
 	
 
 	ExePipe.Break(); //不在继续处理,并返回系统
 	return RETURN_DIRECTLY; 
 }
 
-MsgProcState CBrain::OnEltTaskResult(CTaskDialog* Dialog,CElement* Elt,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress)
+MsgProcState CBrain::OnEltTaskResult(CLogicDialog* Dialog,CElement* Elt,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress)
 {
 	int64 EventID = Msg.GetEventID();
 	

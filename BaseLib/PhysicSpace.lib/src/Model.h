@@ -31,6 +31,9 @@ using namespace Poco;
 
 #include "LinkerPipe.h"
 #include "Object.h"
+#include "UserMutex.h"
+#include "UserTimer.h"
+#include "UserSpacePool.h"
 
 #include <map>
 #include <list>
@@ -65,6 +68,7 @@ enum Log_Flag{
 };
 
 //NotifyModelState()
+#define NOTIFY_SYS_STATE                    100
 #define MNOTIFY_CENTRAL_NERVE_MSG_NUM       10000
 #define MNOTIFY_CENTRAL_NERVE_THREAD_JOIN   10001
 #define MNOTIFY_CENTRAL_NERVE_THREAD_CLOSE  10002
@@ -90,13 +94,12 @@ public:
 	class CLockedLinkerList
 	{
 	private:
-		CABMutex*                   m_pMutex;
+		CUserMutex                  m_Mutex;
 		map<int64,CLinkerPipe*>     m_LinkerList;     	
 	    list<CLinkerPipe*>          m_DelLinkerList; //Waiting to be physically deleted 
     
-		CLockedLinkerList(){};
 	public:
-		CLockedLinkerList(CABMutex* mutex);
+		CLockedLinkerList();
 		~CLockedLinkerList();	
 
 
@@ -142,7 +145,7 @@ public:
 
 	class CLockedModelData{
 	protected:
-		CABMutex*					     m_pMutex;
+		CUserMutex					     m_Mutex;
 		uint32                           m_MaxNerveWorkerNum;      //Allowed maximum number of central nervous system processing threads，default=20
 		uint32                           m_NerveMsgMaxNumInPipe;   //If more than this amount of messages were not handled,considering to generate a new processing thread,default = 10
 		int64                            m_NerveMsgMaxInterval;    //if the time interval  of the last popped message was greater than this number,considering to generate a new processing thread,default=10*1000*1000(the unit is hundred of nanoseconds, or 1 second)
@@ -151,15 +154,11 @@ public:
 
 		map<int64,CModelIOWork*>		 m_ModelIOWorkList;        //for connection to the server
 		map<int64,CCentralNerveWork*>    m_CentralNerveWorkList;  
-		list<Object*>                    m_DelThreadWorkList;      //Pointer list waiting to be physically deleted ( avoiding the thread delete itself), including ModelIOWork and CentralNerveWork
-		CLockedModelData(){};
+		bool                             m_bClosed;               // be closing all work thread; 
 	public:
-		CLockedModelData(CABMutex* mutex);
+		CLockedModelData();
 		~CLockedModelData();
        
-		virtual bool Activation();
-		virtual void Dead();
-
 		void    IncreNerveWorkCount();
 		void    DecreNerveWorkCount();
 
@@ -176,39 +175,25 @@ public:
 		int32   AddIOWork(CModelIOWork* Work);
 		int32   DeleteIOWork(int64 ID);
 	 
-
 		int32   AddCentralNerveWork(CCentralNerveWork* Work);
         int32   DeleteCentralNerveWork(int64 ID);
 		
+		void    CloseAllWorkThread(); //include CModelIOWorks and CCentralNerveWorks
+	
 		bool    RequestCreateNewCentralNerveWork(uint32 MsgNum,int64 Interval,uint32& Reason); 
 	};
 
-    //For Model initialization,  we can add parameters through inheriting this class to  avoid the parameter table too longer
-	class CModelInitData{
-	public:
-		tstring					  m_Name;
-		CABTime*	              m_Timer;
-		CABSpacePool*             m_Pool;
-		CLockedModelData*         m_ModelData;
-		CABMutex*                 m_ModelListMutex; 
-		CLockPipe*                m_CentralNerve;  
-		int32                     m_nCPU;   //cpu number
-	public:
-		CModelInitData();
-		virtual ~CModelInitData();
-	};
 private: 
 	/*The central nerve, all information coming in the pipeline before being processed, 
 	  totally private, preventing the derived classes to access it directly,
 	  because that comes to dealing with thread scheduling.
 	*/
-	CLockPipe*           m_CentralNerve;
+    CUserMutex           m_CentralNerveMutex;
+	CLockPipe            m_CentralNerve;
 
 	//Because in a multi-threaded environment, it need to lock, so we should call GetModelData () got a locked  reference  instead of direct use.
 	CLockedLinkerList    m_SuperiorList;               
-    CLockedModelData*    m_ModelData;
-
-	
+	CLockedModelData     m_ModelData;
 	/*
 	Detecting the state to determine whether system need to increase Workers (threads)，
 	called by the PushCentralNerveMsg;
@@ -229,7 +214,7 @@ protected:
 	virtual CCentralNerveWork* CreateCentralNerveWorker(int64 ID, Model* Parent,uint32 Reason);
 		
 public:
-    Model(CModelInitData* InitData);
+    Model(CUserTimer* Timer,CUserSpacePool* Pool);
 	virtual ~Model();
 
 	virtual MASS_TYPE  MassType(){ return MASS_MODEL;};
@@ -248,7 +233,8 @@ public:
 	CLockedModelData*  GetModelData();
 
 	//it call CentralNerveWorkStrategy() after pushing the message into central nerve 
-	void			   PushCentralNerveMsg(CMsg& Msg,bool bUrgenceMsg=FALSE);
+	//bDirectly meant directly return when the msg pushed the queue without checking and starting work thread
+	void			   PushCentralNerveMsg(CMsg& Msg,bool bUrgenceMsg,bool bDirectly);
 	void			   PopCentralNerveMsg(CMsg& Msg);
 	int32			   GetCentralNerveMsgNum();
 	void			   GetCentralNerveMsgList(ePipeline& Pipe);
@@ -283,41 +269,42 @@ public:
 	  Inherited from Object class, user must override this function,
 	   which is responsible for central nerve processing of Model.
     */
-	virtual bool Do(Energy* E=NULL){
-		assert(E);
+	virtual bool Do(Energy* E)=0;
+	/*	
+	{
+	assert(E);
 
-		//Below is just a sample
-		//if(GetCentralNerveMsgNum()){
-			ePipeline* Pipe = (ePipeline*)E;
-			CMsg Msg(Pipe);		
-/*			
-		
-			int64 MsgID  = Msg.GetMsgID();
-			switch(MsgID)
-			{
-			case MSG_CONNECT_OK:
-				break;
-			case MSG_CONNECT_FAIL:
-				break;
-			case MSG_WHO_ARE_YOU:
-				break;
-			case MSG_RECEIVE_OK:
-				//m_CentralNerve->Push(Msg);
-				break;
-			case MSG_RECEIVE_ERROR:
-				break;
-			case MSG_SEND_PROGRESS:
-				break;
-			case MSG_NEW_DIALOG:
-				break;
-			default:
-				//m_CentralNerve->Push(Msg);
-				break;
-			}
-*/
-		//}
-		return TRUE;	
+	//Below is just a sample
+
+	ePipeline* Pipe = (ePipeline*)E;
+	CMsg Msg(Pipe);		
+
+	int64 MsgID  = Msg.GetMsgID();
+	switch(MsgID)
+	{
+	case MSG_CONNECT_OK:
+	break;
+	case MSG_CONNECT_FAIL:
+	break;
+	case MSG_WHO_ARE_YOU:
+	break;
+	case MSG_RECEIVE_OK:
+	//m_CentralNerve->Push(Msg);
+	break;
+	case MSG_RECEIVE_ERROR:
+	break;
+	case MSG_SEND_PROGRESS:
+	break;
+	case MSG_NEW_DIALOG:
+	break;
+	default:
+	//m_CentralNerve->Push(Msg);
+	break;
 	}
+
+	return TRUE;	
+	}
+	*/
 };
 
 }// namespace ABSTRACT

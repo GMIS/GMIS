@@ -7,14 +7,15 @@
 #include "MainBrain.h"
 #include "GUIMsgDefine.h"
 #include "MainFrame.h"
-#include "TaskDialog.h"
+#include "LogicDialog.h"
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-CMainBrain::CMainBrain(CSystemInitData* InitData)
-:CBrain(InitData)
+CMainBrain::CMainBrain(CUserTimer* Timer,CUserSpacePool* Pool,tstring Name)
+:CBrain(Timer,Pool)
 {
+	m_Name = Name;
 //	m_LogFlag =0;
 //	m_bCheckInstinct = FALSE;
 }
@@ -28,7 +29,7 @@ CMainBrain::~CMainBrain()
 void CMainBrain::SendMsgToGUI(int64 GuiID,CMsg& GuiMsg){
 	if (GuiID == LOCAL_GUI)
 	{
-		CMainFrame* MainFrame =GetGUI();
+		CMainFrame* MainFrame = GetGUI();
 		if(MainFrame){
 			MainFrame->PushGUIMsg(GuiMsg);
 		}
@@ -55,42 +56,5 @@ bool CMainBrain::Do(Energy* E){
 	return true;
 }
 
-bool CMainBrain::Activation(){
-	if (m_Alive)
-	{
-		return true;
-	}
-	
-	tstring error;
-
-   
-	//生成系统缺省任务
-	int64 ID = SYSTEM_SOURCE;
-
-	CSystemTask* Task = new CSystemTask(this,ID,DIALOG_SYSTEM_MAIN);
-	m_TaskList[ID]=Task;
-
-
-	if(!CBrain::Activation()){
-		return false;
-	}
-	return true;
-
-}
-
-#else
-
-bool CMainBrain::Activation(){
-	if (m_Alive)
-	{
-		return true;
-	}
-	
-    if(!CBrain::Activation())return false;
-	
-
-	return true;
-	
-}
 #endif 
 

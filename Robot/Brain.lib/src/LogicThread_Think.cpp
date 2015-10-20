@@ -6,7 +6,7 @@
 #include "LogicThread.h"
 #include "InstinctDefine.h"
 #include "NotifyMsgDef.h"
-#include "TaskDialog.h"
+#include "LogicDialog.h"
 #include "TextAnalyse.h"
 #include "LogicElement.h"
 
@@ -45,7 +45,7 @@ int32 CLogicThread::GetActionRoom(int64 ParentID,ClauseLogicSense* cls){
 	   return RoomList.size();	
 }
 
-void CLogicThread::ThinkProc(CTaskDialog* Dialog,CMsg& Msg){
+void CLogicThread::ThinkProc(CLogicDialog* Dialog,CMsg& Msg){
 	TASK_STATE State = Dialog->GetTaskState();
 	int64 EventID = Msg.GetEventID();
 	assert(EventID);
@@ -80,7 +80,7 @@ void CLogicThread::ThinkProc(CTaskDialog* Dialog,CMsg& Msg){
 
 	ThinkProc(Dialog,Pos,text,true,EventID);
 }
-void CLogicThread::ThinkProc(CTaskDialog* Dialog,int32 Pos,tstring& Msg,bool Forecast ,int64 EventID){
+void CLogicThread::ThinkProc(CLogicDialog* Dialog,int32 Pos,tstring& Msg,bool Forecast ,int64 EventID){
  
 	//CLock lk(&m_Mutex);
 	Dialog->SetTaskState(TASK_THINK);
@@ -154,7 +154,7 @@ void CLogicThread::ThinkProc(CTaskDialog* Dialog,int32 Pos,tstring& Msg,bool For
 	Dialog->NotifyTaskState();
 }
 
-void CLogicThread::ThinkAllAffectedToken(CTaskDialog* Dialog){
+void CLogicThread::ThinkAllAffectedToken(CLogicDialog* Dialog){
 	deque<InfectedText>::iterator It = m_Text.m_InfectedTokenList.begin();
 	while(It != m_Text.m_InfectedTokenList.end()){
 		InfectedText& Text = *It;
@@ -163,7 +163,7 @@ void CLogicThread::ThinkAllAffectedToken(CTaskDialog* Dialog){
 	}
 	m_Text.m_InfectedTokenList.clear();
 }
-void CLogicThread::Think(CTaskDialog* Dialog,CToken* Token, int32 AlterCharPos)
+void CLogicThread::Think(CLogicDialog* Dialog,CToken* Token, int32 AlterCharPos)
 {
     SetForecast(Dialog,NULL_TEXT,NULL);
 
@@ -233,7 +233,7 @@ void CLogicThread::Think(CTaskDialog* Dialog,CToken* Token, int32 AlterCharPos)
 	SetForecast(Dialog,TOKEN,Token);
 }
 
-void CLogicThread::ThinkAllAffectedClause(CTaskDialog* Dialog){
+void CLogicThread::ThinkAllAffectedClause(CLogicDialog* Dialog){
 	deque<InfectedText>::iterator It = m_Text.m_InfectedClauseList.begin();
 	while(It != m_Text.m_InfectedClauseList.end()){
 		InfectedText& Text = *It;
@@ -257,7 +257,7 @@ void CLogicThread::ThinkAllAffectedClause(CTaskDialog* Dialog){
    一种是altertokenpos<EndPos,表示中间修改应该从nexttokenpos出分析
    否则(altertokenpos==endpos)表示nexttokenpos还没有输入完毕,直接返回
 */
-void CLogicThread::Think(CTaskDialog* Dialog,CClause* Clause, int32 AlterTokenPos)
+void CLogicThread::Think(CLogicDialog* Dialog,CClause* Clause, int32 AlterTokenPos)
 {
 
 	assert(m_Text.m_TokenList.size() != 0);
@@ -493,7 +493,7 @@ void CLogicThread::Think(CTaskDialog* Dialog,CClause* Clause, int32 AlterTokenPo
 	return ;			  	
 }
 
-void CLogicThread::ThinkAllAffectedSentence(CTaskDialog* Dialog){
+void CLogicThread::ThinkAllAffectedSentence(CLogicDialog* Dialog){
 	deque<InfectedText>::iterator It = m_Text.m_InfectedSentenceList.begin();
 	while(It != m_Text.m_InfectedSentenceList.end()){
 		InfectedText& Text = *It;
@@ -503,7 +503,7 @@ void CLogicThread::ThinkAllAffectedSentence(CTaskDialog* Dialog){
     m_Text.m_InfectedSentenceList.clear();
 };
 
-void CLogicThread::Think(CTaskDialog* Dialog,CSentence* Sentence, int32 AlterClausePos)
+void CLogicThread::Think(CLogicDialog* Dialog,CSentence* Sentence, int32 AlterClausePos)
 {
  	assert(m_Text.m_ClauseList.size() != 0);
     
@@ -733,7 +733,7 @@ tstring GetParam(vector<tstring>& ParamList){
 
 
 //原本想只做检查,不转换成实际数据,但要做检查,同样需要检查实际值,所以干脆全部做完
-bool  CLogicThread::CheckInstinctParam(CTaskDialog* Dialog,CClause* Clause, vector<tstring>& ParamList){
+bool  CLogicThread::CheckInstinctParam(CLogicDialog* Dialog,CClause* Clause, vector<tstring>& ParamList){
 	
 	int64 InstinctID = Clause->m_MemoryID;
 	assert(InstinctID !=0);
@@ -1387,7 +1387,7 @@ bool  CLogicThread::CheckInstinctParam(CTaskDialog* Dialog,CClause* Clause, vect
 }
 
 
-void CLogicThread::NotifyTokenError(CTaskDialog* Dialog,CToken* Token,uint32 ErrorID)
+void CLogicThread::NotifyTokenError(CLogicDialog* Dialog,CToken* Token,uint32 ErrorID)
 {
 	 assert(ErrorID<LAST_ERROR);
 	 tstring error = ANALYSE_ERROR[ErrorID];
@@ -1402,7 +1402,7 @@ void CLogicThread::NotifyTokenError(CTaskDialog* Dialog,CToken* Token,uint32 Err
 };
 
 
-void CLogicThread::NotifyClauseError(CTaskDialog* Dialog,CClause* Clause,uint32 ErrorID)
+void CLogicThread::NotifyClauseError(CLogicDialog* Dialog,CClause* Clause,uint32 ErrorID)
 {
      
 	 assert(ErrorID<LAST_ERROR);

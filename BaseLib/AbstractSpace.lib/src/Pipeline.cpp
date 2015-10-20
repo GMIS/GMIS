@@ -117,7 +117,7 @@ namespace ABSTRACT{
 	bool  ePipeline::FromString(AnsiString& s,uint32& pos){ 
 		 Clear();
 
-		 if(s.size()-pos<9 || (s[pos]!='9' && s[pos+1]!='@')){
+		 if(s.size()-pos<9 || s[pos]!='4' || s[pos+1]!='@'){
 			 	return false;
 		 }
 		 
@@ -140,15 +140,9 @@ namespace ABSTRACT{
          
 		 //Get m_Lable
 		 start += slen+1;
-		 string temp = s.substr(start,len);
-         eSTRING wLable;
+		 AnsiString temp = s.substr(start,len);
 
-		 uint32 p=0;
-		 bool ret = wLable.FromString(temp,p);
-		 if(!ret){
-			 return false;
-		 }
-		 m_Label = wLable();
+         m_Label = UTF8toWS(temp);
 
 		 //Get Data length
 		 start += len+1;
@@ -171,6 +165,7 @@ namespace ABSTRACT{
 		 pos =start;
 		 uint32 end = len + start;
 		 
+		 bool ret;
 		 while(pos<end)
 		 {	
 			 char Type = s[pos];
@@ -247,4 +242,82 @@ namespace ABSTRACT{
         assert(pos ==  end);
 		return true;
 	};	
+
+	void ePipeline::ToJSON(AnsiString& s){
+		char buf[100];
+		s += "\"Pipe\":{";
+		uint64toa(m_ID,buf);
+		s += "\"ID\":";
+		s += buf;    	
+		s += ",\"Label\":";
+		s += "\"";
+		s += WStoUTF8(m_Label);
+		s += "\"," ;
+
+		s +=  "\"Data\":[";
+	    uint32 i;
+		for (i=0;i<m_EnergyList.size();i++)
+		{
+			Energy* e = m_EnergyList[i];
+			eType Type= e->EnergyType();
+			switch(Type){
+			case TYPE_NULL:
+			{
+				s += "{\"eNULL\":\"NULL\"},";
+			}
+			break;
+			case TYPE_INT:
+			{
+				int64 t= *(int64*)e->Value();
+				int64toa(t,buf);
+				s += "{\"eINT\":";
+				s += buf;
+				s += "},";
+			}
+			break;
+			case TYPE_FLOAT:
+			{
+				float64 f =  *(float64*)e->Value();
+				uint32 n = sprintf(buf,"%.6f",f);
+				while(buf[--n] == '0'); //Remove "0", to reduce the actual storage bytes
+				buf[n+1]='\0';
+
+				s += "{\"eFloat\":";
+				s += buf;
+				s += "},";
+			}
+			break;
+			case TYPE_STRING:
+			{
+				tstring* ws = (tstring*)e->Value();
+				AnsiString s = WStoUTF8(*ws);
+
+				s += "{\"eString\":\"";
+				s += buf;
+				s += "\"},";
+			}
+			break;
+			case TYPE_PIPELINE:
+			{
+				ePipeline* Pipe = (ePipeline*)e->Value();
+				
+				AnsiString NestText;
+				Pipe->ToJSON(NestText);
+			
+				s += "{\"ePipe\":\"";
+				
+				s += NestText;
+				s += "\"},";
+
+			}
+			break;
+			default:
+				break;	
+			}
+		}
+		s +="]";
+		s +="}";
+
+	};
+	
 }//namespace ABSTRACT

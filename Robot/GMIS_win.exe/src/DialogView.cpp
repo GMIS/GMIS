@@ -7,7 +7,7 @@
 #include "DialogView.h"
 #include "UserTimer.h"
 #include "MainFrame.h"
-#include "TaskDialog.h"
+#include "LogicDialog.h"
 
 
 

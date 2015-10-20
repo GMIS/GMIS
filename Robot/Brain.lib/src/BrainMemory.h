@@ -19,10 +19,8 @@
 #include <list>
 #include <algorithm>
 #include "InstinctDefine.h"
-#include "TextAnalyse.h"
 #include "UserTimer.h"
 #include "Sqlite\CppSQLite3.h"
-#include "BrainTask.h"
 #include "UserMutex.h"
 #include "space.h"
 
@@ -139,6 +137,7 @@ using namespace std;
 #define  SYS_ACCOUNT       127282417795000001
 #define  SYS_WORLDIP       127282417795000002
 #define  SYS_DIALOG        127282417795000003
+
 
 
 //使用同一个数据库来表达大脑后,作为表名,左脑ID必须是负值,右脑必须是正值
@@ -464,8 +463,8 @@ public:
 	CBrainMemory();
 	virtual ~CBrainMemory();
 
-    static void Open(const char* DB = NULL);
-    static void Close();
+    void Open(const char* DB = NULL);
+    void Close();
 
 	/*用于系统关闭时在数据库中保存当前逻辑场景系统参数等，启动时恢复。
 	按下列格式存储:

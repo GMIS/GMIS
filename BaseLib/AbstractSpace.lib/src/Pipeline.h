@@ -181,6 +181,24 @@ public:
 	//Note: the inputted string format is: TYPE_PIPELINE@ID@LEN@type@len@data1type@len@data2 ... type@len@dataN
 	bool  FromString(AnsiString& s,uint32& pos);		
 	
+	/*for javascrip, a ePipeline is a JSON Object 
+	   "Pipe": {
+		   "ID": int64
+		   "Label": "string"
+		   "Data": [
+				"eNULL":"NULL",
+				"eINT": int64,
+				"eFloat":float,
+				"eSTRING": "string",
+				Pipe: {
+					....
+				}
+		   ]
+	   }
+	*/
+	void ToJSON(AnsiString& s);
+
+
 	/*
 	Before the pipe flowed into a Mass instance, the system will automatically call this function to check
     the type abbreviation whether is consistent with the instance required,

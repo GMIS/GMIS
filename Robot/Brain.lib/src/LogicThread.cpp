@@ -8,7 +8,7 @@
 #include <iostream>
 #include <string>
 #include "NotifyMsgDef.h"
-#include "TaskDialog.h"
+#include "LogicDialog.h"
 #include "Brain.h"
 
 NumType IsNum(tstring& Text)
@@ -48,7 +48,7 @@ NumType IsNum(tstring& Text)
 
 
 
-CLocalLogicCell::CLocalLogicCell(CBrainTask& Task)
+CLocalLogicCell::CLocalLogicCell(CLogicTask& Task)
 {
     m_Task<<Task;
 };
@@ -283,7 +283,7 @@ void CLogicThread::ClearAnalyse()
 }
 
 	
-bool CLogicThread::CanBeExecute(CTaskDialog* Dialog){
+bool CLogicThread::CanBeExecute(CLogicDialog* Dialog){
 
 	tstring error;
 

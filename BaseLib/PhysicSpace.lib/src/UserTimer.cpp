@@ -7,6 +7,7 @@
 
 #if defined(USING_POCO)
 #include "Poco/DateTime.h"
+#include "poco/LocalDateTime.H"
 using namespace Poco;
 
 #elif defined(USING_WIN32)
@@ -49,7 +50,10 @@ void CUserTimer::GetSystemTime(
 		){
 
 #if defined(USING_POCO)
-	DateTime st;
+
+	Timestamp timestamp;
+	DateTime tt(timestamp);
+	LocalDateTime st(tt);
 
     Year = st.year();
 	Month = st.month();

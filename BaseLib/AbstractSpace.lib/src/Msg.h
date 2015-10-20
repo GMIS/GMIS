@@ -24,7 +24,7 @@ namespace ABSTRACT{
 #define  MSG_WHO_ARE_YOU    MSG_BASE+1ULL
 #define  MSG_BROADCAST_MSG  MSG_BASE+2ULL
 #define  MSG_LINKER_ERROR   MSG_BASE+3ULL
-
+#define  MSG_SYS_MSG        MSG_BASE+4ULL
 
 /*  
 

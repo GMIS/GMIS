@@ -5,6 +5,8 @@
 #include "LinkerPipe.h"
 #include "Model.h"
 #include "ABTime.h"
+#include <Poco/Exception.h>
+#include <Poco/Net/NetException.h>
 
 namespace PHYSIC{
 	
@@ -153,7 +155,7 @@ namespace PHYSIC{
 		}
 	
 		int64 SenderID = CreateTimeStamp();
-		tstring s = GetTimer()->GetFullTime(SenderID);
+	    //tstring s = GetTimer()->GetFullTime(SenderID);
 
 		ePipeline& Address = m_LocalAddressList[SenderID];
 		Address<<LocalAddress;
@@ -400,8 +402,9 @@ namespace PHYSIC{
 						Info->Buffer += ch;
 					}
 					else if(ch == '@'){
-						eSTRING s;
+						//eSTRING s;
 						uint32 p=0;
+						/*
 						bool ret = s.FromString(Info->Buffer,p);
 						if (!ret)
 						{
@@ -409,7 +412,8 @@ namespace PHYSIC{
 						} 
 						else
 						{
-							tstring Name = s;
+						*/
+							tstring Name = UTF8toWS(Info->Buffer);
 
 							assert(Info->DataType == TYPE_PIPELINE);
 							ePipeline* Data = (ePipeline*)Info->Data;
@@ -418,7 +422,7 @@ namespace PHYSIC{
 							Info->Buffer = "";
 							Info->State = LENGTH_PART;
 							Info->DataLen = DATA_LENGTH_LIMIT;
-						}
+						//}
 					}
 					else{
 						BeginErrorState(Info,ERROR_NAME_PART);
@@ -581,8 +585,7 @@ namespace PHYSIC{
 
 			ePipeline& Receiver = m.GetReceiver(); 
 			
-			//assert(Receiver.Size()==0); 
-
+			//assert(Receiver.Size()==0);
 
 			ePipeline LocalAddress;
 			bool ret = ReceiverID2LocalAddress(Receiver,LocalAddress);
@@ -597,7 +600,7 @@ namespace PHYSIC{
 			
 			m.SetSourceID(m_SourceID);
 			m.GetReceiver() << LocalAddress;	
-			m_Parent->PushCentralNerveMsg(m);			
+			m_Parent->PushCentralNerveMsg(m,false,false);			
         }
 
 	};
@@ -816,13 +819,12 @@ namespace PHYSIC{
         }
 
 		int64 EventID = Msg.GetEventID();
-
-		//�ѱ��ط����ߵ�ַ��һ��INT64����
+		
 		int64 SenderID = LocalAddress2SenderID(Sender);	
 		Sender.Clear();
 		Sender.PushInt(SenderID);
 		
-		//��ʱ�������ԴID���Է����ش�ʱ�����ʾ�����
+		
 		int64 TimeStamp = CreateTimeStamp();
         Msg.SetSourceID(TimeStamp);
 
@@ -854,12 +856,178 @@ namespace PHYSIC{
 		
 		if(m_SendState == SEND_MSG)
 		{
-			int32 n = m_SendBuffer.size() - m_SendPos; //��ʣ�������û�з���			
+			int32 n = m_SendBuffer.size() - m_SendPos; 	
 			memset((void*)(m_SendBuffer.c_str()+m_SendPos),'\0',n);
 			m_SendState   = SEND_BREAK;	
 		}
 	}
-		
+
+	bool  CLinkerPipe::ThreadIOWorkProc(char* Buffer,uint32 BufSize){
+
+		_CInnerIOLock lk(m_Mutex,this);
+
+		try{
+			InputProc(Buffer,BufSize);
+			OutputProc(Buffer,BufSize);
+		}
+#if defined(USING_POCO)	
+		catch(Poco::Net::NetException& NetError)
+		{
+			tstring s = UTF8toWS(NetError.displayText());
+			CMsg Msg(MSG_LINKER_ERROR,DEFAULT_DIALOG,0);
+			Msg.GetLetter().PushInt(m_SourceID);
+			Msg.GetLetter().PushString(s);		
+			m_Parent->PushCentralNerveMsg(Msg,false,true);
+		}
+#endif
+		catch(...)
+		{
+			tstring s = _T("ThreadIOWorkProc() throw a unkown exception");
+			CMsg Msg(MSG_LINKER_ERROR,DEFAULT_DIALOG,0);
+			Msg.GetLetter().PushInt(m_SourceID);
+			Msg.GetLetter().PushString(s);		
+			m_Parent->PushCentralNerveMsg(Msg,false,true);
+		}
+		return TRUE;
+	}
+
+
+
+	uint32 CLinkerPipe::InputProc(char* Buffer,uint32 BufSize){
+
+		uint32 RevBytes=0;
+
+		bool RET = PhysicalRev(Buffer, BufSize, RevBytes,0);
+		if (!RET){
+			return 0;
+		}
+		if(RevBytes > 0)
+		{				
+			CompileMsg(Buffer, RevBytes); 
+		}
+		return RevBytes;
+	}
+
+	uint32 CLinkerPipe::OutputProc(char* Buffer,uint32 BufSize){
+
+		uint32 SendBytes =0;
+
+		if(m_SendState == WAIT_MSG ){
+
+			//Preparing to send a new message
+			ePipeline* Msg = NULL;	
+
+			if (m_UrgenceMsg.Size())
+			{
+				Msg = (ePipeline*)m_UrgenceMsg.GetData(0);
+			} 
+			else if(Size())
+			{
+				Msg = (ePipeline*)GetData(0);
+			}else{
+				return 1;
+			}
+
+			int64 MsgID = Msg->GetID();
+			if(MsgID>100){ //Not the feedback msg
+				ePipeline* Letter = GET_LETTER(Msg);
+				MsgID = Letter->GetID();
+			}
+
+			if(MsgID<100){  //Internal control msg can  send at any time
+				eElectron E;
+				if (m_UrgenceMsg.Size())
+				{
+					m_UrgenceMsg.Pop(&E);
+				} 
+				else
+				{
+					ePipeline::Pop(&E);
+				}
+				E.Release();
+				m_CurSendMsg.Reset(Msg);
+
+				if(MsgID == LINKER_RESET)
+				{   //Send a resetting msg to each other
+					while(m_SendBuffer.size()<ERROR_RESUME_LENGTH)m_SendBuffer += '@';
+					m_SendState = SEND_RESET; 
+					m_SendPos = 0;				
+				}else{
+					assert(MsgID == LINKER_FEEDBACK);
+					if(MsgID != LINKER_FEEDBACK){
+						return 0;
+					}
+					m_SendState = SEND_FEEDBACK;
+					Msg->ToString(m_SendBuffer);
+					m_SendPos = 0;	
+
+				}	
+			}
+			else if ( m_PendingMsgID == NULL) //Only after the pending message get a reply  to continue sending new messages
+			{
+				eElectron E;
+				if (m_UrgenceMsg.Size())
+				{
+					m_UrgenceMsg.Pop(&E);
+				} 
+				else
+				{
+					ePipeline::Pop(&E);
+				}
+				E.Release();
+
+				m_CurSendMsg.Reset(Msg);
+
+				m_SendState = SEND_MSG; 
+				Msg->ToString(m_SendBuffer);
+				m_PendingMsgID = m_CurSendMsg.GetMsgID();
+				m_PendMsgSenderID = m_CurSendMsg.GetSenderID();
+
+
+				ePipeline Data;
+				Data.PushInt(MsgID);
+				Data.PushInt(m_SendBuffer.size());
+				Data.PushInt(0);
+				m_Parent->NotifyLinkerState(this,LINKER_SEND_STEP,Data);		   
+
+			}
+		}
+		else{
+			uint32 n = m_SendBuffer.size() - m_SendPos; 
+			if(n>0){
+				--BufSize;
+				uint32 SendSize = (n > BufSize)?BufSize:n;
+				memcpy(Buffer,m_SendBuffer.c_str()+m_SendPos,SendSize);
+
+
+				bool RET = PhysicalSend(Buffer, SendSize, SendBytes,0);
+				if (!RET){
+					return 0;
+				}
+
+				ePipeline Data;
+				m_SendPos += SendBytes; 
+				Data.PushInt(m_PendingMsgID);
+				Data.PushInt(m_SendBuffer.size());
+				Data.PushInt(m_SendPos);
+				m_Parent->NotifyLinkerState(this,LINKER_SEND_STEP,Data);		   
+
+				if(m_SendBuffer.size() == m_SendPos){
+
+					ePipeline Info;
+					Info.Push_Directly(m_CurSendMsg.Release());
+					m_Parent->NotifyLinkerState(this,LINKER_MSG_SENDED,Info);
+
+					m_SendState = WAIT_MSG;	 				
+					m_SendPos = 0;
+					m_SendBuffer = "";
+					m_CurSendMsg.Reset();	
+				}
+			}
+
+		}
+		return SendBytes;
+	}	
 
 	//CLinker
 	//////////////////////////////////////////////////////////////////////////
@@ -905,7 +1073,7 @@ namespace PHYSIC{
 
 	};
 
-	const ePipeline& CLinker::GetCompileData()const //���ڹ۲�LinkerPipe��ǰ������װ�е����
+	const ePipeline& CLinker::GetCompileData()const 
 	{
 		return m_Ptr->m_CurRevMsg;
 	}

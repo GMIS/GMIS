@@ -32,9 +32,6 @@
     <ClCompile Include="src\BrainRequestProc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\BrainTask.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Element.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -59,18 +56,6 @@
     <ClCompile Include="src\NotifyMsgProc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\TaskDialog.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\TaskDialogFindProc.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\TaskDialogMemProc.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\TaskDialogMsgProc.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\TextAnalyse.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -86,6 +71,24 @@
     <ClCompile Include="src\LogicOperator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\BrainWebsocket.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\LogicTask.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\LogicDialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\LogicDialogFindProc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\LogicDialogMemProc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\LogicDialogMsgProc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Brain.h">
@@ -98,9 +101,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\BrainObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\BrainTask.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Element.h">
@@ -127,9 +127,6 @@
     <ClInclude Include="src\RobotMsgDefine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\TaskDialog.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\TextAnalyse.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -146,6 +143,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\RelationalOperator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\BrainWebsocket.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\LogicTask.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\LogicDialog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,7 +1,7 @@
 ﻿#pragma warning (disable:4786)
 
 #include "Brain.h"
-#include "TaskDialog.h"
+#include "LogicDialog.h"
 #include "GUIMsgDefine.h"
 
 
@@ -59,10 +59,14 @@ void CBrain::NotifySysState(int64 NotifyID,ePipeline* Data /*=NULL*/){
 		break;
 	case MNOTIFY_CENTRAL_NERVE_THREAD_CLOSE:
 		{
-			int64 n = Data->PopInt();
+			int64 nThreadNum = Data->PopInt();
+			int64 nClosedThreadID = Data->PopInt();
+			CLockedModelData*  LockedData = GetModelData();
+			LockedData->DeleteCentralNerveWork(nClosedThreadID);
+
 			ePipeline Cmd(GUI_PFM_THREAD_UPDATE);
 			Cmd.PushInt(THREAD_CENTRAL_NERVE);
-			Cmd.PushInt(n);
+			Cmd.PushInt(nThreadNum);
 			GuiMsg.GetLetter().PushPipe(Cmd);
 			
 			int64 GuiID = LOCAL_GUI;
@@ -89,10 +93,15 @@ void CBrain::NotifySysState(int64 NotifyID,ePipeline* Data /*=NULL*/){
 		break;
 	case SNOTIFY_NERVE_THREAD_CLOSE:
 		{
-			int64 n = Data->PopInt();
+			int64 nThreadNum = Data->PopInt();
+			int64 nClosedThreadID = Data->PopInt();
+
+			CLockedSystemData*  LockedData = GetSystemData();
+			LockedData->DeleteNerveWork(nClosedThreadID);
+
 			ePipeline Cmd(GUI_PFM_THREAD_UPDATE);
 			Cmd.PushInt(THREAD_NERVE);
-			Cmd.PushInt(n);
+			Cmd.PushInt(nThreadNum);
 			GuiMsg.GetLetter().PushPipe(Cmd);
 			
 			int64 GuiID = LOCAL_GUI;
@@ -301,7 +310,7 @@ void CBrain::NotifyLinkerState(CLinkerPipe* LinkerPipe,int64 NotifyID,ePipeline&
 
 
 
-void CBrain::NoitfyDialogState(CTaskDialog* Dialog, ePipeline* NotifyInfo){
+void CBrain::NoitfyDialogState(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 	CLock lk(&Dialog->m_Mutex);
 
 	int64 NotifyID = NotifyInfo->GetID();
@@ -348,7 +357,7 @@ void CBrain::NoitfyDialogState(CTaskDialog* Dialog, ePipeline* NotifyInfo){
 	};
 }
 
-void CBrain::OnNotifyDialogError(CTaskDialog* Dialog, ePipeline* NotifyInfo){
+void CBrain::OnNotifyDialogError(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 
 
 	int64 NotifyID = NotifyInfo->GetID();
@@ -411,7 +420,7 @@ void CBrain::OnNotifyDialogError(CTaskDialog* Dialog, ePipeline* NotifyInfo){
 	SendMsgToGUI(GuiID,GuiMsg);
 }
 
-void CBrain::OnNotifyDialogState(CTaskDialog* Dialog, ePipeline* NotifyInfo){
+void CBrain::OnNotifyDialogState(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 
     int64 WorkMode = NotifyInfo->PopInt();
 	int64 State = NotifyInfo->PopInt();
@@ -683,7 +692,7 @@ void CBrain::OnNotifyDialogState(CTaskDialog* Dialog, ePipeline* NotifyInfo){
 	SendMsgToGUI(GuiID,GuiMsg);
 }
 
-void CBrain::OnNotifyDialogOutput(CTaskDialog* Dialog, ePipeline* NotifyInfo){	
+void CBrain::OnNotifyDialogOutput(CLogicDialog* Dialog, ePipeline* NotifyInfo){	
 
 	int64 Type = NotifyInfo->PopInt();
 	
@@ -766,7 +775,7 @@ void CBrain::OnNotifyDialogOutput(CTaskDialog* Dialog, ePipeline* NotifyInfo){
 
 }
 
-void CBrain::OnNotifyLogicView(CTaskDialog* Dialog, ePipeline* NotifyInfo){
+void CBrain::OnNotifyLogicView(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 
 	ePipeline Receiver;
 	Receiver.PushInt(Dialog->m_SourceID);
@@ -782,7 +791,7 @@ void CBrain::OnNotifyLogicView(CTaskDialog* Dialog, ePipeline* NotifyInfo){
 	SendMsgToGUI(GuiID,GuiMsg);
 };
 
-void CBrain::OnNotifyObjectList(CTaskDialog* Dialog, ePipeline* NotifyInfo){
+void CBrain::OnNotifyObjectList(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 
 	ePipeline Receiver;
 	Receiver.PushInt(Dialog->m_SourceID);
@@ -798,7 +807,7 @@ void CBrain::OnNotifyObjectList(CTaskDialog* Dialog, ePipeline* NotifyInfo){
 	SendMsgToGUI(GuiID,GuiMsg);
 }
 
-void CBrain::OnNotifyDialogList(CTaskDialog* Dialog, ePipeline* NotifyInfo){
+void CBrain::OnNotifyDialogList(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 
 	ePipeline Receiver;
 	Receiver.PushInt(Dialog->m_SourceID);
@@ -857,7 +866,7 @@ void CBrain::OnNotifyDialogList(CTaskDialog* Dialog, ePipeline* NotifyInfo){
 	SendMsgToGUI(GuiID,GuiMsg);
 }
 
-void CBrain::OnNotifyProgressOutput(CTaskDialog* Dialog, ePipeline* NotifyInfo)
+void CBrain::OnNotifyProgressOutput(CLogicDialog* Dialog, ePipeline* NotifyInfo)
 {
 	ePipeline Receiver;
 	Receiver.PushInt(Dialog->m_SourceID);
@@ -884,7 +893,7 @@ void CBrain::OnNotifyProgressOutput(CTaskDialog* Dialog, ePipeline* NotifyInfo)
 	SendMsgToGUI(GuiID,GuiMsg);
 	
 }
-void CBrain::OnNotifyDebugView(CTaskDialog* Dialog, ePipeline* NotifyInfo){
+void CBrain::OnNotifyDebugView(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 
 
 	ePipeline Receiver;
@@ -902,7 +911,7 @@ void CBrain::OnNotifyDebugView(CTaskDialog* Dialog, ePipeline* NotifyInfo){
 	SendMsgToGUI(GuiID,GuiMsg);
 }
 
-void CBrain::OnNotifyBrainInit(CTaskDialog* Dialog, ePipeline* NotifyInfo){
+void CBrain::OnNotifyBrainInit(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 	int64 Type = NotifyInfo->PopInt();
 
 	ePipeline Receiver;
@@ -953,6 +962,8 @@ void CBrain::OnNotifyBrainInit(CTaskDialog* Dialog, ePipeline* NotifyInfo){
 		GuiMsg.GetLetter().PushPipe(Cmd3);
 	}else if (Type == INIT_DIALOG_LIST)
 	{
+		int64 SourceID = NotifyInfo->PopInt(); //login user id
+
 		ePipeline DialogList;
 		GetBrainData()->GetAllDialogListInfo(DialogList);
 
@@ -970,7 +981,7 @@ void CBrain::OnNotifyBrainInit(CTaskDialog* Dialog, ePipeline* NotifyInfo){
 	SendMsgToGUI(GuiID,GuiMsg);	
 }
 
-void CBrain::OnNotifyFindInfo(CTaskDialog* Dialog, ePipeline* NotifyInfo){
+void CBrain::OnNotifyFindInfo(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 
 	ePipeline Receiver;
 	Receiver.PushInt(Dialog->m_SourceID);
@@ -987,7 +998,7 @@ void CBrain::OnNotifyFindInfo(CTaskDialog* Dialog, ePipeline* NotifyInfo){
 }
 
 
-void CBrain::OnNotifyMemoryList(CTaskDialog* Dialog, ePipeline* NotifyInfo){
+void CBrain::OnNotifyMemoryList(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 
 	ePipeline Receiver;
 	Receiver.PushInt(Dialog->m_SourceID);

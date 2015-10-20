@@ -18,15 +18,15 @@ public:
 
 protected:
 	//继续处理返回true,否则返回false
-	bool CheckWord(CTaskDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress);
-    bool CheckInstinct(CTaskDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress);
+	bool CheckWord(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress);
+    bool CheckInstinct(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress);
 
 public:
 	CBrainInit(int64 ID);
 	virtual ~CBrainInit();
 	
 	virtual TypeAB  GetTypeAB(){ return 0;};
-	virtual bool  Do(CTaskDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg);
+	virtual bool  Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg);
 	
 };
 

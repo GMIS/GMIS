@@ -6,7 +6,7 @@
 #include "GMIS.h"
 #include "MainBrain.h"
 #include "MainFrame.h"
-#include "TaskDialog.h"
+#include "LogicDialog.h"
 #include "UserTimer.h"
 #include "SystemSetting.h"
 #include "Win32Tool.h"
@@ -112,7 +112,7 @@ void  CMainFrame::SendMsgToBrain(int64 SourceID,int64 DialogID, ePipeline& Msg,i
 	Letter.PushInt(DialogID);
 	Letter.PushPipe(Msg);
 
-	GetBrain()->PushCentralNerveMsg(Msg1); //本地界面直接压入中枢神经，如果是外地界面应该直接网络发送给Brain
+	GetBrain()->PushCentralNerveMsg(Msg1,false,false); //本地界面直接压入中枢神经，如果是外地界面应该直接网络发送给Brain
 }
 
 void CMainFrame::SendMsgToBrainFocuse( ePipeline& Msg,int64 EventID)

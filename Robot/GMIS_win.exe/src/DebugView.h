@@ -9,7 +9,7 @@
 
 
 
-#include "BrainTask.h"
+#include "LogicTask.h"
 #include "WSTreeView.h"
 //#include "hightime.h"
 

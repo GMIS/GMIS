@@ -6,8 +6,7 @@
 #include "LogicThread.h"
 #include "InstinctDefine.h"
 #include "NotifyMsgDef.h"
-#include "TaskDialog.h"
-#include "TaskDialog.h"
+#include "LogicDialog.h"
 
 int64 CLogicThread::GetForecastResult(int64 RoomValue){ //根据空间值得到空间识别ID
 	assert(m_ForecastRoom != NULL);
@@ -109,7 +108,7 @@ void CLogicThread::ExecuteForecast(){
 	}
 }
 */
-void  CLogicThread::SetForecast(CTaskDialog* Dialog,TextType Type,void* Text){ 
+void  CLogicThread::SetForecast(CLogicDialog* Dialog,TextType Type,void* Text){ 
 	
 	if(m_ForecastText != Text || m_ForecastType != Type){ 
 		if(m_ForecastRoom){
@@ -129,7 +128,7 @@ void  CLogicThread::SetForecast(CTaskDialog* Dialog,TextType Type,void* Text){
 	}
 };
 
-void CLogicThread::Forecast(CTaskDialog* Dialog,CToken* Token){
+void CLogicThread::Forecast(CLogicDialog* Dialog,CToken* Token){
 
 	if(m_ForecastRoom == NULL){
 		if(Token->isPunct()){ 

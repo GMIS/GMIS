@@ -363,7 +363,7 @@ int64 CLogicThread::LearnAction(CClause* Clause,int64 ActionID,tstring& Error,in
 
 }
 
-int64 CLogicThread::LearnAction(CTaskDialog* Dialog,tstring& Command,int64 ActionID,int64 MeaningSense,bool IsCheck){
+int64 CLogicThread::LearnAction(CLogicDialog* Dialog,tstring& Command,int64 ActionID,int64 MeaningSense,bool IsCheck){
 
 	CLogicThread Think; //避免破坏当前的思考结果
 		

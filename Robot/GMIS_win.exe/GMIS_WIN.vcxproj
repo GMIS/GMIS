@@ -212,7 +212,6 @@
     <ClInclude Include="src\zip_utils\unzip.h" />
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="..\..\..\..\src\GMIS_WIN\res\bitmap4.bmp" />
     <CustomBuild Include="..\..\..\..\src\GMIS_WIN\CAPACITO.ICO" />
     <CustomBuild Include="CAPACITO.ICO" />
     <CustomBuild Include="res\capacito.ico" />
@@ -244,6 +243,23 @@
     <CustomBuild Include="..\..\..\..\src\GMIS_WIN\res\木门.ico" />
     <CustomBuild Include="..\..\..\..\src\GMIS_WIN\res\文件夹.ico" />
     <CustomBuild Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\res\CAPACITOR.ICO" />
+    <None Include="src\res\ceiling.BMP" />
+    <None Include="src\res\door.BMP" />
+    <None Include="src\res\earth globe.ico" />
+    <None Include="src\res\floor.bmp" />
+    <None Include="src\res\INDUCTOR.ICO" />
+    <None Include="src\res\Logic.ICO" />
+    <None Include="src\res\Main.ico" />
+    <None Include="src\res\metal.bmp" />
+    <None Include="src\res\Navibar.bmp" />
+    <None Include="src\res\roomwall.BMP" />
+    <None Include="src\res\unblock.ico" />
+    <None Include="src\res\Wall.bmp" />
+    <None Include="src\res\文件夹.ico" />
+    <None Include="src\res\木门.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

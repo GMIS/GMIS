@@ -14,7 +14,7 @@
 #include <set>
 #include <deque>
 #include "Brain.h"
-#include "BrainTask.h"
+#include "LogicTask.h"
 #include "BrainMemory.h"
 #include "InstinctDefine.h"
 #include "TextAnalyse.h"
@@ -40,13 +40,13 @@ enum FindTypeExpected {FIND_ALL,FIND_OBJECT,FIND_PEOPLE,FIND_TEXT,FIND_LOGIC, FI
 //逻辑条目的非显示版
 class CLocalLogicCell{
 public:
-	CBrainTask           m_Task;
+	CLogicTask           m_Task;
     tstring              m_LogicMemo;
 	map<tstring,tstring> m_RefList;         //<引用名，引用者>
 
 public:	
 	CLocalLogicCell(){};
-	CLocalLogicCell(CBrainTask& Task);
+	CLocalLogicCell(CLogicTask& Task);
 	virtual ~CLocalLogicCell();
 	void AddRef(const tstring& refName,CLocalLogicCell* WhoRef){ 
 		m_RefList[refName]=WhoRef->LogicName();
@@ -94,7 +94,7 @@ public:
 };
 
 
-class CTaskDialog;
+class CLogicDialog;
 
 class CLogicThread :public CBrainMemory
 {
@@ -170,17 +170,17 @@ public:
 	SentenceLogicSense     m_SentenceSense;
 
 	//具体执行每一个受影响的语法成分
-	void Think(CTaskDialog* Dialog,CToken* Token, int32 AlterPos);
-    void Think(CTaskDialog* Dialog,CClause* Clause, int32 AlterPos);
-	void Think(CTaskDialog* Dialog,CSentence* Sentence, int32 AlterPos);
+	void Think(CLogicDialog* Dialog,CToken* Token, int32 AlterPos);
+    void Think(CLogicDialog* Dialog,CClause* Clause, int32 AlterPos);
+	void Think(CLogicDialog* Dialog,CSentence* Sentence, int32 AlterPos);
 
     //执行所有受影响的语法成分
-	void ThinkAllAffectedToken(CTaskDialog* Dialog);
-    void ThinkAllAffectedClause(CTaskDialog* Dialog);
-	void ThinkAllAffectedSentence(CTaskDialog* Dialog);
+	void ThinkAllAffectedToken(CLogicDialog* Dialog);
+    void ThinkAllAffectedClause(CLogicDialog* Dialog);
+	void ThinkAllAffectedSentence(CLogicDialog* Dialog);
 
-	void ThinkProc(CTaskDialog* Dialog,CMsg& Msg);
-    void ThinkProc(CTaskDialog* Dialog, int32 Pos,tstring& Msg,bool Forecast,int64 EventID=0);	
+	void ThinkProc(CLogicDialog* Dialog,CMsg& Msg);
+    void ThinkProc(CLogicDialog* Dialog, int32 Pos,tstring& Msg,bool Forecast,int64 EventID=0);	
 	
 	int32 GetActionRoom(int64 ParentID,ClauseLogicSense* cls);
 
@@ -196,7 +196,7 @@ public:
 	*/
 
 	//根据本能ID,检查参数的合法性,顺便生成可直接传递的参数, 错误返回false
-	bool CheckInstinctParam(CTaskDialog* Dialog,CClause* Clause, vector<tstring>& ParamList);
+	bool CheckInstinctParam(CLogicDialog* Dialog,CClause* Clause, vector<tstring>& ParamList);
 
 	//冲突返回TRUE，否则FALSE
 	bool CheckActionConflict(CSentence* Sentence);
@@ -213,12 +213,12 @@ public:
 	/*任何信号分析完毕后都应该给对方一个反馈，反馈信息用对方发来的ePipeline包装，
 	  第一个数据为反馈ID，其他内容则根据具体的内容而定
 	*/
-	void NotifyTokenError(CTaskDialog* Dialog,CToken* Token,uint32 ErrorID);
-	void NotifyClauseError(CTaskDialog* Dialog,CClause* Clause,uint32 ErrorID);
+	void NotifyTokenError(CLogicDialog* Dialog,CToken* Token,uint32 ErrorID);
+	void NotifyClauseError(CLogicDialog* Dialog,CClause* Clause,uint32 ErrorID);
 	void AnalyseMsg(int64 RoomID,const char* Comment=NULL);
 
 	//检查输入的逻辑是否可以执行
-	bool CanBeExecute(CTaskDialog* Dialog);
+	bool CanBeExecute(CLogicDialog* Dialog);
 
 	//如果可以执行，则给出第一条逻辑，
 	ePipeline* GetOneLogic();
@@ -236,7 +236,7 @@ public:
     TextType                m_ForecastType;  //针对谁展开联想
 	void*                   m_ForecastText;
 
-	void  SetForecast(CTaskDialog* Dialog,TextType Type,void* Text);
+	void  SetForecast(CLogicDialog* Dialog,TextType Type,void* Text);
 
 	struct  ForecastRoom{
 		ForecastRoom*                      Parent;         //父空间
@@ -264,7 +264,7 @@ public:
 	
 	void  GetAllChild(ForecastRoom* ParentRoom);
 	ForecastRoom* GetCurForecastRoom(ForecastRoom* Parent);
-	void  Forecast(CTaskDialog* Dialog,CToken* Token);
+	void  Forecast(CLogicDialog* Dialog,CToken* Token);
 	void  Forecast(CClause* Clause);
 	void  Forecast(CSentence* Sentence);	
 public:
@@ -386,12 +386,12 @@ public:
 	   存储相应词性的单词，然后再让其意义空间值=ActionID
 	   ActionID如果不是预定义的本能，就是行为逻辑的存储ID
 	*/
-	int64 LearnAction(CTaskDialog* Dialog,tstring& Command,int64 ActionID,int64 MeaningSense = MEANING_SENSE_OK,bool IsCheck = false);
+	int64 LearnAction(CLogicDialog* Dialog,tstring& Command,int64 ActionID,int64 MeaningSense = MEANING_SENSE_OK,bool IsCheck = false);
 
 	//和前一个相比，Command已经被分析
 	int64 LearnAction(CClause* Clause,int64 ActionID,tstring& Error,int64 MeaningSense = MEANING_SENSE_OK,bool IsCheck=false);
     
-	int64 CheckAction(CTaskDialog* Dialog,tstring& Command,int64 ActionID,int64 MeaningSense = MEANING_SENSE_OK ){
+	int64 CheckAction(CLogicDialog* Dialog,tstring& Command,int64 ActionID,int64 MeaningSense = MEANING_SENSE_OK ){
 		return LearnAction(Dialog,Command,ActionID,MeaningSense,true);
 	}
 

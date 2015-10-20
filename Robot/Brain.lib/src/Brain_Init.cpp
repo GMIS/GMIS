@@ -2,7 +2,7 @@
 
 #include "Brain_Init.h"
 #include "LogicThread.h"
-#include "TaskDialog.h"
+#include "LogicDialog.h"
 
 
 struct NewWord{ 
@@ -252,7 +252,7 @@ CBrainInit::~CBrainInit(){
 }
 
 
-bool  CBrainInit::Do(CTaskDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg){ 
+bool  CBrainInit::Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg){ 
 	
 	CLocalInfoAuto LocalInfoAuto(Dialog,this,LocalAddress);
 	
@@ -299,7 +299,7 @@ bool  CBrainInit::Do(CTaskDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddr
 };
 
 
-bool CBrainInit::CheckWord(CTaskDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress){
+bool CBrainInit::CheckWord(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress){
 
 
 	CLogicThread& Think = *Dialog->GetThink();	
@@ -375,7 +375,7 @@ bool CBrainInit::CheckWord(CTaskDialog* Dialog,ePipeline& ExePipe,ePipeline& Loc
 	return true;
 }
 
-bool CBrainInit::CheckInstinct(CTaskDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress){
+bool CBrainInit::CheckInstinct(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress){
 	CLogicThread& Think = *Dialog->GetThink();	
 	Think.ClearAnalyse();
 

@@ -116,9 +116,7 @@ inttable[a][b]  a is the decimal digits, b is the values on the position
 		
 		int64toa(ID,buf1);
 				
-		eSTRING temp(Name);
-        AnsiString AnsiName;
-		temp.ToString(AnsiName); //convert into utf8
+        AnsiString AnsiName =  WStoUTF8(Name);
 		
 #ifdef _WIN32
 		::sprintf_s(buf2,"%d",AnsiName.size());

@@ -54,23 +54,16 @@ public:
 
 #endif
 
-
 public:
-	CUserLinkerPipe(Model* Parent,int64 SourceID,tstring Name);
-	CUserLinkerPipe(CSpaceMutex* Mutex,System* Parent,int64 SourceID); 
+	CUserLinkerPipe(Model* Parent,int64 SourceID,tstring Name);         //used for connecting server
+	CUserLinkerPipe(CSpaceMutex* Mutex,System* Parent,int64 SourceID);  //used for accepted client connection
 
 	virtual ~CUserLinkerPipe();
 
 	virtual bool   IsValid();
 	virtual void   Close();
 
-	virtual bool  ThreadIOWorkProc(char* Buffer,uint32 BufSize);
-
 private:
-	//Returns the number of bytes actually processed
-	uint32 ThreadInputProc(char* Buffer,uint32 BufSize);
-    uint32 ThreadOutputProc(char* Buffer,uint32 BufSize);
-
 	bool  PhysicalRev(char* Buf,uint32 BufSize, uint32& RevLen, uint32 flag=0);
 	bool  PhysicalSend(char* Buf,uint32 BufSize, uint32& SendLen, uint32 flag=0);
 		

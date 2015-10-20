@@ -8,7 +8,7 @@
 #define _LINKERVIEW_H__
 
 #include "WSListView.h"
-#include "TaskDialog.h"
+#include "LogicDialog.h"
 
 
 #define ADD_DIALOG         1

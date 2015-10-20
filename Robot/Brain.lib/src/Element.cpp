@@ -3,13 +3,13 @@
 #include "Brain.h"
 #include "Element.h"
 #include "Pipeline.h"
-#include "TaskDialog.h"
+#include "LogicDialog.h"
 #include "UserTimer.h"
 #include "LinkerPipe.h"
 #include "LogicElement.h"
 
 
-CLocalInfoAuto::CLocalInfoAuto(CTaskDialog* Dialog,CElement* Elt,ePipeline& Pipe)
+CLocalInfoAuto::CLocalInfoAuto(CLogicDialog* Dialog,CElement* Elt,ePipeline& Pipe)
 	: m_LocalPipe(Pipe),m_Dialog(Dialog){
 	assert(Elt);
 	int64 ID = Elt->m_ID;
@@ -245,17 +245,17 @@ Mass* CElement::FindMass(ePipeline& Address){
 }
 
 
-MsgProcState CElement::MsgProc(CTaskDialog* Dialog,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress,int32& ChildIndex){
+MsgProcState CElement::MsgProc(CLogicDialog* Dialog,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress,int32& ChildIndex){
 	MsgProcState ret = Dialog->m_Brain->ElementMsgProc(Dialog,this,ChildIndex,Msg,ExePipe,LocalAddress); //缺省处理
 	return ret;
 }
 
-bool CElement::TaskProc(CTaskDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress)
+bool CElement::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress)
 {
 	return true;
 }
 
-bool CElement::Do(CTaskDialog* Dialog,ePipeline& ExePipe, ePipeline& LocalAddress,CMsg& Msg){
+bool CElement::Do(CLogicDialog* Dialog,ePipeline& ExePipe, ePipeline& LocalAddress,CMsg& Msg){
 
 	CLocalInfoAuto LocalInfoAuto(Dialog,this,LocalAddress);
     
@@ -277,7 +277,7 @@ bool CElement::Do(CTaskDialog* Dialog,ePipeline& ExePipe, ePipeline& LocalAddres
 
 //////////////////////////////////////////////////////////////////////////
 
-bool CSeries::Do(CTaskDialog* Dialog,ePipeline& ExePipe, ePipeline& LocalAddress,CMsg& Msg){
+bool CSeries::Do(CLogicDialog* Dialog,ePipeline& ExePipe, ePipeline& LocalAddress,CMsg& Msg){
 
 	CLocalInfoAuto LocalInfoAuto(Dialog,this,LocalAddress);
     
@@ -565,7 +565,7 @@ void CShunt::Reset()
 	UpdateEventID();
 }
 
-bool CShunt::Do(CTaskDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg){
+bool CShunt::Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg){
 	
 	CLocalInfoAuto LocalInfoAuto(Dialog,this,LocalAddress);
 	

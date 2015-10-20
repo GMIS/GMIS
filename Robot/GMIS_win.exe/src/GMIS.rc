@@ -1,4 +1,4 @@
-//Microsoft Developer Studio generated resource script.
+// Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
 
@@ -13,13 +13,11 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// Chinese (P.R.C.) resources
+// 中文(简体，中国) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
-#ifdef _WIN32
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 #pragma code_page(936)
-#endif //_WIN32
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -27,18 +25,18 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE DISCARDABLE 
+1 TEXTINCLUDE 
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE DISCARDABLE 
+2 TEXTINCLUDE 
 BEGIN
     "#include ""afxres.h""\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE DISCARDABLE 
+3 TEXTINCLUDE 
 BEGIN
     "\r\n"
     "\0"
@@ -54,21 +52,21 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_MAINFRAME           ICON    DISCARDABLE     "res\\Main.ico"
-IDI_CAPACITOR           ICON    DISCARDABLE     "res\\CAPACITOR.ICO"
-IDI_INDUCTOR            ICON    DISCARDABLE     "res\\INDUCTOR.ICO"
-IDI_LOGIC               ICON    DISCARDABLE     "res\\Logic.ICO"
-IDI_EARTH               ICON    DISCARDABLE     "res\\earth globe.ico"
-IDI_CONTAINER           ICON    DISCARDABLE     "res\\文件夹.ico"
-IDI_PEOPLE              ICON    DISCARDABLE     "res\\unblock.ico"
-IDI_ROOM                ICON    DISCARDABLE     "res\\木门.ico"
+IDI_MAINFRAME           ICON                    "res\\Main.ico"
+IDI_CAPACITOR           ICON                    "res\\CAPACITOR.ICO"
+IDI_INDUCTOR            ICON                    "res\\INDUCTOR.ICO"
+IDI_LOGIC               ICON                    "res\\Logic.ICO"
+IDI_EARTH               ICON                    "res\\earth globe.ico"
+IDI_CONTAINER           ICON                    "res\\文件夹.ico"
+IDI_PEOPLE              ICON                    "res\\unblock.ico"
+IDI_ROOM                ICON                    "res\\木门.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
 // Menu
 //
 
-IDR_TEMPLOGICMENU MENU DISCARDABLE 
+IDR_TEMPLOGICMENU MENU
 BEGIN
     POPUP "TempLogicMenu"
     BEGIN
@@ -77,7 +75,7 @@ BEGIN
     END
 END
 
-IDR_OUTPUT MENU DISCARDABLE 
+IDR_OUTPUT MENU
 BEGIN
     POPUP "Output"
     BEGIN
@@ -87,7 +85,7 @@ BEGIN
     END
 END
 
-IDR_LOGICVIEW MENU DISCARDABLE 
+IDR_LOGICVIEW MENU
 BEGIN
     POPUP "LogicView"
     BEGIN
@@ -100,7 +98,7 @@ BEGIN
     END
 END
 
-IDR_TEMPOBJECTMENU MENU DISCARDABLE 
+IDR_TEMPOBJECTMENU MENU
 BEGIN
     POPUP "TempObjectMenu"
     BEGIN
@@ -114,8 +112,8 @@ END
 // Dialog
 //
 
-IDD_INPUTEDIT DIALOG DISCARDABLE  0, 0, 120, 34
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+IDD_INPUTEDIT DIALOG 0, 0, 120, 34
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Dialog"
 FONT 10, "System"
 BEGIN
@@ -125,41 +123,34 @@ BEGIN
     LTEXT           "Input Name:",IDC_STATIC,4,6,39,10
 END
 
-IDD_NEWCONNECT DIALOG DISCARDABLE  0, 0, 102, 34
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+IDD_NEWCONNECT DIALOG 0, 0, 102, 34
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Goto Space"
 FONT 10, "System"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,11,19,31,11
     PUSHBUTTON      "Cancel",IDCANCEL,59,19,31,11
-    CONTROL         "IPAddress1",IDC_NEWIP,"SysIPAddress32",WS_TABSTOP,7,1,
-                    86,14
+    CONTROL         "IPAddress1",IDC_NEWIP,"SysIPAddress32",WS_TABSTOP,7,1,86,14
 END
 
-IDD_SETACCOUNT DIALOG DISCARDABLE  0, 0, 145, 123
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Create Your Space"
-FONT 10, "System"
+IDD_SETACCOUNT DIALOGEX 0, 0, 145, 106
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Create New Account"
+FONT 10, "System", 0, 0, 0x0
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,14,99,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,77,99,50,14
+    DEFPUSHBUTTON   "OK",IDOK,14,75,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,77,75,50,14
     LTEXT           "User Name",IDC_NAME2,13,11,38,9
     LTEXT           "Password",IDC_PASSWORD2,13,27,35,12
     LTEXT           "Confirm",IDC_CONFIRM2,13,44,35,11
     EDITTEXT        IDC_SETNAME,53,9,78,12,ES_AUTOHSCROLL
     EDITTEXT        IDC_SETPASSWORD,53,25,78,12,ES_PASSWORD | ES_AUTOHSCROLL
     EDITTEXT        IDC_SETCONFIRM,53,41,78,12,ES_PASSWORD | ES_AUTOHSCROLL
-    GROUPBOX        "",IDC_GROUP,5,0,134,91
-    LTEXT           "Local Sapce Name",IDC_CONFIRM2,13,59,64,11
-    EDITTEXT        IDC_LOCALNAME,77,58,54,12,ES_AUTOHSCROLL
-    LTEXT           "Outer Space IP",IDC_CONFIRM2,13,74,50,11
-    CONTROL         "IPAddress1",IDC_OUTER_IP,"SysIPAddress32",WS_DISABLED | 
-                    WS_TABSTOP,66,73,65,12
+    GROUPBOX        "",IDC_GROUP,7,2,134,62
 END
 
-IDD_PASSWORD DIALOG DISCARDABLE  20, 20, 103, 55
-STYLE DS_MODALFRAME | DS_CENTER | DS_CENTERMOUSE | WS_POPUP | WS_VISIBLE | 
-    WS_CAPTION | WS_SYSMENU
+IDD_PASSWORD DIALOG 20, 20, 103, 55
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | DS_CENTERMOUSE | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Password Required"
 FONT 8, "System"
 BEGIN
@@ -179,7 +170,7 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO DISCARDABLE 
+GUIDELINES DESIGNINFO
 BEGIN
     IDD_INPUTEDIT, DIALOG
     BEGIN
@@ -200,7 +191,11 @@ BEGIN
         LEFTMARGIN, 2
         RIGHTMARGIN, 141
         TOPMARGIN, 2
-        BOTTOMMARGIN, 118
+        BOTTOMMARGIN, 101
+    END
+
+    IDD_PASSWORD, DIALOG
+    BEGIN
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -211,32 +206,30 @@ END
 // Bitmap
 //
 
-IDB_NAVIBAR             BITMAP  DISCARDABLE     "res\\Navibar.bmp"
-IDB_CEILING             BITMAP  DISCARDABLE     "res\\ceiling.BMP"
-IDB_DOOR                BITMAP  DISCARDABLE     "res\\door.BMP"
-IDB_METAL               BITMAP  DISCARDABLE     "res\\metal.bmp"
-IDB_ROOMWALL            BITMAP  DISCARDABLE     "res\\roomwall.BMP"
-IDB_WALL                BITMAP  DISCARDABLE     "res\\Wall.bmp"
-IDB_FLOOR               BITMAP  DISCARDABLE     "res\\floor.bmp"
-#endif    // Chinese (P.R.C.) resources
+IDB_NAVIBAR             BITMAP                  "res\\Navibar.bmp"
+IDB_CEILING             BITMAP                  "res\\ceiling.BMP"
+IDB_DOOR                BITMAP                  "res\\door.BMP"
+IDB_METAL               BITMAP                  "res\\metal.bmp"
+IDB_ROOMWALL            BITMAP                  "res\\roomwall.BMP"
+IDB_WALL                BITMAP                  "res\\Wall.bmp"
+IDB_FLOOR               BITMAP                  "res\\floor.bmp"
+#endif    // 中文(简体，中国) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// English (U.S.) resources
+// 英语(美国) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-#ifdef _WIN32
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #pragma code_page(1252)
-#endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
 //
 // Menu
 //
 
-IDR_ROOM MENU PRELOAD DISCARDABLE 
+IDR_ROOM MENU
 BEGIN
     POPUP "&Room"
     BEGIN
@@ -250,7 +243,7 @@ BEGIN
     END
 END
 
-IDR_RICHEDITMENU MENU DISCARDABLE 
+IDR_RICHEDITMENU MENU
 BEGIN
     POPUP "Menu"
     BEGIN
@@ -266,7 +259,7 @@ BEGIN
     END
 END
 
-#endif    // English (U.S.) resources
+#endif    // 英语(美国) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

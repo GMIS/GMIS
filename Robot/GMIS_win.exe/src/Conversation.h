@@ -13,7 +13,7 @@
 #include "InputWin.h"
 #include "Outputwin.h"
 #include "GuiGadget.h"
-#include "TaskDialog.h"
+#include "LogicDialog.h"
 
 
 

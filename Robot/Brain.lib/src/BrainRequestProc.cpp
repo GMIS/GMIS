@@ -1,9 +1,9 @@
 ﻿#pragma warning (disable:4786)
 
 #include "Brain.h"
-#include "TaskDialog.h"
+#include "LogicDialog.h"
 #include "GUIMsgDefine.h"
-bool CBrain::ProcessRequest(CTaskDialog* Dialog,ePipeline* RequestInfo){
+bool CBrain::ProcessRequest(CLogicDialog* Dialog,ePipeline* RequestInfo){
 
 	REQUEST_ITEM RequestID = (REQUEST_ITEM)RequestInfo->GetID();
 	
@@ -29,9 +29,9 @@ bool CBrain::ProcessRequest(CTaskDialog* Dialog,ePipeline* RequestInfo){
 	return false;
 }
 
-bool CBrain::OnRequestEnd(CTaskDialog* Dialog,ePipeline* RequestInfo){
+bool CBrain::OnRequestEnd(CLogicDialog* Dialog,ePipeline* RequestInfo){
 	int64 EventID = RequestInfo->PopInt();
-	CTaskDialog* Dlg = GetBrainData()->GetDialog(EventID);
+	CLogicDialog* Dlg = GetBrainData()->GetDialog(EventID);
     if (Dlg)
     {
 		CNotifyState nf(NOTIFY_DIALOG_LIST);
@@ -43,7 +43,7 @@ bool CBrain::OnRequestEnd(CTaskDialog* Dialog,ePipeline* RequestInfo){
 	return true;
 }
 
-bool CBrain::OnRequestDialog(CTaskDialog* Dialog,ePipeline* RequestInfo){
+bool CBrain::OnRequestDialog(CLogicDialog* Dialog,ePipeline* RequestInfo){
 	int64 EventID = RequestInfo->PopInt();
     TASK_OUT_TYPE OutType = (TASK_OUT_TYPE)RequestInfo->PopInt();
 	int64  EventInterval= RequestInfo->PopInt();
@@ -55,7 +55,7 @@ bool CBrain::OnRequestDialog(CTaskDialog* Dialog,ePipeline* RequestInfo){
 	ePipeline* ExePipe = (ePipeline*)RequestInfo->GetData(0);
     ePipeline* Address = (ePipeline*)RequestInfo->GetData(1);
 
-	CTaskDialog* NewDialog = GetBrainData()->GetDialog(EventID);
+	CLogicDialog* NewDialog = GetBrainData()->GetDialog(EventID);
     if (!NewDialog)
     {
 		NewDialog = GetBrainData()->CreateNewDialog(this,Dialog->m_SourceID,EventID,Dialog->GetDialogID(),_T("Dialog"),DialogName,DIALOG_SYSTEM_CHILD,0,OutType);	
@@ -87,11 +87,11 @@ bool CBrain::OnRequestDialog(CTaskDialog* Dialog,ePipeline* RequestInfo){
 	return true;
 }
 
-bool CBrain::OnRequestUseObject(CTaskDialog* Dialog,ePipeline* RequestInfo){
+bool CBrain::OnRequestUseObject(CLogicDialog* Dialog,ePipeline* RequestInfo){
 	return true;
 }
 
-bool CBrain::OnRequestExeLogic(CTaskDialog* Dialog,ePipeline* RequestInfo)
+bool CBrain::OnRequestExeLogic(CLogicDialog* Dialog,ePipeline* RequestInfo)
 {
 	int64 SourceID = Dialog->m_SourceID;
 	if (SourceID == SYSTEM_SOURCE) //暂时不允许本地请求
@@ -111,7 +111,7 @@ bool CBrain::OnRequestExeLogic(CTaskDialog* Dialog,ePipeline* RequestInfo)
 	tstring TaskName = _T("LogicTask");
 	int64 TaskID = AbstractSpace::CreateTimeStamp();	
 
-	CTaskDialog* ChildDialog = GetBrainData()->CreateNewDialog(this,Dialog->m_SourceID,TaskID,0,Dialog->m_SourceName,TaskName,DIALOG_OTHER_TEMP_CHILD,Dialog->m_OutputSourceID,TASK_OUT_DEFAULT);
+	CLogicDialog* ChildDialog = GetBrainData()->CreateNewDialog(this,Dialog->m_SourceID,TaskID,0,Dialog->m_SourceName,TaskName,DIALOG_OTHER_TEMP_CHILD,Dialog->m_OutputSourceID,TASK_OUT_DEFAULT);
 	
 	if (!ChildDialog)
 	{
@@ -140,7 +140,7 @@ bool CBrain::OnRequestExeLogic(CTaskDialog* Dialog,ePipeline* RequestInfo)
 	
 
 	tstring s = Format1024(_T("Create New Dialog[%s]: Type=%d  DialogID=%I64d \n"),
-		TaskName.c_str(),ChildDialog->m_SpaceType,ChildDialog->m_DialogID);	
+		TaskName.c_str(),ChildDialog->m_DialogType,ChildDialog->m_DialogID);	
 	
 	Dialog->RuntimeOutput(0,s);
 	
@@ -182,18 +182,18 @@ bool CBrain::OnRequestExeLogic(CTaskDialog* Dialog,ePipeline* RequestInfo)
 	CMsg Msg1;
 	CreateBrainMsg(Msg1,ChildDialog->m_DialogID,ChildMsg,EventID);		
 	
-	PushNerveMsg(Msg1);		
+	PushNerveMsg(Msg1,false,false);		
 
 	return true;
 }
 
-bool CBrain::OnRequestTransTask(CTaskDialog* Dialog,ePipeline* RequestInfo){
+bool CBrain::OnRequestTransTask(CLogicDialog* Dialog,ePipeline* RequestInfo){
 
 	int64 EventID = RequestInfo->PopInt();
 	
 	tstring TaskName = _T("LogicTask");
 		
-	CTaskDialog* TaskDialog = GetBrainData()->CreateNewDialog(this,Dialog->m_SourceID,EventID,0,Dialog->m_SourceName,TaskName,DIALOG_SYSTEM_CHILD,Dialog->m_OutputSourceID,TASK_OUT_DEFAULT);
+	CLogicDialog* TaskDialog = GetBrainData()->CreateNewDialog(this,Dialog->m_SourceID,EventID,0,Dialog->m_SourceName,TaskName,DIALOG_SYSTEM_CHILD,Dialog->m_OutputSourceID,TASK_OUT_DEFAULT);
 	if (!TaskDialog)
 	{
 		tstring text = _T("The task transferred fail");
@@ -213,13 +213,13 @@ bool CBrain::OnRequestTransTask(CTaskDialog* Dialog,ePipeline* RequestInfo){
 	GetBrainData()->PushBrainEvent(EventID,ExePipe,Address);
 
 	
-	if (Dialog->m_SpaceType==DIALOG_OTHER_MAIN)
+	if (Dialog->m_DialogType==DIALOG_OTHER_MAIN)
 	{
-		TaskDialog->m_SpaceType = DIALOG_OTHER_CHILD;
+		TaskDialog->m_DialogType = DIALOG_OTHER_CHILD;
 	}
 	
 	tstring s = Format1024(_T("Create New Dialog[%s]: Type=%d  DialogID=%I64d\n"),
-		TaskName.c_str(),TaskDialog->m_SpaceType,TaskDialog->m_DialogID);	
+		TaskName.c_str(),TaskDialog->m_DialogType,TaskDialog->m_DialogID);	
 	
 	Dialog->RuntimeOutput(0,s);
 	
@@ -245,12 +245,12 @@ bool CBrain::OnRequestTransTask(CTaskDialog* Dialog,ePipeline* RequestInfo){
 	
 	CMsg BrainMsg;
 	CreateBrainMsg(BrainMsg,TaskDialog->m_DialogID,ChildMsg,0);	
-	PushNerveMsg(BrainMsg);
+	PushNerveMsg(BrainMsg,false,false);
 	
 	return true;
 }
 
-bool CBrain::OnRequestInsertLogic(CTaskDialog* Dialog,ePipeline* RequestInfo)
+bool CBrain::OnRequestInsertLogic(CLogicDialog* Dialog,ePipeline* RequestInfo)
 {
 	int64 EventID = RequestInfo->PopInt();
 
@@ -267,7 +267,7 @@ bool CBrain::OnRequestInsertLogic(CTaskDialog* Dialog,ePipeline* RequestInfo)
 	return true;
 }
 
-bool CBrain::OnRequestRemoveLogic(CTaskDialog* Dialog,ePipeline* RequestInfo)
+bool CBrain::OnRequestRemoveLogic(CLogicDialog* Dialog,ePipeline* RequestInfo)
 {
 	int64 EventID = RequestInfo->PopInt();
 	

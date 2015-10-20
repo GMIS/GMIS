@@ -14,7 +14,7 @@
 # pragma once
 #endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
-class CBrainTask;
+class CLogicTask;
 
 //比如： use capacitor cp:循环变量
 //其中“循环变量”为注释，使用GetLogicElementName()则去掉注释返回实际名字“cp”
@@ -28,12 +28,12 @@ tstring GetLogicElementName(tstring& Name);
 class  CCapacitor : public Mass  
 {
 public:
-	CBrainTask*   m_Task;
+	CLogicTask*   m_Task;
 	ePipeline     m_Temp;      //用来暂时存储一段能量；
 	tstring       m_Name;
 	int64         m_TaskBeginTime;
 public:
-	CCapacitor(CBrainTask* Task,const TCHAR* Name,int64 ID=0)
+	CCapacitor(CLogicTask* Task,const TCHAR* Name,int64 ID=0)
 		:m_Task(Task),m_Name(Name),m_Temp(),Mass(ID),m_TaskBeginTime(0){};	
 	
 	virtual ~CCapacitor(){};
@@ -83,12 +83,12 @@ public:
 class  CInductor : public Mass  
 {
 private:
-	CBrainTask*   m_Task;
+	CLogicTask*   m_Task;
 	ePipeline     m_Temp;      //用来暂时存储一段能量；
 	tstring       m_Name;
 	int64         m_TaskBeginTime;
 public:
-	CInductor(CBrainTask* Task,const TCHAR* Name,int64 ID=0)
+	CInductor(CLogicTask* Task,const TCHAR* Name,int64 ID=0)
 		:m_Task(Task),m_Name(Name),m_Temp(),Mass(ID),m_TaskBeginTime(0){};
 	virtual ~CInductor(){};
 	

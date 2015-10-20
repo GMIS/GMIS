@@ -9,7 +9,7 @@
 #include "LinkerView.h"
 #include "SystemSetting.h"
 #include "LogicThread.h"
-#include "TaskDialog.h"
+#include "LogicDialog.h"
 
 ConvProgressStruct::ConvProgressStruct(){
 	m_OutputProgressBar.m_crProgress = RGB(0x7c,0xfc,0);

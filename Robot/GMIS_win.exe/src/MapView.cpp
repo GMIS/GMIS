@@ -13,7 +13,7 @@
 #include "WorldShow.h"
 #include "Win32Tool.h"
 #include "MainBrain.h"
-#include "TaskDialog.h"
+#include "LogicDialog.h"
 
 HICON MapItem::hWorld     = NULL; 
 HICON MapItem::hContainer = NULL;

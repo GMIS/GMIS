@@ -5,7 +5,7 @@
 
 #include "LinkerView.h"
 #include "MainFrame.h"
-#include "TaskDialog.h"
+#include "LogicDialog.h"
 #include "GMIS.h"
 
 CLinkerView::CLinkerItem::CLinkerItem(int64 ID,const tstring& Name)

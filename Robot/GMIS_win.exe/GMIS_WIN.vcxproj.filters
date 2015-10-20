@@ -234,9 +234,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="..\..\..\..\src\GMIS_WIN\res\bitmap4.bmp">
-      <Filter>Resource Files</Filter>
-    </CustomBuild>
     <CustomBuild Include="..\..\..\..\src\GMIS_WIN\CAPACITO.ICO">
       <Filter>Resource Files</Filter>
     </CustomBuild>
@@ -328,5 +325,52 @@
       <Filter>Resource Files</Filter>
     </CustomBuild>
     <CustomBuild Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\res\Main.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="src\res\CAPACITOR.ICO">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="src\res\INDUCTOR.ICO">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="src\res\Logic.ICO">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="src\res\earth globe.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="src\res\文件夹.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="src\res\unblock.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="src\res\木门.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="src\res\Navibar.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="src\res\ceiling.BMP">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="src\res\door.BMP">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="src\res\metal.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="src\res\roomwall.BMP">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="src\res\Wall.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="src\res\floor.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

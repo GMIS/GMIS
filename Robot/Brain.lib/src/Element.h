@@ -13,7 +13,7 @@
 #include <map>
 #include <tchar.h>
 #include "MsgList.h"
-#include "Brain.h"
+//#include "Brain.h"
 
 /*
   Element是质量体的集合。
@@ -31,8 +31,9 @@ enum LogicRelation {
 	SERIES_RELATION = 1,
 	SHUNT_RELATION  = 2
 };
+enum MsgProcState{ RETURN_DIRECTLY,CONTINUE_TASK};
 
-class CTaskDialog;
+class CLogicDialog;
 
 
 class   CElement: public Mass
@@ -93,15 +94,15 @@ public:
 	ObjectAddress 暂停恢复时，继续执行所需地址
 	Msg 暂停恢复时可能需要处理的外部信息，只有Element具有处理外部信息的能力
 	*/
-	virtual bool Do(CTaskDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg);
+	virtual bool Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg);
 
 
 protected:
 
 	//处理外部信息，缺省：Dialog->m_Brain->TaskDialogProc(Dialog,SysMsg); 
 	//返回CONTINUE_NEXT会继续处理TaskProc()，否则不处理TaskProc(),如果想直接返回系统，那么ExePipe.Break();
-	virtual MsgProcState MsgProc(CTaskDialog* Dialog,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress,int32& ChildIndex);
-    virtual bool TaskProc(CTaskDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress);
+	virtual MsgProcState MsgProc(CLogicDialog* Dialog,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress,int32& ChildIndex);
+    virtual bool TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress);
 
 };
 
@@ -122,7 +123,7 @@ public:
     LogicRelation RealtionType(){ return SERIES_RELATION;};
 
 	//由于此函数递归调用频繁，直接实现do()而不是分别实现MsgProc()和TaskProc()可以节约函数堆栈
-	virtual bool Do(CTaskDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg);
+	virtual bool Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg);
 
 };
 
@@ -158,7 +159,7 @@ public:
 	virtual void InsertLogic(int64 Index,CElement* e);
 	virtual bool RemoveLoigc(int64 ChildID);
 
-	bool Do(CTaskDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg);
+	bool Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg);
 
 };
 
@@ -166,9 +167,9 @@ class  CLocalInfoAuto  //跟踪Mass地址
 {
 private:
 	ePipeline&   m_LocalPipe;
-	CTaskDialog* m_Dialog;
+	CLogicDialog* m_Dialog;
 public:
-    CLocalInfoAuto(CTaskDialog* Dialog,CElement* Elt,ePipeline& Pipe);
+    CLocalInfoAuto(CLogicDialog* Dialog,CElement* Elt,ePipeline& Pipe);
     ~CLocalInfoAuto ();
 };
 
