@@ -58,7 +58,8 @@ public:
 		if(m_User==NULL) {
 			m_Mutex->Acquire();
 		}else {
-			m_Mutex->AcquireThis(m_User);
+			bool ret = m_Mutex->AcquireThis(m_User);
+			assert(ret);
 		}
 	}
     ~CLock (){

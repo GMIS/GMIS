@@ -4,7 +4,224 @@
 
 namespace PHYSIC{
 	
-System::CNetListenWork::CNetListenWork(System* Parent, int32 Port)
+
+CSysThreadWorker::CSysThreadWorker(int64 ID,Model* Parent,int32 Type)
+	:CThreadWorker(ID,Parent,Type)
+{
+	assert(Type == SYSTEM_NEVER_WORK_TYPE || Type == SYSTEM_IO_WORK_TYPE  );
+}
+CSysThreadWorker::~CSysThreadWorker(){
+
+}
+	
+bool CSysThreadWorker::Do(Energy* E){
+	if (m_WorkType == SYSTEM_NEVER_WORK_TYPE)
+	{
+		NerveWorkProc();
+	}else if (m_WorkType == SYSTEM_IO_WORK_TYPE)
+	{
+		SystemIOWorkProc();	
+	}
+	return true;
+}
+	
+void CSysThreadWorker::SystemIOWorkProc(){
+	System* Parent = (System*)m_Parent;
+	try{	
+			while(IsAlive() && Parent->IsAlive()){
+
+				int64 SourceID = 0;
+
+				CLinker Linker;
+				Parent->GetClientLinkerList()->PopLinker(Linker);
+
+				char buf[MODEL_IO_BUFFER_SIZE];
+				if ( Linker.IsValid())
+				{
+					Linker().ThreadIOWorkProc(buf,MODEL_IO_BUFFER_SIZE);
+					Parent->GetClientLinkerList()->ReturnLinker(Linker);
+				}else{
+					SLEEP_MILLI(20);
+				}			
+			}
+		}
+		/*
+		catch(TimeoutException& e){
+			AnsiString s = e.displayText();
+			ePipeline Data;
+			Data.PushString(s);
+			m_Parent->NotifySysState(MNOTIFY_EXCEPTION_OCCURRED,&Data);
+			//CLockedSystemData* LockedData = m_Parent->GetSystemData();
+			//LockedData->DeleteIOWork(m_ID);
+		}
+		*/
+		catch(...){
+			ePipeline NotifyData;
+			NotifyData.PushString(_T("An exception occurred, SystemIOWork Closed"));
+			Parent->NotifySysState(NOTIFY_EXCEPTION_OCCURRED,NULL,&NotifyData);
+		}
+
+		ePipeline NotifyData;
+		NotifyData.PushInt(m_ID);
+		Parent->NotifySysState(NOTIFY_SYSTEM_SCENE,NTID_IO_WORKER_CLOSED,&NotifyData);
+
+}
+	
+void CSysThreadWorker::NerveWorkProc(){
+	System* Parent = (System*)m_Parent;
+	System::CLockedSystemData* LockedData = Parent->GetSystemData();
+
+	try{
+		while (IsAlive() && Parent->IsAlive())
+		{
+
+			CMsg Msg;
+			Parent->PopNerveMsg(Msg);
+
+			if (Msg.IsValid())
+			{	
+				LockedData->IncreNerveWorkerCount();		
+				Parent->NerveMsgProc(Msg);
+				LockedData->DecreNerveWorkerCount();
+			}else{
+				m_IdleCount++;
+				if (m_IdleCount>LockedData->GetNerveMaxIdleCount()) //Around 600 milliseconds to exit if without information can be handled
+				{						
+					int IdleNum = LockedData->GetIdleWorkerNum();
+					if (IdleNum > 1 )//Keep at least one free
+					{
+						m_IdleCount = 0;
+						break;
+					}else{
+						m_IdleCount = 0;
+					}
+				}
+				SLEEP_MILLI(20);
+			}
+
+		}
+	}catch(...){
+
+		ePipeline NotifyData;
+		NotifyData.PushString(_T("An exception occurred, CNerveWork Closed"));
+		Parent->NotifySysState(NOTIFY_EXCEPTION_OCCURRED,NULL,&NotifyData);
+	}
+
+	int n = LockedData->GetNerveWorkerNum();
+	ePipeline NotifyData;
+	NotifyData.PushInt(--n);
+	NotifyData.PushInt(m_ID);
+	Parent->NotifySysState(NOTIFY_SYSTEM_SCENE,NTID_NERVE_THREAD_CLOSED,&NotifyData);
+}
+
+CClientLinkerList::CClientLinkerList()
+	:m_PoolMaxRestSize(20)
+{
+
+}
+CClientLinkerList::~CClientLinkerList(){
+	CLock lk(&m_Mutex);
+	deque<CLinkerPipe*>::iterator it = m_LinkerPool.begin();
+	while (it != m_LinkerPool.end())
+	{
+		CLinkerPipe* LinkPtr = *it;
+		assert(LinkPtr->GetUserNum()==0);
+		delete LinkPtr;
+		it++;
+	}
+}	
+
+void CClientLinkerList::CreateLinker(CLinker& Linker,Model* Parent,int64 ID,ePipeline& Param){
+	CLock lk(&m_Mutex);
+	deque<CLinkerPipe*>::iterator it = m_LinkerPool.begin();
+	while (it != m_LinkerPool.end())
+	{
+		CUserLinkerPipe* UserPipe = (CUserLinkerPipe*)*it;
+		if (UserPipe->GetID()==-1)
+		{
+			if (UserPipe->GetUserNum()!=0)
+			{
+				it++;
+				continue;
+			}else if (m_LinkerPool.size()>m_PoolMaxRestSize)
+			{
+				delete UserPipe;
+				it++;
+				continue;
+			}
+		}
+		UserPipe->Reset();
+		UserPipe->SetSourceID(ID);
+		Linker.Reset(UserPipe);
+		m_LinkerPool.erase(it);
+	    return;
+	}
+	CUserLinkerPipe* UserPipe = new CUserLinkerPipe(&m_ClientSitMutex,(System*)Parent,ID);
+	Linker.Reset(UserPipe);	
+};
+
+bool   CClientLinkerList::DeleteLinker(int64 SourceID){
+	CLock lk(&m_Mutex);
+
+	CLinkerPipe* LinkPtr = NULL;
+	list<CLinkerPipe*>::iterator it = m_LinkerList.begin();
+	while(it != m_LinkerList.end()){
+		LinkPtr = *it;
+		if(LinkPtr->GetSourceID() == SourceID){
+			LinkPtr->Close();
+			m_LinkerList.erase(it);
+			m_LinkerPool.push_back(LinkPtr);
+			return true;
+		}
+		it++;
+	}
+	
+	it = m_ActivelyLinker.begin();
+	while(it != m_ActivelyLinker.end()){
+		LinkPtr = *it;
+		if(LinkPtr->GetSourceID() == SourceID){
+			LinkPtr->SetID(-1); //标记为删除
+			LinkPtr->Close();
+			return true;
+		}
+		it++;
+	}
+	return false;
+}; 
+
+void   CClientLinkerList::PopLinker(CLinker& Linker){
+	CLock lk(&m_Mutex);
+	list<CLinkerPipe*>::iterator it = m_LinkerList.begin();
+	if(it != m_LinkerList.end()){
+		CLinkerPipe* LinkerPtr = *it;
+		Linker.Reset(LinkerPtr);
+		m_ActivelyLinker.push_front(LinkerPtr);
+		m_LinkerList.erase(it);
+	}
+};
+void   CClientLinkerList::ReturnLinker(CLinker& Linker){
+	CLock lk(&m_Mutex);
+	int64 SourceID = Linker().GetSourceID();
+	list<CLinkerPipe*>::iterator it = m_ActivelyLinker.begin();
+	while(it != m_ActivelyLinker.end()){
+		CLinkerPipe* LinkPtr = *it;
+		if(LinkPtr->GetSourceID() == SourceID)
+		{
+			m_ActivelyLinker.erase(it);
+
+			if (LinkPtr->GetID() == -1)//已经被标记删除
+			{	
+				m_LinkerPool.push_back(LinkPtr);	
+				return;
+			}
+			m_LinkerList.push_back(LinkPtr);
+			return;
+		}
+		it++;
+	}
+}
+
+System::CNetListenWorker::CNetListenWorker(System* Parent, int32 Port)
 #if defined(USING_POCO)	
 	:m_Parent(Parent),m_Socket(Port),m_Port(Port)
 #elif defined(USING_WIN32)
@@ -13,11 +230,11 @@ System::CNetListenWork::CNetListenWork(System* Parent, int32 Port)
 {
 
 };
-System::CNetListenWork::~CNetListenWork(){
+System::CNetListenWorker::~CNetListenWorker(){
 
 };
 
-bool System::CNetListenWork::Activation(){
+bool System::CNetListenWorker::Activation(){
 
 #if defined(USING_WIN32)
 	sockaddr_in Local;
@@ -58,8 +275,7 @@ bool System::CNetListenWork::Activation(){
 	Object::Activation();
 	return TRUE;
 };
-
-void System::CNetListenWork::Dead(){
+void System::CNetListenWorker::Dead(){
 	m_Alive = false;
 #if defined(USING_POCO)
 	m_Socket.close();
@@ -74,69 +290,74 @@ void System::CNetListenWork::Dead(){
 	Object::Dead();
 };
 
-bool System::CNetListenWork::Do(Energy* E){
-	while (m_Alive)
+
+bool System::CNetListenWorker::Do(Energy* E){
+	while (m_Alive&&m_Parent->IsAlive())
 	{
 #if defined(USING_POCO)
-
 		try{
+
+			Poco::Timespan timeout(50);
+			bool ret = m_Socket.poll(timeout,Socket::SELECT_READ);
+			if (!ret)
+			{
+				continue;
+			};
 
 			SocketAddress ClientAddress;
 			StreamSocket ClientSocket = m_Socket.acceptConnection(ClientAddress);
 
-			System* System = m_Parent;
+			CLinker Linker;
+			int64 SourceID = CreateTimeStamp();
+			ePipeline Param;
+			m_Parent->m_ClientLinkerList.CreateLinker(Linker,m_Parent,SourceID,Param);
 
-			CUserLinkerPipe* Linker = System->CreateClientLinkerPipe();
-
-			if(Linker== NULL){
+			if(!Linker.IsValid()){
 				AnsiString Add = ClientAddress.toString();
 				tstring  AddW = UTF8toWS(Add);
 
-				tstring s = Format1024(_T("Accept %s Fail: can't create new CUserLinkerPipe "),AddW.c_str());
+				tstring s = Format1024(_T("can't create new CUserLinkerPipe "),AddW.c_str());
 
-				CMsg Msg(MSG_LINKER_ERROR,DEFAULT_DIALOG,0);
-				Msg.GetLetter().PushInt(m_Port);
-				Msg.GetLetter().PushString(s);		
-				m_Parent->PushCentralNerveMsg(Msg,false,false);
+				ePipeline Data;
+				Data.PushInt(m_Port);
+				Data.PushString(s);		
+				m_Parent->NotifySysState(NOTIFY_SYSTEM_SCENE,NTID_LISTEN_FAIL,&Data);
 				ClientSocket.close();
+				m_Parent->GetSystemData()->DelAcceptor(m_Port,false);
 				return true;
 			}
 
 			ClientSocket.setBlocking(false);
-			Linker->m_Socket = ClientSocket;
 
-			System::CLockedLinkerList* ClientList= System->GetClientLinkerList();
-			ClientList->AddLinker(Linker);
+			CUserLinkerPipe* LinkerPtr = (CUserLinkerPipe*)Linker.Release();
+			LinkerPtr->m_Socket = ClientSocket;
 
-			/*先不忙产生显式对话，而是要求对方发送认证信息，认证后才生成对应的对话（这样可以把物理连接的处理限制在UserSystem）
-			由于已经加入了连接表，此时连接处于陌生人状态，循环读取时如果超过一定时间没有改变状态则删除
-			tstring s = tformat(_T("The new linker(%s) coming in"),Linker->GetLabel().c_str());
-			OutSysInfo(s);
-
-			int64 ID = Linker->GetSourceID();
-			CSysDialog* ChildTask = new CSysDialog(this,ID,DIALOG_OTHER_MAIN);
-
-			m_BrainData.AddDialog(ChildTask);
-			*/
+			m_Parent->m_ClientLinkerList.AddLinker(LinkerPtr);
 
 			CMsg Msg(MSG_WHO_ARE_YOU,DEFAULT_DIALOG,0);
-			Linker->PushMsgToSend(Msg);
+			LinkerPtr->PushMsgToSend(Msg);
 
+			m_Parent->CreateClientLinkerWorkerStrategy(m_Port);
 
 		}catch(Poco::Net::NetException& NetError)
 		{
 			tstring errorText  =  UTF8toWS(NetError.what());
 
-			tstring s = Format1024(_T("Listen Fail: %s"),errorText.c_str());
-
-			CMsg Msg(MSG_LINKER_ERROR,DEFAULT_DIALOG,0);
-			Msg.GetLetter().PushInt(m_Port);
-			Msg.GetLetter().PushString(s);		
-			m_Parent->PushCentralNerveMsg(Msg,false,true);
+			ePipeline Data;
+			Data.PushInt(m_Port);
+			Data.PushString(errorText);		
+			m_Parent->NotifySysState(NOTIFY_SYSTEM_SCENE,NTID_LISTEN_FAIL,&Data);
+			m_Parent->GetSystemData()->DelAcceptor(m_Port,false);
 			return true;
-		}catch(Poco::Exception& e)
-		{
-			AnsiString s = e.what();
+		}catch(Exception& exc){
+			tstring errorText  =  UTF8toWS(exc.what());
+
+			ePipeline Data;
+			Data.PushInt(m_Port);
+			Data.PushString(errorText);		
+			m_Parent->NotifySysState(NOTIFY_SYSTEM_SCENE,NTID_LISTEN_FAIL,&Data);
+			m_Parent->GetSystemData()->DelAcceptor(m_Port,false);
+			return true;
 		}
 #elif defined(USING_WIN32)
 		SOCKET Client;
@@ -150,11 +371,12 @@ bool System::CNetListenWork::Do(Energy* E){
 			}
 			else{
 				int ErrorCode = WSAGetLastError();
-				tstring s = Format1024(_T("Listen Fail: Accept() failed [code:%d]"),ErrorCode);
-				CMsg Msg(m_SourceID,DEFAULT_DIALOG,MSG_LINKER_ERROR,DEFAULT_DIALOG);
-				Msg.GetLetter().PushInt(m_Port);
-				Msg.GetLetter().PushString(s);		
-				m_Parent->PushCentralNerveMsg(Msg);
+				tstring s = Format1024(_T("failed code:%d"),ErrorCode);
+				ePipeline Data;
+				Data.PushInt(m_Port);
+				Data.PushString(errorText);		
+				m_Parent->NotifySysState(NOTIFY_SYSTEM_SCENE,NTID_LISTEN_FAIL,&Data);
+				
 				return true;
 			}
 		}
@@ -196,180 +418,18 @@ bool System::CNetListenWork::Do(Energy* E){
 
 #endif
 	}	
+
+	tstring s= Format1024(_T("the port %d has been closed"),m_Port);
+	
+	ePipeline Data;
+	Data.PushInt(m_Port);
+	Data.PushString(s);		
+	m_Parent->NotifySysState(NOTIFY_SYSTEM_SCENE,NTID_LISTEN_FAIL,&Data);
+	m_Parent->GetSystemData()->DelAcceptor(m_Port,false);
 	return true;
 }
 
 
-	//SystemIOWork
-	//////////////////////////////////////////////////////////////////////////
-	System::CSystemIOWork::CSystemIOWork(int64 ID,System* Parent)
-		:m_Parent(Parent)
-	{
-		assert(m_Parent);
-		m_ID = ID;		
-#if defined(USING_POCO)
-		AnsiString ThreadName = "SystemIOThread";
-		m_ObjectDefaultThread.setName(ThreadName);
-#endif
-	};
-	System::CSystemIOWork::~CSystemIOWork(){
-
-	}
-
-	bool System::CSystemIOWork::Do(Energy* E){	
-		try{
-			while(m_Alive && m_Parent->IsAlive()){
-
-				int64 SourceID = 0;
-
-				Model::CLockedLinkerList* LinkerList = m_Parent->GetClientLinkerList();
-				CLinker Linker;
-				LinkerList->GetNextAvailableLinker(SourceID,Linker);
-
-				char buf[MODEL_IO_BUFFER_SIZE];
-				while (m_Alive && Linker.IsValid())
-				{
-					SourceID = Linker().GetSourceID();				
-					Linker().ThreadIOWorkProc(buf,MODEL_IO_BUFFER_SIZE);
-					LinkerList->GetNextAvailableLinker(SourceID,Linker);
-				}
-				SLEEP_MILLI(20);
-			}
-
-
-			//这里不能直接调用NotifySystemState(),可能会引起mutex锁死
-			CMsg Msg(MSG_SYS_MSG,DEFAULT_DIALOG,0);
-			ePipeline& Letter = Msg.GetLetter();
-			Letter.PushInt(NOTIFY_SYS_STATE);
-			Letter.PushInt(SNOTIFY_IO_WORK_THREAD_CLOSE);
-			ePipeline NotifyData;
-			NotifyData.PushInt(m_ID);
-			Letter.PushPipe(NotifyData);
-			m_Parent->PushCentralNerveMsg(Msg,false,true);
-
-			
-			m_Alive = FALSE;
-			return TRUE;
-		}
-/*
-		catch(TimeoutException& e){
-			AnsiString s = e.displayText();
-			ePipeline Data;
-			Data.PushString(s);
-			m_Parent->NotifySysState(MNOTIFY_EXCEPTION_OCCURRED,&Data);
-			//CLockedSystemData* LockedData = m_Parent->GetSystemData();
-			//LockedData->DeleteIOWork(m_ID);
-		}
-		*/
-		catch(...){
-
-			CMsg Msg2(MSG_SYS_MSG,DEFAULT_DIALOG,0);
-			ePipeline& Letter2 = Msg2.GetLetter();
-			Letter2.PushInt(NOTIFY_SYS_STATE);
-			Letter2.PushInt(MNOTIFY_EXCEPTION_OCCURRED);
-			ePipeline NotifyData2;
-			NotifyData2.PushString(_T("An exception occurred, SystemIOWork Closed"));
-			m_Parent->PushCentralNerveMsg(Msg2,false,true);
-		}
-
-		CMsg Msg1(MSG_SYS_MSG,DEFAULT_DIALOG,0);
-		ePipeline& Letter1 = Msg1.GetLetter();
-		Letter1.PushInt(NOTIFY_SYS_STATE);
-		Letter1.PushInt(SNOTIFY_IO_WORK_THREAD_CLOSE);
-		ePipeline NotifyData1;
-		NotifyData1.PushInt(m_ID);
-		Letter1.PushPipe(NotifyData1);
-		
-		m_Parent->PushCentralNerveMsg(Msg1,false,true);
-
-		m_Alive = FALSE;
-		return TRUE;
-	}			
-
-	//Nerve
-	//////////////////////////////////////////////////////////////////////////
-	System::CNerveWork::CNerveWork(int64 ID,System* Parent)
-		:m_Parent(Parent),m_IdleCount(0)
-	{
-		m_ID = ID;
-#if defined(USING_POCO)
-		AnsiString ThreadName = "NerveWorkThread";
-		m_ObjectDefaultThread.setName(ThreadName);
-#endif
-	};
-	System::CNerveWork::~CNerveWork(){
-
-	};
-
-
-	bool System::CNerveWork::Do(Energy* E){
-		int n = 0;
-		try{
-			while (m_Alive && m_Parent->IsAlive())
-			{
-				CMsg Msg;
-				m_Parent->PopNerveMsg(Msg);
-				CLockedSystemData* LockedData = m_Parent->GetSystemData();
-
-				if (Msg.IsValid())
-				{		
-
-					LockedData->IncreNerveWorkCount();
-					m_Parent->NerveProc(Msg);
-
-					LockedData->DecreNerveWorkCount();
-				}else{
-					m_IdleCount++;
-					if (m_IdleCount>LockedData->GetNerveMaxIdleCount()) //Around 600 milliseconds to exit if without information can be handled
-					{
-						n = LockedData->GetNerveWorkNum();
-						int n1 = LockedData->GetBusyNerveWorkNum();
-
-						if (n-n1 == 1 )//Keep at least one free
-						{
-							m_IdleCount = 0;
-						}else{
-							//这里不能直接调用NotifySystemState(),可能会引起mutex锁死
-							CMsg Msg(MSG_SYS_MSG,DEFAULT_DIALOG,0);
-							ePipeline& Letter = Msg.GetLetter();
-							Letter.PushInt(NOTIFY_SYS_STATE);
-							Letter.PushInt(SNOTIFY_NERVE_THREAD_CLOSE);
-							ePipeline NotifyData;
-							NotifyData.PushInt(--n);
-							NotifyData.PushInt(m_ID);
-							Letter.PushPipe(NotifyData);
-							m_Parent->PushCentralNerveMsg(Msg,false,true);
-
-							m_Alive = FALSE;
-							return TRUE;
-						}
-					}
-					SLEEP_MILLI(20);
-				}
-			}
-		}catch(...){
-
-			CMsg Msg2(MSG_SYS_MSG,DEFAULT_DIALOG,0);
-			ePipeline& Letter2 = Msg2.GetLetter();
-			Letter2.PushInt(NOTIFY_SYS_STATE);
-			Letter2.PushInt(MNOTIFY_EXCEPTION_OCCURRED);
-			ePipeline NotifyData2;
-			NotifyData2.PushString(_T("An exception occurred, CNerveWork Closed"));
-			m_Parent->PushCentralNerveMsg(Msg2,false,true);
-		}
-		CMsg Msg1(MSG_SYS_MSG,DEFAULT_DIALOG,0);
-		ePipeline& Letter1 = Msg1.GetLetter();
-		Letter1.PushInt(NOTIFY_SYS_STATE);
-		Letter1.PushInt(SNOTIFY_NERVE_THREAD_CLOSE);
-		ePipeline NotifyData1;
-		NotifyData1.PushInt(--n);
-		NotifyData1.PushInt(m_ID);
-		Letter1.PushPipe(NotifyData1);
-		m_Parent->PushCentralNerveMsg(Msg1,false,true);
-
-		m_Alive = FALSE;
-		return TRUE;
-	};
 
 	//CLockedSystemData
 	//////////////////////////////////////////////////////////////////////////
@@ -381,40 +441,57 @@ bool System::CNetListenWork::Do(Energy* E){
 			m_NerveIdleMaxCount   = 30;
 
 			m_NerveWorkingNum = 0;
-			m_bClosed = false;
+
 	};
 
 	System::CLockedSystemData::~CLockedSystemData(){
 		
+
+	}
+
+	void    System::CLockedSystemData::Clear(){
 		CLock lk(&m_Mutex);
 
-		map<int64,CSystemIOWork*>::iterator ita =  m_SystemIOWorkList.begin();
-		while (ita != m_SystemIOWorkList.end())
+		map<int64,CThreadWorker*>::iterator ita =  m_SystemIOWorkerList.begin();
+		while (ita != m_SystemIOWorkerList.end())
 		{
-			CSystemIOWork* SystemIOWork = ita->second;
-			assert(!SystemIOWork->IsAlive());
-			delete SystemIOWork;
+			CThreadWorker* Worker = ita->second;
+			ita->second = NULL;
+			assert(!Worker->IsAlive());
+			delete Worker;
 			ita++;
 		}
+		m_SystemIOWorkerList.clear();
 
-
-		map<int64,CNerveWork*>::iterator itd = m_NerveWorkList.begin();
-		while (itd != m_NerveWorkList.end())
+		map<int64,CThreadWorker*>::iterator itb = m_NerveWorkerList.begin();
+		while (itb != m_NerveWorkerList.end())
 		{
-			CNerveWork* NerveWork = itd->second;
+			CThreadWorker* NerveWork = itb->second;
+			itb->second = NULL;
 			assert(!NerveWork->IsAlive());
 			delete NerveWork;
-			itd++;
+			itb++;
 		}
+		m_NerveWorkerList.clear();
+
+		deque<CThreadWorker*>::iterator itc = m_ThreadWorkerPool.begin();
+		while(itc != m_ThreadWorkerPool.end())
+		{
+			CThreadWorker* Worker = *itc;
+			*itc = NULL;
+			assert(!Worker->IsAlive());
+			delete Worker;
+			itc++;
+		}
+		m_ThreadWorkerPool.clear();
 	}
 
 
-
-	void  System::CLockedSystemData::IncreNerveWorkCount(){
+	void  System::CLockedSystemData::IncreNerveWorkerCount(){
 		CLock lk(&m_Mutex);
 		++m_NerveWorkingNum ;
 	}
-	void  System::CLockedSystemData::DecreNerveWorkCount(){
+	void  System::CLockedSystemData::DecreNerveWorkerCount(){
 		CLock lk(&m_Mutex);
 		--m_NerveWorkingNum;
 	}
@@ -438,114 +515,172 @@ bool System::CNetListenWork::Do(Energy* E){
 		m_NerveIdleMaxCount = n;
 	}
 
-	int32   System::CLockedSystemData::GetBusyNerveWorkNum(){
+	int32   System::CLockedSystemData::GetBusyNerveWorkerNum(){
 		CLock lk(&m_Mutex);
 		return m_NerveWorkingNum;		
 	};
 
-	int32  System::CLockedSystemData::GetNerveWorkNum(){
+	int32  System::CLockedSystemData::GetNerveWorkerNum(){
 		CLock lk(&m_Mutex);
-		int32 n = m_NerveWorkList.size();
+		int32 n = m_NerveWorkerList.size();
 		return n;
 	}
-
-	int32 System::CLockedSystemData::GetIOWorkNum(){
+	int32   System::CLockedSystemData::GetIdleWorkerNum(){
 		CLock lk(&m_Mutex);
-		return m_SystemIOWorkList.size();
+		return m_NerveWorkerList.size() - m_NerveWorkingNum;
 	}
 
-	int32    System::CLockedSystemData::AddIOWork(CSystemIOWork* Work){
+	int32 System::CLockedSystemData::GetIOWorkerNum(){
 		CLock lk(&m_Mutex);
-		if (m_bClosed)
-		{
-			Work->Dead();
-			delete Work;
-			return 0;
-		}
-		assert(m_SystemIOWorkList.find(Work->m_ID) == m_SystemIOWorkList.end());
-		m_SystemIOWorkList[Work->m_ID] = Work;
-		return m_SystemIOWorkList.size();
+		return m_SystemIOWorkerList.size();
 	}
 
-	int32    System::CLockedSystemData::DeleteIOWork(int64 ID){
+	CThreadWorker* System::CLockedSystemData::CreateThreadWorker(int64 ID,System* Parent,int32 Type){
+		if(!Parent->IsAlive())return NULL;
+
 		CLock lk(&m_Mutex);
-		if (m_bClosed)
-		{
-			return 0;
+		CThreadWorker* Worker = NULL;
+		deque<CThreadWorker*>::iterator it = m_ThreadWorkerPool.begin();
+		if (it != m_ThreadWorkerPool.end())
+		{   
+			Worker = *it;
+			Worker->Dead();
+
+			Worker->m_ID = ID;
+			Worker->m_IdleCount =0;
+			Worker->m_Parent = Parent;
+			m_ThreadWorkerPool.pop_front();
+		}else{
+			Worker = new CSysThreadWorker(ID,Parent,Type);
 		}
-		map<int64,CSystemIOWork*>::iterator it = m_SystemIOWorkList.find(ID);
-		if (it != m_SystemIOWorkList.end())
-		{
-			CSystemIOWork* Work = it->second;
-			m_SystemIOWorkList.erase(it);
-			Work->Dead();
-			delete Work;
+
+		if(!Worker){
+			return NULL;
 		}
-		return m_SystemIOWorkList.size();
+
+		if (Type == SYSTEM_NEVER_WORK_TYPE)
+		{
+			m_NerveWorkerList[ID]= Worker;
+			return Worker;
+		}else if (Type == SYSTEM_IO_WORK_TYPE)
+		{
+			m_SystemIOWorkerList[ID] = Worker;
+			return Worker;
+		}
+		assert(0);
+		return NULL;
+	};
+	void   System::CLockedSystemData::DeleteThreadWorker(System* Parent,int64 ID,int32 Type){
+		
+
+		assert(Type == SYSTEM_NEVER_WORK_TYPE || Type == SYSTEM_IO_WORK_TYPE);
+
+		CLock lk(&m_Mutex);
+		CThreadWorker* Worker = NULL;
+		if (Type == SYSTEM_NEVER_WORK_TYPE)
+		{
+			map<int64,CThreadWorker*>::iterator it = m_NerveWorkerList.find(ID);
+			assert(it != m_NerveWorkerList.end());
+			if (it != m_NerveWorkerList.end())
+			{
+				Worker = it->second;
+				m_NerveWorkerList.erase(it);
+				m_ThreadWorkerPool.push_back(Worker);
+
+			}
+		}else if (Type == SYSTEM_IO_WORK_TYPE)
+		{
+			map<int64,CThreadWorker*>::iterator it = m_SystemIOWorkerList.find(ID);
+			assert(it != m_SystemIOWorkerList.end());
+			if (it != m_SystemIOWorkerList.end())
+			{
+				Worker = it->second;
+				m_SystemIOWorkerList.erase(it);
+				m_ThreadWorkerPool.push_back(Worker);
+
+			}
+		}
+		
+		//限制ThreadWorkerPool大小为20	
+		if(m_ThreadWorkerPool.size()>20)
+		{
+			deque<CThreadWorker*>::iterator it = m_ThreadWorkerPool.begin();
+			CThreadWorker* Worker = *it;
+			Worker->Dead();
+			it = m_ThreadWorkerPool.erase(it);
+			delete Worker;
+		}
 	}
 
-	int32    System::CLockedSystemData::AddNerveWork(CNerveWork* Work){
-		CLock lk(&m_Mutex);
-		if (m_bClosed)
-		{
-			Work->Dead();
-			delete Work;
-			return 0;
-		}
-		assert(m_NerveWorkList.find(Work->m_ID) == m_NerveWorkList.end());
-		m_NerveWorkList[Work->m_ID] = Work;
-		return m_NerveWorkList.size();
-	}
 
-	int32    System::CLockedSystemData::DeleteNerveWork(int64 ID){
-		CLock lk(&m_Mutex);
-		if(m_bClosed){
-			return 0;
-		}
-		map<int64,CNerveWork*>::iterator it = m_NerveWorkList.find(ID);
-		if (it != m_NerveWorkList.end())
+	void  System::CLockedSystemData::WaitAllWorkThreadClosed(System* Parent){
+		assert(!Parent->IsAlive());
+		if (Parent->IsAlive())
 		{
-			CNerveWork* Work = it->second;
-			m_NerveWorkList.erase(it);
-			Work->Dead();
-			delete Work;
+			return;
 		}
-		return m_NerveWorkList.size();
-	}
-	void  System::CLockedSystemData::CloseAllWorkThread(){
+		/*
+		//先打破Acceptor的阻塞
 		m_Mutex.Acquire();
-		m_bClosed = true;	
+		map<int32,CNetListenWorker*>::iterator it1 =  m_AcceptorList.begin();
+		while(it != m_AcceptorList.end()){
+			it->second->CloseSocket();
+			it++;
+		}
 		m_Mutex.Release();
+		*/
 
-		DelAllAcceptor();
+		int n =1;
+		while(n){
+			CLock lk(&m_Mutex);
+			n = m_AcceptorList.size();
+		}
 
-		map<int64,CSystemIOWork*>::iterator ita =  m_SystemIOWorkList.begin();
-		while(ita != m_SystemIOWorkList.end())
+		n =1;
+		while(n){
+			CLock lk(&m_Mutex);
+			n = m_SystemIOWorkerList.size();
+		}
+		
+		n =1;
+		while(n){
+			CLock lk(&m_Mutex);
+			n = m_NerveWorkerList.size();
+		}
+
+		//被删除的worker只是理论上被放入pool中，这里确保线程完全退出
+		deque<CThreadWorker*>::iterator it = m_ThreadWorkerPool.begin();
+		while(it != m_ThreadWorkerPool.end())
 		{
-			CSystemIOWork* Work = ita->second;
-			Work->Dead();
+			CThreadWorker* Worker = *it;
+			Worker->Dead();
+			it++;
+		}
+
+		deque<CNetListenWorker*>::iterator ita = m_AcceptorPool.begin();
+		while(ita != m_AcceptorPool.end())
+		{
+			CNetListenWorker* Worker = *ita;
+			Worker->Dead();
 			ita++;
 		}
 
-		map<int64,CNerveWork*>::iterator itb =  m_NerveWorkList.begin();
-		while(itb != m_NerveWorkList.end())
-		{
-			CNerveWork* Work = itb->second;
-			Work->Dead();
-			itb++;
-		}
-
 	}
-	bool  System::CLockedSystemData::RequestCreateNewNerveWork(uint32 MsgNum,int64 Interval,uint32& Reason) 
+
+	bool  System::CLockedSystemData::RequestCreateNewNerveWorker(uint32 MsgNum,int64 Interval,uint32& Reason) 
 	{
 		CLock lk(&m_Mutex);
 
-		if (m_NerveWorkList.size() == m_MaxNerveWorkerNum)
+		if (m_NerveWorkerList.size() == m_MaxNerveWorkerNum)
 		{
 			Reason =  REASON_LIMIT;
 			return FALSE;
-		}
-		else if (m_NerveWorkingNum == m_NerveWorkList.size()) //All be occupied
+		}else if (m_NerveWorkerList.size()==0)
+		{
+			Reason = REASON_ALWAYS;
+			return TRUE;
+		}	
+		else if (m_NerveWorkingNum == m_NerveWorkerList.size()) //All be occupied or both = 0
 		{			
 			Reason = REASON_MSG_TOO_MUCH;
 			return TRUE;
@@ -556,51 +691,81 @@ bool System::CNetListenWork::Do(Energy* E){
 		}else if(Interval> m_NerveMsgMaxInterval){ //when exceeded specified interval, there is no  message  be  popped to handled, create  new thread
 			Reason = REASON_TIME_OUT;
 			return TRUE;
-		}else {
+		}
+		else {
 			Reason = REASON_REFUSE;
 		}
 		return FALSE;
 	}
-	void System::CLockedSystemData::AddAcceptor(int32 Port,CNetListenWork* Acceptor){
+	System::CNetListenWorker* System::CLockedSystemData::CreateAcceptor(System* Parent,int32 Port){
 		CLock lk(&m_Mutex);
-
-		if(m_bClosed){
-			Acceptor->Dead();
-			delete Acceptor;
-			return;
-		}
-		map<int32,CNetListenWork*>::iterator it = m_AcceptorList.find(Port);
-		if (it != m_AcceptorList.end())
+		deque<CNetListenWorker*>::iterator it = m_AcceptorPool.begin();
+		if (it != m_AcceptorPool.end())
 		{
-			return;
+			CNetListenWorker* Acceptor = *it;
+			Acceptor->Dead(); 
+			Acceptor->m_Parent = Parent;
+			Acceptor->m_Port   = Port;
+			m_AcceptorList[Port] = Acceptor;
+			return Acceptor;
+		} 		
+		CNetListenWorker* Acceptor = new CNetListenWorker(Parent,Port);
+		if (!Acceptor)
+		{
+			return NULL;
 		}
 
 		m_AcceptorList[Port] = Acceptor;
+		return Acceptor;
 	};
 
-	void System::CLockedSystemData::DelAcceptor(int32 Port){
+	bool System::CLockedSystemData::HasAcceptor(int32 Port){
 		CLock lk(&m_Mutex);
-
-		if(m_bClosed){
-			return;
+		map<int32,CNetListenWorker*>::iterator it = m_AcceptorList.find(Port);
+		while (it != m_AcceptorList.end())
+		{
+			if (it->first == Port)
+			{
+				return false;
+			}
+			it++;
 		}
-		map<int32,CNetListenWork*>::iterator it = m_AcceptorList.find(Port);
-		if (it != m_AcceptorList.end())
+		return false;
+	}
+	void System::CLockedSystemData::DelAcceptor(int32 Port,bool bWaitDead){
+		CLock lk(&m_Mutex);
+		map<int32,CNetListenWorker*>::iterator it = m_AcceptorList.find(Port);
+		if (it == m_AcceptorList.end())
 		{
 			return;
 		} 
-		CNetListenWork* Acceptor = it->second;
-		Acceptor->Dead(); 
+		CNetListenWorker* Acceptor = it->second;
+		if(bWaitDead){
+			Acceptor->Dead();
+		}
+		
+		m_AcceptorPool.push_back(Acceptor);
 		m_AcceptorList.erase(it);
+		while (m_AcceptorPool.size()>10)
+		{
+			Acceptor = m_AcceptorPool.front();
+			Acceptor->Dead();
+			delete Acceptor;
+			m_AcceptorPool.pop_front();
+		}
 	};
 
 	void System::CLockedSystemData::DelAllAcceptor(){
 		CLock lk(&m_Mutex);
-		map<int32,CNetListenWork*>::iterator it = m_AcceptorList.begin();
-		if (it != m_AcceptorList.end())
+		map<int32,CNetListenWorker*>::iterator it = m_AcceptorList.begin();
+		while (it != m_AcceptorList.end())
 		{
-			CNetListenWork* Acceptor = it->second;
-			Acceptor->Dead(); 
+			CNetListenWorker* Acceptor = it->second;
+			Acceptor->Dead();
+			if (m_AcceptorPool.size()<10)
+			{
+				m_AcceptorPool.push_back(Acceptor);
+			}
 			it++;
 		} 
 		m_AcceptorList.clear();
@@ -631,55 +796,42 @@ bool System::CNetListenWork::Do(Energy* E){
 			return TRUE;
 		}
 
-		m_Alive= TRUE;
-
 		if(!Model::Activation()){
 			m_Alive = FALSE;
 			return FALSE;
 		}
-
-
-		//缺省生成一个IO线程
-		int64 ID = CreateTimeStamp();
-		CSystemIOWork* IOWork = new CSystemIOWork(ID,this);
-		if(!IOWork || !IOWork->Activation()){
-			return FALSE;
-		}
-		CLockedSystemData* SystemData = (CLockedSystemData*)GetSystemData();
-		SystemData->AddIOWork(IOWork);
-
+		
+		m_Alive= TRUE;
 		return TRUE;
 	}
 
 	void System::Dead()
 	{
 		m_Alive= FALSE;
-		m_SystemData.CloseAllWorkThread();
-		
+		m_SystemData.WaitAllWorkThreadClosed(this);
+		m_SystemData.DelAllAcceptor();
+		m_SystemData.Clear();
 		Model::Dead();
 	};
 
-	CSpaceMutex*          System::GetSpaceMutex(){
-		return &m_ClientSitMutex;
-	}
 
-	Model::CLockedLinkerList*    System::GetClientLinkerList(){
-		return &m_ClientList;
+	CClientLinkerList*    System::GetClientLinkerList(){
+		return &m_ClientLinkerList;
 	};
 	System::CLockedSystemData*    System::GetSystemData(){
 		return &m_SystemData;
 	};
-
+/*
 	void System::GetLinker(int64 ID,CLinker& Linker){
-		CLockedLinkerList*  ClientList = GetClientLinkerList();
+		CClientLinkerList*  ClientList = GetClientLinkerList();
 		ClientList->GetLinker(ID,Linker);
 		if (!Linker.IsValid())
 		{
-			CLockedLinkerList*  SuperiorList = GetSuperiorLinkerList();
+			CSuperiorLinkerList*  SuperiorList = GetSuperiorLinkerList();
 			SuperiorList->GetLinker(ID,Linker);
 		}
 	}
-
+*/
 	int32	System::GetNerveMsgNum(){
 		return m_Nerve.DataNum();
 
@@ -714,7 +866,7 @@ bool System::CNetListenWork::Do(Energy* E){
 		assert(NewMsgPushTime!=0);
 		assert(NewMsgPushTime!=LastMsgPopTime);
 
-		BOOL ret = NerveWorkStrategy(NewMsgPushTime,LastMsgPopTime);
+		BOOL ret = CreateNerveWorkerStrategy(NewMsgPushTime,LastMsgPopTime);
 
 		if (m_LogFlag & LOG_MSG_NERVE_PUSH)
 		{
@@ -728,83 +880,50 @@ bool System::CNetListenWork::Do(Energy* E){
 	}
 
 
-	BOOL  System::NerveWorkStrategy(int64 NewMsgPushTime,int64 LastMsgPopTime){
+	BOOL  System::CreateNerveWorkerStrategy(int64 NewMsgPushTime,int64 LastMsgPopTime){
 
 		int32 n = GetNerveMsgNum();
 
 		ePipeline Data;
 		Data.PushInt(n);
-		NotifySysState(SNOTIFY_NERVE_MSG_NUM,&Data);
-
-		if(LastMsgPopTime==0){	//First ID is 0		
-			CNerveWork* NerveWork = CreateNerveWorker(0,this,REASEON_ALWAYS);
-			if (!NerveWork){
-				assert(0);
-				OutputLog(LOG_TIP,_T("Create first Nerver thread fail,Please reboot it"));
-				return FALSE;
-			}
-			
-			if(NerveWork->Activation())
-			{
-				int n = m_SystemData.AddNerveWork(NerveWork);
-				ePipeline Data;
-				Data.PushInt(n);
-				Data.PushInt(NerveWork->m_ID);
-				NotifySysState(SNOTIFY_NERVE_THREAD_JOIN,&Data);
-				return TRUE;
-			}else{
-				if (NerveWork)
-				{
-					delete NerveWork;
-				}
-				assert(0);
-				OutputLog(LOG_TIP,_T("Create first Nerver thread fail,Please reboot it"));
-
-				NotifySysState(SNOTIFY_NERVE_THREAD_FAIL,NULL);
-			}
-			return FALSE;
-		}
+		NotifySysState(NOTIFY_SYSTEM_SCENE,NTID_NERVE_MSG_NUM,&Data);
 
 		int64 t = NewMsgPushTime-LastMsgPopTime;
 
 		//If more than 10 messages in the central nerve or there is message waiting for being handled more than 2 seconds, create a new thread
 		uint32 Reason ;
-		bool ret = m_SystemData.RequestCreateNewNerveWork(n,t,Reason);
+		bool ret = m_SystemData.RequestCreateNewNerveWorker(n,t,Reason);
 		if (!ret)
 		{
 			if (Reason == REASON_LIMIT)
 			{
 				
-				NotifySysState(SNOTIFY_NERVE_THREAD_LIMIT,NULL);
+				NotifySysState(NOTIFY_SYSTEM_SCENE,NTID_NERVE_THREAD_LIMIT,NULL);
 			}
 			return FALSE;
 		}
 
 		
-		CNerveWork* NerveWork = CreateNerveWorker(NewMsgPushTime,this,Reason);
+		CThreadWorker* NerveWork = m_SystemData.CreateThreadWorker(NewMsgPushTime,this,SYSTEM_NEVER_WORK_TYPE);
 		if (!NerveWork){
 			return FALSE;
 		}
 			
 		if(NerveWork->Activation())
 		{
-			int n =m_SystemData.AddNerveWork(NerveWork);
+			int n = m_SystemData.GetNerveWorkerNum();
 			ePipeline Data;
 			Data.PushInt(n);
 			Data.PushInt(NerveWork->m_ID);
-			NotifySysState(SNOTIFY_NERVE_THREAD_JOIN,&Data);
+			NotifySysState(NOTIFY_SYSTEM_SCENE,NTID_NERVE_THREAD_JOIN,&Data);
 			return TRUE;
 		}else{
-			if(NerveWork){
-				delete NerveWork;
-			}
-			assert(0);
-			OutputLog(LOG_TIP,_T("Create Nerver thread fail,Please reboot it"));
-			NotifySysState(SNOTIFY_NERVE_THREAD_FAIL,NULL);
+			m_SystemData.DeleteThreadWorker(this,NerveWork->m_ID,SYSTEM_NEVER_WORK_TYPE);
+			NotifySysState(NOTIFY_SYSTEM_SCENE,NTID_NERVE_THREAD_FAIL,NULL);
 		}
 		return FALSE;
 	}
-
+	/*
 	void System::BroadcastMsg(set<int64>& SourceList,int64 BCS_ID,ePipeline& MsgData){
 		MsgData.SetID(BCS_ID);
 
@@ -815,7 +934,7 @@ bool System::CNetListenWork::Do(Energy* E){
 
 			int64 SourceID = *it;
 			CLinker Linker;
-			GetLinker(SourceID,Linker);
+			m_ClientLinkerList.GetLinker(SourceID,Linker);
 			if (Linker.IsValid())
 			{
 				Linker().PushMsgToSend(Msg);
@@ -824,86 +943,101 @@ bool System::CNetListenWork::Do(Energy* E){
 		}
 
 	};
-
-	System::CNerveWork* System::CreateNerveWorker(int64 ID,System* Parent,uint32 Reason){
-		CNerveWork* NerveWork = new CNerveWork(ID,this);
-		return NerveWork;	
-	}
-
-	CUserLinkerPipe* System::CreateClientLinkerPipe(){
-		int64 ID = CreateTimeStamp();
-		CUserLinkerPipe* Linker = new CUserLinkerPipe(&m_ClientSitMutex,this,ID);
-		return Linker;
-	}
-
-	void  System::NotifySysState(int64 NotifyID,ePipeline* Data /*= NULL*/){
-		switch(NotifyID){
-
-		case MNOTIFY_IO_WORK_THREAD_CLOSE:
+	*/
+	void System::NotifySysState(int64 NotifyType,int64 NotifyID,ePipeline* Data){
+		switch (NotifyType)
 		{
-			int64 ID = Data->PopInt();
-			CLockedModelData* ModelData = GetModelData();
-			ModelData->DeleteIOWork(ID);
-		}
-		break;
-		case SNOTIFY_IO_WORK_THREAD_CLOSE:
-		{
-			int64 ID = Data->PopInt();
-			CLockedSystemData* SysDate = GetSystemData();
-			SysDate->DeleteIOWork(ID);
-		}
-		case MNOTIFY_EXCEPTION_OCCURRED:
-		{
-			tstring ErrorInfo = Data->PopString();
-			OutputLog(LOG_TIP,ErrorInfo.c_str());
-		}
-		break;
-		}
-	}
-
-	bool System::Connect(int64 ID,AnsiString Address,int32 Port,int32 TimeOut,tstring& error,bool bBlock){
-		assert(TimeOut>0&& TimeOut<60);
-
-		CUserConnectLinkerPipe* ConLinkerPipe = new CUserConnectLinkerPipe(this,ID,Address,Port,TimeOut);
-
-		if(!ConLinkerPipe){
-			error = _T("Create connect pipe fail");
-			return FALSE; 
-		}
-		if(!ConLinkerPipe->Init(error)){
-			delete ConLinkerPipe;
-			return FALSE;	
-		};
-
-		if (bBlock)
-		{
-			if(!ConLinkerPipe->BlockConnect(error)){
-				delete ConLinkerPipe;
-				return FALSE;
-			};
-		}
-
-		//如果没有处理线程则生成一个
-		CLockedModelData* ModelData = GetModelData();
-		if (ModelData->GetIOWorkNum()<m_nCPU*2)
-		{
-			int64 ID = CreateTimeStamp();
-			CModelIOWork* IOWork = new CModelIOWork(ID,this);
-			if (!IOWork || !IOWork->Activation())
+		case NOTIFY_SYSTEM_SCENE:
 			{
-				error = _T("Create connect IOWork fail");
-				return FALSE;
-			}
-			ModelData->AddIOWork(IOWork);
-		}
-		return TRUE;
-	}
+				switch(NotifyID){
+				case NTID_NERVE_MSG_NUM:
+					{
+					}
+					break;
+				case NTID_NERVE_THREAD_JOIN:
+					{
+						int64 n = Data->PopInt();
+					}
+					break;
+				case NTID_NERVE_THREAD_CLOSED:
+					{
+						int64 nThreadNum = Data->PopInt();
+						int64 nClosedThreadID = Data->PopInt();
 
+						CLockedSystemData*  LockedData = GetSystemData();
+						LockedData->DeleteThreadWorker(this,nClosedThreadID,SYSTEM_NEVER_WORK_TYPE);
+
+					}
+					break;
+				case NTID_NERVE_THREAD_LIMIT:
+					{
+
+
+					}
+					break;
+				case NTID_NERVE_THREAD_FAIL:
+					{
+
+					}
+					break;
+				case NTID_IO_WORKER_CLOSED:
+					{
+						int64 ID = Data->PopInt();
+						CLockedSystemData* SystemData = GetSystemData();
+						SystemData->DeleteThreadWorker(this,ID,SYSTEM_IO_WORK_TYPE);
+					}
+					break;
+				case NOTIFY_EXCEPTION_OCCURRED:
+					{
+						tstring ErrorInfo = Data->PopString();
+						tstring info = Format1024(_T("Exception occurred: %s "),ErrorInfo.c_str());
+						OutputLog(LOG_EXCEPTION,info.c_str());
+					}
+					break;
+				case NTID_LISTEN_FAIL:
+					{
+						int64 Port = Data->PopInt();
+						tstring s=Data->PopString();
+						tstring info = Format1024(_T("Listen fail: %s  port=%d"),s.c_str(),(int32)Port);
+						OutputLog(LOG_ERROR,info.c_str());
+					}
+				default:
+					{
+
+					}
+				}
+			}
+			break;
+		case NOTIFY_MODEL_SCENE:
+			Model::NotifySysState(NotifyType,NotifyID,Data);
+			break;
+		}
+	}
+	void System::CreateClientLinkerWorkerStrategy(int32 Port){
+		int32 WorkerNum = m_SystemData.GetIOWorkerNum();
+
+		if (WorkerNum==0 || (m_ClientLinkerList.GetLinkerNum()>10 && WorkerNum< GetCpuNum()))
+		{	
+			int64 ID = CreateTimeStamp();
+			CThreadWorker* IOWork = m_SystemData.CreateThreadWorker(ID,this,SYSTEM_IO_WORK_TYPE);
+			if(!IOWork || !IOWork->Activation()){
+				if(IOWork)m_SystemData.DeleteThreadWorker(this,ID,SYSTEM_IO_WORK_TYPE);
+
+				tstring s= Format1024(_T("Create new IO worker fail, listen port: %d "),Port);
+				OutputLog(LOG_WARNING,s.c_str());
+			}
+		}
+	};
 
 	bool System::OpenPort(int32 Port,tstring& error,bool bIP6){
 		int64 ID = CreateTimeStamp();
 
-		CNetListenWork* Acceptor = new CNetListenWork(this,Port);
+		if(m_SystemData.HasAcceptor(Port)){
+			error = Format1024(_T("the port %d has been opened "),Port);
+			return false;	
+		};
+
+		CNetListenWorker* Acceptor = m_SystemData.CreateAcceptor(this,Port);
 
 		if(!Acceptor){
 			error = _T("Create acceptor fail");
@@ -912,19 +1046,15 @@ bool System::CNetListenWork::Do(Energy* E){
 
 		if(!Acceptor->Activation()){
 			error = _T("Activate acceptor fail");
-			delete Acceptor;
+			m_SystemData.DelAcceptor(Port,false);
 			return FALSE;	
 		};
-
-		CLockedSystemData* SystemData = (CLockedSystemData*)GetSystemData();
-		SystemData->AddAcceptor(Port,Acceptor);	
 
 		return TRUE;
 	};
 
 	void System::ClosePort(int32 Port){
-		CLockedSystemData* SystemData = (CLockedSystemData*)GetSystemData();
-		SystemData->DelAcceptor(Port);
+		m_SystemData.DelAcceptor(Port,true);
 	}
 
 }; //end namespace ABSTRACT

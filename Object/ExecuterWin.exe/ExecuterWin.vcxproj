@@ -48,7 +48,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <TargetName>exe_vc10</TargetName>
-    <LibraryPath>D:\work\GMIS\GMIS_BASE\TheorySapce\bin\VC10\Release;D:\work\GMIS\GMIS_BASE\BaseSpace\bin\VC10\Release;D:\work\GMIS\GMIS_BASE\UserSpace_boost\bin\VC10\Release;D:\work\GMIS\GMIS_SPACE\VirtualSpace\bin\VC10\Release;D:\work\GMIS\GMIS_SPACE\VisualSpace\bin\VC10\Release;D:\work\GMIS\GMIS_SHARE\win3party\bin\VC10\Release;$(LibraryPath)</LibraryPath>
+    <LibraryPath>D:\poco-1.6.0\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\work\GMIS\World\VirtualSpace.lib\src;D:\poco-1.6.0\Net\include;D:\poco-1.6.0\Foundation\include;D:\work\GMIS\BaseLib\VisualSpace.lib\src;D:\work\GMIS\BaseLib\PhysicSpace.lib\src;D:\work\GMIS\BaseLib\AbstractSpace.lib\src;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
@@ -67,7 +68,7 @@
       <Optimization>Disabled</Optimization>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;POCO_STATIC;USING_POCO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
     </ClCompile>
@@ -88,7 +89,7 @@
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>odbc32.lib;odbccp32.lib;opengl32.lib;glu32.lib;theoryspace.lib;virtualspace.lib;visualspace.lib;win3party.lib;userspace_boost.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>odbc32.lib;odbccp32.lib;AbstractSpace.lib;PocoFoundationmd.lib;PocoNetmd.lib;PhysicSpace.lib;visualspace.lib;virtualspace.lib;opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <DataExecutionPrevention>false</DataExecutionPrevention>
     </Link>
   </ItemDefinitionGroup>
@@ -135,7 +136,8 @@
     <ClCompile Include="src\CLog.cpp" />
     <ClCompile Include="src\EditLog.cpp" />
     <ClCompile Include="src\Executer.cpp" />
-    <ClCompile Include="src\ExecuterFrame.cpp" />
+    <ClCompile Include="src\Main.cpp" />
+    <ClCompile Include="src\MainFrame.cpp" />
     <ClCompile Include="src\MouseWheelMgr.cpp" />
     <ClCompile Include="src\SubclassWnd.cpp" />
   </ItemGroup>
@@ -150,7 +152,8 @@
     <ClInclude Include="src\DEBUG.H" />
     <ClInclude Include="src\EditLog.h" />
     <ClInclude Include="src\editlog_stream.h" />
-    <ClInclude Include="src\ExecuterFrame.h" />
+    <ClInclude Include="src\Executer.h" />
+    <ClInclude Include="src\MainFrame.h" />
     <ClInclude Include="src\HookMgr.h" />
     <ClInclude Include="src\MouseWheelMgr.h" />
     <ClInclude Include="src\RESOURCE.H" />

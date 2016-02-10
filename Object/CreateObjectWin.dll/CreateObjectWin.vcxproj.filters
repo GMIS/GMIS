@@ -18,7 +18,13 @@
     <ClCompile Include="src\CreateObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\MyObject.cpp">
+    <ClCompile Include="src\WinAPIObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\uArmObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ThinDataTransProtocal.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -26,7 +32,16 @@
     <ClInclude Include="src\CreateObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\MyObject.h">
+    <ClInclude Include="src\WinAPIObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\uArmObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ObjectList.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ThinDataTransProtocal.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

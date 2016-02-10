@@ -15,7 +15,7 @@ namespace ABSTRACT{
 	{
 	};
 
-	ePipeline::ePipeline(uint64 ID)
+	ePipeline::ePipeline(int64 ID)
 	: m_TypeAB(0),
 	  m_EnergyList(),
 	  m_Alive(1),
@@ -24,7 +24,7 @@ namespace ABSTRACT{
 	{
 	};
 
-	ePipeline::ePipeline(const wchar_t* Text,uint64 ID /*= 0*/)
+	ePipeline::ePipeline(const wchar_t* Text,int64 ID )
 	: m_TypeAB(0),
 	  m_EnergyList(),
 	  m_Alive(1),

@@ -31,7 +31,7 @@ public:
 	CLockPipe(CABMutex* m,const wchar_t* Name=_T("Unkown"),uint64 ID=0)
 		:ePipeline(Name,ID),
 		 m_Mutex(m),
-		 m_UrgenceMsg(_T("UrgenceMsg")),
+		 m_UrgenceMsg(_T("UrgenceMsg"),0),
 		 m_LastPopTimeStamp(0)
 	{};
 	virtual ~CLockPipe(){
@@ -50,6 +50,11 @@ public:
 		CLock lk(m_Mutex,this);
         int32 n = m_UrgenceMsg.Size() + Size();
 		return n;
+	}
+
+	void ClearData(){
+		CLock lk(m_Mutex,this);
+		Clear();
 	}
 	void ToString(AnsiString& s){
 		CLock lk(m_Mutex,this);

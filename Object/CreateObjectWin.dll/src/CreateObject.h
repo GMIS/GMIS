@@ -9,21 +9,28 @@
 #include <stdio.h>
 #include <string>
 
-#include "MyObject.h"
+#include "ObjectList.h"
+
+#include "WinAPIObject.h"
+#include "uArmObject.h"
 
 #define _LinkDLL __declspec(dllexport)
 
 /*
 使用方法：
-  - 首先你在MyObject.h中用一个类来封装自己的任务。
-  - 修改下面的导出函数GetObject，new一个自己设计的类。类的名字并不重要，
-    如果你愿意，你甚至直接使用MyObject作为类名，那么这步都省了。
+  - 首先用一个类来封装自己想要的功能。
+  - 修改导出函数CreateObject，new一个自己设计的类。
+  - 修改导出函数GetObjectDoc，输出你设计的功能的使用说明书
 
 */
 //定义导出函数指针
 
-extern "C"  _LinkDLL Mass* _cdecl CreateObject(tstring Name,int64 ID=0){
-	return new MyObject(Name,ID);
+extern "C"  _LinkDLL Mass* _cdecl CreateObject(tstring Name,int64 ID){
+#if defined _COMPILE_WIMAPI_OBJECT
+	return new CWinAPIObject(Name,ID);
+#elif defined _COMPILE_UARM_OBJECT
+	return new CUArmObject(Name,ID);
+#endif
 }
   
 extern "C"  _LinkDLL void _cdecl  DestroyObject(Mass* p){
@@ -62,9 +69,14 @@ extern "C"  _LinkDLL DLL_TYPE _cdecl GetDllType(){
 
 #endif
 } 
-//这个函数给出一个物体最简单的使用说明,请自行替换
+
 extern "C"  _LinkDLL const TCHAR*   _cdecl GetObjectDoc(){
-	static const TCHAR* Text = _T("This is  MyObject's document");
-	return Text;
+
+#if defined _COMPILE_WIMAPI_OBJECT
+	return CWinAPIObject::UserManual;
+#elif defined _COMPILE_UARM_OBJECT
+	return  CUArmObject::UserManual;
+#endif
+
 }
 #endif // _CREATE_DLL_H

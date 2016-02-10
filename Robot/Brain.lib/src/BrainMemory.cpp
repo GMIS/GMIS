@@ -38,21 +38,7 @@ CppSQLite3DB			  CBrainMemory::BrainDB;
 CBrainMemory::CBrainMemory()
 {
 	// TODO: add one-time construction code here
-	Open();
-
-	assert(BrainDB.IsOpen());
-
-	//首先生成ROOT_SPACE，似乎没有必要，当生成第一个空间时，会自动生成。  
-	int64 RoomID = ROOT_SPACE;   
-	if(!RBrainHasTable(RoomID))CreateRBrainTable(RoomID);
-	RoomID = ROOM_SYSTEM;
-	if(!HasTable(RoomID)){
-		CppSQLite3Buffer SQL;
-		char TableName[30];
-        int64toa(RoomID,TableName);
-		SQL.format("CREATE TABLE \"%s\" ( a INTEGER NOT NULL ,b TEXT NOT NULL);",TableName);
-		BrainDB.execDML(SQL);
-	}
+	//Open();
 }
 
 CBrainMemory::~CBrainMemory()
@@ -83,6 +69,17 @@ void CBrainMemory::Open(const char* DB /*= NULL*/){
 		throw tstring(_T("BrainDB not open"));
 	}
 
+	//首先生成ROOT_SPACE，似乎没有必要，当生成第一个空间时，会自动生成。  
+	int64 RoomID = ROOT_SPACE;   
+	if(!RBrainHasTable(RoomID))CreateRBrainTable(RoomID);
+	RoomID = ROOM_SYSTEM;
+	if(!HasTable(RoomID)){
+		CppSQLite3Buffer SQL;
+		char TableName[30];
+		int64toa(RoomID,TableName);
+		SQL.format("CREATE TABLE \"%s\" ( a INTEGER NOT NULL ,b TEXT NOT NULL);",TableName);
+		BrainDB.execDML(SQL);
+	}
 };
 void CBrainMemory::Close(){
     if (BrainDB.IsOpen())
@@ -96,9 +93,11 @@ void   CBrainMemory::SetSystemItem(int64 Item,AnsiString Info){
 	CppSQLite3Buffer SQL;
 	CppSQLite3Query  Result;
 	char a[30],b[30];
-     int64toa(ROOM_SYSTEM,a);
-	 int64toa(Item,b);
+    int64toa(ROOM_SYSTEM,a);
+	int64toa(Item,b);
 
+	assert(BrainDB.tableExists(a));
+	
     SQL.format("select b from \"%s\" where a = \"%s\";",a,b);				
 	Result = BrainDB.execQuery(SQL);
 	bool Find = !Result.eof();
@@ -130,13 +129,21 @@ AnsiString CBrainMemory::GetSystemItem(int64 Item){
 	assert(Item > 0 );
     AnsiString s;
 	int64toa(ROOM_SYSTEM,Root);
+	
+	assert(BrainDB.tableExists(Root));
+
 	int64toa(Item,Name);
 	SQL.format("select b from \"%s\" where a = \"%s\";",Root,Name);
-				
-	Result = BrainDB.execQuery(SQL);
-    
-
-	if(!Result.eof()) s = Result.getStringField(0);
+	try
+	{
+		Result = BrainDB.execQuery(SQL);
+		if(!Result.eof()) s = Result.getStringField(0);
+	
+	}
+	catch (...)
+	{
+		::MessageBox(NULL,_T("Brain.db may be damaged!"),_T("Warnning"),MB_OK);
+	}
 
 	return s;
 };

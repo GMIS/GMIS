@@ -13,7 +13,6 @@
 #include "PhysicSpace.h"
 #include <set>
 #include <deque>
-#include "Brain.h"
 #include "LogicTask.h"
 #include "BrainMemory.h"
 #include "InstinctDefine.h"
@@ -32,8 +31,6 @@ enum NumType{
 };
 
 NumType IsNum(tstring& Text);
-
-
 
 enum FindTypeExpected {FIND_ALL,FIND_OBJECT,FIND_PEOPLE,FIND_TEXT,FIND_LOGIC, FIND_COMMAND}; 
 
@@ -131,7 +128,7 @@ public:
 	int64                 m_LastMsgTimeStamp; //确保接收到的字符在多线程环境下是按用户输入的顺序理解
 	map<int64,ePipeline>  m_TextMsgQueue;  //用户输入的文字信息在处理之前暂存为有序队列
 
-	int32  m_LogicPos;
+	int32                 m_LogicPos;
 
 
 	void ClearAnalyse(); 

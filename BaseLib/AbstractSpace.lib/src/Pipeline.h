@@ -113,14 +113,14 @@ protected:
 	bool            m_Alive;      //FALSE for breaking this pipe, generally always TRUE, , only for internal use
 
 public:
-    uint64          m_ID;       
+    int64           m_ID;       
 	tstring         m_Label;      //Users filled it for their needs,default usually is ePipeline name.
      
 
 public:
 	ePipeline();
-	ePipeline(uint64 ID);
-	ePipeline(const wchar_t* Text,uint64 ID = 0);
+	ePipeline(int64 ID);
+	ePipeline(const wchar_t* Text,int64 ID );
 	virtual ~ePipeline();
 		
 	ePipeline(const ePipeline& C) { Clone(C);};
@@ -158,8 +158,8 @@ public:
 	bool IsAlive(){ return m_Alive;};
     void Reuse(){ m_Alive = true;};
 
-	void*  Value()const { return (void *)this;};
-    Energy* Clone(){ return new ePipeline(*this);};   
+	virtual void*  Value()const { return (void *)this;};
+    virtual Energy* Clone(){ return new ePipeline(*this);};   
     
 
 	/*
@@ -317,13 +317,9 @@ public:
         m_EnergyList.push_back(Data);   
 	}
 
-	void PushPipe(ePipeline& Data){    
-		ePipeline* Pipe = new ePipeline;
-		*Pipe<<Data;
-		Pipe->m_ID = Data.m_ID;
-		Pipe->m_Label = Data.m_Label;
-		Pipe->m_Alive = Data.m_Alive;
-		Pipe->m_TypeAB = Data.m_TypeAB;
+	void PushPipe(const ePipeline& Data){    
+	    ePipeline* Pipe = new ePipeline(Data);
+		assert(Pipe);
 		m_EnergyList.push_back(Pipe);   
 	};
 		

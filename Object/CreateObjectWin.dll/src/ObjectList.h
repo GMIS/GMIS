@@ -1,0 +1,8 @@
+#ifndef _OBJECT_LIST_H
+#define _OBJECT_LIST_H
+
+
+//#define _COMPILE_WIMAPI_OBJECT
+#define _COMPILE_UARM_OBJECT
+
+#endif  //_OBJECT_LIST_H

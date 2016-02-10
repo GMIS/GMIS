@@ -15,24 +15,51 @@
 #include "SpaceMutex.h"
 
 
-#define SNOTIFY_NERVE_MSG_NUM               20000
-#define SNOTIFY_NERVE_THREAD_JOIN			20001
-#define SNOTIFY_NERVE_THREAD_CLOSE          20002
-#define SNOTIFY_NERVE_THREAD_LIMIT          20003
-#define SNOTIFY_NERVE_THREAD_FAIL           20004
-#define SNOTIFY_LISTEN_FAIL                 20005
-#define SNOTIFY_IO_WORK_THREAD_CLOSE        20006
-
 
 namespace PHYSIC{
+
+	
+enum { 
+	SYSTEM_IO_WORK_TYPE = 100, 
+	SYSTEM_NEVER_WORK_TYPE,
+};
+
+class CSysThreadWorker : public CThreadWorker{
+
+protected:
+	void SystemIOWorkProc();
+	void NerveWorkProc();
+public:
+	CSysThreadWorker(int64 ID,Model* Parent,int32 Type);
+	virtual ~CSysThreadWorker();
+	virtual bool Do(Energy* E);
+
+};
+
+class CClientLinkerList:public CSuperiorLinkerList
+{
+protected:
+	deque<CLinkerPipe*> m_LinkerPool;
+	CSpaceMutex         m_ClientSitMutex;
+	int32               m_PoolMaxRestSize; //default = 20;
+public:
+	CClientLinkerList();
+	~CClientLinkerList();	
+
+	virtual void   CreateLinker(CLinker& Linker,Model* Parent,int64 ID,ePipeline& Param);
+	virtual bool   DeleteLinker(int64 SourceID);  
+	virtual void   PopLinker(CLinker& Linker); 
+	virtual void   ReturnLinker(CLinker& Linker);
+};
+
 
 class  System : public Model  
 {
 public:
 
-	class CNetListenWork: public Object{
+	class CNetListenWorker: public Object{
 
-	protected:
+	public:
 		System*       m_Parent;
 		int32		  m_Port;
 #if defined(USING_POCO)
@@ -40,58 +67,41 @@ public:
 
 #elif defined(USING_WIN32)
 		SOCKET        m_Socket;
-
 #endif
 
 	public:
-		CNetListenWork(System* Parent, int32 Port);
-		~CNetListenWork();
+		CNetListenWorker(System* Parent, int32 Port);
+		~CNetListenWorker();
 		virtual bool Activation();
 		virtual void Dead();
 		virtual bool Do(Energy* E=NULL);
 	};
 
 
-	class CSystemIOWork : public Object{
-	public:
-		System*      m_Parent;
-	public:
-		CSystemIOWork(int64 ID,System* Parent);
-		virtual ~CSystemIOWork();
-		virtual bool Do(Energy* E);
-	};
-
-	class CNerveWork : public Object{
-	protected:			
-		System*	     m_Parent;
-		int32        m_IdleCount;
-	public:
-		CNerveWork(int64 ID,System* Parent);
-		virtual ~CNerveWork();
-		
-		virtual bool Do(Energy* E);
-	};
-
 	class CLockedSystemData{
 	protected:
  		CUserMutex				   m_Mutex;
 		uint32                     m_MaxNerveWorkerNum;      //Allowed maximum number of central nervous system processing threads，default=20
 		uint32                     m_NerveMsgMaxNumInPipe;   //If more than this amount of messages were not handled,considering to generate a new processing thread,default = 10
-		int64                      m_NerveMsgMaxInterval;    //if the time interval  of the last popped message was greater than this number,considering to generate a new processing thread,default=10*1000*1000(the unit is hundred of nanoseconds, or 1 second)
+		int64                      m_NerveMsgMaxInterval;    //if the interval  of the last popped message was greater than this number,considering to generate a new processing thread,default=10*1000*1000( 1 second)
 		int32                      m_NerveIdleMaxCount;	     //If the count of idle threads exceeded this number, the extra thread will be exit，default=30
 
-		uint32                     m_NerveWorkingNum;        //Number of threads used by task logic
-		map<int64,CSystemIOWork*>  m_SystemIOWorkList;  
-		map<int64,CNerveWork*>     m_NerveWorkList;
-		map<int32,CNetListenWork*> m_AcceptorList;
+		uint32                     m_NerveWorkingNum;        
+		
+		map<int32,CNetListenWorker*> m_AcceptorList;
+		deque<CNetListenWorker*>     m_AcceptorPool;
 
-		bool                       m_bClosed;	
+		map<int64,CThreadWorker*>  m_SystemIOWorkerList;  
+		map<int64,CThreadWorker*>  m_NerveWorkerList;
+		deque<CThreadWorker*>      m_ThreadWorkerPool;
+
 	public:
 		CLockedSystemData();
 		virtual ~CLockedSystemData();
+		void    Clear();
 
-		void    IncreNerveWorkCount();
-        void    DecreNerveWorkCount();
+		void    IncreNerveWorkerCount();
+        void    DecreNerveWorkerCount();
 
 		int64   GetNerveMsgInterval();
 		void    SetNerveMsgInterval(int32 n);
@@ -99,54 +109,42 @@ public:
 		int32	GetNerveMaxIdleCount();
 		void	SetNerveMaxIdleCount(int32 n);
 		
-		int32   GetNerveWorkNum();
-		int32   GetBusyNerveWorkNum();
-        
-		int32   GetIOWorkNum();
-		int32   AddIOWork(CSystemIOWork* Work);
-		int32   DeleteIOWork(int64 ID);
-		
-		int32   AddNerveWork(CNerveWork* Work);
-        int32   DeleteNerveWork(int64 ID);
-		
+		int32   GetIOWorkerNum();
 
-		bool    RequestCreateNewNerveWork(uint32 MsgNum,int64 Interval,uint32& Reason); 
+		CThreadWorker* CreateThreadWorker(int64 ID,System* Parent,int32 Type);
+		void   DeleteThreadWorker(System* Parent,int64 ID,int32 Type);
 
-		CNetListenWork* FindAcceptor(int32 Port);
-		void  AddAcceptor(int32 Port,CNetListenWork* Acceptor);
-		void  DelAcceptor(int32 Port);
+		int32   GetNerveWorkerNum();
+		int32   GetBusyNerveWorkerNum();
+        int32   GetIdleWorkerNum(); //GetNerveWorkerNum()-GetBusyNerveWorkerNum();
+	
+		bool    RequestCreateNewNerveWorker(uint32 MsgNum,int64 Interval,uint32& Reason); 
+
+		CNetListenWorker* CreateAcceptor(System* Parent,int32 Port);
+		bool  HasAcceptor(int32 Port);
+		void  DelAcceptor(int32 Port,bool bWaitDead);
 		void  DelAllAcceptor();
 
-		void    CloseAllWorkThread(); //include CSystemIOWork CNerveWork CNetListenWork
+		void  WaitAllWorkThreadClosed(System* Parent); //include CSystemIOWork CNerveWork CNetListenWork
+
 	};
 
-    friend class CSystemIOWork;
-	friend class CNerveWork;
-private:
+protected:
 	//Some messages if the central nerve system does not handle , just leave it to nerve processing
 	CUserMutex                      m_NerveMutex;
 	CLockPipe                       m_Nerve;
 
-	CLockedLinkerList               m_ClientList;
+	CClientLinkerList               m_ClientLinkerList;
 	CLockedSystemData               m_SystemData;
 
-protected:	
 
-	CSpaceMutex 					m_ClientSitMutex;  //Child CLinkerPipe common lock
 
-    virtual void		NerveProc(CMsg& Msg){;//General nerve message processing function that need users to implement
+	virtual BOOL CreateNerveWorkerStrategy(int64 NewMsgPushTime,int64 LastMsgPopTime);
 	
-	};
+	virtual void CreateClientLinkerWorkerStrategy(int32 Port);
 
-	virtual BOOL		NerveWorkStrategy(int64 NewMsgPushTime,int64 LastMsgPopTime);
-	virtual CNerveWork* CreateNerveWorker(int64 ID,System* Parent,uint32 Reason);
+	//virtual void BroadcastMsg(set<int64>& SourceList,int64 BCS_ID,ePipeline& MsgData);
 
-	//used for Accept()
-	CUserLinkerPipe* CreateClientLinkerPipe();
-	
-	virtual void BroadcastMsg(set<int64>& SourceList,int64 BCS_ID,ePipeline& MsgData);
-	
-	virtual void NotifySysState(int64 NotifyID,ePipeline* Data = NULL);
 
 public:
 	System(CUserTimer* Timer,CUserSpacePool* Pool);
@@ -156,22 +154,22 @@ public:
     virtual bool Activation();
 	virtual void Dead();
 
-	CSpaceMutex*          GetSpaceMutex();
-	CLockedLinkerList*    GetClientLinkerList();
+	//General nerve message processing function that need users to implement
+	virtual void		NerveMsgProc(CMsg& Msg)=0;
+
+	CClientLinkerList*    GetClientLinkerList();
 	CLockedSystemData*    GetSystemData();
 
-	void GetLinker(int64 ID,CLinker& Linker );
+	virtual void       NotifySysState(int64 NotifyType,int64 NotifyID,ePipeline* Data);
 
     void	     PopNerveMsg(CMsg& Msg);
 	int32		 GetNerveMsgNum();
 	void		 GetNerveMsgList(ePipeline& Pipe);
+
 	//bDirectly meant directly return when the msg pushed the queue without checking and starting work thread
 	void		 PushNerveMsg(CMsg& Msg,bool bUrgenceMsg,bool bDirectly);
 
-	//Allows to connect several servers at same time, if address and port were the same then to ignore
-	bool Connect(int64 ID,AnsiString Address,int32 Port,int32 TimeOut,tstring& error,bool bBlock);
-
-	//open a port and listen, allow to  open several ports at same time, if port repeated then to ignore
+	//open a port and listen, allow to  open several ports at same time, the repeated port will be ignored
 	bool OpenPort(int32 Port,tstring& error,bool bIP6);
 	void ClosePort(int32 Port);
 

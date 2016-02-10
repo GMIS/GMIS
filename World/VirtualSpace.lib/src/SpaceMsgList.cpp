@@ -55,7 +55,7 @@ void CPipeView::PrintPipe(ePipeline& Pipe,int32 TabNum/*=0*/)
 	   switch(Type){
 	   case TYPE_NULL:
 		   {
-		   _stprintf(buffer+Tab,_T("%03d NULL\n"),i);
+		   _stprintf(buffer+Tab,_T("%03d null\n"),i);
 		   m_Result.PushString(buffer);
 		   }
 		   break;
@@ -63,21 +63,21 @@ void CPipeView::PrintPipe(ePipeline& Pipe,int32 TabNum/*=0*/)
 	   case TYPE_INT:
 		   {
 		   int64* value=(int64 *)Pipe.GetData(i);
-           _stprintf(buffer+Tab,_T("%03d INT64: %I64ld\n"),i, *value);
+           _stprintf(buffer+Tab,_T("%03d int64: %I64ld\n"),i, *value);
            m_Result.PushString(buffer);
 		   }
 		   break;
 	   case TYPE_FLOAT:
 		   {
 		   float64* value=(float64 *)Pipe.GetData(i);
-           _stprintf(buffer+Tab,_T("%03d FLOAT64: %f\n"),i, *value);
+           _stprintf(buffer+Tab,_T("%03d float64: %f\n"),i, *value);
            m_Result.PushString(buffer);
 		   }
 		   break;
 	   case TYPE_STRING:
 		   {
 		   tstring* value=(tstring *)Pipe.GetData(i);
-           _stprintf(buffer+Tab,_T("%03d STRING:"),i);
+           _stprintf(buffer+Tab,_T("%03d string:"),i);
 		   //MBPrintf("test1","%s",value->c_str());
 		   tstring s(buffer);
 		   s +=(*value);

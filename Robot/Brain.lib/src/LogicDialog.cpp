@@ -120,20 +120,22 @@ bool     CNameList::FromEnergy(Energy* E){
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
+CSpaceMutex  CLogicDialog::m_DialogMutex;
 
 CLogicDialog::CLogicDialog(CBrain* Brain,int64 SourceID,int64 DialogID,int64 ParentDialogID,tstring SourceName,tstring DialogName,
-						 DIALOG_TYPE Type,int64 OutputSourceID,TASK_OUT_TYPE TaskType)
-:m_TaskMsgList(&m_Mutex)
+						 DIALOG_TYPE Type,TASK_OUT_TYPE TaskType)
+:m_TaskMsgList(&m_DialogMutex)
 {
 	m_DialogHistory.SetLabel(_T("Histroy"));  //设置名字便于调试
 	m_RuntimeOutput.SetLabel(_T("RuntimeOutput"));
 	m_SearchOutput.SetLabel(_T("SearchOutput"));
 
-	Reset(Brain,SourceID,DialogID,ParentDialogID,SourceName,DialogName,Type,OutputSourceID,TaskType);
+	Reset(Brain,SourceID,DialogID,ParentDialogID,SourceName,DialogName,Type,TaskType);
 }
 
 CLogicDialog::~CLogicDialog()
 {
+
 	ClearLogicSence();
 	ClearObject();
 	m_FindResultList.clear();
@@ -144,7 +146,7 @@ CLogicDialog::~CLogicDialog()
 }
 
 void CLogicDialog::Reset(CBrain* Brain,int64 SourceID,int64 DialogID,int64 ParentDialogID,tstring SourceName,tstring DialogName,
-		   DIALOG_TYPE Type,int64 OutputSourceID,TASK_OUT_TYPE TaskType)
+		   DIALOG_TYPE Type,TASK_OUT_TYPE TaskType)
 
 {
  	    m_SourceName = SourceName;
@@ -153,6 +155,8 @@ void CLogicDialog::Reset(CBrain* Brain,int64 SourceID,int64 DialogID,int64 Paren
 		m_SourceID = SourceID;
 		m_DialogID = DialogID;
 		m_ParentDialogID = ParentDialogID;
+		m_LastDebugTimeStamp = 0;
+
 		m_DialogType = Type;
 		m_TaskOutType = TaskType;
 		m_SysProcCounter = 0;
@@ -164,8 +168,6 @@ void CLogicDialog::Reset(CBrain* Brain,int64 SourceID,int64 DialogID,int64 Paren
 
 		m_bEditValid = true;
 		m_EditText = _T("");
-		m_TaskStateLastTimeStamp = 0;
-		m_OutputSourceID = OutputSourceID;
 		
 		m_DialogHistory.Clear();
 		m_RuntimeOutput.Clear();
@@ -206,12 +208,10 @@ Energy*  CLogicDialog::ToEnergy(){
 	    Pipe->PushInt(m_TaskOutType);
 		
 		Pipe->PushInt(m_ParentDialogID);
-		Pipe->PushInt(m_OutputSourceID);
+		Pipe->PushInt(m_LastDebugTimeStamp);
 
-		
 		Pipe->PushInt(m_WorkMode);
 		Pipe->PushInt(m_TaskState);
-		Pipe->PushInt(m_TaskStateLastTimeStamp);
 
 		ePipeline PauseEventList;
 		map<int64,int64>::iterator it = m_PauseEventList.begin();
@@ -387,11 +387,10 @@ bool   CLogicDialog::FromEnergy(Energy* e){
 
 	
 	m_ParentDialogID = Pipe->PopInt();
-	m_OutputSourceID = Pipe->PopInt();
+	m_LastDebugTimeStamp = Pipe->PopInt();
 
 	m_WorkMode = (WORK_MODE)Pipe->PopInt();	
 	m_TaskState =  (TASK_STATE)Pipe->PopInt();
-	m_TaskStateLastTimeStamp = Pipe->PopInt();
 	
 
 	eElectron E;
@@ -563,7 +562,7 @@ bool   CLogicDialog::FromEnergy(Energy* e){
 	if (m_TaskID!=0)
 	{
 		Pipe->Pop(&E);
-		CLogicTask* Task = m_Brain->GetBrainData()->CreateLogicTask(GetDialogID(),m_TaskID);
+		CLogicTask* Task = m_Brain->GetBrainData()->CreateLogicTask(m_DialogID,m_TaskID);
 		if(!Task){
 			return false;
 		}
@@ -573,7 +572,7 @@ bool   CLogicDialog::FromEnergy(Energy* e){
 	if (m_ThinkID !=0)
 	{
 		Pipe->Pop(&E);
-		CLogicThread* Think = m_Brain->GetBrainData()->CreateLogicThread(GetDialogID(),m_ThinkID);
+		CLogicThread* Think = m_Brain->GetBrainData()->CreateLogicThread(m_DialogID,m_ThinkID);
 		if(!Think){
 			return false;
 		}
@@ -603,7 +602,8 @@ void CLogicDialog::NotifyPause(ePipeline& ExePipe,ePipeline& Address){
 	tstring DialogName = Format1024(_T("Pause(%I64ld)"),PauseID);
 	tstring FirstDialog = _T("Paused, you need input 'run' or 'step' or 'stop' ");
 	
-	CRequestBrain rq(REQUEST_DIALOG,EventID);
+	CRequestBrain rq(REQUEST_DIALOG);
+	rq.PushInt(EventID);
     rq.PushInt(TASK_OUT_DEFAULT);
     rq.PushInt(TIME_SEC);
 	rq.PushInt(FALSE);
@@ -635,7 +635,8 @@ void CLogicDialog::ClosePauseDialog(int64 PauseEventID)
 	{
 		if (it->second == PauseEventID)
 		{		
-			CRequestBrain rq(REQUEST_END,it->second);
+			CRequestBrain rq(REQUEST_END);
+			rq.PushInt(it->second);
 			rq.Request(this);
 			m_PauseEventList.erase(it);
 			return;
@@ -684,24 +685,20 @@ void CLogicDialog::StopPause(int64 PauseID,int64 CmdID){
         while(PauseEventList.Size())
 		{
 			int64 EventID = PauseEventList.PopInt();
-			ePipeline ObjectInfo;
-			bool ret = m_Brain->GetBrainData()->PopBrainEvent(EventID,ObjectInfo);
+			CBrainEvent EventInfo;
+			bool ret = m_Brain->GetBrainData()->PopBrainEvent(EventID,EventInfo);
 			if (!ret)
 			{
 				return;
 			}
 			
-			ePipeline* ObjectAddress1 = (ePipeline*)ObjectInfo.GetData(EVENT_ADDRESS);
-			ePipeline* ExePipe1 = (ePipeline*)ObjectInfo.GetData(EVENT_PIPE);
-			
-			CMsg EltMsg(*ObjectAddress1,MSG_ELT_TASK_CTRL,EventID);
+			CMsg EltMsg(EventInfo.m_ClientAddress,MSG_ELT_TASK_CTRL,EventID);
 			ePipeline& Letter = EltMsg.GetLetter();
 			Letter.PushInt(CmdID);
-			Letter.PushPipe(*ExePipe1);
+			Letter.PushPipe(EventInfo.m_ClientExePipe);
 			
 			//给Element发信息
 			m_Brain->PushNerveMsg(EltMsg,false,false);
-
 		}
 		
 	}else{
@@ -713,20 +710,18 @@ void CLogicDialog::StopPause(int64 PauseID,int64 CmdID){
 
 		int64 EventID = it->second;
 
-		ePipeline ObjectInfo;
-		bool ret = m_Brain->GetBrainData()->PopBrainEvent(EventID,ObjectInfo);
+		CBrainEvent EventInfo;
+		bool ret = m_Brain->GetBrainData()->PopBrainEvent(EventID,EventInfo);
 		if (!ret)
 		{
 			return;
 		}
 		
-		ePipeline* ObjectAddress1 = (ePipeline*)ObjectInfo.GetData(EVENT_ADDRESS);
-		ePipeline* ExePipe1 = (ePipeline*)ObjectInfo.GetData(EVENT_PIPE);
 		
-		CMsg EltMsg(*ObjectAddress1,MSG_ELT_TASK_CTRL,EventID);
+		CMsg EltMsg(EventInfo.m_ClientAddress,MSG_ELT_TASK_CTRL,EventID);
 		ePipeline& Letter = EltMsg.GetLetter();
 		Letter.PushInt(CmdID);
-		Letter.PushPipe(*ExePipe1);
+		Letter.PushPipe(EventInfo.m_ClientExePipe);
 		
 		//给Element发信息
 		m_Brain->PushNerveMsg(EltMsg,false,false);
@@ -737,7 +732,8 @@ bool CLogicDialog::StartChildDialog(int64 EventID,tstring DialogName,tstring Fir
 
 	assert(EventID !=0);
 
-    CRequestBrain rq(REQUEST_DIALOG,EventID);
+    CRequestBrain rq(REQUEST_DIALOG);
+	rq.PushInt(EventID);
     rq.PushInt(OutType);
 	rq.PushInt(EventInterval);
 	rq.PushInt(bFocus?1:0);
@@ -764,7 +760,8 @@ void CLogicDialog::CloseChildDialog(int64 EventID,ePipeline& OldExePipe,ePipelin
 
 	assert(EventID !=0);
 	
-    CRequestBrain rq(REQUEST_END,EventID);
+    CRequestBrain rq(REQUEST_END);
+	rq.PushInt(EventID);
     rq.Request(this);
 
 	if(ExePipe.GetID() == RETURN_ERROR){
@@ -798,7 +795,7 @@ ePipeline&  CLogicDialog::SaveReceiveItem(tstring Info,int32 State){
     Item->PushInt(State);
 	Item->PushString(Info);
 	
-	CNotifyState nf(NOTIFY_DIALOG_OUTPUT);
+	CNotifyDialogState nf(NOTIFY_DIALOG_OUTPUT);
 	nf.PushInt(DIALOG_INFO);
 	nf.Push_Directly(Item);
 	nf.Notify(this);
@@ -815,7 +812,7 @@ ePipeline&  CLogicDialog::SaveSendItem(tstring Info, int32 State)
     Item->PushInt(State);
 	Item->PushString(Info);
 	
-	CNotifyState nf(NOTIFY_DIALOG_OUTPUT);
+	CNotifyDialogState nf(NOTIFY_DIALOG_OUTPUT);
 	nf.PushInt(DIALOG_INFO);
 	nf.Push_Directly(Item);
 	nf.Notify(this);
@@ -823,58 +820,18 @@ ePipeline&  CLogicDialog::SaveSendItem(tstring Info, int32 State)
 	return *(ePipeline*)m_DialogHistory.GetLastData();
 }
 
-void  CLogicDialog::SendMsg(CMsg& Msg,POS_TYPE Type){
-	
-	if (Type == LOCAL)
-	{
-		if (m_SourceID == SYSTEM_SOURCE)
-		{
-			m_Brain->PushCentralNerveMsg(Msg,false,false);
-		}else{
-			if (GetTaskState()==TASK_DELELTE)
-			{
-				return;
-			}
-			m_Brain->PushNerveMsg(Msg,false,false);
-		}
-	} 
-	else
-	{
-
-		if (m_SourceID == SYSTEM_SOURCE)
-		{
-			m_Brain->PushCentralNerveMsg(Msg,false,false);
-		}else{
-			if (GetTaskState()==TASK_DELELTE)
-			{
-				return;
-			}
-		
-			CLinker Linker;
-			m_Brain->GetLinker(m_SourceID,Linker);
-			if (Linker.IsValid())
-			{
-				Linker().PushMsgToSend(Msg);
-			}
-		}
-	}	
-}
 
 void CLogicDialog::ClearTaskMsgList()
 {
-	while (m_TaskMsgList.DataNum())//关于此任务的信息直接丢弃
-	{
-		assert(0); //测试
-		CMsg m;
-		m_TaskMsgList.Pop(m);
-	};
-}
+	m_TaskMsgList.ClearData();
+};
+
 void CLogicDialog::FeedbackToBrain(){
 
-	int64 EventID = GetDialogID();
+	int64 DialogID = m_DialogID;
     
-	if(EventID != 0){
-		CMsg rMsg(MSG_TASK_FEEDBACK,EventID,EventID);		
+	if(DialogID != DEFAULT_DIALOG){
+		CMsg rMsg(MSG_TASK_FEEDBACK,DialogID,DialogID);		
 		ePipeline& rLetter = rMsg.GetLetter();
 		rLetter.PushPipe(m_ExePipe);	
 		
@@ -942,12 +899,8 @@ void  CLogicDialog::Do(CMsg& Msg){
 			}
 		}
 
-		if (m_DialogID == DEFAULT_DIALOG)
-		{
-			m_Brain->BrainDialogProc(this,Msg);	
-		}else{
-			m_Brain->TaskDialogProc(this,&m_ExePipe,Msg);
-		}
+	    DialogMsgProc(&m_ExePipe,Msg);
+		
 	}
     else{
 		
@@ -1018,7 +971,6 @@ void  CLogicDialog::Do(CMsg& Msg){
 				return ;
 			}
 
-
             m_ExePipe.GetLabel() = _T("");
 
 			CurTask->Do(this,m_ExePipe,LocalAddress,EltMsg);
@@ -1053,6 +1005,7 @@ void  CLogicDialog::Do(CMsg& Msg){
 					Error = _T("");
 				} 
 				break;
+
 			case RETURN_GOTO_LABEL: 
 			case RETURN_DEBUG_GOTO_LABEL:
 				{
@@ -1061,6 +1014,7 @@ void  CLogicDialog::Do(CMsg& Msg){
 					RuntimeOutput(MassID,Error);		
 				}
 				break;
+
 			case RETURN_PAUSE:
 				SetWorkMode(WORK_DEBUG);
 				SetTaskState(TASK_PAUSE);
@@ -1126,7 +1080,7 @@ void CLogicDialog::SetBreakPoint(ePipeline& Path,BOOL bEnable){
 	assert(ret);
 	if (ret) //反馈
 	{
-		CNotifyState nf(NOTIFY_DEBUG_VIEW);
+		CNotifyDialogState nf(NOTIFY_DEBUG_VIEW);
 		nf.PushInt(DEBUG_SET_BREAK);
 		nf.PushInt(bEnable);
 		nf.PushPipe(Path1);
@@ -1136,15 +1090,13 @@ void CLogicDialog::SetBreakPoint(ePipeline& Path,BOOL bEnable){
 
 
 TASK_STATE   CLogicDialog::SetTaskState(TASK_STATE State){
-	CLock((CABMutex*)&m_Mutex);
+	CLock((CABMutex*)&m_DialogMutex,this);
 	TASK_STATE Old = m_TaskState;
 	m_TaskState = State;
-	m_TaskStateLastTimeStamp = AbstractSpace::CreateTimeStamp();
-
 	return Old;
 }
 TASK_STATE  CLogicDialog::GetTaskState(){
-	CLock((CABMutex*)&m_Mutex);
+	CLock((CABMutex*)&m_DialogMutex,this);
 	TASK_STATE State = m_TaskState ;
     return State;
 }
@@ -1155,7 +1107,7 @@ TASK_OUT_TYPE CLogicDialog::GetTaskType(){
 void CLogicDialog::NotifyTaskState()
 {
 	TASK_STATE State = m_TaskState;
-	CNotifyState nf(NOTIFY_DIALOG_STATE);
+	CNotifyDialogState nf(NOTIFY_DIALOG_STATE);
 	
 	nf.PushInt(m_WorkMode);
 	nf.PushInt(State);
@@ -1196,7 +1148,7 @@ bool CLogicDialog::ResumeTask(){
 		CTaskDialog* NewDialog = m_Brain->GetBrainData()->GetDialog(EventID);
 		if (!NewDialog)
 		{
-			NewDialog = m_Brain->GetBrainData()->CreateNewDialog(this,m_SourceID,EventID,GetDialogID(),_T("Dialog"),m_DialogName,DIALOG_SYSTEM_CHILD,0,OutType);	
+			NewDialog = m_Brain->GetBrainData()->CreateNewDialog(this,m_SourceID,EventID,m_DialogID,_T("Dialog"),m_DialogName,DIALOG_SYSTEM_CHILD,0,OutType);	
 			if(!NewDialog)return false;
 
 			CNotifyState nf(NOTIFY_DIALOG_LIST);
@@ -1221,7 +1173,7 @@ bool CLogicDialog::ResumeTask(){
 	return true;
 }
 int32 CLogicDialog::GetSysProcNum(){
-	CLock((CABMutex*)&m_Mutex);
+	CLock((CABMutex*)&m_DialogMutex,this);
 	int32 n = m_SysProcCounter;
 	return n;
 }
@@ -1241,7 +1193,8 @@ void  CLogicDialog::ResetTask(){
 		int64 PauseID = it->first;
 		int64 EventID = it->second;
 
-		CRequestBrain rq(REQUEST_END,EventID);
+		CRequestBrain rq(REQUEST_END);
+		rq.PushInt(EventID);
 		rq.Request(this);
 		it++;
 	}
@@ -1250,7 +1203,7 @@ void  CLogicDialog::ResetTask(){
    
 	if (m_ControlDialogID)
 	{
-		m_Brain->GetBrainData()->DeleteDialog(m_ControlDialogID);
+		m_Brain->GetBrainData()->DeleteDialog(m_SourceID,m_ControlDialogID);
     }
 	m_ControlDialogID = AbstractSpace::CreateTimeStamp();
 };
@@ -1258,19 +1211,19 @@ void  CLogicDialog::ResetTask(){
 
 
 void CLogicDialog::SetWorkMode(WORK_MODE Mode){
-	CLock lk(&m_Mutex);
+	CLock lk(&m_DialogMutex,this);
     m_WorkMode = Mode;
 }
 
 WORK_MODE CLogicDialog::GetWorkMode(){
-	CLock lk(&m_Mutex);
+	CLock lk(&m_DialogMutex,this);
 	WORK_MODE Mode = m_WorkMode;
 	return Mode;
 }
 
 CLogicThread* CLogicDialog::GetThink(){
 	if(m_ThinkID ==0){
-		CLogicThread* Think = m_Brain->GetBrainData()->CreateLogicThread(GetDialogID());
+		CLogicThread* Think = m_Brain->GetBrainData()->CreateLogicThread(m_DialogID);
 		m_ThinkID = Think->m_ID;
 		return Think;
 	}
@@ -1281,7 +1234,7 @@ CLogicThread* CLogicDialog::GetThink(){
 
 CLogicTask* CLogicDialog::GetTask(){
 	if(m_TaskID==0){
-		CLogicTask* Task = m_Brain->GetBrainData()->CreateLogicTask(GetDialogID());
+		CLogicTask* Task = m_Brain->GetBrainData()->CreateLogicTask(m_DialogID);
 		m_TaskID = Task->m_ID;
 		return Task;
 	};
@@ -1298,8 +1251,8 @@ CLogicDialog& CLogicDialog::operator << (CLogicDialog& Dialog){
 	m_TaskID = Dialog.m_TaskID;
 	m_ThinkID   = Dialog.m_ThinkID;
 
-	m_Brain->GetBrainData()->SetLogicThreadUser(m_ThinkID,GetDialogID());
-	m_Brain->GetBrainData()->SetLogicTaskUser(m_TaskID,GetDialogID());
+	m_Brain->GetBrainData()->SetLogicThreadUser(m_ThinkID,m_DialogID);
+	m_Brain->GetBrainData()->SetLogicTaskUser(m_TaskID,m_DialogID);
 
 	m_EditText = Dialog.m_EditText;
 	
@@ -1322,7 +1275,7 @@ void CLogicDialog::RuntimeOutput(tstring s){
     Item->PushInt(0);
 	Item->PushString(s);
 		
-	CNotifyState nf(NOTIFY_DIALOG_OUTPUT);
+	CNotifyDialogState nf(NOTIFY_DIALOG_OUTPUT);
 	nf.PushInt(RUNTIME_INFO);
 	nf.Push_Directly(Item);
 	nf.Notify(this);
@@ -1340,7 +1293,7 @@ void CLogicDialog::RuntimeOutput(int64 MassID,tstring s){
     Item->PushInt(MassID);
 	Item->PushString(s);
 		
-	CNotifyState nf(NOTIFY_DIALOG_OUTPUT);
+	CNotifyDialogState nf(NOTIFY_DIALOG_OUTPUT);
 	nf.PushInt(RUNTIME_INFO);
 	nf.Push_Directly(Item);
 	nf.Notify(this);
@@ -1444,7 +1397,7 @@ bool CLogicDialog::CompileTask(){
 
 		tstring EditText = Think->GetUserInput();
 		
-		CNotifyState nf(NOTIFY_DIALOG_ERROR);
+		CNotifyDialogState nf(NOTIFY_DIALOG_ERROR);
 		nf.PushInt(COMPILE_ERROR);
 		nf.PushString(error);
 		nf.PushString(EditText);
@@ -1466,7 +1419,7 @@ bool CLogicDialog::CompileTask(){
 void CLogicDialog::SentenceCompileProgress(int32 ClauseNum, int32 Completed){
 
 	int32 per = Completed/ClauseNum;
-	CNotifyState nf(NOTIFY_PROGRESS_OUTPUT);
+	CNotifyDialogState nf(NOTIFY_PROGRESS_OUTPUT);
 	nf.PushInt(COMPILE_PROGRESS);
 	nf.PushInt(per);
 	nf.Notify(this);

@@ -58,7 +58,7 @@ void CDialogView::SetDialogList(ePipeline& Pipe){
 
 void CDialogView::AddDialogItem(ePipeline& Item){
 	int64 ID = Item.GetID();
-	tstring Time = AbstractSpace::GetTimer()->GetHMS(ID);
+	tstring Time = AbstractSpace::GetTimer()->GetHMSM(ID);
 	tstring& Name = Item.GetLabel();
 	int32    State = *(int32*)Item.GetData(0);
 	tstring text  = *(tstring*)Item.GetData(1);
@@ -147,7 +147,7 @@ LRESULT CDialogView::ChildReaction(SpaceRectionMsg* SRM){
 					PushChild(Info);
                 }else{
 					
-					tstring Time = AbstractSpace::GetTimer()->GetHMS(ID);
+					tstring Time = AbstractSpace::GetTimer()->GetHMSM(ID);
 					tstring& Name = Item->GetLabel();
 					int32    State = *(int32*)Item->GetData(0);
 					tstring& text  = *(tstring*)Item->GetData(1);
@@ -199,7 +199,7 @@ LRESULT CDialogView::ChildReaction(SpaceRectionMsg* SRM){
                 int64 ID = Item->GetID();
                 assert(ID > 0);
  				
-				tstring Time = AbstractSpace::GetTimer()->GetHMS(ID);
+				tstring Time = AbstractSpace::GetTimer()->GetHMSM(ID);
 				tstring& Name = Item->GetLabel();
 				int32    State = *(int32*)Item->GetData(0);
 				tstring& text  = *(tstring*)Item->GetData(1);

@@ -1,42 +1,49 @@
 ﻿#pragma warning (disable:4786)
 
 #include "Brain.h"
+#include "Element.h"
 #include "GUIMsgDefine.h"
 #include "BrainObject.h"
 #include "LogicDialog.h"
 
-MsgProcState CBrain::ElementMsgProc(CLogicDialog* Dialog,CElement* Elt,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
+MsgProcState CElement::EltMsgProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
 	int64 MsgID = Msg.GetMsgID();
 
 	switch(MsgID){
 	case MSG_ELT_TASK_CTRL:
-		return OnEltTaskControl(Dialog,Elt,ChildIndex,Msg,ExePipe,LocalAddress);
+		return OnEltTaskControl(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 		break;
 	case MSG_EVENT_TICK:
 		{
-		   OnEventTick(Dialog,&ExePipe,Msg);
+		   int64 EventID = Msg.GetEventID();
+		   ePipeline& Letter = Msg.GetLetter();
+		   int64 TimeStamp = Letter.PopInt();
+
+		   Dialog->m_Brain->GetBrainData()->ResetEventTickCount(EventID);
+
+		   //Dialog->SaveReceiveItem(_T("ResetEventTickCount"),0);
+
 		   ExePipe.Break(); //不在继续处理,并返回系统
 		   return RETURN_DIRECTLY; 
 		}
 		break;
 	case MSG_ELT_INSERT_LOGIC:
-		return OnEltInsertLogic(Dialog,Elt,ChildIndex,Msg,ExePipe,LocalAddress);
+		return OnEltInsertLogic(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 	case MSG_ELT_REMOVE_LOGIC:
-		return OnEltRemoveLogic(Dialog,Elt,ChildIndex,Msg,ExePipe,LocalAddress);
+		return OnEltRemoveLogic(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 	case MSG_TASK_RESULT:
-		return OnEltTaskResult(Dialog,Elt,ChildIndex,Msg,ExePipe,LocalAddress);
+		return OnEltTaskResult(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 	default:
 		assert(0);
 		break;
 	}
-
 
 	ExePipe.Break(); //不在继续处理,并返回系统
 	return RETURN_DIRECTLY; 
 }
 
 
-MsgProcState CBrain::OnEltTaskControl(CLogicDialog* Dialog,CElement* Elt,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
+MsgProcState CElement::OnEltTaskControl(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
 	int64 EventID = Msg.GetEventID();
 	
 	ePipeline& Letter = Msg.GetLetter();
@@ -89,7 +96,7 @@ MsgProcState CBrain::OnEltTaskControl(CLogicDialog* Dialog,CElement* Elt,int32 C
 						Dialog->m_LogicItemTree.SetID(0);
 						ePipeline PauseIDList;
 
-						CNotifyState nf(NOTIFY_DEBUG_VIEW);
+						CNotifyDialogState nf(NOTIFY_DEBUG_VIEW);
 						nf.PushInt(DEBUG_RESET);
 						nf.PushPipe(PauseIDList);
 						nf.PushPipe(Dialog->m_LogicItemTree);
@@ -152,7 +159,7 @@ MsgProcState CBrain::OnEltTaskControl(CLogicDialog* Dialog,CElement* Elt,int32 C
 	return CONTINUE_TASK;
 }
 
-MsgProcState CBrain::OnEltInsertLogic(CLogicDialog* Dialog,CElement* Elt,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
+MsgProcState CElement::OnEltInsertLogic(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
 
 	int64 EventID = Msg.GetEventID();
 
@@ -214,9 +221,9 @@ MsgProcState CBrain::OnEltInsertLogic(CLogicDialog* Dialog,CElement* Elt,int32 C
 	}
 
 	
-	Elt->InsertLogic(-1,E); //插入末尾
+	InsertLogic(-1,E); //插入末尾
 
-	OutputLog(LOG_MSG_RUNTIME_TIP,_T("Execute inserting logic:1  EventID:%I64ld"),EventID);
+	Dialog->m_Brain->OutputLog(LOG_MSG_RUNTIME_TIP,_T("Execute inserting logic:1  EventID:%I64ld"),EventID);
 	
 	/* 改为整体重置
 	ePipeline DebugItemList;
@@ -245,7 +252,7 @@ MsgProcState CBrain::OnEltInsertLogic(CLogicDialog* Dialog,CElement* Elt,int32 C
 		ePipeline PauseIDList;
 		Dialog->GetPauseIDList(PauseIDList);
 
-		CNotifyState nf(NOTIFY_DEBUG_VIEW);
+		CNotifyDialogState nf(NOTIFY_DEBUG_VIEW);
 		nf.PushInt(DEBUG_RESET);
 		nf.Push_Directly(Dialog->m_LogicItemTree.Clone());
 		nf.PushPipe(PauseIDList);
@@ -263,7 +270,7 @@ MsgProcState CBrain::OnEltInsertLogic(CLogicDialog* Dialog,CElement* Elt,int32 C
 	return RETURN_DIRECTLY; 
 };
 
-MsgProcState CBrain::OnEltRemoveLogic(CLogicDialog* Dialog,CElement* Elt,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
+MsgProcState CElement::OnEltRemoveLogic(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
 	int64 EventID = Msg.GetEventID();
 	
 	ePipeline& Letter = Msg.GetLetter();
@@ -274,10 +281,10 @@ MsgProcState CBrain::OnEltRemoveLogic(CLogicDialog* Dialog,CElement* Elt,int32 C
 	//Mass* E = Elt->FindMass(ChildID);
 	//Dialog->RemoveLogicInstance(E);
 
-	bool ret = Elt->RemoveLoigc(ChildID);
+	bool ret = RemoveLoigc(ChildID);
 	//assert(ret);
 
-	OutputLog(LOG_MSG_RUNTIME_TIP,_T("Executer removing logic:%d EventID:%I64ld "),ret,EventID);
+	Dialog->m_Brain->OutputLog(LOG_MSG_RUNTIME_TIP,_T("Executer removing logic:%d EventID:%I64ld "),ret,EventID);
 
 	if (!ret)
 	{
@@ -313,7 +320,7 @@ MsgProcState CBrain::OnEltRemoveLogic(CLogicDialog* Dialog,CElement* Elt,int32 C
 		ePipeline PauseIDList;
 		Dialog->GetPauseIDList(PauseIDList);
 
-		CNotifyState nf(NOTIFY_DEBUG_VIEW);
+		CNotifyDialogState nf(NOTIFY_DEBUG_VIEW);
 		nf.PushInt(DEBUG_RESET);
 		nf.Push_Directly(Dialog->m_LogicItemTree.Clone());
 		nf.PushPipe(PauseIDList);
@@ -330,7 +337,7 @@ MsgProcState CBrain::OnEltRemoveLogic(CLogicDialog* Dialog,CElement* Elt,int32 C
 	return RETURN_DIRECTLY; 
 }
 
-MsgProcState CBrain::OnEltTaskResult(CLogicDialog* Dialog,CElement* Elt,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress)
+MsgProcState CElement::OnEltTaskResult(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress)
 {
 	int64 EventID = Msg.GetEventID();
 	

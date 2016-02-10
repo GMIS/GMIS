@@ -31,14 +31,14 @@ bool CBrain::ProcessRequest(CLogicDialog* Dialog,ePipeline* RequestInfo){
 
 bool CBrain::OnRequestEnd(CLogicDialog* Dialog,ePipeline* RequestInfo){
 	int64 EventID = RequestInfo->PopInt();
-	CLogicDialog* Dlg = GetBrainData()->GetDialog(EventID);
+	CLogicDialog* Dlg = GetBrainData()->GetDialog(Dialog->m_SourceID,EventID);
     if (Dlg)
     {
-		CNotifyState nf(NOTIFY_DIALOG_LIST);
+		CNotifyDialogState nf(NOTIFY_DIALOG_LIST);
 		nf.PushInt(DL_DEL_DIALOG);
 		nf.Notify(Dlg);
 		
-		GetBrainData()->DeleteDialog(EventID);
+		GetBrainData()->DeleteDialog(Dialog->m_SourceID,EventID);
     }
 	return true;
 }
@@ -55,15 +55,15 @@ bool CBrain::OnRequestDialog(CLogicDialog* Dialog,ePipeline* RequestInfo){
 	ePipeline* ExePipe = (ePipeline*)RequestInfo->GetData(0);
     ePipeline* Address = (ePipeline*)RequestInfo->GetData(1);
 
-	CLogicDialog* NewDialog = GetBrainData()->GetDialog(EventID);
+	CLogicDialog* NewDialog = GetBrainData()->GetDialog(Dialog->m_SourceID,EventID);
     if (!NewDialog)
     {
-		NewDialog = GetBrainData()->CreateNewDialog(this,Dialog->m_SourceID,EventID,Dialog->GetDialogID(),_T("Dialog"),DialogName,DIALOG_SYSTEM_CHILD,0,OutType);	
+		NewDialog = GetBrainData()->CreateNewDialog(this,Dialog->m_SourceID,EventID,Dialog->m_DialogID,_T("Dialog"),DialogName,DIALOG_SYSTEM_CHILD,OutType);	
 		if(!NewDialog)return false;
 		
 		NewDialog->m_bEditValid = bEditValid?true:false;
 
-		CNotifyState nf(NOTIFY_DIALOG_LIST);
+		CNotifyDialogState nf(NOTIFY_DIALOG_LIST);
 		nf.PushInt(DL_ADD_DIALOG);
 		nf.PushInt(bFocusDialog);
 		nf.Notify(NewDialog);		
@@ -78,8 +78,12 @@ bool CBrain::OnRequestDialog(CLogicDialog* Dialog,ePipeline* RequestInfo){
 		NewDialog->SetTaskState(TASK_WAIT);
 		NewDialog->NotifyTaskState();
 	}
-	GetBrainData()->PushBrainEvent(EventID,*ExePipe,*Address,EventInterval);
-	
+#ifdef _DEBUG
+	tstring memo = Format1024(_T("%s %d"),_T(__FILE__),__LINE__);
+	GetBrainData()->PushBrainEvent(EventID,EventID,*ExePipe,*Address,EventInterval,false,memo);
+#else
+	GetBrainData()->PushBrainEvent(EventID,EventID,*ExePipe,*Address,EventInterval,false);
+#endif
 	if (DialogText.size())
 	{
 		NewDialog->SaveSendItem(DialogText,0);
@@ -96,29 +100,26 @@ bool CBrain::OnRequestExeLogic(CLogicDialog* Dialog,ePipeline* RequestInfo)
 	int64 SourceID = Dialog->m_SourceID;
 	if (SourceID == SYSTEM_SOURCE) //暂时不允许本地请求
 	{
-		return false;
-		
+		return false;	
 	}
 
 	int64 EventID = RequestInfo->PopInt();
 	assert(EventID);	
 	
-	tstring LogicText = RequestInfo->PopString();	
-	ePipeline* ExePipe    = (ePipeline*)RequestInfo->GetData(0);
+	tstring LogicText  = RequestInfo->PopString();	
+	ePipeline* ExePipe = (ePipeline*)RequestInfo->GetData(0);
 	
-	//生成子对话	
-	
+	//生成子对话		
 	tstring TaskName = _T("LogicTask");
 	int64 TaskID = AbstractSpace::CreateTimeStamp();	
 
-	CLogicDialog* ChildDialog = GetBrainData()->CreateNewDialog(this,Dialog->m_SourceID,TaskID,0,Dialog->m_SourceName,TaskName,DIALOG_OTHER_TEMP_CHILD,Dialog->m_OutputSourceID,TASK_OUT_DEFAULT);
+	CLogicDialog* ChildDialog = GetBrainData()->CreateNewDialog(this,Dialog->m_SourceID,TaskID,0,Dialog->m_SourceName,TaskName,DIALOG_OTHER_TEMP_CHILD,TASK_OUT_DEFAULT);
 	
 	if (!ChildDialog)
-	{
-		
+	{	
 		tstring text = _T("The task transferred fail");
 		Dialog->SaveSendItem(text,0);				
-		
+
 		CMsg rMsg(MSG_TASK_FEEDBACK,DEFAULT_DIALOG,EventID);		
 		
 		ePipeline& rLetter = rMsg.GetLetter();	
@@ -126,19 +127,25 @@ bool CBrain::OnRequestExeLogic(CLogicDialog* Dialog,ePipeline* RequestInfo)
 		ExePipe->SetLabel(text.c_str());
 		rLetter.PushPipe(*ExePipe);
 		
-		Dialog->SendMsg(rMsg,REMOTE);
-		
+		CLinker Linker;
+		GetLinker(rMsg.GetSourceID(),Linker);
+		if (Linker.IsValid())
+		{
+			Linker().PushMsgToSend(rMsg);
+		}
+
 		return false;
 	}
-	
-	
 
     ePipeline Address(SourceID);
-	Address.PushInt(EventID);
+	Address.PushInt(TaskID);
 
-    GetBrainData()->PushBrainEvent(TaskID,*ExePipe,Address);
-	
-
+#ifdef _DEBUG
+	tstring memo = Format1024(_T("%s %d"),_T(__FILE__),__LINE__);
+    GetBrainData()->PushBrainEvent(TaskID,EventID,*ExePipe,Address,TIME_SEC,true,memo);
+#else
+	GetBrainData()->PushBrainEvent(TaskID,EventID,*ExePipe,Address,TIME_SEC,true);
+#endif
 	tstring s = Format1024(_T("Create New Dialog[%s]: Type=%d  DialogID=%I64d \n"),
 		TaskName.c_str(),ChildDialog->m_DialogType,ChildDialog->m_DialogID);	
 	
@@ -148,7 +155,7 @@ bool CBrain::OnRequestExeLogic(CLogicDialog* Dialog,ePipeline* RequestInfo)
 	Dialog->SaveSendItem(text,0);
 	
 	
-	CNotifyState nf(NOTIFY_DIALOG_LIST);
+	CNotifyDialogState nf(NOTIFY_DIALOG_LIST);
 	nf.PushInt(DL_ADD_DIALOG);
 	nf.PushInt(TRUE);
 	nf.Notify(ChildDialog);
@@ -169,9 +176,14 @@ bool CBrain::OnRequestExeLogic(CLogicDialog* Dialog,ePipeline* RequestInfo)
 	
 		ExePipe->SetID(RETURN_ERROR);
 		ExePipe->GetLabel() = _T("Think error!");
-		rLetter.PushPipe(*ExePipe);		
-		Dialog->SendMsg(rMsg,REMOTE);
-		
+		rLetter.PushPipe(*ExePipe);	
+
+		CLinker Linker;
+		GetLinker(rMsg.GetSourceID(),Linker);
+		if (Linker.IsValid())
+		{
+			Linker().PushMsgToSend(rMsg);
+		}		
 		//关闭对话	
 		return false;
 	}
@@ -190,10 +202,11 @@ bool CBrain::OnRequestExeLogic(CLogicDialog* Dialog,ePipeline* RequestInfo)
 bool CBrain::OnRequestTransTask(CLogicDialog* Dialog,ePipeline* RequestInfo){
 
 	int64 EventID = RequestInfo->PopInt();
-	
+	int64 bJustOnce = RequestInfo->PopInt();
+
 	tstring TaskName = _T("LogicTask");
 		
-	CLogicDialog* TaskDialog = GetBrainData()->CreateNewDialog(this,Dialog->m_SourceID,EventID,0,Dialog->m_SourceName,TaskName,DIALOG_SYSTEM_CHILD,Dialog->m_OutputSourceID,TASK_OUT_DEFAULT);
+	CLogicDialog* TaskDialog = GetBrainData()->CreateNewDialog(this,Dialog->m_SourceID,EventID,Dialog->m_DialogID,Dialog->m_DialogName,TaskName,DIALOG_SYSTEM_CHILD,TASK_OUT_DEFAULT);
 	if (!TaskDialog)
 	{
 		tstring text = _T("The task transferred fail");
@@ -204,14 +217,17 @@ bool CBrain::OnRequestTransTask(CLogicDialog* Dialog,ePipeline* RequestInfo){
 		Dialog->ResetThink();
 		return false;
 	}
-	
+
 	//生成一个与任务对话对应的事件
 	ePipeline ExePipe;
 	ePipeline Address;
 	Address.PushInt(EventID);
-
-	GetBrainData()->PushBrainEvent(EventID,ExePipe,Address);
-
+#ifdef _DEBUG
+	tstring memo = Format1024(_T("%s %d"),_T(__FILE__),__LINE__);
+	GetBrainData()->PushBrainEvent(EventID,EventID,ExePipe,Address,TIME_SEC,bJustOnce,memo);
+#else
+	GetBrainData()->PushBrainEvent(EventID,EventID,ExePipe,Address,TIME_SEC,bJustOnce);
+#endif
 	
 	if (Dialog->m_DialogType==DIALOG_OTHER_MAIN)
 	{
@@ -223,15 +239,10 @@ bool CBrain::OnRequestTransTask(CLogicDialog* Dialog,ePipeline* RequestInfo){
 	
 	Dialog->RuntimeOutput(0,s);
 	
-	tstring text = _T("The task has been transferred to the sub-dialogue processing");
-	
 	//把当前逻辑环境转交给新的子对话
 	*TaskDialog<<*Dialog;
-	
-	//如果是系统对话则生成子对话，系统对话一般不执行逻辑任务，转移给子对话后可以重新开放用户输入					
-	Dialog->SaveReceiveItem(text,0);
-	
-	CNotifyState nf(NOTIFY_DIALOG_LIST);
+		
+	CNotifyDialogState nf(NOTIFY_DIALOG_LIST);
 	nf.PushInt(DL_ADD_DIALOG);
 	nf.PushInt(TRUE); //是否设置为当前对话
 	nf.Notify(TaskDialog);

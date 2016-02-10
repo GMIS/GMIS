@@ -14,6 +14,7 @@
     <ProjectGuid>{1765356C-3A67-47E0-8ED7-796F5262EA5B}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>uarm</RootNamespace>
+    <ProjectName />
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

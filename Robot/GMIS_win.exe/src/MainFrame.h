@@ -43,7 +43,6 @@ class CMainFrame : public CWSFrameView
 			while (m_Alive)
 			{
 				m_Parent->GUIMsgProc();
-				SLEEP_MILLI(20);
 			}
 			return true;
 		}
@@ -72,7 +71,7 @@ public:
 	CVSpace2*           m_SpaceSelected;
 	SplitterStruct      m_Splitter;
 
-	CUserMutex			m_Mutex;
+	static CUserMutex	m_Mutex;
 	CLockPipe           m_MsgList;
 	GUIMsgObject        m_MsgProcObject;
 	

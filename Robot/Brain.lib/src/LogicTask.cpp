@@ -2,6 +2,7 @@
 //
 //////////////////////////////////////////////////////////////////////
 #pragma warning(disable: 4786)
+#pragma warning(disable: 4244)
 
 #include "Brain.h"
 #include "LogicTask.h"

@@ -23,8 +23,12 @@
   靠上述方式组装逻辑应该可以同时组装出空间外形，但目前没有实现
 */
 
+#define IT_SELF  -1
+
 typedef vector<Mass*>            ActomList;
 typedef vector<Mass*>::iterator  ActomPtr;
+
+
 
 enum LogicRelation { 
 	UNKOWN_RELATION = 0, 
@@ -98,11 +102,15 @@ public:
 
 
 protected:
+	virtual bool TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
+ 
+	//返回CONTINUE_TASK会继续处理TaskProc()，否则不处理TaskProc(),如果想直接返回系统，那么ExePipe.Break();
+	virtual MsgProcState EltMsgProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
+		MsgProcState OnEltTaskControl(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
+		MsgProcState OnEltInsertLogic(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
+		MsgProcState OnEltRemoveLogic(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
+		MsgProcState OnEltTaskResult(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
 
-	//处理外部信息，缺省：Dialog->m_Brain->TaskDialogProc(Dialog,SysMsg); 
-	//返回CONTINUE_NEXT会继续处理TaskProc()，否则不处理TaskProc(),如果想直接返回系统，那么ExePipe.Break();
-	virtual MsgProcState MsgProc(CLogicDialog* Dialog,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress,int32& ChildIndex);
-    virtual bool TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress);
 
 };
 

@@ -25,36 +25,10 @@ CMainBrain::~CMainBrain()
 
 }
 
-
-void CMainBrain::SendMsgToGUI(int64 GuiID,CMsg& GuiMsg){
-	if (GuiID == LOCAL_GUI)
-	{
-		CMainFrame* MainFrame = GetGUI();
-		if(MainFrame){
-			MainFrame->PushGUIMsg(GuiMsg);
-		}
-	}else{
-		CLinker Linker;
-		GetLinker(GuiID,Linker);
-		if (Linker.IsValid())
-		{
-			Linker().PushMsgToSend(GuiMsg);
-		}
+void  CMainBrain::SendMsgToLocalGUI(CMsg& GuiMsg){
+	CMainFrame* MainFrame = GetGUI();
+	if(MainFrame){
+		MainFrame->PushGUIMsg(GuiMsg);
 	}
 }
-
-
-
-
-#ifndef USING_GUI  //直接使用主线程
-
-bool CMainBrain::Do(Energy* E){
-	while (m_Alive)
-	{
-		CBrain::Do();
-	}
-	return true;
-}
-
-#endif 
 

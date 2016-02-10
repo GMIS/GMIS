@@ -3,6 +3,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #pragma warning(disable: 4786)
+#pragma warning(disable: 4244)
 
 #include "GMIS.h"
 
@@ -212,12 +213,12 @@ void CAutoObjectView::OnImportObject(){
 	if (!bFind)
 	{
 		tstring Info = Format1024(_T("Import object fail: not find %s in zip file"),ObjectFileName.c_str());	
-		GetBrain()->OutSysInfo(Info);
+		GetBrain()->OutSysInfo(Info.c_str());
 		return;
 	}
 
 	tstring Info = Format1024(_T("Import object = %s"),ObjectFileName.c_str());	
-	GetBrain()->OutSysInfo(Info);
+	GetBrain()->OutSysInfo(Info.c_str());
 	
 
 	CMsg Msg(MSG_ROBOT_CREATE_SPACE,0,0);
@@ -338,7 +339,7 @@ void CAutoObjectView::OnExportObjectAsFile(tstring Name, int64 FatherID, int64 C
 		return;
 	}
 	tstring Task = Format1024(_T("Export object = %s"),szFileTitle);
-    GetBrain()->OutSysInfo(Task);
+    GetBrain()->OutSysInfo(Task.c_str());
 		  
 	CMsg Msg(MSG_ROBOT_EXPORT_OBJECT,NULL,0);
 	ePipeline& Letter = Msg.GetLetter();
@@ -370,7 +371,8 @@ void CAutoObjectView::OnSelectObject(ObjectItem* Ob){
 	Item->PushInt(Ob->m_Type);
 	Item->PushString(Ob->m_Fingerprint);
 	Item->PushPipe(Addr);
-	
+	Item->PushInt(DLL_INVALID);
+
 	Msg.Push_Directly(Item);
 	
 	GetGUI()->SendMsgToBrainFocuse(Msg);
@@ -878,8 +880,8 @@ void CWorldShow::RoamingWorld(float x0,float z0){
 		}
          
 		//处理好与物体的碰撞，还要检查是否与房间墙壁发生碰撞
-		float dx = m_CurRoom->Room.m_RoomDx/2-0.4;
-		float dz = m_CurRoom->Room.m_RoomDz/2-0.4;
+		float dx = m_CurRoom->Room.m_RoomDx/2.0-0.4;
+		float dz = m_CurRoom->Room.m_RoomDz/2.0-0.4;
 
 
 		//确保在墙壁组成的包围盒里,但四周的门廊（如果有的话）是一个例外
@@ -1081,7 +1083,7 @@ bool CWorldShow::OpenDoor(){
    }
 
    tstring s = Format1024(_T("Connecting space %s..."),Name.c_str());
-   GetBrain()->OutSysInfo(s);
+   GetBrain()->OutSysInfo(s.c_str());
 
    CLinker World;
    GetBrain()->GetLinker(SPACE_SOURCE,World);

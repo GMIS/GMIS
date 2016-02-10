@@ -1,16 +1,29 @@
-// MyObject.cpp: implementation of the MyObject class.
+// WinAPIObject.cpp: implementation of the WinAPIObject class.
 //
 //////////////////////////////////////////////////////////////////////
 
-#include "MyObject.h"
+#include "WinAPIObject.h"
+
+
+#if defined _COMPILE_WIMAPI_OBJECT
+
 #include <assert.h>
 #include <shellapi.h>
+
+const TCHAR* CWinAPIObject::UserManual = __TEXT(\
+		"\
+		1 cmd：open\n\
+		Function：打开一个程序或链接\n\
+		Input：字符串，程序名或链接地址\n\
+		Output：null\n\
+		"\
+		);
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-bool MyObject::Do(Energy* E)
+bool CWinAPIObject::Do(Energy* E)
 {
 	assert(E->EnergyType() == TYPE_PIPELINE);
 	ePipeline* Pipe = (ePipeline*)E;
@@ -79,3 +92,4 @@ bool MyObject::Do(Energy* E)
 //	Pipe->SetID(RETURN_ERROR);
 	return false;
 }
+#endif //_COMPILE_WIMAPI_OBJECT

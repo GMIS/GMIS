@@ -36,8 +36,9 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LinkIncremental>false</LinkIncremental>
-    <LibraryPath>D:\work\GMIS\GMIS_BASE\TheorySapce\bin\VC10\Release;D:\work\GMIS\GMIS_BASE\BaseSpace\bin\VC10\Release;D:\work\GMIS\GMIS_BASE\UserSpace_win32\bin\VC10\Release;D:\work\GMIS\GMIS_SPACE\VirtualSpace\bin\VC10\Release;D:\work\GMIS\GMIS_SPACE\VisualSpace\bin\VC10\Release;D:\work\GMIS\GMIS_SHARE\win3party\bin\VC10\Release;$(LibraryPath)</LibraryPath>
+    <LinkIncremental>true</LinkIncremental>
+    <LibraryPath>D:\poco-1.6.0\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\poco-1.6.0\Foundation\include;D:\poco-1.6.0\Net\include;D:\work\GMIS\World\VirtualSpace.lib\src;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
@@ -55,14 +56,10 @@
       <Optimization>Disabled</Optimization>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <PreprocessorDefinitions>NDEBUG;WIN32;_WINDOWS;UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AssemblerListingLocation>d:\project\obj\vc6\release\SpacePortal\</AssemblerListingLocation>
-      <PrecompiledHeaderOutputFile>d:\project\obj\vc6\release\SpacePortal\SpacePortal.pch</PrecompiledHeaderOutputFile>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <PreprocessorDefinitions>NDEBUG;WIN32;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;USING_POCO;POCO_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>
       </PrecompiledHeader>
-      <ObjectFileName>d:\project\obj\vc6\release\SpacePortal\</ObjectFileName>
-      <ProgramDataBaseFileName>d:\project\obj\vc6\release\SpacePortal\</ProgramDataBaseFileName>
     </ClCompile>
     <Midl>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -81,8 +78,9 @@
     <Link>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>odbc32.lib;odbccp32.lib;opengl32.lib;glu32.lib;glaux.lib;TheorySpace.lib;UserSpace_Win32.lib;win3party.lib;visualspace.lib;virtualspace.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>odbc32.lib;odbccp32.lib;opengl32.lib;glu32.lib;glaux.lib;AbstractSpace.lib;PocoFoundationmd.lib;PocoNetmd.lib;PhysicSpace.lib;visualspace.lib;virtualspace.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <DataExecutionPrevention>false</DataExecutionPrevention>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -96,8 +94,7 @@
       <MinimalRebuild>true</MinimalRebuild>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <PreprocessorDefinitions>_DEBUG;WIN32;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;USING_POCO;POCO_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
     </ClCompile>
     <Midl>
@@ -128,11 +125,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\Main.cpp" />
+    <ClCompile Include="src\MainFrame.cpp" />
     <ClCompile Include="src\RequestProc.cpp" />
     <ClCompile Include="src\SpacePortal.cpp" />
     <ClCompile Include="src\StatusTip.cpp" />
     <ClCompile Include="src\Win32Tool.cpp" />
-    <ClCompile Include="src\WorldLog.cpp" />
+    <ClCompile Include="src\LogView.cpp" />
     <ClCompile Include="src\zip_utils\unzip.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -142,11 +140,12 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\MainFrame.h" />
     <ClInclude Include="src\resource.h" />
     <ClInclude Include="src\SpacePortal.h" />
     <ClInclude Include="src\StatusTip.h" />
     <ClInclude Include="src\Win32Tool.h" />
-    <ClInclude Include="src\WorldLog.h" />
+    <ClInclude Include="src\LogView.h" />
     <ClInclude Include="src\zip_utils\unzip.h" />
   </ItemGroup>
   <ItemGroup>

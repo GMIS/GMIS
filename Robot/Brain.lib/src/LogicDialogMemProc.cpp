@@ -3,6 +3,7 @@
 //////////////////////////////////////////////////////////////////////
 #pragma warning(disable: 4786)
 
+#include "Brain.h"
 #include "InstinctDefine.h"
 #include "NotifyMsgDef.h"
 #include "LogicDialog.h"
@@ -56,9 +57,9 @@ CObjectData* CLogicDialog::FindObject(int64 ObjectID){
 	}
 
 	//没找到则在父对话中找
-	if (m_ParentDialogID)
+	if (m_ParentDialogID!=NO_PARENT)
 	{
-		CLogicDialog* ParentDialog = m_Brain->GetBrainData()->GetDialog(m_ParentDialogID);
+		CLogicDialog* ParentDialog = m_Brain->GetBrainData()->GetDialog(m_SourceID,m_ParentDialogID);
 		if (ParentDialog)
 		{
 			It = ParentDialog->m_ObjectList.begin();
@@ -72,7 +73,7 @@ CObjectData* CLogicDialog::FindObject(int64 ObjectID){
 	}
 
     //最后在系统对话中找
-	CLogicDialog* SysDialog = m_Brain->GetBrainData()->GetDialog(DEFAULT_DIALOG);
+	CLogicDialog* SysDialog = m_Brain->GetBrainData()->GetDialog(SYSTEM_SOURCE,DEFAULT_DIALOG);
 	if (SysDialog)
 	{
 		It = SysDialog->m_ObjectList.begin();
@@ -107,9 +108,9 @@ int32 CLogicDialog::FindObject(tstring Name,vector<CObjectData>& ObjectList){
 	}
 
 	//没找到则在父对话中找
-	if (m_ParentDialogID)
+	if (m_ParentDialogID!=NO_PARENT)
 	{
-		CLogicDialog* ParentDialog = m_Brain->GetBrainData()->GetDialog(m_ParentDialogID);
+		CLogicDialog* ParentDialog = m_Brain->GetBrainData()->GetDialog(m_SourceID,m_ParentDialogID);
 		if (ParentDialog)
 		{
 			It = ParentDialog->m_ObjectList.begin();
@@ -128,7 +129,7 @@ int32 CLogicDialog::FindObject(tstring Name,vector<CObjectData>& ObjectList){
 		return ObjectList.size();
 	}
     //最后在系统对话中找
-	CLogicDialog* SysDialog = m_Brain->GetBrainData()->GetDialog(DEFAULT_DIALOG);
+	CLogicDialog* SysDialog = m_Brain->GetBrainData()->GetDialog(SYSTEM_SOURCE,DEFAULT_DIALOG);
 	if (SysDialog)
 	{
 		It = SysDialog->m_ObjectList.begin();
@@ -310,7 +311,7 @@ bool CLogicDialog::RegisterLogic(CLogicTask* Task)
 	m_LogicList.push_back(lg);
 	
 	//通知GUI界面，有逻辑条目
-	CNotifyState nf(NOTIFY_LOGIC_VIEW);
+	CNotifyDialogState nf(NOTIFY_LOGIC_VIEW);
 	nf.PushInt(ADD_LOGIC);
 	nf.Push_Directly(lg->GetLogicItem());
 	nf.Notify(this);
@@ -372,7 +373,7 @@ void CLogicDialog::DeleteLogic(const tstring& Name){
 	}
 	
 	//通知GUI界面，有逻辑条目
-	CNotifyState nf(NOTIFY_LOGIC_VIEW);
+	CNotifyDialogState nf(NOTIFY_LOGIC_VIEW);
 	nf.PushInt(DELETE_LOGIC);
 	nf.Push_Directly(lg->GetLogicItem());
 	nf.Notify(this);
@@ -395,7 +396,7 @@ void CLogicDialog::ReferenceLogic(const tstring& scrName,const tstring& refName,
 	} 
 	
 
-	CNotifyState nf(NOTIFY_LOGIC_VIEW);
+	CNotifyDialogState nf(NOTIFY_LOGIC_VIEW);
 	nf.PushInt(REF_LOGIC);
 
 	ePipeline* Pipe = new ePipeline;
@@ -415,7 +416,7 @@ void CLogicDialog::RegisterCapacitor(const tstring& Name, CLocalLogicCell* Creat
 	
 	ePipeline* Item = Cp->GetElementItem();
 
-	CNotifyState nf(NOTIFY_LOGIC_VIEW);
+	CNotifyDialogState nf(NOTIFY_LOGIC_VIEW);
 	nf.PushInt(ADD_CAPA);
     nf.Push_Directly(Item);
 	nf.Notify(this);
@@ -432,7 +433,7 @@ void CLogicDialog::ReferenceCapacitor(const tstring& scrName,const tstring& refN
 		 Cp->DelRef(refName);
 	}
 
-	CNotifyState nf(NOTIFY_LOGIC_VIEW);
+	CNotifyDialogState nf(NOTIFY_LOGIC_VIEW);
 	nf.PushInt(REF_CAPA);
 	
 	ePipeline* Item = new ePipeline;
@@ -453,7 +454,7 @@ void CLogicDialog::RegisterInductor(const tstring& Name, CLocalLogicCell* Create
 	m_InduList.push_back(Indu);
 	ePipeline* Item = Indu->GetElementItem();
 
-	CNotifyState nf(NOTIFY_LOGIC_VIEW);
+	CNotifyDialogState nf(NOTIFY_LOGIC_VIEW);
 	nf.PushInt(ADD_INDU);
     nf.Push_Directly(Item);
 	nf.Notify(this);
@@ -477,7 +478,7 @@ void CLogicDialog::RegisterObject(ePipeline& ObjectData){
 	Ob->m_ID = AbstractSpace::CreateTimeStamp();
 	m_ObjectList.push_back(Ob);
 
-	CNotifyState nf(NOTIFY_OBJECT_VIEW);
+	CNotifyDialogState nf(NOTIFY_OBJECT_VIEW);
 	nf.PushInt(ADD_OBJECT);
     nf.Push_Directly(ObjectData.Clone());
 	nf.Notify(this);
@@ -517,7 +518,7 @@ void CLogicDialog::DeleteObject(ePipeline& ObjectData){
 		}
 		It++;
 	}
-	CNotifyState nf(NOTIFY_OBJECT_VIEW);
+	CNotifyDialogState nf(NOTIFY_OBJECT_VIEW);
 	nf.PushInt(DEL_OBJECT);
     nf.Push_Directly(ObjectData.Clone());
 	nf.Notify(this);
@@ -535,7 +536,7 @@ void CLogicDialog::ReferenceInductor(const tstring& scrName,const tstring& refNa
 	}
 
 
-	CNotifyState nf(NOTIFY_LOGIC_VIEW);
+	CNotifyDialogState nf(NOTIFY_LOGIC_VIEW);
 	nf.PushInt(REF_INDU);
 
 	ePipeline* Item = new ePipeline;
@@ -630,7 +631,7 @@ void CLogicDialog::ClearLogicSence(){
 	}
 	m_InduList.clear();
 
-	CNotifyState nf(NOTIFY_LOGIC_VIEW);
+	CNotifyDialogState nf(NOTIFY_LOGIC_VIEW);
 	nf.PushInt(CLEAR_ALL);
 	nf.Notify(this);
 }
@@ -644,7 +645,7 @@ void CLogicDialog::ClearObject(){
 	}
 	m_ObjectList.clear();
 	
-	CNotifyState nf(NOTIFY_OBJECT_VIEW);
+	CNotifyDialogState nf(NOTIFY_OBJECT_VIEW);
 	nf.PushInt(CLEAR_ALL);
 	nf.Notify(this);
 }

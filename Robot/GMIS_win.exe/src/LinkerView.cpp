@@ -89,7 +89,6 @@ void CLinkerView::AddDialog(int64 SourceID,int64 DialogID,int64 ParentID,tstring
  		Name =GetDefaultName();
 	};
 
-	
 	CLinkerItem* LinkerItem = new CLinkerItem(DialogID,Name); 
    
     SIZE s = CalcuTextSize(Name.c_str());
@@ -136,7 +135,7 @@ LRESULT CLinkerView::ChildReaction(SpaceRectionMsg* SRM){
 			int64 SourceID = Param.PopInt();
 			int64 ParentID = Param.PopInt();
             
-			if (DialogItem->m_Alias==DEFAULT_DIALOG)
+			if (ParentID == NO_PARENT)
 			{
 				CLinkerItem* LinkerItem = DialogItem;
 				LinkerItem->m_Alias = SourceID;
@@ -144,20 +143,24 @@ LRESULT CLinkerView::ChildReaction(SpaceRectionMsg* SRM){
 				LinkerItem->m_State |= SPACE_OPEN;
 				
 				Layout(true);
-	
 			}else{
 				CLinkerItem* LinkerItem = FindLinker(SourceID);
 				if (LinkerItem)
 				{
 					if (ParentID)
 					{
-						LinkerItem = (CLinkerItem*)LinkerItem->FindSpace(ParentID);
+						if(ParentID != SourceID){ 
+							LinkerItem = (CLinkerItem*)LinkerItem->FindSpace(ParentID);
+						}
 					}
+
 					if (LinkerItem)
 					{
 						LinkerItem->m_State |= SPACE_OPEN;
 						LinkerItem->PushChild(DialogItem);		
 						Layout(true);
+					}else{
+						delete DialogItem;
 					}
 				}else{
 					delete DialogItem;
@@ -232,7 +235,7 @@ LRESULT CLinkerView::ChildReaction(SpaceRectionMsg* SRM){
 			{
 
 				CLinkerItem* DialogItem = LinkerItem;
-				if(DialogID != DEFAULT_DIALOG){
+				if(DialogID != DEFAULT_DIALOG ){
 					DialogItem = (CLinkerItem*)LinkerItem->FindSpace(DialogID);
 				}
 				if (DialogItem)
@@ -245,11 +248,12 @@ LRESULT CLinkerView::ChildReaction(SpaceRectionMsg* SRM){
 					if(m_SpaceSelected){
 						m_SpaceSelected->m_State &= ~SPACE_SELECTED;
 					}
+					m_OldSelected = NULL;
 					
 					m_SpaceSelected = DialogItem;
 					m_SpaceSelected->m_State |= SPACE_SELECTED;
 					m_SpaceFocused = m_SpaceSelected;
-
+					
 					Invalidate();
 				}
 
@@ -264,7 +268,7 @@ LRESULT CLinkerView::ChildReaction(SpaceRectionMsg* SRM){
 			CVSpace2* Linker = FindSpace(SourceID);
 			if(Linker==NULL)return 0;
 			CVSpace2* DialogItem = Linker;
-			if (DialogID != DEFAULT_DIALOG )
+			if (DialogID != SourceID )
 			{
 				DialogItem = (CLinkerItem*)Linker->FindSpace(DialogID);
 			}
@@ -283,35 +287,108 @@ LRESULT CLinkerView::ChildReaction(SpaceRectionMsg* SRM){
 }
 
 LRESULT CLinkerView::OnLButtonDown(WPARAM wParam, LPARAM lParam){
-	LRESULT ret = CWSTreeView::OnLButtonDown(wParam,lParam);
+	LRESULT ret = CWSScrollView::OnLButtonDown(wParam,lParam);
 	
     POINTS* p = (POINTS*)(&lParam);
-	
-	if(m_ScrollSelected){
-		//if(m_SpaceSelected)m_SpaceSelected->m_State &= ~SPACE_SELECTED;
-		//m_SpaceSelected = NULL; //点击了Scrollbar不能再点击其它
-		return 0;
-	}
-	
 	POINT point;
-	point.x =p->x;
-	point.y =p->y;
+	point.x = p->x;
+	point.y = p->y;
+
+
+    if(m_ScrollSelected){
+		if(m_SpaceSelected){ 
+			m_SpaceSelected->m_AreaBottom-= m_Toolbar.m_Height;
+			m_SpaceSelected->m_State &= ~SPACE_SELECTED;
+			m_Toolbar.m_Owner = NULL;
+			m_SpaceSelected = NULL;
+		}
+		return ret;
+	}
+
+	::SetCapture(m_hWnd);
+
+	CVSpace2* NewSelect = Hit(point);
+    if(NewSelect==NULL)return 0;
 	
-//	CVSpace2* SpaceSelected = Hit(point);	
-	if(m_SpaceSelected){
+	if(NewSelect == m_SpaceSelected){		
+		//点击发生在treebox?
+		RECT TreeBox = GetHeaderBox(m_SpaceSelected);  
+		if(::PtInRect(&TreeBox,point)){
+			//取消工具条，避免因为收缩导致工具条依然在原地
+			/*if(m_Toolbar.m_Owner){ 
+				m_Toolbar.m_Owner->m_AreaBottom-=m_Toolbar.m_Height;
+				m_Toolbar.m_Owner->m_State &= ~SPACE_SELECTED;
+				m_Toolbar.m_Owner = NULL;
+			}
+			*/
+			ToggleSpace(m_SpaceSelected);
+			return 0;
+		}
+		
+		//点击发生在item?
+		RECT rc = m_SpaceSelected->GetArea();
+		rc.bottom-=m_Toolbar.m_Height; //排除toolbar再次点击在Item上则取消选择
+		if(::PtInRect(&rc,point)){
+			//m_SpaceSelected->SetArea(rc);
+			//m_SpaceSelected->m_State &= ~SPACE_SELECTED;
+			//m_SpaceSelected = NULL;
+			//m_Toolbar.m_Owner = NULL;
+			//Layout();
+			return 0;
+		}
+		//点击发生在toolbar上
+		CVSpace2* Space = m_Toolbar.HitTest(point.x,point.y);
+		if(Space && Space != &m_Toolbar){
+			Space->m_State |= SPACE_SELECTED;
+			m_ToobarItemSelected = Space;
+			Invalidate();
+		}	        		
+	}else {// NewSelect != m_SpaceSelected	
+		
+		RECT TreeBox = GetHeaderBox(NewSelect);  
+		if(::PtInRect(&TreeBox,point)){
+			//取消旧的选择
+			if(m_SpaceSelected){ 
+				m_SpaceSelected->m_AreaBottom-=m_Toolbar.m_Height;
+				m_SpaceSelected->m_State &= ~SPACE_SELECTED;
+				m_Toolbar.m_Owner = NULL;
+				m_SpaceSelected = NULL;
+			}
+			ToggleSpace( NewSelect);
+			return 0 ; //点击newselect treebox不影响当前选择
+		}
+		
+		if(NewSelect->m_State & SPACE_NOTOOLABR )return 0;
+		
+		//取消旧的选择
+		if(m_SpaceSelected){ 
+			m_SpaceSelected->m_AreaBottom-=m_Toolbar.m_Height;
+			m_SpaceSelected->m_State &= ~SPACE_SELECTED;
+			m_Toolbar.m_Owner = NULL;
+			m_SpaceSelected = NULL;
+		}
+		//设置新选择
+		m_SpaceSelected = NewSelect;
+		m_SpaceSelected->m_State |= SPACE_SELECTED;
+		
+		m_SpaceSelected->m_AreaBottom += m_Toolbar.m_Height; //增加高度放置toolbar
+		m_Toolbar.m_Owner = m_SpaceSelected;
+
 		if (m_OldSelected == m_SpaceSelected)
 		{
 			return 0;
 		};
 
 		SetSpaceWarning(m_SpaceSelected,FALSE);
-	    m_OldSelected = m_SpaceSelected;
+		m_OldSelected = m_SpaceSelected;
 
-		ePipeline Msg(GUI_SET_FOUCUS_DIALOG);  //本地焦点输入，写信和收信为同一个人		
+		ePipeline Msg(GUI_SET_FOUCUS_DIALOG);  //本地焦点输入，写信和收信为同一个人
 		GetGUI()->SendMsgToBrainFocuse(Msg);
 
-	}	
-	Invalidate();
+
+		Layout();	
+	}
+	
 	return 0;
 }
 

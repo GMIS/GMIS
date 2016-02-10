@@ -1,7 +1,8 @@
 ﻿// LocalLogicView.cpp: implementation of the CLocalLogicView class.
 //
 //////////////////////////////////////////////////////////////////////
-#pragma warning (disable:4786) 
+#pragma warning (disable: 4786) 
+#pragma warning (disable: 4244)
 
 #include "GMIS.h"
 #include "resource.h"

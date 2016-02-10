@@ -290,7 +290,7 @@ bool CLogicThread::CanBeExecute(CLogicDialog* Dialog){
 	if(m_Text.m_SentenceList.size()==0 || m_TextMsgQueue.size() || !m_Text.IsComplete() ){
 		error = m_Text.PrintThinkResult();
 
-		CNotifyState nf(NOTIFY_DIALOG_ERROR);
+		CNotifyDialogState nf(NOTIFY_DIALOG_ERROR);
 		nf.PushInt(THINK_ERROR);
 		nf.PushString(error);
 		nf.Notify(Dialog);
@@ -313,7 +313,7 @@ bool CLogicThread::CanBeExecute(CLogicDialog* Dialog){
 		CSentence* Sentence = m_Text.m_SentenceList.at(i);
 		if(!Sentence->IsOK()){
 			error = m_Text.PrintThinkResult();
-			CNotifyState nf(NOTIFY_DIALOG_ERROR);
+			CNotifyDialogState nf(NOTIFY_DIALOG_ERROR);
 			nf.PushInt(THINK_ERROR);
 			nf.PushString(error);
 			nf.Notify(Dialog);
@@ -325,7 +325,7 @@ bool CLogicThread::CanBeExecute(CLogicDialog* Dialog){
 			if(n != 1 && Sentence->m_AnalyseResult.Size() != 1){
 				error = Format1024(_T("ERROR: Inner command must be used alone."));
 				//error = m_Text.PrintThinkResult();
-				CNotifyState nf(NOTIFY_DIALOG_ERROR);
+				CNotifyDialogState nf(NOTIFY_DIALOG_ERROR);
 				nf.PushInt(THINK_ERROR);
 				nf.PushString(error);
 				nf.Notify(Dialog);
@@ -348,7 +348,7 @@ bool CLogicThread::CanBeExecute(CLogicDialog* Dialog){
 					//不能连续两句都是think
 					error = _T("Error: Action type Conflict !");
 					//error = m_Text.PrintThinkResult();
-					CNotifyState nf(NOTIFY_DIALOG_ERROR);
+					CNotifyDialogState nf(NOTIFY_DIALOG_ERROR);
 					nf.PushInt(THINK_ERROR);
 					nf.PushString(error);
 					nf.Notify(Dialog);
@@ -362,7 +362,7 @@ bool CLogicThread::CanBeExecute(CLogicDialog* Dialog){
 			if(i != m_Text.m_SentenceList.size()-1){
 				error = _T("Error: Task sentence more than one or not be in last !");
 				//error = m_Text.PrintThinkResult();
-				CNotifyState nf(NOTIFY_DIALOG_ERROR);
+				CNotifyDialogState nf(NOTIFY_DIALOG_ERROR);
 				nf.PushInt(THINK_ERROR);
 				nf.PushString(error);
 				nf.Notify(Dialog);
@@ -390,7 +390,7 @@ bool CLogicThread::CanBeExecute(CLogicDialog* Dialog){
 					{
 						error = Format1024(_T("Error: capacitor name [%s] be existed!\n"),Name.c_str());
 
-						CNotifyState nf(NOTIFY_DIALOG_ERROR);
+						CNotifyDialogState nf(NOTIFY_DIALOG_ERROR);
 						nf.PushInt(THINK_ERROR);
 						nf.PushString(error);
 						nf.Notify(Dialog);
@@ -407,7 +407,7 @@ bool CLogicThread::CanBeExecute(CLogicDialog* Dialog){
 					{
 						error = Format1024(_T("Error: Inductor name [%s] be existed!\n"),Name.c_str());
 						
-						CNotifyState nf(NOTIFY_DIALOG_ERROR);
+						CNotifyDialogState nf(NOTIFY_DIALOG_ERROR);
 						nf.PushInt(THINK_ERROR);
 						nf.PushString(error);
 						nf.Notify(Dialog);
@@ -424,7 +424,7 @@ bool CLogicThread::CanBeExecute(CLogicDialog* Dialog){
 						//没有找到引用对象
 						error = Format1024(_T("Error: lose reference capacitor [%s] !\n"),Name.c_str());
 
-						CNotifyState nf(NOTIFY_DIALOG_ERROR);
+						CNotifyDialogState nf(NOTIFY_DIALOG_ERROR);
 						nf.PushInt(THINK_ERROR);
 						nf.PushString(error);
 						nf.Notify(Dialog);
@@ -440,7 +440,7 @@ bool CLogicThread::CanBeExecute(CLogicDialog* Dialog){
 						//没有找到引用对象
 						error = Format1024(_T("Error: lose reference inductor [%s] !\n"),Name.c_str());
 
-						CNotifyState nf(NOTIFY_DIALOG_ERROR);
+						CNotifyDialogState nf(NOTIFY_DIALOG_ERROR);
 						nf.PushInt(THINK_ERROR);
 						nf.PushString(error);
 						nf.Notify(Dialog);

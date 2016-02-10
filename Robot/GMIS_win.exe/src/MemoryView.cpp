@@ -2,6 +2,7 @@
 //
 //////////////////////////////////////////////////////////////////////
 #pragma warning (disable:4786) 
+#pragma warning (disable: 4244)
 
 #include "MemoryView.h"
 #include "GMIS.h"

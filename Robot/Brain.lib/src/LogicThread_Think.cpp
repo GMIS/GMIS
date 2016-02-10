@@ -2,13 +2,16 @@
 // 分析信号部分
 //////////////////////////////////////////////////////////////////////
 #pragma warning(disable: 4786)
+#pragma warning(disable: 4244)
 
+#include "Brain.h"
 #include "LogicThread.h"
 #include "InstinctDefine.h"
 #include "NotifyMsgDef.h"
 #include "LogicDialog.h"
 #include "TextAnalyse.h"
 #include "LogicElement.h"
+
 
 int32 CLogicThread::GetActionRoom(int64 ParentID,ClauseLogicSense* cls){
 	   CppSQLite3Buffer SQL;
@@ -108,7 +111,7 @@ void CLogicThread::ThinkProc(CLogicDialog* Dialog,int32 Pos,tstring& Msg,bool Fo
 				ThinkAllAffectedClause(Dialog);
 				ThinkAllAffectedSentence(Dialog);
 				
-				CNotifyState nf(NOTIFY_PROGRESS_OUTPUT);
+				CNotifyDialogState nf(NOTIFY_PROGRESS_OUTPUT);
 				nf.PushInt(THINK_PROGRESS);
 				nf.PushInt(per);
 				nf.Notify(Dialog);
@@ -1378,6 +1381,16 @@ bool  CLogicThread::CheckInstinctParam(CLogicDialog* Dialog,CClause* Clause, vec
 			}
 		}
 		break;
+	case INSTINCT_CREATE_ACCOUNT:
+	case INSTINCT_DELETE_ACCOUNT:
+		{
+			if( ParamList.size()!=0 ){
+				//Error = "param error" 
+				Clause->m_MemoryID = ERROR_20;
+				return false;
+			}
+		};
+		break;
 	default:
 		assert(0);	
 		return false;
@@ -1393,7 +1406,7 @@ void CLogicThread::NotifyTokenError(CLogicDialog* Dialog,CToken* Token,uint32 Er
 	 tstring error = ANALYSE_ERROR[ErrorID];
 	 tstring s = Format1024(_T("Error token = %s : %s\n"),Token->m_Str.c_str(),error.c_str());
 	 
-	 CNotifyState nf(NOTIFY_DIALOG_ERROR);
+	 CNotifyDialogState nf(NOTIFY_DIALOG_ERROR);
 	 nf.PushInt(THINK_ERROR);
 	 nf.PushString(s);
 	 nf.Notify(Dialog);
@@ -1411,7 +1424,7 @@ void CLogicThread::NotifyClauseError(CLogicDialog* Dialog,CClause* Clause,uint32
 	 tstring s = Format1024(_T("Clause error: %s\n"),error.c_str());
 
 	 
-	 CNotifyState nf(NOTIFY_DIALOG_ERROR);
+	 CNotifyDialogState nf(NOTIFY_DIALOG_ERROR);
 	 nf.PushInt(THINK_ERROR);
 	 nf.PushString(s);
 	 nf.Notify(Dialog);

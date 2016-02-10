@@ -27,13 +27,16 @@
     <ClCompile Include="src\StatusTip.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\WorldLog.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Win32Tool.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\zip_utils\unzip.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\MainFrame.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\LogView.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -52,13 +55,16 @@
     <ClInclude Include="src\StatusTip.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\WorldLog.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\Win32Tool.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\zip_utils\unzip.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\MainFrame.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\LogView.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

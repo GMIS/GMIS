@@ -1,8 +1,8 @@
-// WorldLog.cpp: implementation of the CWorldLog class.
+// LogView.cpp: implementation of the CLogView class.
 //
 //////////////////////////////////////////////////////////////////////
 
-#include "WorldLog.h"
+#include "LogView.h"
 #include "UserTimer.h"
 
 InfoItem::InfoItem(int64 ID,const TCHAR* text)
@@ -25,21 +25,21 @@ void InfoItem::Draw(HDC hDC,ePipeline* Pipe /*=Pipe*/){
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-CWorldLog::CWorldLog()
+CLogView::CLogView()
 {
 	//m_bShowBorder = true;
 	m_crViewBkg =  RGB(0,0,0);
 	m_MaxItemNum = 1000;
 }
 
-CWorldLog::~CWorldLog()
+CLogView::~CLogView()
 {
 
 }
 
-InfoItem* CWorldLog::AddInfo(const TCHAR* text){
+InfoItem* CLogView::AddInfo(const TCHAR* text){
 	int64 ID = AbstractSpace::CreateTimeStamp();
-	tstring Time = AbstractSpace::GetTimer()->GetHMS(ID);
+	tstring Time = AbstractSpace::GetTimer()->GetFullTime(ID);
 	Time = Format1024(_T("%s   %s"),Time.c_str(),text);
 	InfoItem* Item = new InfoItem(ID,Time.c_str()); 
     SIZE s = CalcuTextSize(Time.c_str());
@@ -48,13 +48,13 @@ InfoItem* CWorldLog::AddInfo(const TCHAR* text){
 	return Item;
 };
 
-void CWorldLog::ClearAllItem(){
+void CLogView::ClearAllItem(){
 	SendChildMessage(GetHwnd(),CLR_INFO,0,0);	
 };
 
 	
 
-LRESULT CWorldLog::ChildReaction(SpaceRectionMsg* SRM){
+LRESULT CLogView::ChildReaction(SpaceRectionMsg* SRM){
 	switch(SRM->Msg)
 	{
 	case ADD_INFO:
@@ -78,7 +78,7 @@ LRESULT CWorldLog::ChildReaction(SpaceRectionMsg* SRM){
 	return 0;
 }
 
-LRESULT CWorldLog::OnLButtonDown(WPARAM wParam, LPARAM lParam){
+LRESULT CLogView::OnLButtonDown(WPARAM wParam, LPARAM lParam){
 	LRESULT ret = CWSScrollView::OnLButtonDown(wParam,lParam);
  	
     POINTS* p = (POINTS*)(&lParam);
@@ -104,7 +104,7 @@ LRESULT CWorldLog::OnLButtonDown(WPARAM wParam, LPARAM lParam){
 	return 0;
 }
 
-LRESULT CWorldLog::Reaction(UINT message, WPARAM wParam, LPARAM lParam){
+LRESULT CLogView::Reaction(UINT message, WPARAM wParam, LPARAM lParam){
 	if(message == WM_LBUTTONDOWN){
 		return OnLButtonDown(wParam,lParam);
 	}

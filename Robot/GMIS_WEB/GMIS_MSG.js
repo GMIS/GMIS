@@ -138,7 +138,7 @@ ePipeline.prototype = {
 		//data
 		s += datastring;
 		return s;
-	},
+    },
 	FromString: function(s){
 		this.Data = [];
 	
@@ -252,10 +252,13 @@ ePipeline.prototype = {
 			
 				end = i+1+len;//end pos of this pipe
 				s1 = s.substring(start,end); //get this pipe's string
-				ret = PipeFromString(s1);
+				pos = end;	
+				
+				child = new ePipeline();
+				ret = child.FromString(s1);
 				if(!ret)return false;
-
-				pos = end;						
+				this.Data.push({type:'pipe',value:child});	
+									
 			}
 			break;
     		default: 
@@ -296,6 +299,13 @@ function GMIS_Msg(){
 //GMIS_Msg methods
 GMIS_Msg.prototype = {
  	FromString: function(s){
+ 	
+ 	this.ID = 0;
+	this.Label = "";
+ 	this.ReceiverInfo = new ePipeline();
+	this.Letter       = new ePipeline();
+	this.SenderInfo   = new ePipeline();
+	
 	var slen = s.length;
 	var pos = 0;
 	if(slen<9 || s[pos] !='4' || s[pos+1] != '@')return false;
@@ -334,6 +344,7 @@ GMIS_Msg.prototype = {
 			pos+=2;
 			i = s.indexOf('@',pos);//ID
 			if(i==-1)return false;
+			
 			pos =i+1;
 			i = s.indexOf('@',pos);//Label len
 			if(i==-1)return false;	
@@ -348,11 +359,11 @@ GMIS_Msg.prototype = {
 			len = Number(s1);
 			
 			end = i+1+len;//end pos of this pipe
+			pos =end;	
 			s1 = s.substring(start,end); //get this pipe's string
 			ret = this.ReceiverInfo.FromString(s1);
 			if(!ret)return false;
 
-			pos =end;	
 	}
 	
 	if(pos>=slen)return false;
@@ -378,12 +389,12 @@ GMIS_Msg.prototype = {
 			len = Number(s1);
 			
 			end = i+1+len;//end pos of this pipe
+			pos = end;
+				
 			s1 = s.substring(start,end); //get this pipe's string
 			ret = this.Letter.FromString(s1);
 			if(!ret)return false;
 
-			pos =end;	
-
 	}
 	if(pos>=slen)return false;
 	ch = s[pos];
@@ -408,11 +419,11 @@ GMIS_Msg.prototype = {
 			len = Number(s1);
 			
 			end = i+1+len;//end pos of this pipe
+			pos =end;
 			s1 = s.substring(start,end); //get this pipe's string
 			ret = this.SenderInfo.FromString(s1);
 			if(!ret)return false;
-
-			pos =end;	
+				
 	}	
 	return true;
 	},

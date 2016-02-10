@@ -38,7 +38,7 @@ class System;
 
 class CUserLinkerPipe : public CLinkerPipe  
 {
-	SUPPORT_ABSTRACT_SAPCE_POOL(CUserLinkerPipe);
+	//SUPPORT_ABSTRACT_SAPCE_POOL(CUserLinkerPipe);
 
 private:
 	bool          m_bDeleteMutex;
@@ -63,6 +63,7 @@ public:
 	virtual bool   IsValid();
 	virtual void   Close();
 
+
 private:
 	bool  PhysicalRev(char* Buf,uint32 BufSize, uint32& RevLen, uint32 flag=0);
 	bool  PhysicalSend(char* Buf,uint32 BufSize, uint32& SendLen, uint32 flag=0);
@@ -72,7 +73,7 @@ private:
 //With active connection ability
 class CUserConnectLinkerPipe:public CUserLinkerPipe
 {
-	SUPPORT_ABSTRACT_SAPCE_POOL(CUserConnectLinkerPipe);
+	//SUPPORT_ABSTRACT_SAPCE_POOL(CUserConnectLinkerPipe);
 
 public:
 	int32		m_TimeOut;
@@ -87,7 +88,7 @@ public:
 	bool BlockConnect(tstring& error);
 	virtual bool  ThreadIOWorkProc(char* Buffer,uint32 BufSize);
 private:
-	void Connect();
+	bool Connect(tstring& error);
 
 };
 

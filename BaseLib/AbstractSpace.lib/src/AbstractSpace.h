@@ -3,7 +3,7 @@
 * author: ZhangHongBing(hongbing75@gmail.com)  
 *  
 *
-* a top root class based on energy-mass viewpoint, inherit it to get world
+* root class based on energy-mass viewpoint, inherit it to get world
 */
 
 
@@ -19,7 +19,7 @@ using namespace std;
 #define UNICODE_16_BIT
 #else 
 #define UNICODE_32_BIT
-#pragma message("!!! Are you sure the unicode char is 32 bit of your platform ?")
+#pragma message("!!! Are you sure the unicode char is 32 bit on your platform ?")
 #endif
 
 namespace ABSTRACT { 

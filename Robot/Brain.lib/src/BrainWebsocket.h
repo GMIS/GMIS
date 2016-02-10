@@ -62,7 +62,7 @@ public:
 
 class CWebsocketLinkerPipe:public CLinkerPipe
 {
-	SUPPORT_ABSTRACT_SAPCE_POOL(CWebsocketLinkerPipe);
+	//SUPPORT_ABSTRACT_SAPCE_POOL(CWebsocketLinkerPipe);
 
 private:
 	bool          m_bDeleteMutex;

@@ -249,6 +249,7 @@ public:
 	SPACETYPE    m_Type;
 	tstring      m_Fingerprint;
 	ePipeline    m_Address; //空间路径
+	DLL_TYPE     m_ExecuterType;
 public:
 	CObjectData(ePipeline& ObjectData);
 	CObjectData& operator=(const CObjectData& ob);
@@ -283,6 +284,7 @@ public:
 		if(m_PrivateValidata)delete m_PrivateValidata;
 		m_PrivateValidata = NULL;
 	}
+	void Reset();
 
 	virtual ENERGY_TYPE EnergyType(){ return TYPE_USER;}
 
@@ -399,6 +401,7 @@ public:
 
 	virtual ~People();
 
+	void Reset(tstring Name,tstring Cryptograhp);
 	People operator = ( People& p){
 		ePipeline* thisPipe = (ePipeline*)this;
 		ePipeline* PeoplePipe = (ePipeline*)&p;

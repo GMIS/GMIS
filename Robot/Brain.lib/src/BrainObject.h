@@ -87,8 +87,8 @@ public:
 	
 	virtual TypeAB  GetTypeAB(){ return 0x00000000;};
 	
-	virtual MsgProcState MsgProc(CLogicDialog* Dialog,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress,int32& ChildIndex);
-    virtual bool TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress);
+	virtual MsgProcState EltMsgProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
+    virtual bool TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
 	
 };	
 
@@ -101,7 +101,7 @@ public:
 	
 	virtual ~CWaitSecond(){};
 	
-	virtual bool TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress);
+	virtual bool TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
 };	
 
 //GOTO LABLE在转向之前会向系统申请一次中断，这样可以避免在无限转向循环中其他并联分支没有机会执行
@@ -121,8 +121,8 @@ public:
 	
 	virtual TypeAB GetTypeAB(){ return 0;};
 	
-	virtual MsgProcState MsgProc(CLogicDialog* Dialog,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress,int32& ChildIndex);
-    virtual bool TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress);
+	virtual MsgProcState EltMsgProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
+    virtual bool TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
 
 };
 
@@ -170,7 +170,7 @@ public:
 	
 	virtual TypeAB  GetTypeAB(){ return 0x30000000;} 
 
-    virtual bool TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress);
+    virtual bool TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
 
 };
 
@@ -218,6 +218,8 @@ protected:
 	bool  DoSetFindPricision(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg);
 		
 	bool  DoCloseDialog(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg);	
+	bool  DoCreateAccount(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg);	
+	bool  DoDeleteAccount(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg);	
 };
 
 
@@ -235,8 +237,8 @@ public:
 	
 	virtual TypeAB  GetTypeAB(){ return 0;};
 	
-	virtual MsgProcState MsgProc(CLogicDialog* Dialog,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress,int32& ChildIndex);
-    virtual bool TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress);
+	virtual MsgProcState EltMsgProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
+    virtual bool TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
 
 };
 
@@ -248,7 +250,10 @@ class CStartObject: public CElement
 public:   
 	ePipeline*       m_Obj;
 protected:
-	
+	void Reset(){	
+		m_Obj->m_ID = 0; //实例ID
+		assert(m_Obj->Size()==5);
+	}
 	CStartObject():CElement(0,_T("")){}; //不允许空引用；
 public:
 	CStartObject(int64 ID,ePipeline* Obj);
@@ -267,7 +272,7 @@ public:
 	virtual ~CNameObject();
 	
 	virtual TypeAB  GetTypeAB(){ return 0;};
-    virtual bool TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress);
+    virtual bool TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
 	
 };
 
@@ -279,7 +284,7 @@ public:
 	virtual ~CNameObject_Static();
 	
 	virtual TypeAB  GetTypeAB(){ return 0;};
-    virtual bool TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress);
+    virtual bool TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
 	
 };
 
@@ -296,7 +301,7 @@ public:
 	};
 	
 	virtual TypeAB  GetTypeAB(){ return 0x30000000;};
-    virtual bool TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress);
+    virtual bool TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
 	
 };
 
@@ -315,7 +320,7 @@ public:
 	};
 	
 	virtual TypeAB  GetTypeAB(){ return 0;};
-    virtual bool TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress);
+    virtual bool TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
 	
 };
 
@@ -334,7 +339,7 @@ public:
 	};
 
 	virtual TypeAB  GetTypeAB(){ return 0;};
-	virtual bool TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress);
+	virtual bool TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
 
 };
 class CUseObject: public CElement
@@ -346,8 +351,8 @@ public:
 	
 	virtual TypeAB  GetTypeAB(){ return 0;};
 
-	virtual MsgProcState MsgProc(CLogicDialog* Dialog,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress,int32& ChildIndex);
-    virtual bool TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress);
+	virtual MsgProcState EltMsgProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
+    virtual bool TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
 	
 };
 
@@ -359,8 +364,8 @@ public:
 
 	virtual TypeAB  GetTypeAB(){ return 0;};
 
-	virtual MsgProcState MsgProc(CLogicDialog* Dialog,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress,int32& ChildIndex);
-	virtual bool TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress);
+	virtual MsgProcState EltMsgProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
+	virtual bool TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
 
 };
 
@@ -391,7 +396,7 @@ public:
 	virtual ~CCreateTable(){};
 	
 	virtual TypeAB  GetTypeAB(){ return 0x00000000;};
-    virtual bool TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress);
+    virtual bool TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
 	
 };
 
@@ -404,7 +409,7 @@ public:
 	virtual ~CFocusTable(){};
 	
 	virtual TypeAB  GetTypeAB(){ return 0;};
-    virtual bool TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress);
+    virtual bool TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
 };
 
 //静态版本，即focus memory名字直接由参数提供
@@ -418,7 +423,7 @@ public:
 	virtual ~CFocusMemory_Static(){};
 	
 	virtual TypeAB  GetTypeAB(){ return 0;};
-    virtual bool TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress);
+    virtual bool TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
 	
 };
 
@@ -433,7 +438,7 @@ public:
 	};
 
 	virtual TypeAB  GetTypeAB(){ return 0x10000000;};	
-	virtual bool TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress);
+	virtual bool TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
 };
 
 class  CTable_ExportData : public CElement  
@@ -447,7 +452,7 @@ public:
 	};
 
 	virtual TypeAB  GetTypeAB(){ return 0x10000000;};	
-	virtual bool TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress);
+	virtual bool TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
 };
 
 class  CTable_InsertData : public CElement  
@@ -461,7 +466,7 @@ public:
 	};
 
 	virtual TypeAB  GetTypeAB(){ return 0x10000000;};	
-	virtual bool TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress);
+	virtual bool TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
 };
 class CTable_ModifyData: public CElement  
 {
@@ -474,7 +479,7 @@ public:
 	};
 
 	virtual TypeAB  GetTypeAB(){ return 0x10000000;};	
-	virtual bool TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress);
+	virtual bool TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
 };
 
 class  CTable_GetData : public CElement  
@@ -488,7 +493,7 @@ public:
 	
 	virtual TypeAB  GetTypeAB(){ return 0x10000000;};
 	
-    virtual bool TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress);
+    virtual bool TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
 
 };
 
@@ -503,7 +508,7 @@ public:
 	
 	virtual TypeAB  GetTypeAB(){ return 0x10000000;};
 	
-    virtual bool TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress);
+    virtual bool TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
 
 };
 
@@ -518,7 +523,7 @@ public:
 	
 	virtual TypeAB  GetTypeAB(){ return 0x00000000;};
 	
-    virtual bool TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress);
+    virtual bool TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
 	
 };
 
@@ -533,7 +538,7 @@ public:
 	
 	virtual TypeAB  GetTypeAB(){ return 0x00000000;};
 	
-    virtual bool TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress);
+    virtual bool TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
 	
 };
 //////////////////////////////////////////////////////////////////////////
@@ -552,7 +557,7 @@ public:
 	};
 	
 	virtual TypeAB  GetTypeAB(){ return 0;};
-	virtual bool  TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress);
+	virtual bool  TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
 	
 };
 
@@ -569,7 +574,7 @@ public:
 	};
 	
 	virtual TypeAB  GetTypeAB(){ return 0;};
-	virtual bool    TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress);
+	virtual bool    TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
 	
 };
 
@@ -588,8 +593,8 @@ public:
 	
 	virtual TypeAB  GetTypeAB(){ return 0x00000000;};
 	
-	virtual MsgProcState MsgProc(CLogicDialog* Dialog,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress,int32& ChildIndex);
-    virtual bool TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress);
+	virtual MsgProcState EltMsgProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
+    virtual bool TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
 };	
 
 
@@ -604,7 +609,7 @@ public:
 	
 	virtual TypeAB  GetTypeAB(){ return 0x00000000;};
 	
-    virtual bool TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress);
+    virtual bool TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
 	
 };	
 
@@ -616,8 +621,8 @@ class CUseRobot: public CElement
 {
 public:
 	CLogicDialog*   m_Dialog;
-	int64          m_RobotID;
-	ePipeline      m_TaskLogic;  //其中m_Label是此逻辑的明文
+	int64           m_RobotID;
+	ePipeline       m_TaskLogic;  //其中m_Label是此逻辑的明文
 	
 protected:
 	CUseRobot():CElement(0,_T("")){}; //不允许空引用；
@@ -628,8 +633,8 @@ public:
 	virtual TypeAB GetTypeAB();
     virtual tstring GetName();
 
-	virtual MsgProcState MsgProc(CLogicDialog* Dialog,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress,int32& ChildIndex);
-    virtual bool TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress);
+	virtual MsgProcState EltMsgProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
+    virtual bool TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
 
 };
 
@@ -668,7 +673,7 @@ public:
 	virtual ~CPipeViewMass(){};
 	
 	void GetPipeInfo(ePipeline* Pipe,tstring& text);
-    virtual bool TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress);
+    virtual bool TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
 };
 
 /*
@@ -684,4 +689,4 @@ public:
 	virtual bool TaskProc(CTaskDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress);
 };
 */
-#endif // !defined(AFX_BRAINOBJECT_H__48B86D08_4A8A_44A9_BEE5_F7AD3334BD3F__INCLUDED_)
+#endif // _BRAINOBJECT_H__

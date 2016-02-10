@@ -115,7 +115,7 @@ NewWord _WordList[]={    //note: 增减项目必须修改初始化单词数目
 	{MEMORY_NOUN,_T("info"),_T("信息")}, 
 	{MEMORY_NOUN,_T("document"),_T("文档")}, 
 
-	{MEMORY_NOUN,_T("arm"),_T("机械臂")}, 
+	{MEMORY_NOUN,_T("account"),_T("帐号")}, 
 };
 
 
@@ -208,7 +208,10 @@ InitInstinct _InstinctList[]={
 	{INSTINCT_GOTO_TASK,_T("goto")},	
 	
 	{INSTINCT_CLOSE_DIALOG,_T("close dialog")},
-	
+
+	{INSTINCT_CREATE_ACCOUNT,_T("create account")},
+	{INSTINCT_DELETE_ACCOUNT,_T("delete account")},
+
 	//内部非独立命令
 	{INSTINCT_LEARN_TOKEN,_T("learn token")},
 	{INSTINCT_LEARN_PRONOUN,_T("learn pronoun")},
@@ -257,8 +260,8 @@ bool  CBrainInit::Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAdd
 	CLocalInfoAuto LocalInfoAuto(Dialog,this,LocalAddress);
 	
 	if(!Msg.IsReaded()){
-		int32 ChildIndex = -1;
-		MsgProcState ret = CElement::MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+		int32 ChildIndex = IT_SELF;
+		MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 		if(ret == RETURN_DIRECTLY){
 			return true;
 		}
@@ -281,6 +284,9 @@ bool  CBrainInit::Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAdd
 				return false;
 			}
 		}
+
+		Dialog->m_Brain->OutSysInfo(_T("Checking memory....OK"));
+
 	}catch(CppSQLite3Exception &e ){ 
 		
 		AnsiString s = e.errorMessage();
@@ -331,7 +337,7 @@ bool CBrainInit::CheckWord(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& Lo
 			NewWord& r = _WordList[m_Index];
 			tstring s = Format1024(_T("Checking  word =\"%s\""),r.Word1);
 
-			CNotifyState nf(NOTIFY_BRAIN_INIT);
+			CNotifyDialogState nf(NOTIFY_BRAIN_INIT);
 			nf.PushInt(INIT_PROGRESS);
 			nf.PushString(s);
 			nf.PushInt(m_Index*100/n);
@@ -407,7 +413,7 @@ bool CBrainInit::CheckInstinct(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline
 
 			tstring s = Format1024(_T("Checking  instinct =\"%s\""),r.Cmd);
 
-			CNotifyState nf(NOTIFY_BRAIN_INIT);
+			CNotifyDialogState nf(NOTIFY_BRAIN_INIT);
 			nf.PushInt(INIT_PROGRESS);
 			nf.PushString(s);
 			nf.PushInt(m_Index*100/n);

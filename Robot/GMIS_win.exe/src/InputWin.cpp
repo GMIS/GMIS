@@ -179,7 +179,7 @@ tstring CInputEdit::GetEditText(bool Clear){
 	cr.cpMin =  m_EditBeginPos;
 	cr.cpMax = -1;
 	SetSel(cr);
- 
+
 	EDITSTREAM es;
 	tstring  HisStr;
 	es.dwCookie = (DWORD)&HisStr;
@@ -200,17 +200,17 @@ tstring CInputEdit::GetEditText(bool Clear){
 		cr.cpMin = -1;
 		SetSel(cr);
 	}
-	 CHARFORMAT cf;
-	 cf.cbSize = sizeof(CHARFORMAT);
-	 cf.dwEffects = 0;
-	 cf.dwMask =  CFM_COLOR ;
-	 cf.crTextColor = m_crText;
-	 ::SendMessage(GetHandle(),EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
+	CHARFORMAT cf;
+	cf.cbSize = sizeof(CHARFORMAT);
+	cf.dwEffects = 0;
+	cf.dwMask =  CFM_COLOR ;
+	cf.crTextColor = m_crText;
+	::SendMessage(GetHandle(),EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
 
 	SendMessage(EM_HIDESELECTION, FALSE,FALSE);   
 	return HisStr;
 }
-	
+
 BOOL CInputEdit::IsEditingArea(int CharPos)
 {
 	if(CharPos == -1){
@@ -268,6 +268,7 @@ void CInputEdit::OnMenuPaste(){
 
 	if(cr.cpMin<m_EditBeginPos)return; //不在可编辑范围
 
+	
 	ePipeline  NewMsg;
 
 	//注意：当粘贴覆盖已有选择时，大脑可以一步完成，此时NewMsg的坐标是覆盖范围
@@ -281,6 +282,7 @@ void CInputEdit::OnMenuPaste(){
     assert(cr.cpMin == cr.cpMax);
 	int32 EndPos = cr.cpMax;
 
+	
     int n = EndPos - BeginPos;
 	
 	if(n==0)return;
@@ -290,6 +292,14 @@ void CInputEdit::OnMenuPaste(){
 	cr.cpMin = BeginPos;
 	cr.cpMax = EndPos;
 	SetSel(cr);
+
+	CHARFORMAT cf;
+	SendMessage(EM_GETCHARFORMAT,SCF_SELECTION,(LPARAM)&cf);
+	cf.dwMask = CFM_COLOR;
+	cf.dwEffects = 0;
+	cf.crTextColor = RGB(0,0,0);
+
+	SendMessage(EM_SETCHARFORMAT,SCF_SELECTION,(LPARAM)&cf);
 
 	SendMessage(EM_GETSELTEXT, 0, (LPARAM)lpsz);
 	lpsz[n] = _T('\0');

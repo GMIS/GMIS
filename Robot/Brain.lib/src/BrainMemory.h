@@ -26,6 +26,13 @@
 
 using namespace std;
 
+//NOTE: the minimum unit of timestamp is hundred nanosecond 
+#define TIME_SEC    10*1000*1000  //1 second = 1 hundred nanosecond * TIME_SEC
+#define TIME_MILlI  10*1000       //1 millisecond = 1 hundred nanosecond * TIME_MILlI
+
+#define MIN_EVENT_INTERVAL 10*1000*1  //the minimum event interval = 1 millisecond
+
+
 /*定义系统配置表名，位置：MyBrain.db
     用来存储诸如地图、好友名单等虚拟人的启动必须的数据
 	表的结构为：项目名  项目数据
@@ -34,6 +41,7 @@ using namespace std;
   note: 在生成SQL语句时，当数字做表名，表项时，需要使用双引号，
          如 select "127282417795627563" from “127282417795627560”
 */
+
 
 
 

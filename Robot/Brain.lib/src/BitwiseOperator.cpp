@@ -26,7 +26,7 @@
 		uint32 TypeA = DataA.EnergyType();
 		uint32 TypeB = DataB.EnergyType();
         
-		//Allows only 32-bit integers or unsigned integer to do this
+		//Allow only 32-bit integers or unsigned integer to operate
 		if(TypeA == TYPE_INT &&      
 			TypeB == TYPE_INT){
 			*(uint64*)(DataA.Value()) =(*(uint64*)(DataA.Value())) & (*(uint64*)(DataB.Value()));
@@ -77,7 +77,7 @@
 		uint32 TypeA = DataA.EnergyType();
 		uint32 TypeB = DataB.EnergyType();
 		
-		//Allows only 32-bit integers or unsigned integer to do this,the output data type is synonymous with first data
+		//Allow only 32-bit integers or unsigned integer to operate,the output data type is synonymous with first data
 		if(TypeA == TYPE_INT  &&      
 			TypeB == TYPE_INT ){
 			*(uint64*)(DataA.Value()) =(*(uint64*)(DataA.Value())) | (*(uint64*)(DataB.Value()));
@@ -105,7 +105,7 @@
 		uint32 TypeA = DataA.EnergyType();
 		uint32 TypeB = DataB.EnergyType();
 		
-		//llows only 32-bit integers or unsigned integer to do this
+		//Allow only 32-bit integers or unsigned integer to operate
 		if(TypeA==TYPE_INT  &&      
 			TypeB == TYPE_INT){
 			*(uint64*)(DataA.Value()) =(*(uint64*)(DataA.Value())) ^ (*(uint64*)(DataB.Value()));
@@ -134,7 +134,7 @@
 		uint32 TypeA = DataA.EnergyType();
 		uint32 TypeB = DataB.EnergyType();
 		
-		//llows only 32-bit integers or unsigned integer to do this
+		//Allow only 32-bit integers or unsigned integer to operate
 		if(TypeA==TYPE_INT  &&      
 			TypeB == TYPE_INT){
 			*(uint64*)(DataA.Value()) =(*(uint64*)(DataA.Value())) << (*(uint64*)(DataB.Value()));
@@ -162,7 +162,7 @@
 		uint32 TypeA = DataA.EnergyType();
 		uint32 TypeB = DataB.EnergyType();
 		
-		//llows only 32-bit integers or unsigned integer to do this
+		//Allow only 32-bit integers or unsigned integer to operate
 		if(TypeA==TYPE_INT  &&      
 			TypeB == TYPE_INT){
 			*(uint64*)(DataA.Value()) =(*(uint64*)(DataA.Value())) >> (*(uint64*)(DataB.Value()));

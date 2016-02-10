@@ -2,7 +2,7 @@
 //
 //////////////////////////////////////////////////////////////////////
 #pragma warning (disable:4786) 
-
+#pragma warning (disable: 4244)
 #include "GMIS.h"
 #include "MainFrame.h"
 #include "Conversation.h"
@@ -547,9 +547,15 @@ void CConversation::ClearDialogInfo(){
 
 
 void CConversation::AddRuntimeInfo(ePipeline& Item){
+	int64 TimeStamp = Item.GetID();
+	tstring timeStr = AbstractSpace::GetTimer()->GetHMSM(TimeStamp);
+	
 	int64 ID = Item.PopInt();
-	tstring s = Item.PopString();
+	tstring text = Item.PopString();
+	
+	tstring s = Format1024(_T("%s  %I64ld \n%s"),timeStr.c_str(),ID,text.c_str());
 	m_OutputWin.m_OutputView.AddText(s.c_str());
+
 	::SetFocus(m_InputWin.m_Edit.GetHandle());
 	if (!IsViewOpened(OUTPUT_VIEW))
 	{
@@ -684,19 +690,13 @@ void CConversation::SetCurDialog(int64 SourceID,int64 DialogID,ePipeline& Pipe){
 	ePipeline* RuntimeData = (ePipeline*)Pipe.GetData(1);
     m_OutputWin.m_OutputView.ClearText();
 
-	
-	for (int i=0; i<RuntimeData->Size(); i++)
+	//第一个数据表明还有多少没有显示
+	ePipeline* Item0 = (ePipeline*)RuntimeData->GetData(0);
+	int32 n = Item0->PopInt(); 
+
+	for (int i=1; i<RuntimeData->Size(); i++)
 	{
 		ePipeline* Item = (ePipeline*)RuntimeData->GetData(i);
-        if (i==0)
-        {
-			ENERGY_TYPE t = Item->GetDataType(0);
-			if (t==TYPE_INT)
-			{
-				int32 n = Item->PopInt(); //表明还有多少没有显示
-				continue; //目前暂时忽略此处理
-			}
-		}
 		int64 ID = Item->PopInt();
 		tstring s = Item->PopString();
 		m_OutputWin.m_OutputView.AddText(s.c_str());

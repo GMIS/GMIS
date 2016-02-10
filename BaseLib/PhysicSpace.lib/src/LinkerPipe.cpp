@@ -11,32 +11,31 @@
 namespace PHYSIC{
 	
 
-//CInnerIOLock
+//CLinkerPipe
 //////////////////////////////////////////////////////////////////////////
 	
-
+	/*
 	CLinkerPipe::_CInnerIOLock::_CInnerIOLock( CABMutex* mutex,CLinkerPipe* User)
 		: m_Mutex(mutex),m_User(User){
 		assert(mutex);
 		assert(User);
 		m_Mutex->AcquireThis(m_User);				
-		m_User->m_bThreadUse = TRUE;
+	
 
 	};
 	CLinkerPipe::_CInnerIOLock::~_CInnerIOLock (){
 
-		m_User->m_bThreadUse = FALSE;
+	
 		m_Mutex->ReleaseThis(m_User);
 	};
-
-	CLinkerPipe::CLinkerPipe(CABMutex* m,Model* Parent,bool m_bClientLink)
+	*/
+	CLinkerPipe::CLinkerPipe(CABMutex* m,Model* Parent,LinkerType LinkType)
 		:CLockPipe(m),
 		m_UseCounter(0),
-		m_bThreadUse(FALSE),
 		m_SourceID(-1),
 		m_LocalAddressList(),
 		m_RecoType(LINKER_STRANGER),
-		m_bClientLink(m_bClientLink),
+		m_LinkerType(LinkType),
 		m_Parent(Parent),
 		m_StateOutputLevel(NORMAL_LEVEL),
  		m_SendState(WAIT_MSG),
@@ -48,8 +47,7 @@ namespace PHYSIC{
 		m_CurRevMsg(),
 		m_ContextStack(),
 		m_bRevError(FALSE),
-		m_ErrorSaveLen(1024),
-		m_Owner(NULL)
+		m_ErrorSaveLen(1024)
 	{
 		
 	};
@@ -57,14 +55,13 @@ namespace PHYSIC{
 
 
 
-	CLinkerPipe::CLinkerPipe(CABMutex* m,Model* Parent,bool m_bClientLink,int64 SourceID,tstring Name)
+	CLinkerPipe::CLinkerPipe(CABMutex* m,Model* Parent,LinkerType LinkType,int64 SourceID,tstring Name)
 		:CLockPipe(m,Name.c_str()),
 			m_UseCounter(0),
-			m_bThreadUse(FALSE),
 			m_SourceID(SourceID),
 			m_LocalAddressList(),
 			m_RecoType(LINKER_STRANGER),
-			m_bClientLink(m_bClientLink),
+			m_LinkerType(LinkType),
 			m_Parent(Parent),
 			m_StateOutputLevel(NORMAL_LEVEL),
 	 		m_SendState(WAIT_MSG),
@@ -76,8 +73,7 @@ namespace PHYSIC{
 			m_CurRevMsg(),
 			m_ContextStack(),
 			m_bRevError(FALSE),
-			m_ErrorSaveLen(1024),
-			m_Owner(NULL)
+			m_ErrorSaveLen(1024)
 	{
 
 	};
@@ -89,11 +85,6 @@ namespace PHYSIC{
 			RevContextInfo* Info = *it;
 			delete Info;
 			it++;
-		}
-		
-		if (m_Owner)
-		{
-			delete m_Owner;
 		}
 	};
 	
@@ -474,7 +465,7 @@ namespace PHYSIC{
 							Info->Reset();  
 							break;
 						}else{
-							BeginErrorState(Info,ERROR_OTHER_PARNT);
+							BeginErrorState(Info,ERROR_OTHER_PART);
 							Info->Reset();
 						}
 					}else{ 
@@ -619,7 +610,7 @@ namespace PHYSIC{
 		ePipeline Data;
 		Data.PushInt(ErrorType);
 		Data.Push_Directly(m_CurRevMsg.Clone());
-		m_Parent->NotifyLinkerState(this,LINKER_COMPILE_ERROR,Data);
+		m_Parent->NotifyLinkerState(this,LINKER_BEGIN_ERROR_STATE,Data);
 	};
 	
 	void CLinkerPipe::EndErrorState(RevContextInfo* Info)
@@ -636,7 +627,7 @@ namespace PHYSIC{
 //        ePipeline* Msg = (ePipeline*)E.Release();
 		
 		ePipeline Data;
-        m_Parent->NotifyLinkerState(this,LINKER_RECEIVE_RESUME,Data);
+        m_Parent->NotifyLinkerState(this,LINKER_END_ERROR_STATE,Data);
 		
 		deque<RevContextInfo*>::iterator it = m_ContextStack.begin();
         while (it != m_ContextStack.end())
@@ -730,7 +721,7 @@ namespace PHYSIC{
 	
 	void CLinkerPipe::Reset(){
 		CLock lk(m_Mutex,this);
-
+		m_ID = 0;
 		m_LocalAddressList.clear();
 		m_RecoType    = LINKER_INVALID;
 		m_SendState   = WAIT_MSG;
@@ -745,6 +736,8 @@ namespace PHYSIC{
 			delete Info;
 			it++;
 		}
+		m_ContextStack.clear();
+		m_SourceID = -1;
 
 	}
 
@@ -863,30 +856,27 @@ namespace PHYSIC{
 	}
 
 	bool  CLinkerPipe::ThreadIOWorkProc(char* Buffer,uint32 BufSize){
-
-		_CInnerIOLock lk(m_Mutex,this);
-
+		
 		try{
+			CLock lk(m_Mutex,this);
 			InputProc(Buffer,BufSize);
-			OutputProc(Buffer,BufSize);
+			OutputProc(Buffer,BufSize);	
 		}
 #if defined(USING_POCO)	
 		catch(Poco::Net::NetException& NetError)
 		{
 			tstring s = UTF8toWS(NetError.displayText());
-			CMsg Msg(MSG_LINKER_ERROR,DEFAULT_DIALOG,0);
-			Msg.GetLetter().PushInt(m_SourceID);
-			Msg.GetLetter().PushString(s);		
-			m_Parent->PushCentralNerveMsg(Msg,false,true);
+			ePipeline  ErrorInfo;
+			ErrorInfo.PushString(s);
+			m_Parent->NotifyLinkerState(this,LINKER_EXCEPTION_ERROR,ErrorInfo);
 		}
 #endif
 		catch(...)
 		{
 			tstring s = _T("ThreadIOWorkProc() throw a unkown exception");
-			CMsg Msg(MSG_LINKER_ERROR,DEFAULT_DIALOG,0);
-			Msg.GetLetter().PushInt(m_SourceID);
-			Msg.GetLetter().PushString(s);		
-			m_Parent->PushCentralNerveMsg(Msg,false,true);
+			ePipeline  ErrorInfo;
+			ErrorInfo.PushString(s);
+			m_Parent->NotifyLinkerState(this,LINKER_EXCEPTION_ERROR,ErrorInfo);
 		}
 		return TRUE;
 	}
@@ -930,7 +920,7 @@ namespace PHYSIC{
 
 			int64 MsgID = Msg->GetID();
 			if(MsgID>100){ //Not the feedback msg
-				ePipeline* Letter = GET_LETTER(Msg);
+				ePipeline* Letter = static_cast<ePipeline*>(Msg->GetData(1));
 				MsgID = Letter->GetID();
 			}
 

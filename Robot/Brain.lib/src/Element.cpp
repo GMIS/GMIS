@@ -15,6 +15,9 @@ CLocalInfoAuto::CLocalInfoAuto(CLogicDialog* Dialog,CElement* Elt,ePipeline& Pip
 	int64 ID = Elt->m_ID;
 	m_LocalPipe.PushInt(ID);
 
+//	tstring s = Format1024(_T("go in Elt:%s "),Elt->GetName().c_str());
+//	Dialog->RuntimeOutput(ID,s.c_str());
+
 	if (Dialog->m_Brain->GetLogFlag() & LOG_MSG_PROC_PATH ) //可用于调试时跟踪执行路径
 	{
 		if (Dialog->m_CurTaskMsgID != MSG_EVENT_TICK)
@@ -28,6 +31,10 @@ CLocalInfoAuto::~CLocalInfoAuto (){
 	eElectron E;
 	m_LocalPipe.PopBack(&E);
 	int64 ID = E.Int64();
+	
+	//tstring s = _T("go out Elt");
+	//m_Dialog->RuntimeOutput(ID,s.c_str());
+	
 	if (m_Dialog->m_Brain->GetLogFlag() & LOG_MSG_PROC_PATH  )
 	{
 		if (m_Dialog->m_CurTaskMsgID != MSG_EVENT_TICK)
@@ -245,12 +252,7 @@ Mass* CElement::FindMass(ePipeline& Address){
 }
 
 
-MsgProcState CElement::MsgProc(CLogicDialog* Dialog,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress,int32& ChildIndex){
-	MsgProcState ret = Dialog->m_Brain->ElementMsgProc(Dialog,this,ChildIndex,Msg,ExePipe,LocalAddress); //缺省处理
-	return ret;
-}
-
-bool CElement::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress)
+bool CElement::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress)
 {
 	return true;
 }
@@ -259,11 +261,11 @@ bool CElement::Do(CLogicDialog* Dialog,ePipeline& ExePipe, ePipeline& LocalAddre
 
 	CLocalInfoAuto LocalInfoAuto(Dialog,this,LocalAddress);
     
-	int32 ChildIndex = -1 ;
+	int32 ChildIndex = IT_SELF ;
 	if (!Msg.IsReaded()) //先处理信息
 	{
 
-		MsgProcState ret= MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+		MsgProcState ret= EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 		if (ret == RETURN_DIRECTLY)
 		{
 			return true;
@@ -271,7 +273,7 @@ bool CElement::Do(CLogicDialog* Dialog,ePipeline& ExePipe, ePipeline& LocalAddre
 	}
 	
 
-	bool ret = TaskProc(Dialog,Msg,ChildIndex,ExePipe,LocalAddress);
+	bool ret = TaskProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 	return ret;
 }
 
@@ -290,8 +292,8 @@ bool CSeries::Do(CLogicDialog* Dialog,ePipeline& ExePipe, ePipeline& LocalAddres
 		ePipeline& ObjectAddress = Msg.GetReceiver();
 		if (ObjectAddress.Size()==0) //该此Element处理信息,在处理自己的Child之前
 		{
-			ChildIndex = -1;  //-1表示自身,而不是某个child
-			MsgProcState ret = CElement::MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex); 
+			ChildIndex = IT_SELF;  //表示自身,而不是某个child
+			MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress); 
 			if (ret==RETURN_DIRECTLY)
 			{
 				return true;
@@ -318,8 +320,8 @@ bool CSeries::Do(CLogicDialog* Dialog,ePipeline& ExePipe, ePipeline& LocalAddres
 			    int64 MsgID = Msg.GetMsgID();
 				tstring MsgStr = Dialog->m_Brain->MsgID2Str(MsgID);
 
-				ChildIndex = -1;
-				CElement::MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+				ChildIndex = IT_SELF;
+				CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 				
 				ExePipe.SetID(RETURN_ERROR);
 				ExePipe.GetLabel() = Format1024(_T("Error: Msg(%s) Address(%I64ld) Invalid"),MsgStr.c_str(),ID);
@@ -339,7 +341,7 @@ bool CSeries::Do(CLogicDialog* Dialog,ePipeline& ExePipe, ePipeline& LocalAddres
 					};
 					
 					ChildIndex = It-m_ActomList.begin();
-					MsgProcState ret = CElement::MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+					MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 					if (ret == RETURN_DIRECTLY)
 					{
 						return true;
@@ -396,6 +398,7 @@ bool CSeries::Do(CLogicDialog* Dialog,ePipeline& ExePipe, ePipeline& LocalAddres
 		case RETURN_PIPE_BREAK:  //应该并连体去处理 
 		case RETURN_DEBUG_PIPE_BREAK:		
 			return true;
+
 		case RETURN_GOTO_LABEL:
 			{
 				tstring& Label = ExePipe.GetLabel(); 
@@ -591,8 +594,8 @@ bool CShunt::Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,
 		{     
 
 
-			ChildIndex =-1;
-			MsgProcState ret = MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+			ChildIndex = IT_SELF;
+			MsgProcState ret = EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
             if (ret == RETURN_DIRECTLY)
             {
 				return true;
@@ -619,8 +622,8 @@ bool CShunt::Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,
 			if (It == m_ActomList.end())
 			{
 				//先交给系统缺省处理
-				ChildIndex =-1;
-				MsgProcState ret = MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+				ChildIndex =IT_SELF;
+				MsgProcState ret = EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 				if (ret == RETURN_DIRECTLY)
 				{
 					return true;
@@ -633,9 +636,9 @@ bool CShunt::Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,
 			else{
 				/*
 				得到目标MASS的序列号，优先执行这个，然后会接着寻找没有执行的继续执行
-				可能有人会问，这样i之前的岂不是没有机会执行？
+				可能有人会问，这样It之前的岂不是没有机会执行？
 				当一个并联体接收到指定目标的信息时，意味着i之前的MASS肯定都执行过，
-				虽然不一定都执行完成，没完成的同样会接收到指定地址的信息。
+				虽然不一定都执行完成，没完成的之后同样会接收到指定地址的信息。
 				*/
 				ChildIndex = It-m_ActomList.begin();		
 				
@@ -652,7 +655,7 @@ bool CShunt::Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,
 					};
 
 									
-					MsgProcState ret = MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+					MsgProcState ret = EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 					if (ret == RETURN_DIRECTLY)
 					{
 						return true;
@@ -754,6 +757,7 @@ bool CShunt::Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,
 				SaveTempResult(ChildIndex,ExePipe);
 			}
 			break;
+
 		case RETURN_GOTO_LABEL:			
 		case RETURN_DEBUG_GOTO_LABEL:
 			assert(ExePipe.GetLabel() != m_Name); //理论上不存在GOTO并联体的问题
@@ -821,8 +825,9 @@ bool CShunt::Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,
 		if (State == RETURN_NORMAL)
 		{
 			ExePipe.SetID(RETURN_WAIT);
+		}else{
+			ExePipe.SetID(RETURN_DEBUG_WAIT);
 		}
-		assert(ExePipe.GetID() == RETURN_WAIT || ExePipe.GetID() == RETURN_DEBUG_WAIT);
 	}
 
 	return true;

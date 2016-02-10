@@ -1,7 +1,8 @@
 ﻿// OuputWin.cpp: implementation of the COutputWin class.
 //
 //////////////////////////////////////////////////////////////////////
-#pragma warning(disable: 4786)
+#pragma warning (disable: 4786)
+#pragma warning (disable: 4244)
 
 #include "OutputWin.h"
 //#include <wtypes.h>

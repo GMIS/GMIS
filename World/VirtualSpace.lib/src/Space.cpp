@@ -479,16 +479,15 @@ bool SpaceAddress::operator == (const SpaceAddress Address){
 //////////////////////////////////////////////////////////////////////////
 
 CObjectData::CObjectData(ePipeline& ObjectData){
-	if (ObjectData.Size()!=4)
-	{
-		return;
-	}
+	assert (ObjectData.Size()==5);
+	
 	m_ID   = ObjectData.GetID();
 	m_Name = *(tstring*)ObjectData.GetData(0);
-	m_Type = *(SPACETYPE*)ObjectData.GetData(1);
+	m_Type = (SPACETYPE)*(int64*)ObjectData.GetData(1);
 	m_Fingerprint = *(tstring*)ObjectData.GetData(2);
 	ePipeline* Path = (ePipeline*)ObjectData.GetData(3);
 	m_Address << *Path;
+	m_ExecuterType  = (DLL_TYPE)*(int64*)ObjectData.GetData(4);
 }
 CObjectData& CObjectData::operator =(const CObjectData& ob){
 	if(this != &ob){
@@ -497,6 +496,7 @@ CObjectData& CObjectData::operator =(const CObjectData& ob){
 		m_Type = ob.m_Type;
 		m_Fingerprint = ob.m_Fingerprint;
 		m_Address = ob.m_Address;
+		m_ExecuterType = ob.m_ExecuterType;
 	}
 	return *this;
 }
@@ -508,6 +508,7 @@ ePipeline* CObjectData::GetItemData(){
 	Item->PushInt((int64)m_Type);
 	Item->PushString(m_Fingerprint);
 	Item->Push_Directly(m_Address.Clone());
+	Item->PushInt(m_ExecuterType);
 	return Item;
 }
 
@@ -517,23 +518,7 @@ ePipeline* CObjectData::GetItemData(){
 CSpace::CSpace()
 :m_ValidateModule(NULL),m_PrivateValidata(NULL)
 {
-	m_ID = -1;  //ParentID
-
-	PushInt(-1);          //Space ID
-	PushString(_T(""));  //Space Name
-	PushInt(LOCAL_SPACE);//Space Type
-
-	tstring Fingerprint;
-    PushString(Fingerprint); //Space Fingerprint
-
-	ePipeline Property;
-	CreateDefaultProerty(Property); //Space Property;
-	PushPipe(Property);
-
-	ePipeline OwnerInfo;
-	CreateDefaultOwnerInfo(OwnerInfo); //Space OwnerList
-	PushPipe(OwnerInfo);
-
+	Reset();
 };
 
 CSpace::CSpace(int64 ParentID, int64 ChildID)
@@ -562,6 +547,25 @@ CSpace::CSpace(int64 ParentID, int64 ChildID)
 		m_ID = -1;	
 	};
 }
+
+void CSpace::Reset(){
+	m_ID = -1;  //ParentID
+
+	PushInt(-1);          //Space ID
+	PushString(_T(""));  //Space Name
+	PushInt(LOCAL_SPACE);//Space Type
+
+	tstring Fingerprint;
+	PushString(Fingerprint); //Space Fingerprint
+
+	ePipeline Property;
+	CreateDefaultProerty(Property); //Space Property;
+	PushPipe(Property);
+
+	ePipeline OwnerInfo;
+	CreateDefaultOwnerInfo(OwnerInfo); //Space OwnerList
+	PushPipe(OwnerInfo);
+};
 
 int64   CSpace::GetSpaceID(){
     assert(Size()>5);
@@ -1005,6 +1009,9 @@ bool  ROOM_SPACE::AllowInto(People& p){
     //访问者不是固定注册的拥有者，但只要当前空间不禁止参观也可以进入
 	bool Allow = false;
 
+	return Allow;
+	
+	//以下以后再实现
 	switch(RoomRight)
 	{
 	case NO_RIGHT:
@@ -1115,6 +1122,13 @@ People::~People(){
 	}
 };
 
+void People::Reset(tstring Name,tstring Cryptograhp){
+	CSpace::Reset();
+	m_AutoLeave = true;
+	m_Cryptograhp=Cryptograhp;
+	SetName(Name);
+	m_KeyList.clear();
+}
 void People::GoOut(){
 	if(IsValid()){
 		int64 ParentID = GetParentID();

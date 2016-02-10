@@ -1,362 +1,313 @@
-﻿
+﻿#pragma warning(disable:4244)
 
 #include "Model.h"
 #include "LinkerPipe.h"
 #include "UserLinkerPipe.h"
 
 namespace PHYSIC{
+	CSuperiorLinkerList::CSuperiorLinkerList(){
 
-//CLockedLinkerList
-//////////////////////////////////////////////////////////////////////////
-Model::CLockedLinkerList::CLockedLinkerList(){
+	};
 
-}
-
-Model::CLockedLinkerList::~CLockedLinkerList(){
-	DeleteAllLinker();
-}
-	
-bool Model::CLockedLinkerList::DeleteLinker(int64 ID) 
-{
-	CLock lk(&m_Mutex);
-	
-	while(m_DelLinkerList.size()){
-		CLinkerPipe* Linker  = m_DelLinkerList.front();
-		m_DelLinkerList.pop_front();
-		if(Linker->GetUserNum()){
-            m_DelLinkerList.push_back(Linker);
-			break;
-		}else{
+	CSuperiorLinkerList::~CSuperiorLinkerList(){
+		CLock lk(&m_Mutex);
+		list<CLinkerPipe*>::iterator it = m_LinkerList.begin();
+		while(it != m_LinkerList.end()){
+			CLinkerPipe* Linker = *it;
 			delete Linker;
-		} 
-	};
-
-	map<int64,CLinkerPipe*>::iterator it = m_LinkerList.find(ID);
-	if(it != m_LinkerList.end()){
-		CLinkerPipe* Linker = it->second;
-		Linker->Close();
-		m_LinkerList.erase(it);
-		Linker->SetRecoType(LINKER_DEL);
-		m_DelLinkerList.push_back(Linker);
-		return true;
-	}
-	return false;
-}
-
-void Model::CLockedLinkerList::GetLinker(int64 ID,CLinker& Linker)
-{
-	CLock lk(&m_Mutex);
-	map<int64,CLinkerPipe*>::iterator it = m_LinkerList.find(ID);
-	if(it != m_LinkerList.end()){
-		CLinkerPipe* LinkerPtr = it->second;
-		Linker.Reset(LinkerPtr);
-	}else{
-		Linker.Reset(NULL);
-	}
-}
-int32  Model::CLockedLinkerList::GetLinkerNum(){
-	CLock lk(&m_Mutex);
-	return m_LinkerList.size();
-};
-
-int32  Model::CLockedLinkerList::GetDelLinkerNum(){
-	CLock lk(&m_Mutex);
-	return m_DelLinkerList.size();
-}
-
-void  Model::CLockedLinkerList::AddLinker(CLinkerPipe* Linker){
-	assert(Linker);
-	
-	CLock lk(&m_Mutex);
-	int64 SourceID = Linker->GetSourceID();   		
-	assert(m_LinkerList.find(SourceID) == m_LinkerList.end());
-	m_LinkerList[SourceID] = Linker;
-}
-
-bool Model::CLockedLinkerList::SetLinkerID(int64 OldID,int64 NewID){
-	CLock lk(&m_Mutex);
-	map<int64,CLinkerPipe*>::iterator it = m_LinkerList.find(OldID);
-	if(it != m_LinkerList.end()){
-		CLinkerPipe* LinkerPtr = it->second;
-	    m_LinkerList[NewID] = LinkerPtr;
-		LinkerPtr->SetSourceID(NewID);
-		m_LinkerList.erase(it);
-		return true;
-	}	
-	return false;
-};
-
-void Model::CLockedLinkerList::DeleteAllLinker(){
-	CLock lk(&m_Mutex);
-	map<int64,CLinkerPipe*>::iterator it = m_LinkerList.begin();
-	while(it != m_LinkerList.end()){
-		CLinkerPipe* LinkerPtr = it->second;	
-		LinkerPtr->Close();
-		delete LinkerPtr;
-		it++;
-	}	
-	
-	m_LinkerList.clear();	
-	
-	while(m_DelLinkerList.size()){
-		CLinkerPipe* Linker  = m_DelLinkerList.front();
-		m_DelLinkerList.pop_front();
-		delete Linker;
-	} 
-}
-	
-void Model::CLockedLinkerList::GetNextLinker(int64 SourceID,CLinker& Linker){
-	CLock lk(&m_Mutex);
-	if (m_LinkerList.size()==0)
-	{
-		Linker.Reset(NULL);
-		return;
-	};
-	
-	map<int64,CLinkerPipe*>::iterator it;
-	if (SourceID == 0)
-	{
-		it = m_LinkerList.begin();
-		
-	}else{
-		
-		it = m_LinkerList.find(SourceID);
-		if(it == m_LinkerList.end()){
-			Linker.Reset(NULL);
-			return;
-		}
-		
-		it++;
-		if (it == m_LinkerList.end())
-		{
-			Linker.Reset(NULL);
-			return;
-		}
-		
-	}
-
-	CLinkerPipe* LinkPipe = it->second;
-	Linker.Reset(LinkPipe);
-};
-void Model::CLockedLinkerList::GetNextAvailableLinker(int64 SourceID,CLinker& Linker){
-	CLock lk(&m_Mutex);
-	if (m_LinkerList.size()==0)
-	{
-		Linker.Reset(NULL);
-		return;
-	};
-
-	map<int64,CLinkerPipe*>::iterator it;
-	if (SourceID == 0)
-	{
-		it = m_LinkerList.begin();
-
-	}else{
-		it = m_LinkerList.find(SourceID);
-		if(it == m_LinkerList.end()){
-			Linker.Reset(NULL);
-			return;
-		}
-		it++; //the next linker we wanted
-	}
-
-	while(it != m_LinkerList.end()){
-		CLinkerPipe* LinkPipe = it->second;
-
-		if(LinkPipe->IOBusy()){
 			it++;
-			continue;
 		}
-		
-		int32 LinkerType = LinkPipe->GetRecoType();
-		if(LinkerType < LINKER_STRANGER)
-		{
-			if (LinkerType == LINKER_DEL && LinkPipe->GetUserNum()==0)
-			{
-				it = m_LinkerList.erase(it);
-				LinkPipe->Close();
-				delete LinkPipe;
-				LinkPipe = NULL;
-				continue;
-			}	
-			it++;
-		}else{
-			Linker.Reset(LinkPipe);
+
+		it = m_ActivelyLinker.begin();
+		if(it != m_ActivelyLinker.end()){
+			CLinkerPipe* Linker = *it;
+			Linker->SetID(-1); //标记为删除
 			return;
 		}
-		
-	}
-	
-	Linker.Reset(NULL);
-	return;
-};
-//CIOWork
-//////////////////////////////////////////////////////////////////////////
-Model::CModelIOWork::CModelIOWork(int64 ID,Model* Parent)
-:m_Parent(Parent)
-{
-	m_ID = ID;
+	};
 
-#if defined(USING_POCO)
-	AnsiString ThreadName = "ModelIOThread";
-	m_ObjectDefaultThread.setName(ThreadName);
+	int32  CSuperiorLinkerList::GetLinkerNum(){
+		CLock lk(&m_Mutex);
+		return m_LinkerList.size() + m_ActivelyLinker.size();
+	}
+	void CSuperiorLinkerList::CreateLinker(CLinker& Linker,Model* Parent,int64 SourceID,ePipeline& Param){
+		tstring Addr = Param.PopString();
+		AnsiString Address = WStoUTF8(Addr);
+		int64 Port = Param.PopInt();
+		int64 TimeOut = Param.PopInt();
+
+		CUserConnectLinkerPipe* ConLinkerPipe = new CUserConnectLinkerPipe(Parent,SourceID,Address,Port,TimeOut);
+		Linker.Reset(ConLinkerPipe);
+	};
+
+	void   CSuperiorLinkerList::AddLinker(CLinkerPipe* Linker){
+		assert(Linker);
+
+		CLock lk(&m_Mutex);
+		int64 SourceID = Linker->GetSourceID();
+
+#ifdef _DEBUG
+		list<CLinkerPipe*>::iterator it = m_LinkerList.begin();
+		while(it != m_LinkerList.end()){
+			CLinkerPipe* Linker = *it;
+			assert(Linker->GetSourceID() != SourceID);
+			it++;
+		}
 #endif
-};
+		m_LinkerList.push_back(Linker);
+	};
 
-Model::CModelIOWork::~CModelIOWork(){
+	bool   CSuperiorLinkerList::DeleteLinker(int64 SourceID){
+		CLock lk(&m_Mutex);
+		CLinkerPipe* LinkPtr = NULL;
+		list<CLinkerPipe*>::iterator it = m_LinkerList.begin();
+		while(it != m_LinkerList.end()){
+			LinkPtr = *it;
+			if(LinkPtr->GetSourceID() == SourceID){
+				if (LinkPtr->GetUserNum()==0)
+				{
+					LinkPtr->Close();
+					m_LinkerList.erase(it);
+					delete LinkPtr;
+				}else{
+					LinkPtr->SetID(-1); //标记为删除。
+				}
+				return true;
+			}
+			it++;
+		}
 		
-};
-	
-bool Model::CModelIOWork::Do(Energy* E){
-	try
-	{
-	CLinker Linker;
-	while(m_Alive && m_Parent->IsAlive()){
-			int64 SourceID = 0;
-			
-			CLockedLinkerList* LinkerList = m_Parent->GetSuperiorLinkerList();
-			
-			LinkerList->GetNextAvailableLinker(SourceID,Linker);
+		it = m_ActivelyLinker.begin();
+		while(it != m_ActivelyLinker.end()){
+			LinkPtr = *it;
+			if(LinkPtr->GetSourceID() == SourceID){	
+				LinkPtr->SetID(-1); //标记为删除。
+				LinkPtr->Close();
+				return true;
+			};
+			it++;
+		}
+		return false;
+	};  
 
-			char buf[MODEL_IO_BUFFER_SIZE];
-			while (m_Alive && Linker.IsValid())
+	void   CSuperiorLinkerList::GetLinker(int64 SourceID,CLinker& Linker){
+		CLock lk(&m_Mutex);
+		CLinkerPipe* LinkPtr = NULL;
+		list<CLinkerPipe*>::iterator it = m_LinkerList.begin();
+		while(it != m_LinkerList.end()){
+			LinkPtr = *it;
+			if(LinkPtr->GetSourceID() == SourceID){
+				Linker.Reset(LinkPtr);
+				return;
+			};
+			it++;
+		}
+		
+		it = m_ActivelyLinker.begin();
+		while(it != m_ActivelyLinker.end()){
+			LinkPtr = *it;
+			if(LinkPtr->GetSourceID() == SourceID){
+				Linker.Reset(LinkPtr);
+				return;
+			};
+			it++;
+		}
+
+		Linker.Reset(NULL);
+	};
+
+	bool   CSuperiorLinkerList::HasLinker(const AnsiString& Address,const int32 Port){
+		CLock lk(&m_Mutex);
+		list<CLinkerPipe*>::iterator it = m_LinkerList.begin();
+		while(it != m_LinkerList.end()){
+			CLinkerPipe* LinkerPtr = *it;
+			CUserConnectLinkerPipe* ConnectLinker = (CUserConnectLinkerPipe*)LinkerPtr;
+			if (ConnectLinker->m_Address == Address && ConnectLinker->m_Port == Port)
 			{
-				SourceID = Linker().GetSourceID();
-				//与ServerIO
-				Linker().ThreadIOWorkProc(buf,MODEL_IO_BUFFER_SIZE);
-				LinkerList->GetNextAvailableLinker(SourceID,Linker);
+				return true;
+			}
+			it++;
+		}
+	    it = m_ActivelyLinker.begin();
+		while(it != m_ActivelyLinker.end()){
+			CLinkerPipe* LinkerPtr = *it;
+			CUserConnectLinkerPipe* ConnectLinker = (CUserConnectLinkerPipe*)LinkerPtr;
+			if ( ConnectLinker->m_Address == Address && ConnectLinker->m_Port == Port)
+			{
+				return true;
+			}
+			it++;
+		}
+		return false;
+	}
+	void   CSuperiorLinkerList::PopLinker(CLinker& Linker){
+		CLock lk(&m_Mutex);
+		list<CLinkerPipe*>::iterator it = m_LinkerList.begin();
+		while(it != m_LinkerList.end()){
+			CLinkerPipe* LinkerPtr = *it;
+			if (LinkerPtr->GetID()==-1)
+			{
+				if (LinkerPtr->GetUserNum()==0)
+				{
+					delete LinkerPtr;
+					it = m_LinkerList.erase(it);
+				}else{
+					it++;
+				}
+				continue;
 			}
 			
-			SLEEP_MILLI(20);
+			Linker.Reset(LinkerPtr);
+			m_ActivelyLinker.push_front(LinkerPtr);
+			m_LinkerList.erase(it);
+			break;			
 		}
-       
-		CMsg Msg(MSG_SYS_MSG,DEFAULT_DIALOG,0);
-		ePipeline& Letter = Msg.GetLetter();
-		Letter.PushInt(NOTIFY_SYS_STATE);
-		Letter.PushInt(MNOTIFY_IO_WORK_THREAD_CLOSE);
-		ePipeline NotifyData;
-		NotifyData.PushInt(m_ID);
-		Letter.PushPipe(NotifyData);
-		m_Parent->PushCentralNerveMsg(Msg,false,true);
-
-	}
-	catch (...)
-	{
-		CMsg Msg2(MSG_SYS_MSG,DEFAULT_DIALOG,0);
-		ePipeline& Letter2 = Msg2.GetLetter();
-		Letter2.PushInt(NOTIFY_SYS_STATE);
-		Letter2.PushInt(MNOTIFY_EXCEPTION_OCCURRED);
-		ePipeline NotifyData2;
-		NotifyData2.PushString(_T("An exception occurred, ModelIOWork Close"));
-		Letter2.PushPipe(NotifyData2);
-		m_Parent->PushCentralNerveMsg(Msg2,false,true);
-	}
-	CMsg Msg1(MSG_SYS_MSG,DEFAULT_DIALOG,0);
-	ePipeline& Letter1 = Msg1.GetLetter();
-	Letter1.PushInt(NOTIFY_SYS_STATE);
-	Letter1.PushInt(MNOTIFY_IO_WORK_THREAD_CLOSE);
-	ePipeline NotifyData1;
-	NotifyData1.PushInt(m_ID);
-	Letter1.PushPipe(NotifyData1);
-	m_Parent->PushCentralNerveMsg(Msg1,false,true);
-
-	m_Alive = FALSE;
-	return TRUE;			
-}
+	};
 	
-//CCentralNerveWork
-//////////////////////////////////////////////////////////////////////////
-
-Model::CCentralNerveWork::CCentralNerveWork(int64 ID,Model* Parent)
-	:m_Parent(Parent),m_IdleCount(0)
-{
-	m_ID = ID;
-
-#if defined(USING_POCO)
-	AnsiString ThreadName = "CentralNerveThread";
-	m_ObjectDefaultThread.setName(ThreadName);
-#endif
-	assert(Parent);	
-};
-	
-Model::CCentralNerveWork::~CCentralNerveWork(){
-		
-};
-	
-bool Model::CCentralNerveWork::Do(Energy* E){
-	int32 WorkNum = 0;
-	try{
-		while (m_Alive && m_Parent->IsAlive())
-		{
-			CMsg Msg;
-			m_Parent->PopCentralNerveMsg(Msg);
-			CLockedModelData* LockedData = m_Parent->GetModelData();
-
-			if (Msg.IsValid())
-			{		
-
-				LockedData->IncreNerveWorkCount();
-				m_Parent->Do(Msg.Release());
-
-				LockedData->DecreNerveWorkCount();
-				m_IdleCount = 0;
-			}else{
-				m_Parent->Do(NULL);
-				m_IdleCount++;
-	
-				int n = LockedData->GetNerveMaxIdleCount();
-				
-				if ( m_IdleCount > n ) //Default exit if 1000 milliseconds  without information can be handled 
+	void   CSuperiorLinkerList::ReturnLinker(CLinker& Linker){
+		CLock lk(&m_Mutex);
+		int64 SourceID = Linker().GetSourceID();
+		list<CLinkerPipe*>::iterator it = m_ActivelyLinker.begin();
+		while(it != m_ActivelyLinker.end()){
+			CLinkerPipe* LinkPtr = *it;
+			if(LinkPtr->GetSourceID() == SourceID)
+			{
+				m_ActivelyLinker.erase(it);
+				if (LinkPtr->GetID() == -1)//已经被标记删除
 				{
-					WorkNum = LockedData->GetCentralNerveWorkNum();
-					if(WorkNum>1){ //reserve one at least
-						
-						CMsg Msg(MSG_SYS_MSG,DEFAULT_DIALOG,0);
-						ePipeline& Letter = Msg.GetLetter();
-						Letter.PushInt(NOTIFY_SYS_STATE);
-						Letter.PushInt(MNOTIFY_CENTRAL_NERVE_THREAD_CLOSE);
-						ePipeline NotifyData;
-						NotifyData.PushInt(--WorkNum);
-						NotifyData.PushInt(m_ID);
-						Letter.PushPipe(NotifyData);
-						m_Parent->PushCentralNerveMsg(Msg,false,true);
-						
-						m_Alive = FALSE;
-						return TRUE;
+					Linker.Release();
+					if(LinkPtr->GetUserNum()==0){ //如果其它线程还在使用此连接，那不能直接删除			
+						delete LinkPtr;	
+						return;
 					}
 				}
-				
+				m_LinkerList.push_back(LinkPtr);
+				return;
+			};
+			it++;
+		}
+	}
+
+
+//////////////////////////////////////////////////////////////////////////
+CThreadWorker::CThreadWorker(int64 ID,Model* Parent,int32 Type)
+	:m_Parent(Parent),m_WorkType(Type)
+{
+	m_ID = ID;
+	m_WorkType = Type;
+	m_IdleCount = 0;
+};
+
+CThreadWorker::~CThreadWorker(){
+
+}
+
+void CThreadWorker::ModelIOWorkProc(){
+	try
+	{
+		CLinker Linker;
+		while(m_Alive && m_Parent->IsAlive()){
+
+			m_Parent->GetSuperiorLinkerList()->PopLinker(Linker);
+
+			char buf[MODEL_IO_BUFFER_SIZE];
+			if (Linker.IsValid())
+			{
+ 				Linker().ThreadIOWorkProc(buf,MODEL_IO_BUFFER_SIZE);
+				m_Parent->GetSuperiorLinkerList()->ReturnLinker(Linker);
+			}else{
 				SLEEP_MILLI(20);
 			}
 		}
 	}
-    catch(...){
-
-		CMsg Msg2(MSG_SYS_MSG,DEFAULT_DIALOG,0);
-		ePipeline& Letter2 = Msg2.GetLetter();
-		Letter2.PushInt(NOTIFY_SYS_STATE);
-		Letter2.PushInt(MNOTIFY_EXCEPTION_OCCURRED);
-		ePipeline NotifyData2;
-		NotifyData2.PushString(_T("An exception occurred, CCentralNerveWork Closed"));
-		m_Parent->PushCentralNerveMsg(Msg2,false,true);
+	catch (...)
+	{
+		ePipeline NotifyData;
+		NotifyData.PushString(_T("An exception occurred, ModelIOWork Close"));
+		m_Parent->NotifySysState(NOTIFY_EXCEPTION_OCCURRED,NULL,&NotifyData);
 	}
-	
-	CMsg Msg1(MSG_SYS_MSG,DEFAULT_DIALOG,0);
-	ePipeline& Letter1 = Msg1.GetLetter();
-	Letter1.PushInt(NOTIFY_SYS_STATE);
-	Letter1.PushInt(MNOTIFY_CENTRAL_NERVE_THREAD_CLOSE);
-	ePipeline NotifyData1;
-	NotifyData1.PushInt(--WorkNum);
-	NotifyData1.PushInt(m_ID);
-	Letter1.PushPipe(NotifyData1);
-	m_Parent->PushCentralNerveMsg(Msg1,false,true);
 
-	m_Alive = FALSE;
-	return TRUE;
+	ePipeline NotifyData;
+	NotifyData.PushInt(m_ID);	
+	m_Parent->NotifySysState(NOTIFY_MODEL_SCENE,NTID_IO_WORKER_CLOSED,&NotifyData);
+
 }
 
+void CThreadWorker::CentralNerveWorkProc(){
+	int32 WorkNum = 0;
+	Model::CLockedModelData* LockedData = m_Parent->GetModelData();
 
-	
+	try{
+		while (IsAlive() && m_Parent->IsAlive())
+		{
+			CMsg Msg;
+			m_Parent->PopCentralNerveMsg(Msg);
+
+			if (Msg.IsValid())
+			{			
+				m_Parent->CentralNerveMsgProc(Msg);
+
+				m_IdleCount = 0;
+			}else{
+				m_IdleCount++;	
+				int Max = LockedData->GetNerveMaxIdleCount();
+
+				if ( m_IdleCount > Max ) //Default exit if 1000 milliseconds  without information can be handled 
+				{
+					m_IdleCount = 0;
+					break;
+				}			
+				SLEEP_MILLI(20);
+			}
+		}
+	}
+	catch(...){
+		ePipeline NotifyData;
+		NotifyData.PushString(_T("An exception occurred, CCentralNerveWork Close"));
+		m_Parent->NotifySysState(NOTIFY_EXCEPTION_OCCURRED,NULL,&NotifyData);
+	}
+
+	ePipeline NotifyData;
+	NotifyData.PushInt(--WorkNum);
+	NotifyData.PushInt(m_ID);
+	m_Parent->NotifySysState(NOTIFY_MODEL_SCENE,NTID_NERVE_THREAD_CLOSED,&NotifyData);
+
+}
+bool CThreadWorker::Do(Energy* E){
+	if (m_WorkType == MODEL_IO_WORK_TYPE)
+	{
+		ModelIOWorkProc();
+		return true;
+	}else if (m_WorkType == MODEL_CENTRAL_NEVER_WORK_TYPE)
+	{
+		CentralNerveWorkProc();
+		return true;
+	}else if (m_WorkType == MODEL_TEST_WORK_TYPE)
+	{
+		UnitTest();
+	}
+	assert(0);
+	return true;
+}
+
+void CThreadWorker::UnitTest(){
+	try
+	{
+		m_Parent->UnitTest();
+	}
+	catch (...)
+	{
+		ePipeline NotifyData;
+		NotifyData.PushString(_T("An exception occurred, ModelIOWork Close"));
+		m_Parent->NotifySysState(NOTIFY_EXCEPTION_OCCURRED,NULL,&NotifyData);
+	}
+
+	ePipeline NotifyData;
+	NotifyData.PushInt(m_ID);	
+	m_Parent->NotifySysState(NOTIFY_MODEL_SCENE,NTID_TEST_WORKER_CLOSED,&NotifyData);
+
+}
+
 //CLockedModelData
 //////////////////////////////////////////////////////////////////////////
 Model::CLockedModelData::CLockedModelData(){
@@ -364,43 +315,48 @@ Model::CLockedModelData::CLockedModelData(){
 	m_NerveMsgMaxNumInPipe = 10;
 	m_NerveMsgMaxInterval  = 10*1000*1000; //1秒
 	m_NerveIdleMaxCount    = 50;
-	m_NerveWorkingNum      = 0;
-	m_bClosed             = false;
+
 };
 
 Model::CLockedModelData::~CLockedModelData(){
 
+
+}
+void    Model::CLockedModelData::Clear(){
 	CLock lk(&m_Mutex);
-	
-	map<int64,CModelIOWork*>::iterator ita =  m_ModelIOWorkList.begin();
-	while (ita != m_ModelIOWorkList.end())
+
+	map<int64,CThreadWorker*>::iterator ita =  m_ModelIOWorkerList.begin();
+	while (ita != m_ModelIOWorkerList.end())
 	{
-		CModelIOWork* ModelIOWork = ita->second;
-		assert(!ModelIOWork->IsAlive());
-		delete ModelIOWork;
+		CThreadWorker* Worker = ita->second;
+		ita->second = NULL;
+		assert(!Worker->IsAlive());
+		delete Worker;
 		ita++;
 	}
-	
-	
-	map<int64,CCentralNerveWork*>::iterator itd = m_CentralNerveWorkList.begin();
-	while (itd != m_CentralNerveWorkList.end())
+	m_ModelIOWorkerList.clear();
+
+	map<int64,CThreadWorker*>::iterator itd = m_CentralNerveWorkerList.begin();
+	while (itd != m_CentralNerveWorkerList.end())
 	{
-		CCentralNerveWork* CentralNerveWork = itd->second;
-		assert(!CentralNerveWork->IsAlive());
-		delete CentralNerveWork;
+		CThreadWorker* Worker = itd->second;
+		itd->second = NULL;
+		assert(!Worker->IsAlive());
+		delete Worker;
 		itd++;
 	}
+	m_CentralNerveWorkerList.clear();
 
-}
-
-
-void  Model::CLockedModelData::IncreNerveWorkCount(){
-	CLock lk(&m_Mutex);
-	++m_NerveWorkingNum ;
-}
-void  Model::CLockedModelData::DecreNerveWorkCount(){
-	CLock lk(&m_Mutex);
-	--m_NerveWorkingNum;
+	deque<CThreadWorker*>::iterator itc = m_ThreadWorkerPool.begin();
+	while(itc != m_ThreadWorkerPool.end())
+	{
+		CThreadWorker* Worker = *itc;
+		*itc = NULL;
+		assert(!Worker->IsAlive());
+		delete Worker;
+		itc++;
+	}
+	m_ThreadWorkerPool.clear();
 }
 
 int64   Model::CLockedModelData::GetNerveMsgInterval(){
@@ -422,109 +378,142 @@ void   Model::CLockedModelData::SetNerveMaxIdleCount(int32 n){
 	m_NerveIdleMaxCount = n;
 }
 
-int32  Model::CLockedModelData::GetCentralNerveWorkNum(){
+int32  Model::CLockedModelData::GetCentralNerveWorkerNum(){
 	CLock lk(&m_Mutex);
-	int32 n = m_CentralNerveWorkList.size();
+	int32 n = m_CentralNerveWorkerList.size();
 	return n;
 }
-int32   Model::CLockedModelData::GetBusyNerveWorkNum(){
+
+int32 Model::CLockedModelData::GetIOWorkerNum(){
 	CLock lk(&m_Mutex);
-	return m_NerveWorkingNum;		
-};
-int32 Model::CLockedModelData::GetIOWorkNum(){
-	CLock lk(&m_Mutex);
-	return m_ModelIOWorkList.size();
-}
-int32    Model::CLockedModelData::AddIOWork(CModelIOWork* Work){
-	CLock lk(&m_Mutex);
-	if(m_bClosed){
-		Work->Dead();
-		delete Work;
-		return 0;
-	}
-	assert(m_ModelIOWorkList.find(Work->m_ID) == m_ModelIOWorkList.end());
-	m_ModelIOWorkList[Work->m_ID] = Work;
-	return m_ModelIOWorkList.size();
+	return m_ModelIOWorkerList.size();
 }
 
-int32    Model::CLockedModelData::DeleteIOWork(int64 ID){
-	CLock lk(&m_Mutex);
-    if(m_bClosed)return 0;
-
-	map<int64,CModelIOWork*>::iterator it = m_ModelIOWorkList.find(ID);
-	if (it != m_ModelIOWorkList.end())
-	{
-		CModelIOWork* Work = it->second;
-		Work->Dead();
-		m_ModelIOWorkList.erase(it);
-		delete Work;
-	}
-	return m_ModelIOWorkList.size();
-}
-
-int32    Model::CLockedModelData::AddCentralNerveWork(CCentralNerveWork* Work){
-	CLock lk(&m_Mutex);
-	if (m_bClosed)
-	{
-		Work->Dead();
-		delete Work;
-		return 0;
-	}
-	assert(m_CentralNerveWorkList.find(Work->m_ID) == m_CentralNerveWorkList.end());
-	m_CentralNerveWorkList[Work->m_ID] = Work;
-	return m_CentralNerveWorkList.size();
+CThreadWorker* Model::CLockedModelData::CreateThreadWorker(int64 ID,Model* Parent,int32 Type){
 	
-}
+	if(!Parent->IsAlive())return NULL;
 
-int32    Model::CLockedModelData::DeleteCentralNerveWork(int64 ID){
 	CLock lk(&m_Mutex);
-
-	if(m_bClosed){
-		return 0;
+	
+	CThreadWorker* Worker = NULL;
+	deque<CThreadWorker*>::iterator it = m_ThreadWorkerPool.begin();
+	if (it != m_ThreadWorkerPool.end())
+	{   
+		Worker = *it;
+		Worker->Dead();
+		Worker->m_ID = ID;
+		Worker->m_IdleCount =0;
+		Worker->m_Parent = Parent;
+		m_ThreadWorkerPool.pop_front();
+	}else{
+		Worker = new CThreadWorker(ID,Parent,Type);
+	}
+	
+	if(!Worker){
+		return NULL;
 	}
 
-	map<int64,CCentralNerveWork*>::iterator it = m_CentralNerveWorkList.find(ID);
-	if (it != m_CentralNerveWorkList.end())
+	if (Type == MODEL_CENTRAL_NEVER_WORK_TYPE)
 	{
-		CCentralNerveWork* Work = it->second;
-		m_CentralNerveWorkList.erase(it);
-		Work->Dead();
-		delete Work;
+		m_CentralNerveWorkerList[ID]= Worker;
+		return Worker;
+	}else if (Type == MODEL_IO_WORK_TYPE)
+	{
+		m_ModelIOWorkerList[ID] = Worker;
+		return Worker;
 	}
-	return m_CentralNerveWorkList.size();
+	assert(0);
+	return NULL;
+}
+void   Model::CLockedModelData::DeleteThreadWorker(Model* Parent,int64 ID,int32 Type){
+
+	CLock lk(&m_Mutex);
+	
+	assert(Type == MODEL_CENTRAL_NEVER_WORK_TYPE  || Type == MODEL_IO_WORK_TYPE);
+
+	CThreadWorker* Worker = NULL;
+	if (Type == MODEL_CENTRAL_NEVER_WORK_TYPE)
+	{
+		map<int64,CThreadWorker*>::iterator it = m_CentralNerveWorkerList.find(ID);
+		assert(it != m_CentralNerveWorkerList.end());
+		if (it != m_CentralNerveWorkerList.end())
+		{
+			Worker = it->second;
+			m_CentralNerveWorkerList.erase(it);
+			m_ThreadWorkerPool.push_back(Worker);
+
+		}
+
+	}else if (Type == MODEL_IO_WORK_TYPE)
+	{
+		map<int64,CThreadWorker*>::iterator it = m_ModelIOWorkerList.find(ID);
+		assert(it != m_ModelIOWorkerList.end());
+		if (it != m_ModelIOWorkerList.end())
+		{
+			Worker = it->second;
+			m_ModelIOWorkerList.erase(it);
+			m_ThreadWorkerPool.push_back(Worker);
+
+		}
+	}
+	//限制ThreadWorkerPool大小为20	
+	if(m_ThreadWorkerPool.size()>20)
+	{
+		deque<CThreadWorker*>::iterator it = m_ThreadWorkerPool.begin();
+		CThreadWorker* Worker = *it;
+		Worker->Dead();
+		it = m_ThreadWorkerPool.erase(it);
+		delete Worker;
+	}
 }
 
-void  Model::CLockedModelData::CloseAllWorkThread(){
-	m_Mutex.Acquire();
-	m_bClosed = true;	
-	m_Mutex.Release();
-
-	map<int64,CModelIOWork*>::iterator ita =  m_ModelIOWorkList.begin();
-	while(ita != m_ModelIOWorkList.end())
+void  Model::CLockedModelData::WaitAllWorkerThreadClosed(Model* Parent){
+	assert(!Parent->IsAlive());
+	if (Parent->IsAlive())
 	{
-		CModelIOWork* ModelIOWork = ita->second;
-		ModelIOWork->Dead();
-		ita++;
+		return;
+	}
+	int n = 1;
+	while (n)
+	{
+		SLEEP_MILLI(100);
+		CLock lk(&m_Mutex);	
+		n = m_ModelIOWorkerList.size();	
 	}
 
-	map<int64,CCentralNerveWork*>::iterator itb =  m_CentralNerveWorkList.begin();
-	while(itb != m_CentralNerveWorkList.end())
+    n = 1;
+	while(n){
+		SLEEP_MILLI(100);
+		CLock lk(&m_Mutex);	
+		n = m_CentralNerveWorkerList.size();
+	}
+	
+	//被删除的worker只是理论上被放入pool中，这里确保线程完全退出
+	deque<CThreadWorker*>::iterator it = m_ThreadWorkerPool.begin();
+	while(it != m_ThreadWorkerPool.end())
 	{
-		CCentralNerveWork* Work = itb->second;
-		Work->Dead();
-		itb++;
+		CThreadWorker* Worker = *it;
+		Worker->Dead();
+		it++;
 	}
 
 }
 
- bool Model::CLockedModelData::RequestCreateNewCentralNerveWork(uint32 MsgNum,int64 Interval,uint32& Reason){
+ bool Model::CLockedModelData::RequestCreateNewCentralNerveWorker(uint32 MsgNum,int64 Interval,uint32& Reason){
 	
 	CLock lk(&m_Mutex);		
-	if (m_CentralNerveWorkList.size() == m_MaxNerveWorkerNum)
+	if (m_CentralNerveWorkerList.size() == m_MaxNerveWorkerNum)
 	{
 		Reason =  REASON_LIMIT;
 		return FALSE;
-	}	
+	}
+/*   Model::Do() is a default central nerve worker, so...
+	else if (m_CentralNerveWorkerList.size()==0)
+	{
+		Reason == REASON_ALWAYS;
+		return TRUE;
+	}
+*/
 	else if (MsgNum > m_NerveMsgMaxNumInPipe)//when Current message number exceeded a specified number,start new thread
 	{
 		Reason = REASON_MSG_TOO_MUCH;
@@ -532,17 +521,12 @@ void  Model::CLockedModelData::CloseAllWorkThread(){
 	}else if(Interval> m_NerveMsgMaxInterval){ //when exceeded specified interval, there is no  message  be  popped to handled, create  new thread
 		Reason = REASON_TIME_OUT;
 		return TRUE;
-	}else if (m_NerveWorkingNum == m_CentralNerveWorkList.size())
-	{
-		Reason = REASON_WORKER_BUSY;
-		return TRUE;
 	}
 	else {
 		Reason = REASON_REFUSE;
 	}
 	return FALSE;
 }
-
 
 //Model
 //////////////////////////////////////////////////////////////////////////
@@ -563,7 +547,7 @@ m_nCPU(2)
 
 Model::~Model()
 {
-
+	
 };    
 
 bool Model::Activation(){
@@ -571,8 +555,6 @@ bool Model::Activation(){
 		return true;
 	}
 	
-	m_Alive = TRUE;
-
 #if defined(USING_POCO) 
 	initializeNetwork();
 
@@ -583,7 +565,7 @@ bool Model::Activation(){
 	if ( LOBYTE( wsaData.wVersion ) != 2 ||
 		HIBYTE( wsaData.wVersion ) != 2 ){ 
 			WSACleanup();
-			return FALSE; 
+			return false; 
 	}
 #endif
 
@@ -591,14 +573,29 @@ bool Model::Activation(){
 		m_Alive = FALSE;
 		return false;
 	}
-	return TRUE;
+
+	/*
+	int64 ID = CreateTimeStamp();
+	CThreadWorker* TestWorker = m_ModelData.CreateThreadWorker(ID,this,MODEL_TEST_WORK_TYPE);
+	if (!TestWorker)
+	{
+		return false;
+	}
+	if (!TestWorker->Activation())
+	{
+		return false;
+	}
+	*/
+	return true;
 }
 
 void Model::Dead(){
 	m_Alive = FALSE;
-	m_ModelData.CloseAllWorkThread();
+	m_ModelData.WaitAllWorkerThreadClosed(this);
+	m_ModelData.Clear();
 	Object::Dead();
 }
+
 
 void  Model::SetLogFlag(uint32 flag){
 	m_LogFlag = flag;
@@ -607,8 +604,10 @@ void  Model::SetLogFlag(uint32 flag){
 uint32  Model::GetLogFlag(){
 	return m_LogFlag;
 }	
-
-Model::CLockedLinkerList*  Model::GetSuperiorLinkerList(){
+int32   Model::GetCpuNum(){
+	return m_nCPU;
+}
+CSuperiorLinkerList*  Model::GetSuperiorLinkerList(){
 	return &m_SuperiorList;
 };
 
@@ -624,78 +623,114 @@ void  Model::GetCentralNerveMsgList(ePipeline& Pipe){
 	m_CentralNerve.CopyTo(Pipe);
 }
 
+void  Model::NotifySysState(int64 NotifyType,int64 NotifyID,ePipeline* Data){
+	switch (NotifyType)
+	{
+	case NOTIFY_MODEL_SCENE:
+		{
+
+			switch(NotifyID){
+			case NTID_NERVE_MSG_NUM:
+				{
+				}
+				break;	
+
+			case NTID_NERVE_THREAD_JOIN:
+				{
+					int64 n = Data->PopInt();
+				}
+				break;
+			case NTID_NERVE_THREAD_CLOSED:
+				{
+					int64 nThreadNum = Data->PopInt();
+					int64 nClosedThreadID = Data->PopInt();
+					CLockedModelData*  LockedData = GetModelData();
+					LockedData->DeleteThreadWorker(this,nClosedThreadID,MODEL_CENTRAL_NEVER_WORK_TYPE);
+
+				}
+				break;
+			case NTID_NERVE_THREAD_LIMIT:
+				{
 
 
-BOOL  Model::CentralNerveWorkStrategy(int64 NewMsgPushTime,int64 LastMsgPopTime){
+				}
+				break;
+			case NTID_NERVE_THREAD_FAIL:
+				{
+
+				}
+				break;
+			case NTID_IO_WORKER_CLOSED:
+				{
+					int64 ID = Data->PopInt();
+					CLockedModelData* ModelData = GetModelData();
+					ModelData->DeleteThreadWorker(this,ID,MODEL_IO_WORK_TYPE);
+				}
+				break;
+			case NTID_CONNECT_FAIL:
+				{
+
+				}
+				break;
+			case NTID_CONNECT_OK:
+				{
+
+				}
+				break;
+			case NTID_TEST_WORKER_CLOSED:
+				{
+					int64 ID = Data->PopInt();
+					CLockedModelData* ModelData = GetModelData();
+					ModelData->DeleteThreadWorker(this,ID,MODEL_IO_WORK_TYPE);
+					
+				}
+				break;
+			}
+		}
+		break;
+	}
+}
+
+BOOL  Model::CreateCentralNerveWorkerStrategy(int64 NewMsgPushTime,int64 LastMsgPopTime){
 	int32 n = GetCentralNerveMsgNum();
 	ePipeline Data;
 	Data.PushInt(n);
-	NotifySysState(MNOTIFY_CENTRAL_NERVE_MSG_NUM,&Data);
-	
+	NotifySysState(NOTIFY_MODEL_SCENE,NTID_NERVE_MSG_NUM,&Data);
+
 	int64 t = NewMsgPushTime-LastMsgPopTime; //convert into second
-	
-	if(LastMsgPopTime==0){	//First ID is 0	
-		CCentralNerveWork* CentralNerveWork = CreateCentralNerveWorker(0,this,REASEON_ALWAYS); 
-		if (!CentralNerveWork)
-		{
-			assert(0);
-			OutputLog(LOG_TIP,_T("Create first centtral Nerver thread fail,Please reboot it"));
-			return FALSE;
-		}
-		if (CentralNerveWork->Activation())
-		{
-			int n = m_ModelData.AddCentralNerveWork(CentralNerveWork);
-			ePipeline Data;
-			Data.PushInt(n);
-			Data.PushInt(CentralNerveWork->m_ID);
-			NotifySysState(MNOTIFY_CENTRAL_NERVE_THREAD_JOIN,&Data);
-			return TRUE;
-		}else{
-			if(CentralNerveWork){
-				delete CentralNerveWork;
-			}
-			assert(0);
-			OutputLog(LOG_TIP,_T("Create first centtral Nerver thread fail,Please reboot it"));
 
-			NotifySysState(MNOTIFY_CENTRAL_NERVE_THREAD_FAIL,NULL);
-			return FALSE;
+	//If more than 10 messages in the central nerve or there is message waiting for being handled more than 2 seconds, create a new thread
+	uint32 Reason ;
+	bool ret = m_ModelData.RequestCreateNewCentralNerveWorker(n,t,Reason);
+	if (!ret)
+	{
+		if (Reason == REASON_LIMIT)
+		{
+			NotifySysState(NOTIFY_MODEL_SCENE,NTID_NERVE_THREAD_LIMIT,NULL);
 		}
+		return FALSE;
 	}
-	else{//If more than 10 messages in the central nerve or there is message waiting for being handled more than 2 seconds, create a new thread
-		uint32 Reason ;
-		bool ret = m_ModelData.RequestCreateNewCentralNerveWork(n,t,Reason);
-		if (!ret)
-		{
-			if (Reason == REASON_LIMIT)
-			{
-				NotifySysState(MNOTIFY_CENTRAL_NERVE_THREAD_LIMIT,NULL);
-			}
-			return FALSE;
-		}
-		
-		CCentralNerveWork* CentralNerveWork = CreateCentralNerveWorker(NewMsgPushTime,this,Reason);
-		if (!CentralNerveWork)
-		{
-			return FALSE;
-		}
-		if (CentralNerveWork->Activation())
-		{
-			int n =m_ModelData.AddCentralNerveWork(CentralNerveWork);
-			ePipeline Data;
-			Data.PushInt(n);
-			Data.PushInt(CentralNerveWork->m_ID);
-			NotifySysState(MNOTIFY_CENTRAL_NERVE_THREAD_JOIN,&Data);
 
-			return TRUE;
-		}else{
-			if(CentralNerveWork){
-				delete CentralNerveWork;
-			}
-			NotifySysState(MNOTIFY_CENTRAL_NERVE_THREAD_FAIL,NULL);
-			return FALSE;
-		}
-		
+	CThreadWorker* CentralNerveWork =m_ModelData.CreateThreadWorker(NewMsgPushTime,this,MODEL_CENTRAL_NEVER_WORK_TYPE);
+	if (!CentralNerveWork)
+	{
+		return FALSE;
 	}
+	if (CentralNerveWork->Activation())
+	{
+		int n =m_ModelData.GetCentralNerveWorkerNum();
+		ePipeline Data;
+		Data.PushInt(n);
+		Data.PushInt(CentralNerveWork->m_ID);
+		NotifySysState(NOTIFY_MODEL_SCENE,NTID_NERVE_THREAD_JOIN,&Data);
+
+		return TRUE;
+	}else{
+		m_ModelData.DeleteThreadWorker(this,CentralNerveWork->m_ID,MODEL_CENTRAL_NEVER_WORK_TYPE);
+		NotifySysState(NOTIFY_MODEL_SCENE,NTID_NERVE_THREAD_FAIL,NULL);
+		return FALSE;
+	}
+
 	return FALSE;
 }
 
@@ -714,11 +749,11 @@ void  Model::PushCentralNerveMsg(CMsg& Msg,bool bUrgenceMsg,bool bDireclty){
 	{
 		return;
 	}
+
 	int64 NewMsgPushTime = CreateTimeStamp();
-	assert(NewMsgPushTime!=0);
 	assert(NewMsgPushTime!=LastMsgPopTime);
 
-	BOOL ret = CentralNerveWorkStrategy(NewMsgPushTime,LastMsgPopTime);
+	BOOL ret = CreateCentralNerveWorkerStrategy(NewMsgPushTime,LastMsgPopTime);
 	if (m_LogFlag & LOG_MSG_CENTRL_NERVE_PUSH)
 	{
 		tstring MsgStr = MsgID2Str(MsgID);
@@ -735,54 +770,90 @@ void Model::PopCentralNerveMsg(CMsg& Msg){
 
 };
 
-Model::CCentralNerveWork* Model::CreateCentralNerveWorker(int64 ID,Model* Parent,uint32 Reason){
-	CCentralNerveWork* NerveWork = new CCentralNerveWork(ID,this);
-
-	return NerveWork;
-} 
-
-
 
 bool Model::Connect(int64 ID,AnsiString Address,int32 Port,int32 TimeOut,tstring& error,bool bBlock){
 	assert(TimeOut>0&& TimeOut<60);
 
-	CUserConnectLinkerPipe* ConLinkerPipe = new CUserConnectLinkerPipe(this,ID,Address,Port,TimeOut);
-
-	if(!ConLinkerPipe){
-		error = _T("Create connect pipe fail");
-		return FALSE; 
+	if (m_SuperiorList.HasLinker(Address,Port))
+	{
+		error = _T("the connection has existed");
+		return false;
 	}
+
+	ePipeline Param;
+	Param.PushString(Address);
+	Param.PushInt(Port);
+	Param.PushInt(TimeOut);
+
+	CLinker Linker;
+	m_SuperiorList.CreateLinker(Linker,this,ID,Param);
+	
+	//CUserConnectLinkerPipe* ConLinkerPipe = new CUserConnectLinkerPipe(this,ID,Address,Port,TimeOut);
+
+	if(!Linker.IsValid()){
+		error = _T("Create connect pipe fail");
+		return false; 
+	};
+
+	CUserConnectLinkerPipe* ConLinkerPipe = (CUserConnectLinkerPipe*)Linker.Release();
 	if(!ConLinkerPipe->Init(error)){
 		delete ConLinkerPipe;
-		return FALSE;	
+		return false;	
 	};
 
 	if (bBlock)
 	{
 		if(!ConLinkerPipe->BlockConnect(error)){
 			delete ConLinkerPipe;
-			return FALSE;
+			return false;
 		};
+		
 	}else{
-		CLockedLinkerList* ServerList = GetSuperiorLinkerList();
-		ServerList->AddLinker(ConLinkerPipe);
+		//Note: auto connect by thread function
+		m_SuperiorList.AddLinker(ConLinkerPipe);
 	}
+
 	//if there is not thread to handle,create new one
 	CLockedModelData* ModelData = GetModelData();
-	if (ModelData->GetIOWorkNum()<m_nCPU*2)
+	if (ModelData->GetIOWorkerNum()==0)
 	{
-		int64 ID = CreateTimeStamp();
-		CModelIOWork* IOWork = new CModelIOWork(ID,this);
-		if (!IOWork || !IOWork->Activation())
+		int64 WorkerID = CreateTimeStamp();
+
+		CThreadWorker* IOWork = m_ModelData.CreateThreadWorker(WorkerID,this,MODEL_IO_WORK_TYPE);
+		if (!IOWork||!IOWork->Activation())
 		{
-			error = _T("Create connect IOWork fail");
-			return FALSE;
+			if(IOWork)m_ModelData.DeleteThreadWorker(this,IOWork->m_ID,MODEL_IO_WORK_TYPE);
+			error = _T("Activate IOWorker fail");
+
+			m_SuperiorList.DeleteLinker(ID);
+			return false;
 		}
-		ModelData->AddIOWork(IOWork);
 	}
 	return TRUE;
 }
 
+bool Model::Do(Energy* E){
 
+	try{
+		while (IsAlive())
+		{
+			CMsg Msg;
+			PopCentralNerveMsg(Msg);
 
+			if (Msg.IsValid())
+			{			
+				CentralNerveMsgProc(Msg);
+			}else{
+				SLEEP_MILLI(20);
+			}
+		}
+	}
+	catch(...){
+		ePipeline NotifyData;
+		NotifyData.PushString(_T("Where default CentralNerveWork have an exception occurred"));
+		NotifySysState(NOTIFY_EXCEPTION_OCCURRED,NULL,&NotifyData);
+
+	}
+	return true;
+}
 }; //end namespace ABSTRACT

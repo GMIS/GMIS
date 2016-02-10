@@ -19,7 +19,7 @@ namespace PHYSIC{
 //////////////////////////////////////////////////////////////////////
 
 CUserLinkerPipe::CUserLinkerPipe(Model* Parent,int64 SourceID,tstring Name)
-:CLinkerPipe(NULL,Parent,FALSE,SourceID,Name){
+:CLinkerPipe(NULL,Parent,SERVER_LINKER,SourceID,Name){
 	m_RecoType = LINKER_FRIEND;
 	m_Mutex = new CUserMutex;
 	m_bDeleteMutex = TRUE;
@@ -31,7 +31,7 @@ CUserLinkerPipe::CUserLinkerPipe(Model* Parent,int64 SourceID,tstring Name)
 
 
 CUserLinkerPipe::CUserLinkerPipe(CSpaceMutex* Mutex,System* Parent,int64 SourceID)
-:CLinkerPipe(Mutex,Parent,TRUE,SourceID,_T("Child"))
+:CLinkerPipe(Mutex,Parent,CLIENT_LINKER,SourceID,_T("Child"))
 {
 	assert(Mutex);
 	m_bDeleteMutex = FALSE;
@@ -90,6 +90,12 @@ bool  CUserLinkerPipe::PhysicalRev(char* Buf,uint32 BufSize, uint32& RevLen, uin
 	if (ret)
 	{
 		RevLen = m_Socket.receiveBytes(Buf,BufSize,flag);
+		if (RevLen==0)
+		{
+			ePipeline ErrorInfo;
+			m_Parent->NotifyLinkerState(this,LINKER_IO_ERROR,ErrorInfo);
+			return false;
+		}
 		Buf[RevLen] = '\0';
 	}
 #elif defined(USING_WIN32)
@@ -115,11 +121,8 @@ bool  CUserLinkerPipe::PhysicalRev(char* Buf,uint32 BufSize, uint32& RevLen, uin
 
 				m_RecoType = LINKER_INVALID;
 
-				CMsg Msg(MSG_LINKER_ERROR,DEFAULT_DIALOG,0);
-
-				Msg.GetLetter().PushInt(m_SourceID);
-				Msg.GetLetter().PushInt(nError);	
-				m_Parent->PushCentralNerveMsg(Msg);				
+				ePipeline ErrorInfo;
+				m_Parent->NotifyLinkerState(this,LINKER_IO_ERROR,ErrorInfo);			
 				return FALSE;
 			}
 
@@ -128,11 +131,8 @@ bool  CUserLinkerPipe::PhysicalRev(char* Buf,uint32 BufSize, uint32& RevLen, uin
 				int nError = WSAGetLastError();
 				m_RecoType = LINKER_INVALID;
 
-				CMsg Msg(MSG_LINKER_ERROR,DEFAULT_DIALOG,0);
-
-				Msg.GetLetter().PushInt(m_SourceID);
-				Msg.GetLetter().PushInt(nError);	
-				m_Parent->PushCentralNerveMsg(Msg);				
+				ePipeline ErrorInfo;
+				m_Parent->NotifyLinkerState(this,LINKER_IO_ERROR,ErrorInfo);		
 				return FALSE;
 			}
 
@@ -145,11 +145,8 @@ bool  CUserLinkerPipe::PhysicalRev(char* Buf,uint32 BufSize, uint32& RevLen, uin
 
 		m_RecoType = LINKER_INVALID;
 
-		CMsg Msg(MSG_LINKER_ERROR,DEFAULT_DIALOG,0);
-
-		Msg.GetLetter().PushInt(m_SourceID);
-		Msg.GetLetter().PushInt(nError);		
-		m_Parent->PushCentralNerveMsg(Msg);
+		ePipeline ErrorInfo;
+		m_Parent->NotifyLinkerState(this,LINKER_IO_ERROR,ErrorInfo);
 
 		return FALSE;
 	}
@@ -192,11 +189,8 @@ bool  CUserLinkerPipe::PhysicalSend(char* Buf,uint32 BufSize, uint32& SendLen, u
 
 				m_RecoType = LINKER_INVALID;
 
-				CMsg Msg(MSG_LINKER_ERROR,DEFAULT_DIALOG,0);
-
-				Msg.GetLetter().PushInt(m_SourceID);
-				Msg.GetLetter().PushInt(nError);		
-				m_Parent->PushCentralNerveMsg(Msg);				
+				ePipeline ErrorInfo;
+				m_Parent->NotifyLinkerState(this,LINKER_IO_ERROR,ErrorInfo);			
 				return FALSE;
 			}
 			SendLen = nBytes;
@@ -208,11 +202,8 @@ bool  CUserLinkerPipe::PhysicalSend(char* Buf,uint32 BufSize, uint32& SendLen, u
 
 		m_RecoType = LINKER_INVALID;
 
-		CMsg Msg(MSG_LINKER_ERROR,DEFAULT_DIALOG,0);
-
-		Msg.GetLetter().PushInt(m_SourceID);
-		Msg.GetLetter().PushInt(nError);		
-		m_Parent->PushCentralNerveMsg(Msg);
+		ePipeline ErrorInfo;
+		m_Parent->NotifyLinkerState(this,LINKER_IO_ERROR,ErrorInfo);
 
 		return FALSE;
 	}
@@ -308,19 +299,11 @@ bool CUserConnectLinkerPipe::BlockConnect(tstring& error)
 		m_bConnected = TRUE;
 
 	}catch(Poco::TimeoutException& TimeOutError){
-		tstring s = UTF8toWS(TimeOutError.displayText());
-		CMsg Msg(MSG_LINKER_ERROR,DEFAULT_DIALOG,0);
-		Msg.GetLetter().PushInt(m_SourceID);
-		Msg.GetLetter().PushString(s);		
-		m_Parent->PushCentralNerveMsg(Msg,false,true);
+		error = UTF8toWS(TimeOutError.displayText());
 		return false;
 	}catch(Poco::Net::NetException& NetError)
 	{
-		tstring s = UTF8toWS(NetError.displayText());
-		CMsg Msg(MSG_LINKER_ERROR,DEFAULT_DIALOG,0);
-		Msg.GetLetter().PushInt(m_SourceID);
-		Msg.GetLetter().PushString(s);		
-		m_Parent->PushCentralNerveMsg(Msg,false,true);
+		error = UTF8toWS(NetError.displayText());
 		return false;
 
 	}
@@ -363,7 +346,7 @@ bool CUserConnectLinkerPipe::BlockConnect(tstring& error)
 #endif
 	return true;
 }
-void CUserConnectLinkerPipe::Connect(){
+bool CUserConnectLinkerPipe::Connect(tstring& error){
 
 #if defined(USING_POCO)
 	const Poco::Net::SocketAddress Address(m_Address,m_Port);
@@ -372,24 +355,16 @@ void CUserConnectLinkerPipe::Connect(){
 	try{
 		m_Socket.connect(Address,TimeOut);
 	}catch(Poco::TimeoutException& TimeOutError){
-		tstring s = UTF8toWS(TimeOutError.displayText());
-		CMsg Msg(MSG_LINKER_ERROR,DEFAULT_DIALOG,0);
-		Msg.GetLetter().PushInt(m_SourceID);
-		Msg.GetLetter().PushString(s);		
-		m_Parent->PushCentralNerveMsg(Msg,false,true);
-		return;
+		error = UTF8toWS(TimeOutError.displayText());
+
+		return false;;
 	}catch(Poco::Net::NetException& NetError)
 	{
-		tstring s = UTF8toWS(NetError.displayText());
-		CMsg Msg(MSG_LINKER_ERROR,DEFAULT_DIALOG,0);
-		Msg.GetLetter().PushInt(m_SourceID);
-		Msg.GetLetter().PushString(s);		
-		m_Parent->PushCentralNerveMsg(Msg,false,true);
-		return;
+		error = UTF8toWS(NetError.displayText());
+		return false;
 
 	}
 		
-	m_Parent->GetSuperiorLinkerList()->AddLinker(this);
 	m_bConnected = TRUE;
 
 #elif defined(USING_WIN32)
@@ -409,37 +384,37 @@ void CUserConnectLinkerPipe::Connect(){
 
 			m_Parent->GetSuperiorLinkerList()->AddLinker(this);
 			m_bConnected = TRUE;
-			return ;
 		}
 	}
 	else if (ret == SOCKET_ERROR) { //exit
-		tstring s = _T("Connect Fail: Internal socket error.");
-		CMsg Msg(MSG_LINKER_ERROR,DEFAULT_DIALOG,0);
-		Msg.GetLetter().PushInt(m_SourceID);
-		Msg.GetLetter().PushString(s);		
-		m_Parent->PushCentralNerveMsg(Msg);
-		return;
+		error = _T("Connect Fail: Internal socket error.");
+		return false;
 	}
 	else if(ret == 0){
 		m_TimeOut--;
 		if (m_TimeOut == 0)
 		{
-			tstring s = _T("Connect Fail: Time Out");
-			CMsg Msg(MSG_LINKER_ERROR,DEFAULT_DIALOG,0);
-			Msg.GetLetter().PushInt(m_SourceID);
-			Msg.GetLetter().PushString(s);		
-			m_Parent->PushCentralNerveMsg(Msg);
+			error = _T("Connect Fail: Time Out");
+			return false;
 		}
 	}
 #endif
+	return true;
 }
 
 bool  CUserConnectLinkerPipe::ThreadIOWorkProc(char* Buffer,uint32 BufSize){
-	_CInnerIOLock lk(m_Mutex,this);
+	CLock lk(m_Mutex,this);
 
 	if (!m_bConnected)
 	{
-		Connect();
+		tstring Error;
+		bool ret = Connect(Error);
+		if (!ret)
+		{
+			ePipeline ErrorInfo;
+			ErrorInfo.PushString(Error);
+			m_Parent->NotifyLinkerState(this,LINKER_CONNECT_ERROR,ErrorInfo);
+		}
 	}else{
 		CUserLinkerPipe::ThreadIOWorkProc(Buffer,BufSize);
 	}

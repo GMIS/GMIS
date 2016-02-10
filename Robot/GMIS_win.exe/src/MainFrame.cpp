@@ -2,7 +2,7 @@
 //
 //////////////////////////////////////////////////////////////////////
 #pragma warning (disable:4786)
-
+#pragma warning (disable: 4244)
 #include "GMIS.h"
 #include "MainBrain.h"
 #include "MainFrame.h"
@@ -12,6 +12,9 @@
 #include "Win32Tool.h"
 #include "UseShGetFileInfo.h"
 #include "Ipclass.h"
+#include "mousewheelMgr.h"
+
+CUserMutex	CMainFrame::m_Mutex;
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
@@ -39,11 +42,11 @@ CMainFrame::~CMainFrame()
 
 void CMainFrame::GetFocusDialog(int64& SourceID,int64& DialogID){
 	CVSpace2* Item = m_LinkerView.GetCurDialog();
-	//assert(Item != NULL);
+
 	if (!Item)
 	{
-		SourceID = 0;
-		DialogID = 0;
+		SourceID = SYSTEM_SOURCE;
+		DialogID = DEFAULT_DIALOG;
 		return;
 	};
 
@@ -112,6 +115,7 @@ void  CMainFrame::SendMsgToBrain(int64 SourceID,int64 DialogID, ePipeline& Msg,i
 	Letter.PushInt(DialogID);
 	Letter.PushPipe(Msg);
 
+	Msg1.SetSourceID(LOCAL_GUI_SOURCE);
 	GetBrain()->PushCentralNerveMsg(Msg1,false,false); //本地界面直接压入中枢神经，如果是外地界面应该直接网络发送给Brain
 }
 
@@ -128,10 +132,13 @@ void CMainFrame::GUIMsgProc(){
 
 	if (m_MsgList.DataNum()==0)
 	{
+		SLEEP_MILLI(20);
 		return;
 	}
 	CMsg Msg; 
 	m_MsgList.Pop(Msg);
+
+	assert(Msg.GetMsgID() == MSG_BRAIN_TO_GUI);
 
 REPEAT:
 	ePipeline& Receiver = Msg.GetReceiver();
@@ -363,11 +370,6 @@ REPEAT:
 						
 						m_LinkerView.AddDialog(SourceID,DialogID,ParentID,Name);
 					} 	
-
-					m_LinkerView.SetCurDialog(SYSTEM_SOURCE,DEFAULT_DIALOG);
-					ePipeline Pipe;
-					m_ConvView.SetCurDialog(SYSTEM_SOURCE,DEFAULT_DIALOG,Pipe);	
-
 				}
 			}
 			break;
@@ -761,7 +763,11 @@ LRESULT CMainFrame::OnCreate( WPARAM wParam, LPARAM lParam)
 	RECT rc;
 	::SetRect(&rc,0,0,0,0);
 	
-	SS.Init();
+	//字体，图标资源初始化		
+	if(!SS.Init(NULL))return -1;  
+
+	CMouseWheelMgr::Initialize();
+
 
 	if(!m_AddressBar.Create(GetHinstance(),NULL,WS_CHILD|WS_VISIBLE|WS_CLIPCHILDREN,rc,GetHwnd())){
 		return -1;

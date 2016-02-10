@@ -7,39 +7,43 @@ void WebSocketRequestHandler::handleRequest(HTTPServerRequest& request, HTTPServ
 	try
 	{
 	
+	
 		WebSocket ws(request, response);
-
-		CWebsocketLinkerPipe* Linker = m_Brain->CreateWebSocketLinkerPipe(ws);
-
-		m_Brain->OutSysInfo(_T("One WebSocket connection established."));
-
-		if(Linker== NULL){
+		CLinker Linker;
+		int64 SourceID = AbstractSpace::CreateTimeStamp();
+		m_Brain->m_WebsocketClientList.CreateLinker(Linker,m_Brain,SourceID,ws);
+		if(!Linker.IsValid()){
 			   
 				AnsiString Add = request.clientAddress().toString();
 				tstring  AddW = UTF8toWS(Add);
 
-				tstring s = Format1024(_T("Accept %s Fail: can't create new WebsocketLinkerPipe "),AddW.c_str());
+				tstring s = Format1024(_T("websocket accept %s fail (can't create new WebsocketLinker)"),AddW.c_str());
 
-				CMsg Msg(SYSTEM_SOURCE,DEFAULT_DIALOG,MSG_LINKER_ERROR,DEFAULT_DIALOG);
-				Msg.GetLetter().PushInt(0);
-				Msg.GetLetter().PushString(s);		
-				m_Brain->PushCentralNerveMsg(Msg,false,false);
+				ePipeline Info;
+				Info.PushString(s);
+				m_Brain->NotifyLinkerState(NULL,LINKER_CREATE_ERROR,Info);
 				ws.close();
 				return;
 		}
 
 
-		System::CLockedLinkerList* ClientList= m_Brain->GetClientLinkerList();
-		ClientList->AddLinker(Linker);
+		CLinkerPipe* LinkerPtr = Linker.Release();
+		LinkerPtr->SetStateOutputLevel(WEIGHT_LEVEL);
+		m_Brain->m_WebsocketClientList.AddLinker(LinkerPtr);
 
 		CMsg Msg(MSG_WHO_ARE_YOU,DEFAULT_DIALOG,0);
-		Linker->PushMsgToSend(Msg);
+		LinkerPtr->PushMsgToSend(Msg);
+
+		m_Brain->CreateWebsokectWorkerStrategy();
 	}
 	catch (WebSocketException& exc)
 	{
-		AnsiString Info = exc.what();
-		tstring wInfo = UTF8toWS(Info);
-		m_Brain->OutSysInfo(wInfo.c_str());
+		AnsiString error = exc.what();
+		tstring wInfo = Format1024(_T("webcoket exception:%s"),UTF8toWS(error).c_str());
+		ePipeline Info;
+		Info.PushInt(-1);
+		Info.PushString(wInfo);
+		m_Brain->NotifySysState(NOTIFY_SYSTEM_SCENE,NTID_LISTEN_FAIL,&Info);
 
 		switch (exc.code())
 		{
@@ -85,7 +89,7 @@ HTTPRequestHandler* BrainRequestHandlerFactory::createRequestHandler(const HTTPS
 
 
 CWebsocketLinkerPipe::CWebsocketLinkerPipe(CSpaceMutex* Mutex,System* Parent,int64 SourceID,const Socket& socket)
-	:CLinkerPipe(Mutex,Parent,TRUE,SourceID,_T("Child")),m_Socket(socket)
+	:CLinkerPipe(Mutex,Parent,WEBSOCKET_LINKER,SourceID,_T("Child")),m_Socket(socket)
 {
 	assert(Mutex);
 	m_bDeleteMutex = FALSE;

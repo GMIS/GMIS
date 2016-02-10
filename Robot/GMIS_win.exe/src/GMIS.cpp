@@ -10,7 +10,6 @@
 #include "ConvertUTF.h"
 #include "UserSpacePool.h"
 #include "SystemSetting.h"
-#include "mousewheelMgr.h"
 #include <tchar.h>
 #include "Win32Tool.h"
 //#include "vld.h"
@@ -68,7 +67,7 @@ tstring GetTempDir(){
 
 #ifdef  USING_GUI
 
-#include "ThinDataTransProtocal.h"
+//#include "ThinDataTransProtocal.h"
 
 #pragma comment(lib, "comctl32.lib")
 
@@ -105,27 +104,22 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 			::SendMessage(hWnd, WM_ROCK_TDL_SHOWWINDOW, 0, 0);
 			::SetForegroundWindow(hWnd);
 		}else{
-			::MessageBox(NULL,_T("Warning"),_T("Task has been exist"),MB_OK);
+			::MessageBox(NULL,_T("GMIS has been existed"),_T("Warning"),MB_OK);
 		}	
 		return 0;
-
 	};
 
-	
 
 	//启动大脑
 	try
 	{
-
 		tstring AppName =_T("GMIS(Local)");
 
 		//初始化大脑
 		static CUserSpacePool   SpacePool; //必须是静态的，确保是最后被析构
 		static CUserTimer       Timer;
-
-		int64  t = Timer.TimeStamp();
-		tstring w = Timer.GetFullTime(t);
-		tstring w1 = Timer.GetHMS(t);
+		static CBrainMemory     BrainMemory;
+		BrainMemory.Open();
 
 		static CMainBrain MainBrain(&Timer,&SpacePool,AppName);
 		AfxBrain = &MainBrain;
@@ -133,21 +127,27 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 		if(!MainBrain.Activation()){
 			if (MainBrain.m_ErrorInfo.size()==0)
 			{
-				MainBrain.m_ErrorInfo = _T("未知原因");
+				MainBrain.m_ErrorInfo = _T("unkown error");
 			}
 			::MessageBox(NULL,MainBrain.m_ErrorInfo.c_str(),_T("Activation fail"),MB_OK);
 			return 0;
 		}
 
+		
 #ifndef USING_GUI
 		MainBrain.CheckMemory();
 		//没有图形界面的消息循环，则自己保证循环
-		MainBrain.Do(NULL);
+		while(MainBrain.IsAlive()){
+			Sleep(500);
+		}
 #else 
-		//字体，图标资源初始化		
-		if(!SS.Init(NULL))return 0;  
+		//先初始化本地界面
+		static CUserMutex  UIMutex;
+		CWinSpace2::InitUIMutex(&UIMutex);
 
-		//如果使用本地用户界面，则相当于登录一个本地用户
+		static CMainFrame MainFrame;
+		AfxGUI   = &MainFrame;
+
 		INITCOMMONCONTROLSEX ics;
 		ics.dwSize = sizeof(INITCOMMONCONTROLSEX);
 		ics.dwICC  = ICC_INTERNET_CLASSES;
@@ -155,25 +155,15 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 
 		if (AfxInitRichEditEx()==FALSE)
 		{
-			MainBrain.Dead();
-			if(MutexOneInstance)CloseHandle(MutexOneInstance);
-			return 0;
+			return -1;
 		}
 
 		CWinSpace2::RegisterCommonClass(hInstance);
-		CMouseWheelMgr::Initialize();
-
-		CUserMutex  UIMutex;
-		CWinSpace2::InitUIMutex(&UIMutex);
-
-
-		//先初始化本地界面
-		CMainFrame MainFrame;
-		AfxGUI   = &MainFrame;
 
 		RECT rc;
 		::SetRect(&rc,200,200,940,740);
 		if(!MainFrame.Create(hInstance,AppName.c_str(),WS_CLIPCHILDREN,rc,NULL)){
+			::MessageBox(NULL,_T("Create MainFrame fail"),_T("Warning"),MB_OK);
 			int n = ::GetLastError();
 			MainBrain.Dead();
 			if(MutexOneInstance)CloseHandle(MutexOneInstance);
@@ -195,11 +185,10 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 
 		MainFrame.InitSplitterPos(150);
 
-		//身份验证
+		//如果使用本地用户界面，则相当于登录一个本地用户
 		tstring CrypStr;
-		if(GetBrain()->GetUserAccountNum()==0){ 
+		if(MainBrain.GetBrainData()->GetUserAccountNum()==0){ //隐患？ 故意如此导致陌生人成功使用
 			//首次使用，要求注册一个
-
 			int i=0;		
 			int ret = DialogBoxParam (hInstance,MAKEINTRESOURCE(IDD_SETACCOUNT), 
 				MainFrame.GetHwnd(), SetPasswordDlgProc, 0);
@@ -211,14 +200,22 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 			CrypStr = TempAccount.Name + TempAccount.Password;
 
 			TempAccount.Password = _T("");
-			GetBrain()->RegisterUserAccount(TempAccount.Name,CrypStr,DIALOG_SYSTEM_MAIN);
+			MainBrain.GetBrainData()->RegisterUserAccount(TempAccount.Name,CrypStr,DIALOG_SYSTEM_MAIN);
 
-			ret = MainBrain.Login(0,TempAccount.Name,CrypStr);
+			tstring  Name = TempAccount.Name ;
+			ret = MainBrain.Login(LOCAL_GUI_SOURCE,Name,CrypStr);
 			if(!ret){
 				MainBrain.Dead();
 				if(MutexOneInstance)CloseHandle(MutexOneInstance);
 				return 0;
 			}
+
+			CLogicDialog* Dialog = MainBrain.GetBrainData()->GetDialog(SYSTEM_SOURCE,DEFAULT_DIALOG);
+			CNotifyDialogState nf(NOTIFY_DIALOG_LIST);
+			nf.PushInt(DL_LOGIN_ONE);
+			nf.PushInt(LOCAL_GUI_SOURCE);
+			nf.Notify(Dialog);
+			
 			CrypStr = _T("");
 			TempAccount.Password =_T("");
 
@@ -235,8 +232,13 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 				}
 				CrypStr = TempAccount.Name + TempAccount.Password;
 				
-			    ret = MainBrain.Login(0,TempAccount.Name,CrypStr);
+			    ret = MainBrain.Login(LOCAL_GUI_SOURCE,TempAccount.Name,CrypStr);
 				if(ret){
+					CLogicDialog* Dialog = MainBrain.GetBrainData()->GetDialog(SYSTEM_SOURCE,DEFAULT_DIALOG);
+					CNotifyDialogState nf(NOTIFY_DIALOG_LIST);
+					nf.PushInt(DL_LOGIN_ONE);
+					nf.PushInt(LOCAL_GUI_SOURCE);
+					nf.Notify(Dialog);
 					break;
 				}
 			}
@@ -273,11 +275,15 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	catch (exception& roException)
 	{
 		tstring s = Format1024(_T("GMIS starting fail: %s "),roException.what());
-		::MessageBox(NULL,_T("Sorry!"),s.c_str(),MB_OK);
-	}catch (...)
+		::MessageBox(NULL,s.c_str(),_T("Sorry!"),MB_OK);
+	}
+	catch (tstring& s){
+		::MessageBox(NULL,s.c_str(),_T("Sorry!"),MB_OK);
+	}
+	catch (...)
 	{
 		tstring s = _T("GMIS starting fail: an exception occured");
-		::MessageBox(NULL,_T("Sorry!"),s.c_str(),MB_OK);
+		::MessageBox(NULL,s.c_str(),_T("Sorry!"),MB_OK);
 	}
 	
 	GetBrain()->Dead();

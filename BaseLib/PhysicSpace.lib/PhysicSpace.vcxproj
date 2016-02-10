@@ -19,7 +19,7 @@
     <ClCompile Include="src\Object.cpp" />
     <ClCompile Include="src\SpaceMutex.cpp" />
     <ClCompile Include="src\System.cpp" />
-    <ClCompile Include="src\ThinDataTransProtocal.cpp" />
+    <ClCompile Include="src\UnitTest.cpp" />
     <ClCompile Include="src\UserLinkerPipe.cpp" />
     <ClCompile Include="src\UserMutex.cpp" />
     <ClCompile Include="src\UserSpacePool.cpp" />
@@ -28,11 +28,11 @@
   <ItemGroup>
     <ClInclude Include="src\LinkerPipe.h" />
     <ClInclude Include="src\Model.h" />
+    <ClInclude Include="src\NotifyCodes.h" />
     <ClInclude Include="src\Object.h" />
     <ClInclude Include="src\PhysicSpace.h" />
     <ClInclude Include="src\SpaceMutex.h" />
     <ClInclude Include="src\System.h" />
-    <ClInclude Include="src\ThinDataTransProtocal.h" />
     <ClInclude Include="src\UserLinkerPipe.h" />
     <ClInclude Include="src\UserMutex.h" />
     <ClInclude Include="src\UserSpacePool.h" />
@@ -72,7 +72,7 @@
     <IntDir>$(SolutionDir)obj\$(ProjectName)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>D:\boost;$(IncludePath);..\TheorySapce\src</IncludePath>
+    <IncludePath>D:\poco-1.6.0\Foundation\include;D:\poco-1.6.0\Net\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -107,7 +107,7 @@
       <Optimization>MaxSpeed</Optimization>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE;USING_POCO;POCO_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <ResourceCompile>
       <Culture>0x0804</Culture>

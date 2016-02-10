@@ -13,33 +13,33 @@
 //#include "Arm.h"
 //////////////////////////////////////////////////////////////////////////
 
-MsgProcState CWaitSecond_Static::MsgProc(CLogicDialog* Dialog,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress,int32& ChildIndex)
+MsgProcState CWaitSecond_Static::EltMsgProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress)
 {
 	
 	int64 MsgID = Msg.GetMsgID();
 	if(MsgID == MSG_EVENT_TICK)
 	{	
 		if(!ExePipe.IsAlive()){
-			ePipeline EventInfo;
+			CBrainEvent EventInfo;
 			bool ret = Dialog->m_Brain->GetBrainData()->PopBrainEvent(GetEventID(),EventInfo);
 			if (!ret) 
 			{
-				ExePipe.GetLabel() = Format1024(_T("Error: (%d)%s event lost"),m_ID,GetName().c_str());
+				ExePipe.GetLabel() = Format1024(_T("Error: (%I64ld)%s event lost"),m_ID,GetName().c_str());
 				ExePipe.SetID(RETURN_ERROR);
 				return RETURN_DIRECTLY;
 			}
 
-			ePipeline* OldExePipe = (ePipeline*)EventInfo.GetData(EVENT_PIPE);
+			ePipeline& OldExePipe = EventInfo.m_ClientExePipe;
 			
-			Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
+			Dialog->CloseChildDialog(GetEventID(),OldExePipe,ExePipe);
 			
 			return CONTINUE_TASK;
 		}
 		int64 EventID = Msg.GetEventID();
 		if (EventID != GetEventID()) //调试暂停后也会持续收到此信息
 		{
-			ChildIndex = -1;
-			MsgProcState ret = CElement::MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+			ChildIndex = IT_SELF;
+			MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 			return ret;
 		}
 
@@ -65,37 +65,37 @@ MsgProcState CWaitSecond_Static::MsgProc(CLogicDialog* Dialog,CMsg& Msg,ePipelin
 			
 			Dialog->m_Brain->OutputLog(LOG_MSG_RUNTIME_TIP,_T("%I64ld waited %.3f second"),m_ID,t);
 
-			ePipeline EventInfo;
+			CBrainEvent EventInfo;
 			bool ret = Dialog->m_Brain->GetBrainData()->PopBrainEvent(EventID,EventInfo);
 			if (!ret) 
 			{
-				ExePipe.GetLabel() = Format1024(_T("Error: (%d)%s event lost"),m_ID,GetName().c_str());
+				ExePipe.GetLabel() = Format1024(_T("Error: (%I64ld)%s event lost"),m_ID,GetName().c_str());
 				ExePipe.SetID(RETURN_ERROR);
 				return RETURN_DIRECTLY;
 			}
-			ePipeline* OldExePipe = (ePipeline*)EventInfo.GetData(EVENT_PIPE);
+			ePipeline& OldExePipe = EventInfo.m_ClientExePipe;
 			
 			ExePipe.Clear();
-			ExePipe<<*OldExePipe;
+			ExePipe<<OldExePipe;
 			
 			if(m_bPause){
 				ExePipe.SetID(RETURN_BREAK);
 				m_bPause = false;
 			}
 			
-			Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
+			Dialog->CloseChildDialog(GetEventID(),OldExePipe,ExePipe);
 		}
 	}else{
 
-		ChildIndex = -1;
-		MsgProcState ret = CElement::MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+		ChildIndex = IT_SELF;
+		MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 		return ret;
 		
 	}
 	return RETURN_DIRECTLY;
 }
 
-bool CWaitSecond_Static::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress){
+bool CWaitSecond_Static::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
 	m_StartTimeStamp = AbstractSpace::CreateTimeStamp();
 	
 	UpdateEventID();
@@ -107,7 +107,7 @@ bool CWaitSecond_Static::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildInde
 }
 
 
-bool CWaitSecond::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress){
+bool CWaitSecond::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
 	m_StartTimeStamp = AbstractSpace::CreateTimeStamp();
 
 	if (ExePipe.Size()==0)
@@ -137,7 +137,7 @@ bool CWaitSecond::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipe
 }
 //////////////////////////////////////////////////////////////////////////
 
-MsgProcState CGotoLabel::MsgProc(CLogicDialog* Dialog,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress,int32& ChildIndex){
+MsgProcState CGotoLabel::EltMsgProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
 	int64 MsgID = Msg.GetMsgID();
 	if(MsgID == MSG_EVENT_TICK)
 	{	
@@ -145,14 +145,14 @@ MsgProcState CGotoLabel::MsgProc(CLogicDialog* Dialog,CMsg& Msg,ePipeline& ExePi
 		int64 EventID = Msg.GetEventID();
 		if (EventID != GetEventID()) //调试暂停后也会持续收到此信息
 		{
-			ChildIndex = -1;
-			MsgProcState ret = CElement::MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+			ChildIndex = IT_SELF;
+			MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 			return ret;
 		}
 		
 		ePipeline& Letter = Msg.GetLetter(); //注意：虽然用不到，但必须使用一次，表明此信读过，避免随后被使用
 
-		ePipeline ObjectInfo;
+		CBrainEvent ObjectInfo;
 		bool ret = Dialog->m_Brain->GetBrainData()->PopBrainEvent(EventID,ObjectInfo);
 		if (!ret) 
 		{
@@ -160,13 +160,12 @@ MsgProcState CGotoLabel::MsgProc(CLogicDialog* Dialog,CMsg& Msg,ePipeline& ExePi
 			ExePipe.SetID(RETURN_ERROR);
 			return RETURN_DIRECTLY;
 		}
-		
-		ePipeline* ExePipe1 = (ePipeline*)ObjectInfo.GetData(EVENT_PIPE);
+	
 
 		ExePipe.Clear();
-		ExePipe<<*ExePipe1;
+		ExePipe<<ObjectInfo.m_ClientExePipe;;
 
-		int64 ID = ExePipe1->GetID();
+		int64 ID = ObjectInfo.m_ClientExePipe.GetID();
 		if (ID == RETURN_BREAK || ExePipe.GetID()==RETURN_BREAK)
 		{
 			ExePipe.SetID(RETURN_DEBUG_GOTO_LABEL);
@@ -183,8 +182,8 @@ MsgProcState CGotoLabel::MsgProc(CLogicDialog* Dialog,CMsg& Msg,ePipeline& ExePi
 		
 
 	}else{
-		ChildIndex = -1;
-		MsgProcState ret = CElement::MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+		ChildIndex = IT_SELF;
+		MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 		return ret;
 		
 	}
@@ -192,12 +191,17 @@ MsgProcState CGotoLabel::MsgProc(CLogicDialog* Dialog,CMsg& Msg,ePipeline& ExePi
 
 }
 
-bool CGotoLabel::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress){
+bool CGotoLabel::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
 		
 	UpdateEventID();
-	
-	Dialog->m_Brain->GetBrainData()->PushBrainEvent(GetEventID(),ExePipe,LocalAddress,MIN_EVENT_INTERVAL); 
+	int64 EventID = GetEventID();
 
+#ifdef _DEBUG
+	tstring memo = Format1024(_T("%s %d"),_T(__FILE__),__LINE__);
+	Dialog->m_Brain->GetBrainData()->PushBrainEvent(EventID,EventID,ExePipe,LocalAddress,MIN_EVENT_INTERVAL,false,memo); 
+#else
+	Dialog->m_Brain->GetBrainData()->PushBrainEvent(EventID,EventID,ExePipe,LocalAddress,MIN_EVENT_INTERVAL,false); 
+#endif
 	int64 ID = ExePipe.GetID();
 	if (ID == RETURN_BREAK)
 	{
@@ -209,7 +213,7 @@ bool CGotoLabel::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipel
 }
 
 
-bool COutputInfo::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress){
+bool COutputInfo::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
 	
 	tstring Info = ExePipe.PopString();
 	Dialog->RuntimeOutput(m_ID,Info);
@@ -264,7 +268,12 @@ bool  CInterBrainObject::Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& L
 	case INSTINCT_CLOSE_DIALOG:
 		DoCloseDialog(Dialog,ExePipe,LocalAddress,Msg);
 		break;
-
+	case INSTINCT_CREATE_ACCOUNT:
+		DoCreateAccount(Dialog,ExePipe,LocalAddress,Msg);
+		break;
+	case INSTINCT_DELETE_ACCOUNT:
+		DoDeleteAccount(Dialog,ExePipe,LocalAddress,Msg);
+		break;
 	case INSTINCT_LEARN_TOKEN:
 	case INSTINCT_LEARN_PRONOUN:
 	case INSTINCT_LEARN_ADJECTIVE:
@@ -317,8 +326,8 @@ bool  CInterBrainObject::DoCloseDialog(CLogicDialog* Dialog,ePipeline& ExePipe,e
 	
 	if (!Msg.IsReaded())
 	{
-		int32 ChildIndex = -1;
-		MsgProcState ret = CElement::MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+		int32 ChildIndex = IT_SELF;
+		MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 		if(ret == RETURN_DIRECTLY){
 			return true;
 		}
@@ -332,11 +341,11 @@ bool  CInterBrainObject::DoCloseDialog(CLogicDialog* Dialog,ePipeline& ExePipe,e
 	}
 	if (Dialog->m_DialogType == DIALOG_SYSTEM_CHILD || Dialog->m_DialogType == DIALOG_OTHER_CHILD)
 	{
-		CNotifyState nf(NOTIFY_DIALOG_LIST);
+		CNotifyDialogState nf(NOTIFY_DIALOG_LIST);
 		nf.PushInt(DL_DEL_DIALOG);
 		nf.Notify(Dialog);
 
-		Brain->GetBrainData()->DeleteDialog(Dialog->GetDialogID());
+		Brain->GetBrainData()->DeleteDialog(Dialog->m_SourceID,Dialog->m_DialogID);
 
 		return true;
 	}
@@ -351,12 +360,93 @@ bool  CInterBrainObject::DoCloseDialog(CLogicDialog* Dialog,ePipeline& ExePipe,e
 	
 }
 
+bool  CInterBrainObject::DoCreateAccount(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg){
+	
+	if (!Msg.IsReaded())
+	{
+		int32 ChildIndex = IT_SELF;
+		MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
+		if(ret == RETURN_DIRECTLY){
+			return true;
+		}
+	}
+
+	if (Dialog->m_SourceID != LOCAL_GUI_SOURCE && Dialog->m_DialogType != DIALOG_SYSTEM_MAIN)
+	{
+		ExePipe.GetLabel() =_T("this dialog not authorized to perform this operation");
+		ExePipe.SetID(RETURN_ERROR);
+		return false;
+	}
+		
+	if (!ExePipe.HasTypeAB(0x33100000))
+	{
+		ExePipe.GetLabel() =_T("parameter is not valid");
+		ExePipe.SetID(RETURN_ERROR);
+		return false;
+	}
+	tstring Name = ExePipe.PopString();
+	tstring Password = ExePipe.PopString();
+	int64   DialogType = ExePipe.PopInt();
+
+	tstring CrypStr = Name + Password;
+
+	ePipeline UserInfo;
+	if(Dialog->m_Brain->GetBrainData()->FindRegisterUserInfo(Name,CrypStr,UserInfo)){
+		tstring s = Format1024(_T("User Name '%s' has exist"),Name.c_str());
+		ExePipe.GetLabel() = s;
+		ExePipe.SetID(RETURN_ERROR);
+		return false;
+	};
+
+	if (DialogType > DIALOG_NULL && DialogType < DIALOG_OTHER_CHILD)
+	{
+		Dialog->m_Brain->GetBrainData()->RegisterUserAccount(Name,CrypStr,DIALOG_SYSTEM_MAIN);
+	}else{
+		ExePipe.GetLabel() =_T("DialogType is not valid");
+		ExePipe.SetID(RETURN_ERROR);
+		return false;
+	}
+	return true;
+};
+bool  CInterBrainObject::DoDeleteAccount(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg){
+	if (!Msg.IsReaded())
+	{
+		int32 ChildIndex = IT_SELF;
+		MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
+		if(ret == RETURN_DIRECTLY){
+			return true;
+		}
+	}
+
+	if (Dialog->m_SourceID != LOCAL_GUI_SOURCE && Dialog->m_DialogType != DIALOG_SYSTEM_MAIN)
+	{
+		ExePipe.GetLabel() =_T("this dialog not authorized to perform this operation");
+		ExePipe.SetID(RETURN_ERROR);
+		return false;
+	}
+
+	if (!ExePipe.HasTypeAB(0x33100000))
+	{
+		ExePipe.GetLabel() =_T("parameter is not valid");
+		ExePipe.SetID(RETURN_ERROR);
+		return false;
+	}
+	tstring Name = ExePipe.PopString();
+	tstring Password = ExePipe.PopString();
+	tstring CrypStr = Name + Password;
+	int64 SourceID = Dialog->m_Brain->GetBrainData()->DeleteUserAccount(Name,CrypStr);
+	if (SourceID>0)
+	{
+		int32 n = Dialog->m_Brain->GetBrainData()->DeleteDialogOfSource(SourceID);
+	}
+	return true;
+};
 
 bool  CInterBrainObject::DoThinkLogic(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg){	
 	if (!Msg.IsReaded())
 	{
-		int32 ChildIndex = -1;
-		MsgProcState ret = CElement::MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+		int32 ChildIndex = IT_SELF;
+		MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 		if(ret == RETURN_DIRECTLY){
 			return true;
 		}
@@ -371,8 +461,8 @@ bool  CInterBrainObject::DoThinkLogic(CLogicDialog* Dialog,ePipeline& ExePipe,eP
 bool  CInterBrainObject::DoDebugTask(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg){
 	if (!Msg.IsReaded())
 	{
-		int32 ChildIndex = -1;
-		MsgProcState ret = CElement::MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+		int32 ChildIndex = IT_SELF;
+		MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 		if(ret == RETURN_DIRECTLY){
 			return true;
 		}
@@ -385,28 +475,25 @@ bool  CInterBrainObject::DoStopTask(CLogicDialog* Dialog,ePipeline& ExePipe,ePip
 	
 	if (!Msg.IsReaded())
 	{
-		int32 ChildIndex = -1;
-		MsgProcState ret = CElement::MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+		int32 ChildIndex = IT_SELF;
+		MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 		if(ret == RETURN_DIRECTLY){
 			return true;
 		}
 	}
 
-	int64 EventID = Dialog->GetDialogID();
-	ePipeline ObjectInfo;
+	int64 EventID = Dialog->m_DialogID;
+	CBrainEvent ObjectInfo;
 	bool ret = Dialog->m_Brain->GetBrainData()->PopBrainEvent(EventID,ObjectInfo);
 	if (!ret) 
 	{
 		return true;
 	}
 				
-	ePipeline* ObjectAddress1 = (ePipeline*)ObjectInfo.GetData(EVENT_ADDRESS);
-	ePipeline* ExePipe1 = (ePipeline*)ObjectInfo.GetData(EVENT_PIPE);
-				
-	CMsg EltMsg(*ObjectAddress1,MSG_ELT_TASK_CTRL,0);
+	CMsg EltMsg(ObjectInfo.m_ClientAddress,MSG_ELT_TASK_CTRL,0);
 	ePipeline& Letter = EltMsg.GetLetter();
 	Letter.PushInt(CMD_STOP);
-	Letter.PushPipe(*ExePipe1);
+	Letter.PushPipe(ObjectInfo.m_ClientExePipe);
 				
 	//给Element发信息
 	Dialog->m_Brain->PushNerveMsg(EltMsg,false,false);
@@ -417,29 +504,26 @@ bool  CInterBrainObject::DoPauseTask(CLogicDialog* Dialog,ePipeline& ExePipe,ePi
 
 	if (!Msg.IsReaded())
 	{
-		int32 ChildIndex = -1;
-		MsgProcState ret = CElement::MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+		int32 ChildIndex = IT_SELF;
+		MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 		if(ret == RETURN_DIRECTLY){
 			return true;
 		}
 	}
 
 
-	int64 EventID = Dialog->GetDialogID();
-	ePipeline ObjectInfo;
+	int64 EventID = Dialog->m_DialogID;
+	CBrainEvent ObjectInfo;
 	bool ret = Dialog->m_Brain->GetBrainData()->PopBrainEvent(EventID,ObjectInfo);
 	if (!ret) 
 	{
 		return true;
 	}
-				
-	ePipeline* ObjectAddress1 = (ePipeline*)ObjectInfo.GetData(EVENT_ADDRESS);
-	ePipeline* ExePipe1 = (ePipeline*)ObjectInfo.GetData(EVENT_PIPE);
-				
-	CMsg EltMsg(*ObjectAddress1,MSG_ELT_TASK_CTRL,0);
+	
+	CMsg EltMsg(ObjectInfo.m_ClientAddress,MSG_ELT_TASK_CTRL,0);
 	ePipeline& Letter = EltMsg.GetLetter();
 	Letter.PushInt(CMD_PAUSE);
-	Letter.PushPipe(*ExePipe1);
+	Letter.PushPipe(ObjectInfo.m_ClientExePipe);
 				
 	//给Element发信息
 	Dialog->m_Brain->PushNerveMsg(EltMsg,false,false);
@@ -451,14 +535,14 @@ bool  CInterBrainObject::DoRunTask(CLogicDialog* Dialog,ePipeline& ExePipe,ePipe
 	
 	if (!Msg.IsReaded())
 	{
-		int32 ChildIndex = -1;
-		MsgProcState ret = CElement::MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+		int32 ChildIndex = IT_SELF;
+		MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 		if(ret == RETURN_DIRECTLY){
 			return true;
 		}
 	}
 
-	CLogicDialog* ParentDialg = Dialog->m_Brain->GetBrainData()->GetDialog(Dialog->m_ParentDialogID);
+	CLogicDialog* ParentDialg = Dialog->m_Brain->GetBrainData()->GetDialog(Dialog->m_SourceID,Dialog->m_ParentDialogID);
 
 	assert(ParentDialg);
 	if (!ParentDialg)
@@ -466,10 +550,10 @@ bool  CInterBrainObject::DoRunTask(CLogicDialog* Dialog,ePipeline& ExePipe,ePipe
 		return false;
 	}
 
-	if(ParentDialg->GetControlEventID() == Dialog->GetDialogID()) //用户在缺省的控制对话中输入"run"，意味着将重启全部暂停
+	if(ParentDialg->GetControlEventID() == Dialog->m_DialogID) //用户在缺省的控制对话中输入"run"，意味着将重启全部暂停
 	{
 		ePipeline ReceiverInfo;
-		ReceiverInfo.PushInt(ParentDialg->GetDialogID());
+		ReceiverInfo.PushInt(ParentDialg->m_DialogID);
 		
 		ePipeline ChildMsg(GUI_TASK_CONTROL);
 		ChildMsg.PushInt(CMD_RUN);
@@ -480,20 +564,18 @@ bool  CInterBrainObject::DoRunTask(CLogicDialog* Dialog,ePipeline& ExePipe,ePipe
 		ParentDialg->Do(NewMsg);		
 	}
 	else{ //意味着用户在暂停对话中输入了"run"命令，这时候可以直接取得事件
-		int64 EventID = Dialog->GetDialogID();
-		ePipeline ObjectInfo;
+		int64 EventID = Dialog->m_DialogID;
+		CBrainEvent ObjectInfo;
 		bool ret = Dialog->m_Brain->GetBrainData()->PopBrainEvent(EventID,ObjectInfo);
 		if (!ret)
 		{
 			return true;
 		}
-		ePipeline* ObjectAddress1 = (ePipeline*)ObjectInfo.GetData(EVENT_ADDRESS);
-		ePipeline* ExePipe1 = (ePipeline*)ObjectInfo.GetData(EVENT_PIPE);
 		
-		CMsg EltMsg(*ObjectAddress1,MSG_ELT_TASK_CTRL,EventID);
+		CMsg EltMsg(ObjectInfo.m_ClientAddress,MSG_ELT_TASK_CTRL,EventID);
 		ePipeline& Letter = EltMsg.GetLetter();
 		Letter.PushInt(CMD_RUN);
-		Letter.PushPipe(*ExePipe1);
+		Letter.PushPipe(ObjectInfo.m_ClientExePipe);
 		
 		//给Element发信息
 		Dialog->m_Brain->PushNerveMsg(EltMsg,false,false);
@@ -505,28 +587,25 @@ bool  CInterBrainObject::DoRunTask(CLogicDialog* Dialog,ePipeline& ExePipe,ePipe
 bool  CInterBrainObject::DoStepTask(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg){
 	if (!Msg.IsReaded())
 	{
-		int32 ChildIndex = -1;
-		MsgProcState ret = CElement::MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+		int32 ChildIndex = IT_SELF;
+		MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 		if(ret == RETURN_DIRECTLY){
 			return true;
 		}
 	}
 
-	int64 EventID = Dialog->GetDialogID();
-	ePipeline ObjectInfo;
+	int64 EventID = Dialog->m_DialogID;
+	CBrainEvent ObjectInfo;
 	bool ret = Dialog->m_Brain->GetBrainData()->PopBrainEvent(EventID,ObjectInfo);
 	if (!ret)
 	{
 		return true;
 	}
-				
-	ePipeline* ObjectAddress1 = (ePipeline*)ObjectInfo.GetData(EVENT_ADDRESS);
-	ePipeline* ExePipe1 = (ePipeline*)ObjectInfo.GetData(EVENT_PIPE);
-				
-	CMsg EltMsg(*ObjectAddress1,MSG_ELT_TASK_CTRL,EventID);
+								
+	CMsg EltMsg(ObjectInfo.m_ClientAddress,MSG_ELT_TASK_CTRL,EventID);
 	ePipeline& Letter = EltMsg.GetLetter();
 	Letter.PushInt(CMD_DEBUG_STEP);
-	Letter.PushPipe(*ExePipe1);
+	Letter.PushPipe(ObjectInfo.m_ClientExePipe);
 				
 	//给Element发信息
 	Dialog->m_Brain->PushNerveMsg(EltMsg,false,false);
@@ -537,8 +616,8 @@ bool  CInterBrainObject::DoStepTask(CLogicDialog* Dialog,ePipeline& ExePipe,ePip
 bool  CInterBrainObject::DoGotoTask(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg){
 	if (!Msg.IsReaded())
 	{
-		int32 ChildIndex = -1;
-		MsgProcState ret = CElement::MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+		int32 ChildIndex = IT_SELF;
+		MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 		if(ret == RETURN_DIRECTLY){
 			return true;
 		}
@@ -614,8 +693,8 @@ bool  CInterBrainObject::DoLearnText(CLogicDialog* Dialog,ePipeline& ExePipe,ePi
 			
 			return true;
 		}else{
-			int32 ChildIndex = -1;
-			MsgProcState ret = CElement::MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+			int32 ChildIndex = IT_SELF;
+			MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 			if(ret == RETURN_DIRECTLY){
 				return true;
 			}
@@ -705,8 +784,8 @@ bool  CInterBrainObject::DoLearnLogic(CLogicDialog* Dialog,ePipeline& ExePipe,eP
 			
 			return true;
 		}else{
-			int32 ChildIndex = -1;
-			MsgProcState ret = CElement::MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+			int32 ChildIndex = IT_SELF;
+			MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 			if(ret == RETURN_DIRECTLY){
 				return true;
 			}
@@ -809,8 +888,8 @@ bool  CInterBrainObject::DoLearnObject(CLogicDialog* Dialog,ePipeline& ExePipe,e
 			
 			return true;
 		}else{
-			int32 ChildIndex = -1;
-			MsgProcState ret = CElement::MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+			int32 ChildIndex = IT_SELF;
+			MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 			if(ret == RETURN_DIRECTLY){
 				return true;
 			}
@@ -1013,8 +1092,8 @@ bool  CInterBrainObject::DoLearnAction(CLogicDialog* Dialog,ePipeline& ExePipe,e
 				
 			}
 		}else{
-			int32 ChildIndex = -1;
-			MsgProcState ret = CElement::MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+			int32 ChildIndex = IT_SELF;
+			MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 			if(ret == RETURN_DIRECTLY){
 				return true;
 			}
@@ -1132,8 +1211,8 @@ bool  CInterBrainObject::DoLearnMemory(CLogicDialog* Dialog,ePipeline& ExePipe,e
 			}
 			return false;
 		}else{
-			int32 ChildIndex = -1;
-			MsgProcState ret = CElement::MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+			int32 ChildIndex = IT_SELF;
+			MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 			if(ret == RETURN_DIRECTLY){
 				return true;
 			}
@@ -1170,8 +1249,8 @@ bool  CInterBrainObject::DoLearnMemory(CLogicDialog* Dialog,ePipeline& ExePipe,e
 bool  CInterBrainObject::DoFind(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg){
 	if (!Msg.IsReaded())
 	{
-		int32 ChildIndex = -1;
-		MsgProcState ret = CElement::MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+		int32 ChildIndex = IT_SELF;
+		MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 		if(ret == RETURN_DIRECTLY){
 			return true;
 		}
@@ -1180,7 +1259,7 @@ bool  CInterBrainObject::DoFind(CLogicDialog* Dialog,ePipeline& ExePipe,ePipelin
 	tstring text = m_Param.PopString();
 	
 	
-	CNotifyState nf(NOTIFY_FIND_VIEW);
+	CNotifyDialogState nf(NOTIFY_FIND_VIEW);
 	nf.PushInt(FIND_START);
 	nf.Notify(Dialog);
 	
@@ -1193,7 +1272,7 @@ bool  CInterBrainObject::DoFind(CLogicDialog* Dialog,ePipeline& ExePipe,ePipelin
 	Dialog->m_SearchOutput = SearchResult;
 
 	//输出结果,0条目也要通知
-	CNotifyState nf1(NOTIFY_FIND_VIEW);
+	CNotifyDialogState nf1(NOTIFY_FIND_VIEW);
 	nf1.PushInt(FIND_UPDATE);
 	nf1.PushPipe(SearchResult);
 	nf1.Notify(Dialog);
@@ -1202,13 +1281,13 @@ bool  CInterBrainObject::DoFind(CLogicDialog* Dialog,ePipeline& ExePipe,ePipelin
 	//如果已经找到所有结果,通知搜索结束
 	if (Dialog->m_FindSeedList.size()==0)
 	{
-		CNotifyState nf2(NOTIFY_FIND_VIEW);
+		CNotifyDialogState nf2(NOTIFY_FIND_VIEW);
 		nf2.PushInt(FIND_STOP);
 		nf2.PushInt(TRUE);
 		nf2.Notify(Dialog);	
 		Dialog->m_SearchOutput.SetID(0); //没有更多结果
 	}else{
-		CNotifyState nf2(NOTIFY_FIND_VIEW);
+		CNotifyDialogState nf2(NOTIFY_FIND_VIEW);
 		nf2.PushInt(FIND_STOP);
         nf2.PushInt(FALSE);
 		nf2.Notify(Dialog);	
@@ -1221,8 +1300,8 @@ bool  CInterBrainObject::DoFind(CLogicDialog* Dialog,ePipeline& ExePipe,ePipelin
 bool  CInterBrainObject::DoFindLogic(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg){
 	if (!Msg.IsReaded())
 	{
-		int32 ChildIndex = -1;
-		MsgProcState ret = CElement::MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+		int32 ChildIndex = IT_SELF;
+		MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 		if(ret == RETURN_DIRECTLY){
 			return true;
 		}
@@ -1231,7 +1310,7 @@ bool  CInterBrainObject::DoFindLogic(CLogicDialog* Dialog,ePipeline& ExePipe,ePi
 	tstring text = m_Param.PopString();
 	
 	
-	CNotifyState nf(NOTIFY_FIND_VIEW);
+	CNotifyDialogState nf(NOTIFY_FIND_VIEW);
 	nf.PushInt(FIND_START);
 	nf.Notify(Dialog);
 	
@@ -1244,7 +1323,7 @@ bool  CInterBrainObject::DoFindLogic(CLogicDialog* Dialog,ePipeline& ExePipe,ePi
 	Dialog->m_SearchOutput = SearchResult;
 	
 	//输出结果,0条目也要通知
-	CNotifyState nf1(NOTIFY_FIND_VIEW);
+	CNotifyDialogState nf1(NOTIFY_FIND_VIEW);
 	nf1.PushInt(FIND_UPDATE);
 	nf1.PushPipe(SearchResult);
 	nf1.Notify(Dialog);
@@ -1253,13 +1332,13 @@ bool  CInterBrainObject::DoFindLogic(CLogicDialog* Dialog,ePipeline& ExePipe,ePi
 	//如果已经找到所有结果,通知搜索结束
 	if (Dialog->m_FindSeedList.size()==0)
 	{
-		CNotifyState nf2(NOTIFY_FIND_VIEW);
+		CNotifyDialogState nf2(NOTIFY_FIND_VIEW);
 		nf2.PushInt(FIND_STOP);
 		nf2.PushInt(TRUE);
 		nf2.Notify(Dialog);	
 		Dialog->m_SearchOutput.SetID(0); //没有更多结果
 	}else{
-		CNotifyState nf2(NOTIFY_FIND_VIEW);
+		CNotifyDialogState nf2(NOTIFY_FIND_VIEW);
 		nf2.PushInt(FIND_STOP);
         nf2.PushInt(FALSE);
 		nf2.Notify(Dialog);	
@@ -1271,8 +1350,8 @@ bool  CInterBrainObject::DoFindLogic(CLogicDialog* Dialog,ePipeline& ExePipe,ePi
 bool  CInterBrainObject::DoFindObject(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg){
 	if (!Msg.IsReaded())
 	{
-		int32 ChildIndex = -1;
-		MsgProcState ret = CElement::MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+		int32 ChildIndex = IT_SELF;
+		MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 		if(ret == RETURN_DIRECTLY){
 			return true;
 		}
@@ -1281,7 +1360,7 @@ bool  CInterBrainObject::DoFindObject(CLogicDialog* Dialog,ePipeline& ExePipe,eP
 	tstring text = m_Param.PopString();
 	
 	
-	CNotifyState nf(NOTIFY_FIND_VIEW);
+	CNotifyDialogState nf(NOTIFY_FIND_VIEW);
 	nf.PushInt(FIND_START);
 	nf.Notify(Dialog);
 	
@@ -1294,7 +1373,7 @@ bool  CInterBrainObject::DoFindObject(CLogicDialog* Dialog,ePipeline& ExePipe,eP
 	Dialog->m_SearchOutput = SearchResult;
 	
 	//输出结果,0条目也要通知
-	CNotifyState nf1(NOTIFY_FIND_VIEW);
+	CNotifyDialogState nf1(NOTIFY_FIND_VIEW);
 	nf1.PushInt(FIND_UPDATE);
 	nf1.PushPipe(SearchResult);
 	nf1.Notify(Dialog);
@@ -1303,13 +1382,13 @@ bool  CInterBrainObject::DoFindObject(CLogicDialog* Dialog,ePipeline& ExePipe,eP
 	//如果已经找到所有结果,通知搜索结束
 	if (Dialog->m_FindSeedList.size()==0)
 	{
-		CNotifyState nf2(NOTIFY_FIND_VIEW);
+		CNotifyDialogState nf2(NOTIFY_FIND_VIEW);
 		nf2.PushInt(FIND_STOP);
 		nf2.PushInt(TRUE);
 		nf2.Notify(Dialog);	
 		Dialog->m_SearchOutput.SetID(0); //没有更多结果
 	}else{
-		CNotifyState nf2(NOTIFY_FIND_VIEW);
+		CNotifyDialogState nf2(NOTIFY_FIND_VIEW);
 		nf2.PushInt(FIND_STOP);
         nf2.PushInt(FALSE);
 		nf2.Notify(Dialog);	
@@ -1322,8 +1401,8 @@ bool  CInterBrainObject::DoFindObject(CLogicDialog* Dialog,ePipeline& ExePipe,eP
 bool  CInterBrainObject::DoSetGlobleLogic(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg){
 	if (!Msg.IsReaded())
 	{
-		int32 ChildIndex = -1;
-		MsgProcState ret = CElement::MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+		int32 ChildIndex = IT_SELF;
+		MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 		if(ret == RETURN_DIRECTLY){
 			return true;
 		}
@@ -1335,8 +1414,8 @@ bool  CInterBrainObject::DoSetGlobleLogic(CLogicDialog* Dialog,ePipeline& ExePip
 bool  CInterBrainObject::DoFindSetStartTime(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg){
 	if (!Msg.IsReaded())
 	{
-		int32 ChildIndex = -1;
-		MsgProcState ret = CElement::MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+		int32 ChildIndex = IT_SELF;
+		MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 		if(ret == RETURN_DIRECTLY){
 			return true;
 		}
@@ -1347,8 +1426,8 @@ bool  CInterBrainObject::DoFindSetStartTime(CLogicDialog* Dialog,ePipeline& ExeP
 bool  CInterBrainObject::DoFindSetEndTime(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg){
 	if (!Msg.IsReaded())
 	{
-		int32 ChildIndex = -1;
-		MsgProcState ret = CElement::MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+		int32 ChildIndex = IT_SELF;
+		MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 		if(ret == RETURN_DIRECTLY){
 			return true;
 		}
@@ -1358,8 +1437,8 @@ bool  CInterBrainObject::DoFindSetEndTime(CLogicDialog* Dialog,ePipeline& ExePip
 bool  CInterBrainObject::DoSetFindPricision(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg){
 	if (!Msg.IsReaded())
 	{
-		int32 ChildIndex = -1;
-		MsgProcState ret = CElement::MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+		int32 ChildIndex = IT_SELF;
+		MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 		if(ret == RETURN_DIRECTLY){
 			return true;
 		}
@@ -1373,8 +1452,8 @@ bool  CInterBrainObject::DoLearnWord(CLogicDialog* Dialog,ePipeline& ExePipe,ePi
 
 	if (!Msg.IsReaded())
 	{
-		int32 ChildIndex = -1;
-		MsgProcState ret = CElement::MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+		int32 ChildIndex = IT_SELF;
+		MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 		if(ret == RETURN_DIRECTLY){
 			return true;
 		}
@@ -1455,7 +1534,7 @@ CInputElement::~CInputElement(){
 	
 };
 
-MsgProcState CInputElement::MsgProc(CLogicDialog* Dialog,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress,int32& ChildIndex)
+MsgProcState CInputElement::EltMsgProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress)
 {
 	int64 MsgID = Msg.GetMsgID();
 	if( MsgID == MSG_TASK_RESULT){
@@ -1525,13 +1604,13 @@ MsgProcState CInputElement::MsgProc(CLogicDialog* Dialog,CMsg& Msg,ePipeline& Ex
 		}
 		
 	}else{
-		ChildIndex = -1;
-		MsgProcState ret = CElement::MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+		ChildIndex = IT_SELF;
+		MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 		return ret;
 	}	
 	return RETURN_DIRECTLY;
 }
-bool CInputElement::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress){
+bool CInputElement::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
 	
 	UpdateEventID();
 	bool ret = Dialog->StartChildDialog(GetEventID(),_T("Input Dialog"),m_Name,TASK_OUT_THINK,ExePipe,LocalAddress);
@@ -1553,7 +1632,7 @@ CNameObject::~CNameObject(){
 	
 };
 
-bool CNameObject::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress){
+bool CNameObject::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
 
 	ePipeline* ObjectInstance = Dialog->FindObjectInstance(Dialog->m_ObjectFocus);
 	if (ObjectInstance==NULL)
@@ -1571,7 +1650,7 @@ bool CNameObject::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipe
 	}
 	Dialog->m_NamedObjectList.RegisterNameByTask(InstanceName,Dialog->m_TaskID,Dialog->m_ObjectFocus);
 	
-	CNotifyState nf(NOTIFY_MEMORY_VIEW);
+	CNotifyDialogState nf(NOTIFY_MEMORY_VIEW);
 	nf.PushInt(INSTANCE_OBJECT);
 	nf.PushInt(NAME_INSTANCE);
 	nf.PushString(SrcObjectName);
@@ -1592,7 +1671,7 @@ CNameObject_Static::~CNameObject_Static(){
 	
 };
 
-bool CNameObject_Static::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress){
+bool CNameObject_Static::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
 	
 	ePipeline* ObjectInstance = Dialog->FindObjectInstance(Dialog->m_ObjectFocus);
 	if (ObjectInstance==NULL)
@@ -1610,7 +1689,7 @@ bool CNameObject_Static::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildInde
 	}
 	Dialog->m_NamedObjectList.RegisterNameByTask(InstanceName,Dialog->m_TaskID,Dialog->m_ObjectFocus);
 	
-	CNotifyState nf(NOTIFY_MEMORY_VIEW);
+	CNotifyDialogState nf(NOTIFY_MEMORY_VIEW);
 	nf.PushInt(INSTANCE_OBJECT);
 	nf.PushInt(NAME_INSTANCE);
 	nf.PushString(SrcObjectName);
@@ -1625,7 +1704,7 @@ bool CNameObject_Static::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildInde
 //////////////////////////////////////////////////////////////////////////
 
 
-bool CFocusObject::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress){
+bool CFocusObject::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
 
 	ExePipe.AutoTypeAB();   
 	uint32 Type = GetTypeAB();             		
@@ -1648,7 +1727,7 @@ bool CFocusObject::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePip
 }
 
 
-bool  CFocusObject_Static::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress){
+bool  CFocusObject_Static::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
 	
 	int64 InstanceID = Dialog->m_NamedObjectList.GetInstanceID(m_FocusName);
 	Dialog->m_ObjectFocus = InstanceID;
@@ -1661,7 +1740,7 @@ bool  CFocusObject_Static::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIn
 };
 
 
-bool  CFocusObject_Inter::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress){
+bool  CFocusObject_Inter::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
 
 	Dialog->m_ObjectFocus = m_InstanceID;
 	
@@ -1677,7 +1756,7 @@ CUseObject::~CUseObject(){
 
 }
 
-MsgProcState CUseObject::MsgProc(CLogicDialog* Dialog,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress,int32& ChildIndex)
+MsgProcState CUseObject::EltMsgProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress)
 {
 	int64 MsgID = Msg.GetMsgID();
 	if(MsgID == MSG_TASK_RESULT)
@@ -1718,8 +1797,8 @@ MsgProcState CUseObject::MsgProc(CLogicDialog* Dialog,CMsg& Msg,ePipeline& ExePi
 
 		return RETURN_DIRECTLY; // 不在继续执行TaskProc
 	}else{
-		ChildIndex = -1;
-		MsgProcState ret = CElement::MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+		ChildIndex = IT_SELF;
+		MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 		return ret;
 	}
 
@@ -1727,7 +1806,7 @@ MsgProcState CUseObject::MsgProc(CLogicDialog* Dialog,CMsg& Msg,ePipeline& ExePi
 }
 
 
-bool  CUseObject::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress){
+bool  CUseObject::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
 	
 	
 	ePipeline* ObjectInstance = Dialog->FindObjectInstance(Dialog->m_ObjectFocus);
@@ -1753,8 +1832,10 @@ bool  CUseObject::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipe
 	//准备好一个请求信息
 	UpdateEventID();
 
-	CRequestBrain rq(REQUEST_USE_OBJECT,GetEventID());
-	rq.Push_Directly(ObjectInstance->Clone());
+	CRequestBrain rq(REQUEST_USE_OBJECT);
+	int64 DllType = *(int64*)ObjectInstance->GetData(4);
+	rq.PushInt(DllType);
+	rq.PushInt(m_InstanceID);
 	rq.Push_Directly(ExePipe.Clone());
 	
 	
@@ -1765,7 +1846,7 @@ bool  CUseObject::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipe
 				
 	
 	//把请求发给对方
-	CMsg NewMsg(MSG_TASK_REQUEST,DEFAULT_DIALOG,0);
+	CMsg NewMsg(MSG_TASK_REQUEST,DEFAULT_DIALOG,GetEventID());
 	ePipeline& Letter = NewMsg.GetLetter();
 	Letter.Push_Directly(rq.Clone());
 	
@@ -1784,7 +1865,7 @@ CGetObjectDoc::~CGetObjectDoc(){
 
 }
 
-MsgProcState CGetObjectDoc::MsgProc(CLogicDialog* Dialog,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress,int32& ChildIndex)
+MsgProcState CGetObjectDoc::EltMsgProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress)
 {
 	int64 MsgID = Msg.GetMsgID();
 	if(MsgID == MSG_TASK_RESULT)
@@ -1826,8 +1907,8 @@ MsgProcState CGetObjectDoc::MsgProc(CLogicDialog* Dialog,CMsg& Msg,ePipeline& Ex
 
 		return RETURN_DIRECTLY; // 不在继续执行TaskProc
 	}else{
-		ChildIndex = -1;
-		MsgProcState ret = CElement::MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+		ChildIndex = IT_SELF;
+		MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 		return ret;
 	}
 
@@ -1835,7 +1916,7 @@ MsgProcState CGetObjectDoc::MsgProc(CLogicDialog* Dialog,CMsg& Msg,ePipeline& Ex
 }
 
 
-bool  CGetObjectDoc::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress){
+bool  CGetObjectDoc::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
 
 
 	ePipeline* ObjectInstance = Dialog->FindObjectInstance(Dialog->m_ObjectFocus);
@@ -1845,6 +1926,7 @@ bool  CGetObjectDoc::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,eP
 	}
 
 	assert(ObjectInstance->GetID() ==Dialog->m_ObjectFocus );
+
 
 	//如果没有启动外部器官，则启动
 	CLinker Linker;
@@ -1859,10 +1941,11 @@ bool  CGetObjectDoc::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,eP
 	//准备好一个请求信息
 	UpdateEventID();
 
-	CRequestBrain rq(REQUEST_GET_OBJECT_DOC,GetEventID());
-	rq.Push_Directly(ObjectInstance->Clone());
+	CRequestBrain rq(REQUEST_GET_OBJECT_DOC);
+	int64 DllType = *(int64*)ObjectInstance->GetData(4);
+	rq.PushInt(DllType);
+	rq.PushInt(	Dialog->m_ObjectFocus);
 	rq.Push_Directly(ExePipe.Clone());
-
 
 	//这个子对话主要起提示作用，实际任务会交给远方执行
 	tstring DialogText = Format1024(_T("Waiting for run external object:%I64ld  EventID:%I64ld"),Dialog->m_ObjectFocus,GetEventID());
@@ -1871,7 +1954,7 @@ bool  CGetObjectDoc::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,eP
 
 
 	//把请求发给对方
-	CMsg NewMsg(MSG_TASK_REQUEST,DEFAULT_DIALOG,0);
+	CMsg NewMsg(MSG_TASK_REQUEST,DEFAULT_DIALOG,GetEventID());
 	ePipeline& Letter = NewMsg.GetLetter();
 	Letter.Push_Directly(rq.Clone());
 
@@ -1924,13 +2007,19 @@ bool  CStartObject::Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalA
 			if (retTask == RETURN_ERROR)
 			{
 				
-				Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
+				Dialog->CloseChildDialog(EventID,*OldExePipe,ExePipe);
 				ExePipe.SetID(retTask);
 				ExePipe.SetLabel(NewExePipe->GetLabel().c_str());
 				return true;
 			}
-			
-			CNotifyState nf(NOTIFY_MEMORY_VIEW);
+			int64 DllType = NewExePipe->PopInt();
+			int64 InstanceID = NewExePipe->PopInt();
+				
+			assert(m_Obj->Size()==5);
+			m_Obj->SetID(InstanceID);
+			*(int64*)m_Obj->GetData(4) = DllType;
+
+			CNotifyDialogState nf(NOTIFY_MEMORY_VIEW);
 			nf.PushInt(INSTANCE_OBJECT);
 			nf.PushInt(CREATE_INSTANCE);
 			nf.Push_Directly(m_Obj->Clone());
@@ -1940,17 +2029,16 @@ bool  CStartObject::Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalA
 			ExePipe.Clear();
 			ExePipe << *NewExePipe;
 			
-			Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
 
-			int64 InstanceID = m_Obj->GetID();
+			Dialog->CloseChildDialog(EventID,*OldExePipe,ExePipe);
+
 			Dialog->AddObjectInstance(InstanceID,*m_Obj);
-			
 			Dialog->m_ObjectFocus = InstanceID;
 			
 			return true;
 		}else{
-			int32 ChildIndex = -1;
-			MsgProcState ret = CElement::MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+			int32 ChildIndex = IT_SELF;
+			MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 			if(ret == RETURN_DIRECTLY){
 				return true;
 			}
@@ -1974,17 +2062,18 @@ bool  CStartObject::Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalA
 	UpdateEventID();
 	
 	//这个子对话主要起提示作用，实际任务会交给远方执行
-	tstring DialogText = _T("Waiting for start external object");
+	tstring DialogText = _T("Waiting for starting external object");
 	tstring Title = Format1024(_T("StartObject(%I64ld)"),m_ID);
 	Dialog->StartChildDialog(GetEventID(),Title,DialogText,TASK_OUT_DEFAULT,ExePipe,LocalAddress);
 	
 	
 	//把请求发给对方
-	CRequestBrain rq(REQUEST_START_OBJECT,GetEventID());
+	Reset();
+	CRequestBrain rq(REQUEST_START_OBJECT);
 	rq.Push_Directly(m_Obj->Clone());
 	rq.Push_Directly(ExePipe.Clone());
 	
-	CMsg NewMsg(MSG_TASK_REQUEST,DEFAULT_DIALOG,0);
+	CMsg NewMsg(MSG_TASK_REQUEST,DEFAULT_DIALOG,GetEventID());
 	ePipeline& Letter = NewMsg.GetLetter();
 	Letter.Push_Directly(rq.Clone());
 	
@@ -2047,8 +2136,8 @@ bool  CCloseObject::Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalA
 			Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
 			return true;
 		}else{
-			int32 ChildIndex = -1;
-			MsgProcState ret = CElement::MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+			int32 ChildIndex = IT_SELF;
+			MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 			if(ret == RETURN_DIRECTLY){
 				return true;
 			}
@@ -2065,7 +2154,7 @@ bool  CCloseObject::Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalA
 	
 	tstring SrcObjectName = *(tstring*)ObjectInstance->GetData(0);
 	
-	CNotifyState nf(NOTIFY_MEMORY_VIEW);
+	CNotifyDialogState nf(NOTIFY_MEMORY_VIEW);
 	nf.PushInt(INSTANCE_OBJECT);
 	nf.PushInt(CLOSE_INSTANCE);
 	nf.PushString(SrcObjectName);
@@ -2085,8 +2174,11 @@ bool  CCloseObject::Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalA
 	//准备好一个请求信息
 	UpdateEventID();
 
-	CRequestBrain rq(REQUEST_CLOSE_OBJECT,GetEventID());
-	rq.Push_Directly(ObjectInstance->Clone());
+	CRequestBrain rq(REQUEST_CLOSE_OBJECT);
+
+	int64 DllType = *(int64*)ObjectInstance->GetData(4);
+	rq.PushInt(DllType);
+	rq.PushInt(ObjectInstance->GetID());
 	rq.Push_Directly(ExePipe.Clone());
 	
 	Dialog->CloseObjectInstance(Dialog->m_ObjectFocus);
@@ -2098,7 +2190,7 @@ bool  CCloseObject::Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalA
 	
 	
 	//把请求发给对方
-	CMsg NewMsg(MSG_TASK_REQUEST,DEFAULT_DIALOG,0);
+	CMsg NewMsg(MSG_TASK_REQUEST,DEFAULT_DIALOG,GetEventID());
 	ePipeline& Letter = NewMsg.GetLetter();
 	Letter.Push_Directly(rq.Clone());
 	
@@ -2108,16 +2200,16 @@ bool  CCloseObject::Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalA
 
 //////////////////////////////////////////////////////////////////////////
 
-bool  CCreateTable::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress){ 
+bool  CCreateTable::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){ 
 	
 	
 	int64 InstanceID = AbstractSpace::CreateTimeStamp();
-	ePipeline Pipe(m_MemoryName.c_str());
+	ePipeline Pipe(m_MemoryName.c_str(),0);
 	Dialog->AddMemoryInstance(InstanceID,Pipe);
 	Dialog->m_DataTableFocus = InstanceID;
 	Dialog->m_NamedTableList.RegisterNameByTask(m_MemoryName,Dialog->m_TaskID,InstanceID);
 	
-	CNotifyState nf(NOTIFY_MEMORY_VIEW);
+	CNotifyDialogState nf(NOTIFY_MEMORY_VIEW);
 	nf.PushInt(INSTANCE_DATA);
 	nf.PushInt(CREATE_INSTANCE);
 	nf.PushString(m_MemoryName);
@@ -2126,7 +2218,7 @@ bool  CCreateTable::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePi
 	return true;
 }
 
-bool  CFocusTable::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress)
+bool  CFocusTable::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress)
 {
 	
 	tstring MemoryName = ExePipe.PopString();
@@ -2142,7 +2234,7 @@ bool  CFocusTable::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePip
 	return true;
 }
 
-bool  CFocusMemory_Static::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress)
+bool  CFocusMemory_Static::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress)
 {
 	
 	int64 InstanceID = Dialog->m_NamedTableList.GetInstanceID(m_FocusName);
@@ -2157,7 +2249,7 @@ bool  CFocusMemory_Static::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIn
 	return true;
 }
 
-bool  CTable_InsertData::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress){ 
+bool  CTable_InsertData::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){ 
 	
 	ePipeline* MemoryInstance = Dialog->FindTempMemory(Dialog->m_DataTableFocus);
 	if (MemoryInstance==NULL)
@@ -2189,7 +2281,7 @@ bool  CTable_InsertData::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildInde
 	
 	tstring& InstanceName = MemoryInstance->GetLabel();
 	
-	CNotifyState nf(NOTIFY_MEMORY_VIEW);
+	CNotifyDialogState nf(NOTIFY_MEMORY_VIEW);
 	nf.PushInt(INSTANCE_DATA);
 	nf.PushInt(INSERT_DATA);
 	nf.PushString(InstanceName);
@@ -2205,7 +2297,7 @@ bool  CTable_InsertData::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildInde
 	return true;
 }
 
-bool  CTable_ImportData::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress){ 
+bool  CTable_ImportData::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){ 
 
 	ePipeline* MemoryInstance = Dialog->FindTempMemory(Dialog->m_DataTableFocus);
 	if (MemoryInstance==NULL)
@@ -2238,7 +2330,7 @@ bool  CTable_ImportData::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildInde
 		}
 	}
 
-	CNotifyState nf(NOTIFY_MEMORY_VIEW);
+	CNotifyDialogState nf(NOTIFY_MEMORY_VIEW);
 	nf.PushInt(INSTANCE_DATA);
 	nf.PushInt(IMPORT_DATA);
 	nf.PushString(InstanceName);
@@ -2248,7 +2340,7 @@ bool  CTable_ImportData::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildInde
 
 	return true;
 }
-bool  CTable_ExportData::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress){ 
+bool  CTable_ExportData::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){ 
 
 	ePipeline* MemoryInstance = Dialog->FindTempMemory(Dialog->m_DataTableFocus);
 	if (MemoryInstance==NULL)
@@ -2271,7 +2363,7 @@ bool  CTable_ExportData::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildInde
 
 	tstring& InstanceName = MemoryInstance->GetLabel();
 
-	CNotifyState nf(NOTIFY_MEMORY_VIEW);
+	CNotifyDialogState nf(NOTIFY_MEMORY_VIEW);
 	nf.PushInt(INSTANCE_DATA);
 	nf.PushInt(EXPORT_DATA);
 	nf.PushString(InstanceName);
@@ -2280,7 +2372,7 @@ bool  CTable_ExportData::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildInde
 	return true;
 }
 
-bool CTable_ModifyData::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress)
+bool CTable_ModifyData::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress)
 {
 
 	ePipeline* MemoryInstance = Dialog->FindTempMemory(Dialog->m_DataTableFocus);
@@ -2308,7 +2400,7 @@ bool CTable_ModifyData::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex
 
 	tstring& InstanceName = MemoryInstance->GetLabel();
 
-	CNotifyState nf(NOTIFY_MEMORY_VIEW);
+	CNotifyDialogState nf(NOTIFY_MEMORY_VIEW);
 	nf.PushInt(INSTANCE_DATA);
 	nf.PushInt(MODIFY_DATA);
 	nf.PushString(InstanceName);
@@ -2324,7 +2416,7 @@ bool CTable_ModifyData::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex
 
 	return true;
 }
-bool  CTable_GetData::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress){ 
+bool  CTable_GetData::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){ 
 	
 	ePipeline* MemoryInstance = Dialog->FindTempMemory(Dialog->m_DataTableFocus);
 	if (MemoryInstance==NULL)
@@ -2348,7 +2440,7 @@ bool  CTable_GetData::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,e
 	return true;
 }
 
-bool  CTable_RemoveData::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress){ 
+bool  CTable_RemoveData::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){ 
 	ePipeline* MemoryInstance = Dialog->FindTempMemory(Dialog->m_DataTableFocus);
 	if (MemoryInstance==NULL)
 	{
@@ -2367,7 +2459,7 @@ bool  CTable_RemoveData::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildInde
 	
 	tstring& InstanceName = MemoryInstance->GetLabel();
 	
-	CNotifyState nf(NOTIFY_MEMORY_VIEW);
+	CNotifyDialogState nf(NOTIFY_MEMORY_VIEW);
 	nf.PushInt(INSTANCE_DATA);
 	nf.PushInt(REMOVE_DATA);
 	nf.PushString(InstanceName);
@@ -2377,7 +2469,7 @@ bool  CTable_RemoveData::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildInde
 	return true;
 }
 
-bool  CTable_GetSize::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress){ 
+bool  CTable_GetSize::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){ 
 	ePipeline* MemoryInstance = Dialog->FindTempMemory(Dialog->m_DataTableFocus);
 	if (MemoryInstance==NULL)
 	{
@@ -2390,7 +2482,7 @@ bool  CTable_GetSize::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,e
 	return true;
 }
 
-bool  CCloseTable::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress){ 
+bool  CCloseTable::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){ 
 		
 	ePipeline* MemoryInstance = Dialog->FindTempMemory(Dialog->m_DataTableFocus);
 	if (MemoryInstance==NULL)
@@ -2402,7 +2494,7 @@ bool  CCloseTable::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePip
 	
 	Dialog->CloseMemoryInstance(Dialog->m_DataTableFocus);
 	
-	CNotifyState nf(NOTIFY_MEMORY_VIEW);
+	CNotifyDialogState nf(NOTIFY_MEMORY_VIEW);
 	nf.PushInt(INSTANCE_DATA);
 	nf.PushInt(CLOSE_INSTANCE);
 	nf.PushString(InstanceName);
@@ -2414,7 +2506,7 @@ bool  CCloseTable::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePip
 
 //////////////////////////////////////////////////////////////////////////
 
-bool  CFocusLogic::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress)
+bool  CFocusLogic::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress)
 {
 	
 	tstring LogicName = ExePipe.PopString();
@@ -2431,7 +2523,7 @@ bool  CFocusLogic::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePip
 	return true;
 }
 
-bool  CFocusLogic_Static::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress)
+bool  CFocusLogic_Static::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress)
 {
 
 	CElement* E = FindFocusLogic(m_FocusName);
@@ -2448,7 +2540,7 @@ bool  CFocusLogic_Static::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildInd
 }
 
 
-MsgProcState CInserLogic::MsgProc(CLogicDialog* Dialog,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress,int32& ChildIndex)
+MsgProcState CInserLogic::EltMsgProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress)
 {
 	int64 MsgID = Msg.GetMsgID();
 	if(MsgID == MSG_TASK_RESULT)
@@ -2492,14 +2584,14 @@ MsgProcState CInserLogic::MsgProc(CLogicDialog* Dialog,CMsg& Msg,ePipeline& ExeP
 		Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
 		return RETURN_DIRECTLY;
 	}else{
-		ChildIndex = -1;
-		MsgProcState ret = CElement::MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+		ChildIndex = IT_SELF;
+		MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 		return ret;
 	}
 	return RETURN_DIRECTLY;
 };
 
-bool CInserLogic::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress){
+bool CInserLogic::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
 	CElement* LogicInstance = FindFocusLogic(Dialog->m_LogicFocus);
 	if (LogicInstance==NULL)
 	{
@@ -2518,7 +2610,8 @@ bool CInserLogic::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipe
 	Dialog->StartChildDialog(GetEventID(),_T("Insert Logic"),DialogText,TASK_OUT_DEFAULT,ExePipe,LocalAddress);
 	
 
-	CRequestBrain rq(REQUEST_INSERT_LOGIC,GetEventID());
+	CRequestBrain rq(REQUEST_INSERT_LOGIC);
+	rq.PushInt(GetEventID());
 	rq.PushString(m_InsertLogicName);
 	rq.PushPipe(InsertAddress);
 	rq.Request(Dialog);
@@ -2531,7 +2624,7 @@ bool CInserLogic::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipe
 
 //////////////////////////////////////////////////////////////////////////
 
-bool CRemoveLogic::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress){
+bool CRemoveLogic::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
 	CElement* LogicInstance = FindFocusLogic(Dialog->m_LogicFocus);
 	if (LogicInstance==NULL)
 	{
@@ -2569,7 +2662,8 @@ bool CRemoveLogic::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePip
 	Dialog->StartChildDialog(GetEventID(),_T("Remove Logic"),DialogText,TASK_OUT_DEFAULT,ExePipe,RemoveAddress);
 
 	RemoveAddress.PopInt();  //去掉dilaog ID
-	CRequestBrain rq(REQUEST_REMOVE_LOGIC,GetEventID());
+	CRequestBrain rq(REQUEST_REMOVE_LOGIC);
+	rq.PushInt(GetEventID());
 	rq.PushPipe(RemoveAddress);
 	rq.PushInt(ChildID);
 	rq.Request(Dialog);
@@ -2602,7 +2696,7 @@ tstring CUseRobot::GetName(){
 };
 
 
-MsgProcState CUseRobot::MsgProc(CLogicDialog* Dialog,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress,int32& ChildIndex){
+MsgProcState CUseRobot::EltMsgProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
 	int64 MsgID = Msg.GetMsgID();
 	if(MsgID == MSG_TASK_RESULT)
 	{		
@@ -2638,13 +2732,13 @@ MsgProcState CUseRobot::MsgProc(CLogicDialog* Dialog,CMsg& Msg,ePipeline& ExePip
 		Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
 		
 	}else{
-		MsgProcState ret = CElement::MsgProc(Dialog,Msg,ExePipe,LocalAddress,ChildIndex);
+		MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 		return ret;
 	}
 	return RETURN_DIRECTLY;
 }
 
-bool CUseRobot::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress){
+bool CUseRobot::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
 	//return m_Dialog->m_Brain->RunExternalRobot(m_Dialog,m_EventID,m_RobotID,m_TaskLogic,ExePipe,LocalAddress);	
 	
 	//如果没有启动外部器官，则启动
@@ -2661,7 +2755,8 @@ bool CUseRobot::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeli
 	//发执行信息
 	UpdateEventID();
 
-	CRequestBrain rq(REQUEST_EXE_LOGIC,GetEventID());
+	CRequestBrain rq(REQUEST_EXE_LOGIC);
+	rq.PushInt(GetEventID());
 	rq.PushString(LogicText);
 	rq.Push_Directly(ExePipe.Clone());
 	
@@ -3017,7 +3112,7 @@ void CPipeViewMass::GetPipeInfo(ePipeline* Pipe,tstring& text){
 	}
 }
 
-bool CPipeViewMass::TaskProc(CLogicDialog* Dialog,CMsg& Msg,int32 ChildIndex,ePipeline& ExePipe,ePipeline& LocalAddress)
+bool CPipeViewMass::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress)
 {
 	tstring Text;
 	GetPipeInfo(&ExePipe,Text);	

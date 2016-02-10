@@ -10,10 +10,6 @@
 #include "Pipeline.h"
 #include "Element.h"
 
-#if defined(_MSC_VER) && (_MSC_VER >= 1200)
-# pragma once
-#endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
-
 class CLogicTask;
 
 //比如： use capacitor cp:循环变量

@@ -1,0 +1,24 @@
+#ifndef _NOTIFY_CODES_H
+#define _NOTIFY_CODES_H
+
+#define NOTIFY_MODEL_SCENE       1000
+#define NOTIFY_SYSTEM_SCENE      2000
+	#define NTID_NERVE_MSG_NUM       1
+	#define NTID_NERVE_THREAD_JOIN   2
+	#define NTID_NERVE_THREAD_CLOSED  3
+	#define NTID_NERVE_THREAD_LIMIT  4
+	#define NTID_NERVE_THREAD_FAIL   5
+    #define NTID_IO_WORKER_CLOSED    6
+	#define NTID_CONNECT_FAIL        7
+	#define NTID_CONNECT_OK          8
+	#define NTID_LISTEN_FAIL         9
+	#define NTID_TEST_WORKER_CLOSED  10
+
+
+#define NOTIFY_EXCEPTION_OCCURRED    3100
+#define NOTIFY_ILLEGAL_MSG           3200
+
+#define NOTIFY_BRAIN_SCENE        5000
+
+
+#endif

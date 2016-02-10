@@ -13,9 +13,11 @@ namespace ABSTRACT{
 
 //General and basic predefined
 
-#define  SYSTEM_SOURCE   0
-#define  DEFAULT_DIALOG  0
-#define  LOCAL_GUI       0
+#define  SYSTEM_SOURCE       0
+#define  LOCAL_GUI_SOURCE    10
+#define  DEFAULT_DIALOG      0
+#define  MAX_LOCAL_SOURCE_ID 1000
+#define  NO_PARENT       -1
 	
 #define  SPACE_SOURCE        1
 #define  SPACE_SOURCE_READY -1
@@ -23,8 +25,6 @@ namespace ABSTRACT{
 #define  MSG_BASE           127282417797660000ULL
 #define  MSG_WHO_ARE_YOU    MSG_BASE+1ULL
 #define  MSG_BROADCAST_MSG  MSG_BASE+2ULL
-#define  MSG_LINKER_ERROR   MSG_BASE+3ULL
-#define  MSG_SYS_MSG        MSG_BASE+4ULL
 
 /*  
 
@@ -100,7 +100,6 @@ public:
 	int64 GetSendTimeStamp();
 };
 
-#define  GET_LETTER(Msg)       static_cast<ePipeline*>(Msg->GetData(1))
 
 } //namespace
 

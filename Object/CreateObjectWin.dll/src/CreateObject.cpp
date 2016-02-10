@@ -3,8 +3,9 @@
 
 #pragma warning(disable: 4786)
 
+//#include <windows.h>
 #include "CreateObject.h"
-#include <windows.h>
+
 
 #ifndef _WIN32_WINNT
 #define _WIN32_WINNT  0x0400

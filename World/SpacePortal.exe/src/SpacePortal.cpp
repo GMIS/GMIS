@@ -6,7 +6,6 @@
 #include "SpacePortal.h"
 #include <direct.h>
 #include "SpaceMsgList.h"
-#include "Win32Tool.h"
 #include "resource.h"
 #include "Space.h"
 #include "sqlite\CppSQLite3.h"
@@ -14,6 +13,9 @@
 #include "DLL_Load.h"
 #include "zip_utils\unzip.h"
 #include <process.h>
+#include "Win32Tool.h"
+
+#include "MainFrame.h"
 
 tstring GetCurrentDir(){
 	static tstring Dir;
@@ -59,22 +61,6 @@ tstring SpacePath2FileAddress(ePipeline& Path)
 	}
 	return CurDir;
 }
-
-struct SPACE_ACCOUNT{
-			tstring Name;
-			tstring Password;
-			tstring Confirm;
-			tstring CrypText;
-			tstring LocalName;
-			uint32  OuterIP;
-};
-
-SPACE_ACCOUNT     AfxAccount;
-
-BOOL CALLBACK SetPasswordDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
-BOOL CALLBACK GetPasswordDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
-
-
 
 Dll_Object::Dll_Object()
 :m_hDll(NULL),m_ID(0)
@@ -123,16 +109,12 @@ bool Dll_Object::IsValid(){
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-CSpacePortal::CSpacePortal(CSystemInitData* InitData)
-:System(InitData)
+CSpacePortal::CSpacePortal(CUserTimer* Timer,CUserSpacePool* Pool)
+:System(Timer,Pool)
 {
-	m_InitThread=0;
-	m_SecondHide = -1;
-	m_Second = m_SecondHide;
 
-	m_LogFlag = LOG_MSG_I0_RECEIVED|LOG_MSG_IO_PUSH|LOG_MSG_IO_SENDED|LOG_MSG_IO_REMOTE_RECEIVED;
+	m_LogFlag = LOG_WARNING|LOG_TIP|LOG_MSG_I0_RECEIVED|LOG_MSG_IO_PUSH|LOG_MSG_IO_SENDED|LOG_MSG_IO_REMOTE_RECEIVED;
 
-	m_Created = FALSE;
 	m_bWriteLogToDatabase = FALSE;
 
 	tstring Dir = GetCurrentDir();
@@ -148,6 +130,26 @@ CSpacePortal::CSpacePortal(CSystemInitData* InitData)
 
 CSpacePortal::~CSpacePortal()
 {
+
+
+	map<int64,People*>::iterator it = m_VisitorList.begin();
+
+	while(it != m_VisitorList.end()){
+		People* robot = it->second;
+		robot->GoOut();
+		delete robot;
+		it++;
+	}
+	m_VisitorList.clear();
+
+	deque<People*>::iterator ita = m_VisitorPool.begin();
+	while(ita != m_VisitorPool.end()){
+		People* robot = *ita;
+		delete robot;
+		ita++;
+	}
+	DeleteAllExecuter();
+
 	GetWorldDB().close();
 }
 
@@ -173,244 +175,82 @@ tstring CSpacePortal::MsgID2Str(int64 MsgID){
 	return MsgStr;
 };
 
-UINT CSpacePortal::InitThreadFunc (LPVOID pParam){
-
-	CSpacePortal* World= (CSpacePortal*)pParam;
-	try{
-		World->CheckWorldDB();
-	}catch (CppSQLite3Exception e) {
-		
-#ifdef _UNICODE
-		AnsiString s = e.errorMessage();
-		tstring ws = UTF8toWS(s);
-		World->AddRTInfo(ws);
-#else
-        World->AddRTInfo(e.errorMessage());
-#endif
-		World->AddRTInfo(_T("WARNING:  Space database check fail."));
-	}catch(...){
-        World->AddRTInfo(_T("WARNING:  unkown exception occur ,Space database check fail."));
-	};
-	World->AddRTInfo(_T("SpacePortal check Ok !"));
-	if(World->m_SecondHide != -1){
-		tstring s = Format1024(_T("Hide window after %d second..."),World->m_SecondHide);	
-		World->AddRTInfo(s);	
-		::SetTimer(World->GetHwnd(),TIMER_HIDEWIN,1000,NULL);
-	};
-	return 0;
-}
-
-void    CSpacePortal::CheckWorldDB(){
-
-	return ; //Seems to be unnecessary
-
-	CppSQLite3Buffer  SQL;
-    char Name[30];
-    int64 ID = 2;
-	vector<int64> TableList;
-	bool FindEnd = false;
-		
-	m_Status.SetTip(_T("Checking Space Database...")); 
-			
-	SQL.format("select  count(*) from sqlite_master where type='table'");
-	CppSQLite3Query q = GetWorldDB().execQuery(SQL);	        
-	if (q.eof())return;
-	int32 Count = q.getIntField(0);
-	if(Count==0)return;
-
-    int32 n=0; 
-
-	SPACETYPE RoomType = ROBOT_VISITER;
-	while(m_Alive) 
-	{
-		//Each time we take out the 100-space checking, delete the ROBOT_VISIT residues 
-        TableList.clear();    
-	    int64toa(ID,Name); 	
-		SQL.format("select name from sqlite_master where type='table' and name > \"%s\"",Name);
-		q = GetWorldDB().execQuery(SQL);	        
-		if (q.eof())break;
-		
-		while (m_Alive && !q.eof())
-        {
-			ID = q.getInt64Field(0);
-			TableList.push_back(ID);
-			if (TableList.size()== 100)break;
-            q.nextRow();
-        }
-        
-		vector<int64>::iterator It = TableList.begin();
-		while (m_Alive && It != TableList.end())
-		{
-            int64toa(*It,Name); 	
-			SQL.format("delete from \"%s\"  where %s = %d ",Name,ITEM_TYPE,RoomType);
-			GetWorldDB().execDML(SQL);
-			It++;
-			n++;
-			m_Status.SetProgressPer(n*100/Count);
-		}
-          
-	};
-	m_Status.SetProgressPer(0);
-    m_Status.SetTip(_T(""));
-}
 
 bool CSpacePortal::Activation(){
-    
-
-	HINSTANCE hInstance = CWinSpace2::GetHinstance();
-		
-
-	if(!HasChild(ROOT_SPACE)){
-		
-		if(::MessageBox(NULL,_T("No Found World Database,Create new ?"),_T("Query"),MB_YESNO)==IDNO)return false;
-		
-
-		int ret = DialogBoxParam (hInstance,MAKEINTRESOURCE(IDD_SETACCOUNT), GetHwnd(), SetPasswordDlgProc, 0);
-		if(ret>0){
-			try{
-	
-				tstring Cryptograph = AfxAccount.Name+AfxAccount.Password;
-								
-
-				SpaceAddress Address(ROOT_SPACE,OUTER_SPACEID);
-				tstring OuterName = _T("Unkown Name");  //Should be according to the Outer IP to get the name
-                         				
-				tstring Fingerprint = Format1024(_T("%I64ld"),OUTER_SPACEID); //Current space eigenvalue replaced by its subspace's ID for simplifying 
-
-				ROOM_SPACE OuterRoom(ROOT_SPACE,OUTER_SPACEID,OuterName,0,OUTER_SPACE,NO_RIGHT,Fingerprint);
-
-				Fingerprint = Format1024(_T("%I64ld"),LOCAL_SPACEID);
-				ROOM_SPACE LocalRoom(ROOT_SPACE,LOCAL_SPACEID,AfxAccount.LocalName, 0,LOCAL_SPACE,NO_RIGHT,Fingerprint);
-
-				LocalRoom.AddOwner(AfxAccount.Name.c_str(),Cryptograph,USABLE);
-
-				People& Host = GetHost();
-				Host.SetName(AfxAccount.Name);
-				Host.m_Cryptograhp = Cryptograph;
-				Host.SetSpaceType(ROBOT_HOST);
-				
-				ROOM_SPACE& RootRoom = GetRootRoom();
-				bool ret = RootRoom.Logon(0,Host);
-				assert(ret);
-			}    
-			catch (...) {
-				return false;		
-            }			
-		}
-		else return false;		
-	}
-
-	else 
-	{
-		bool bHostValid = false;
-		if(m_CmdLine.Size()==2)
-		{
-		
-			AfxAccount.Name = m_CmdLine.PopString();
-			tstring CryptText = m_CmdLine.PopString();
-
-			People& Host = GetHost();
-			Host.SetName(AfxAccount.Name);
-			Host.m_Cryptograhp = CryptText;
-			Host.SetSpaceType(ROBOT_HOST);
-
-			ROOM_SPACE& RootRoom = GetRootRoom();
-			if(RootRoom.Logon(0,Host)){			                
-				bHostValid = true;				
-			}
-		}
-
-		int i=0;
-		while(!bHostValid && i++<3){
-		    SPACE_ACCOUNT param;
-			int ret = ::DialogBoxParam (hInstance,MAKEINTRESOURCE(IDD_PASSWORD), 
-                          GetHwnd(), GetPasswordDlgProc, (long)&param);
-			if(ret==0)return false;
-		   try{
-
-                People& Host = GetHost();
-				Host.SetName(AfxAccount.Name);
-				Host.m_Cryptograhp = AfxAccount.Name+AfxAccount.Password; 
-				Host.SetSpaceType(ROBOT_HOST);
-
-				ROOM_SPACE& RootRoom = GetRootRoom();
-				if(RootRoom.Logon(0,Host)){	
-					bHostValid = true;
-						break;				
-				}
-			}catch(exception& roException){
-#ifdef _UNICODE
-			   AnsiString str = roException.what();
-			   tstring s = UTF8toWS(str);
-				AddRTInfo(s);
-#else
-			    AddRTInfo(roException.what());
-#endif
-	        }
-			catch (...) {
-				AddRTInfo(_T("Unkown error"));		
-            }
-		}	
-		if (!bHostValid)
-		{
-			return false;
-		}
-	}
-
+   
 
 	if(!System::Activation())return false;
 
 	tstring error;
 	if(!OpenPort(SPACE_PORT,error,false)){
-		AddRTInfo(error);
+		OutputLog(LOG_WARNING,error.c_str());
 		m_Alive = false;
 		return false;	
 	};
 
-	//CheckWorldDB();
-	uint32 ThreadID =0;
-	m_InitThread = (HANDLE)_beginthreadex(NULL,   // Security
-			0,							               // Stack size - use default
-			InitThreadFunc,     		
-			(void*)this,	      
-			0,					                	   // Init flag
-			&ThreadID);		
-		
-	if(m_InitThread == 0){
-		AddRTInfo(_T("Error: can't create thread, space check fail"));  
-		return false;
-	}
 	return true;	
 };
 
-void CSpacePortal::Dead(){
+CExecuter*  CSpacePortal::AddExecuter(DLL_TYPE Type,int64 ExecuterLinkerID){
+	CLock lk(&m_Mutex);
+	CExecuter* Executer = new  CExecuter(Type,ExecuterLinkerID);
+	if(!Executer)return NULL;
 
-	int64 SourceID = 0;
-	CLockedLinkerList* LinkerList = GetClientLinkerList();
-	CLinker Linker;
-	LinkerList->GetNextLinker(SourceID,Linker);
-	
-	while (Linker.IsValid())
+	m_ExecuterList[Type] = Executer;
+	return Executer;
+};
+CExecuter*  CSpacePortal::FindExecuter(DLL_TYPE Type){
+	CLock lk(&m_Mutex);
+	map<int32,CExecuter*>::iterator it = m_ExecuterList.find(Type);
+	if (it != m_ExecuterList.end())
 	{
-		People* Robot = (People*)Linker().m_Owner;
-		if (Robot)
+		CExecuter* Executer = it->second;
+		return Executer;
+	}
+	return NULL;
+};
+CExecuter*  CSpacePortal::FindExecuterByLinker(int64 ExecuterLinkerID){
+	CLock lk(&m_Mutex);
+	map<int32,CExecuter*>::iterator it = m_ExecuterList.begin();
+	while (it != m_ExecuterList.end())
+	{
+		CExecuter* Executer = it->second;
+		if (Executer->m_ID == ExecuterLinkerID)
 		{
-			Robot->GoOut();
+			return Executer;
 		}
-		LinkerList->GetNextLinker(Linker().GetSourceID(),Linker);
+		it++;
 	}
+	return NULL;
+};
 
-	System::Dead();
-
-	if (m_InitThread==0)
+void CSpacePortal::DeleteExecuter(int64 ExecuterLinkerID){
+	CLock lk(&m_Mutex);
+	map<int32,CExecuter*>::iterator it = m_ExecuterList.begin();
+	while (it != m_ExecuterList.end())
 	{
-		return;
+		CExecuter* Executer = it->second;
+		if (Executer->m_ID = ExecuterLinkerID)
+		{
+			delete Executer;
+			m_ExecuterList.erase(it);
+			break;
+		}
+		it++;
 	}
-	::WaitForSingleObject(m_InitThread, INFINITE);
-	::CloseHandle(m_InitThread);
-	
-}
-
+};
+void CSpacePortal::DeleteAllExecuter(){
+	CLock lk(&m_Mutex);
+	map<int32,CExecuter*>::iterator it = m_ExecuterList.begin();
+	while (it != m_ExecuterList.end())
+	{
+		CExecuter* Executer = it->second;
+		delete Executer;
+		it++;
+	}
+	m_ExecuterList.clear();
+};
+/*
 void  CSpacePortal::PushExecuterEvent(int64 ExecuterID,int64 RobotID,int64 EventID){
 	assert(ExecuterID);
 	assert(RobotID);
@@ -452,21 +292,53 @@ void  CSpacePortal::RegisterExecuterUser(int64 RobotID,int64 ExecuterID){
 	set < int64 >& ExecuterList = m_ExecuterUserList[RobotID];
 	ExecuterList.insert(ExecuterID);
 }
+*/
+People*  CSpacePortal::CheckinVisitor(int64 SourceID,tstring& Name,tstring& CryptText){
+	CLock lk(&m_Mutex);
+	People* robot = NULL;
+	if(m_VisitorPool.size()){
+		robot = *m_VisitorPool.begin();
+		m_VisitorPool.pop_front();
+	}
+	if(robot==NULL){
+		robot = new People(Name,CryptText);
+		if(!robot)return NULL;
+	}else{
+		robot->Reset(Name,CryptText);
+	}
+	assert(m_VisitorList.find(SourceID)==m_VisitorList.end());
+	m_VisitorList[SourceID]=robot;
 
+	return robot;
+}
+People*  CSpacePortal::GetVisitor(int64 SourceID){
+	CLock lk(&m_Mutex);
+	map<int64,People*>::iterator it = m_VisitorList.find(SourceID);
+	if(it==m_VisitorList.end())return NULL;
+	People* robot = it->second;
+	return robot;
+};
+void     CSpacePortal::CheckoutVisitor(int64 SourceID){
+	CLock lk(&m_Mutex);
+	map<int64,People*>::iterator it = m_VisitorList.find(SourceID);
+	if(it==m_VisitorList.end())return;
+	People* robot = it->second;
+	robot->GoOut();
+	m_VisitorPool.push_back(robot);
+	m_VisitorList.erase(it);
+}
 
-
-
-
+/*
 bool  CSpacePortal::StartExecuter(int64 ExecuterID,tstring FileName){
     
 	while(m_ExecuterPool.size()){
 		int64 SourceID = m_ExecuterPool.back();
 		m_ExecuterPool.pop_back();
 		CLinker Linker;
-		GetLinker(SourceID,Linker);
+		m_ClientLinkerList.GetLinker(SourceID,Linker);
 		if (Linker.IsValid())
 		{
-			GetClientLinkerList()->SetLinkerID(SourceID,ExecuterID);
+			Linker().SetSourceID(ExecuterID);
 			return true;
 		}
 	}
@@ -481,7 +353,7 @@ bool  CSpacePortal::StartExecuter(int64 ExecuterID,tstring FileName){
 	ExecuterFile += _T("\\");
 	ExecuterFile += FileName;
 	
-	AddRTInfo(ExecuterFile);
+	OutputLog(LOG_TIP,ExecuterFile.c_str());
 
 	STARTUPINFO si;
 	PROCESS_INFORMATION  pi;	
@@ -510,16 +382,16 @@ bool  CSpacePortal::StartExecuter(int64 ExecuterID,tstring FileName){
 		return false;
 	}
 
-	AddRTInfo(_T("Waite Executer start..."));
+	OutputLog(LOG_TIP,_T("Waite Executer start..."));
 
 	//Then wait for the connection to success
 	int n=50;
 	
 	CLinker ExecuterLinker;
-	GetLinker(ExecuterID,ExecuterLinker);
-	while((!ExecuterLinker.IsValid() || ExecuterLinker().GetRecoType() != LINKER_FRIEND) && n-- >0 ){
-		GetLinker(ExecuterID,ExecuterLinker);
-		SLEEP_MILLI(200);
+	m_ClientLinkerList.GetLinker(ExecuterID,ExecuterLinker);
+	while((!ExecuterLinker.IsValid() || ExecuterLinker().GetRecoType() != LINKER_ORGAN) && n-- >0 ){
+		m_ClientLinkerList.GetLinker(ExecuterID,ExecuterLinker);
+		SLEEP_MILLI(50);
 	}
 	
 	if (!ExecuterLinker.IsValid())
@@ -529,7 +401,8 @@ bool  CSpacePortal::StartExecuter(int64 ExecuterID,tstring FileName){
  	}
 	return true;
 }
-
+*/
+/*
 void   CSpacePortal::UserLinkerClosedProc(int64 RobotID)
 {
 	CLock lk(&m_Mutex);
@@ -571,6 +444,7 @@ void   CSpacePortal::UserLinkerClosedProc(int64 RobotID)
     m_ExecuterUserList.erase(it);
 
 };
+
 
 void   CSpacePortal::ExecuteLinkerClosedProc(int64 ExecuterID){
 	CLock lk(&m_Mutex);
@@ -617,123 +491,360 @@ void   CSpacePortal::ExecuteLinkerClosedProc(int64 ExecuterID){
 	}
 	
 }
-
-
-void CSpacePortal::AddRTInfo(tstring& s){
-	InfoItem* Item = m_Log.AddInfo(s.c_str());
+*/
+void   CSpacePortal::UserLinkerClosedProc(int64 RobotID)
+{
+	CLock lk(&m_Mutex);
+	map<int32,CExecuter*>::iterator it = m_ExecuterList.begin();
+	while(it != m_ExecuterList.end()){
+		CExecuter* Executer = it->second;
+		
+		CLinker ExecuterLinker;
+		GetLinker(Executer->m_ID,ExecuterLinker);
 	
+		map<int64, CSpaceEvent>::iterator ita = Executer->m_EventList.begin();
+		while (ita != Executer->m_EventList.end())
+		{
+			int64 SpaceEventID = ita->first;
+			CSpaceEvent& Event = ita->second;
+			if(Event.m_ClientLinkerID == RobotID){
+
+				//To notify executer stay of execution, here EventID=0
+				CMsg NewMsg(MSG_OBJECT_CLOSE,DEFAULT_DIALOG,SpaceEventID);
+				ePipeline& NewLetter = NewMsg.GetLetter();
+
+				ePipeline ExePipe;
+				NewLetter.PushPipe(ExePipe);
+				ExecuterLinker().PushMsgToSend(NewMsg);
+			}
+			ita++;
+		}
+		it++;
+	}
+}
+void   CSpacePortal::ExecuteLinkerClosedProc(int64 ExecuterID){
+
+	CExecuter* Executer = FindExecuterByLinker(ExecuterID);
+	if(Executer == NULL)return;
+
+	
+	CLock lk(&m_Mutex);
+	map<int64, CSpaceEvent>::iterator it = Executer->m_EventList.begin();
+
+	while (it != Executer->m_EventList.end())
+	{
+		int64 SpaceEventID = it->first;
+		CSpaceEvent& Event = it->second;
+		CLinker RobotLinker;
+		GetLinker(Event.m_ClientLinkerID,RobotLinker);
+
+		if (RobotLinker.IsValid())
+		{
+			ePipeline ExePipe(RETURN_ERROR);
+			ExePipe.GetLabel() = Format1024(_T("lost executer connection;"));
+
+			CMsg FeedbackMsg(MSG_TASK_FEEDBACK,DEFAULT_DIALOG,Event.m_ClientEventID);
+			ePipeline& rLetter = FeedbackMsg.GetLetter();
+			rLetter.PushPipe(ExePipe);  
+			RobotLinker().PushMsgToSend(FeedbackMsg);
+		}
+
+		it++;
+	}
+	Executer->m_EventList.clear();
 }
 
-void CSpacePortal::AddRTInfo(const TCHAR* Text){
-	InfoItem* Item = m_Log.AddInfo(Text);
+void CSpacePortal::WriteLogDB(TCHAR* Format, tstring& s){
+	if (!m_bWriteLogToDatabase)
+	{
+		return;
+	}
+	int64 TimeStamp = AbstractSpace::CreateTimeStamp();
+	m_LogDB.WriteItem(TimeStamp,_T("SpacePortal"),s);
 };
 
-
-void CSpacePortal::CloseLinker(int64 ID){
-	GetClientLinkerList()->DeleteLinker(ID);
+void CSpacePortal::GetLinker(int64 SourceID,CLinker& Linker){
+	GetClientLinkerList()->GetLinker(SourceID,Linker);
+	if (!Linker.IsValid())
+	{
+		GetSuperiorLinkerList()->GetLinker(SourceID,Linker);
+	}
 };
-
-
 
 void  CSpacePortal::OutputLog(uint32 Type,const TCHAR* text){
 	if(m_LogFlag & Type){
-		AddRTInfo(text);
+		GetGUI()->AddRTInfo(text);
 	}
 
 };
 
-void  CSpacePortal::NotifyLinkerState(CLinkerPipe* Linker,int64 NotifyID,ePipeline& Data){
+void  CSpacePortal::NotifyLinkerState(CLinkerPipe* LinkerPtr,int64 NotifyID,ePipeline& Info){
+	
+	CUserLinkerPipe* Linker = (CUserLinkerPipe*)LinkerPtr;
 
-};
+	STATE_OUTPUT_LEVEL Flag = Linker->GetOutputLevel();
+	int64 SourceID = Linker->GetSourceID();
 
-System::CNerveWork* CSpacePortal::CreateNerveWorker(int64 ID,System* Parent,uint32 Reason){
-	return NULL;
-}
-Model::CCentralNerveWork* CSpacePortal::CreateCentralNerveWorker(int64 ID,Model* Parent,uint32 Reason){
-/*
-	if (Reason == REASON_MSG_TOO_MUCH)
-	{
-		int32 NerveMsgNum = GetNerveMsgNum();
-		int32 CentralMsgNum = GetCentralNerveMsgNum();
-		float f = (float32)(CentralMsgNum-NerveMsgNum)/(float32)CentralMsgNum*100;
-		if (f<10.0f)
+	switch(Flag){
+	case WEIGHT_LEVEL:
 		{
-			return NULL;  //不批准
-		}
-	}
-*/
-	System::CCentralNerveWork* NerveWork = new System::CCentralNerveWork(ID,this);
-	return NerveWork;
-}
+			switch(NotifyID)
+			{
+			case LINKER_RECEIVE_STEP:
+				{
+					//目前没有处理必要
+					int64 DataSize = Info.PopInt();
+					int64 ParentSize  = Info.PopInt();
+					ePipeline* Data = (ePipeline*)Info.GetData(0);
+				}
+				return;
+			case LINKER_SEND_STEP:
+				{
+					int64 MsgID   = Info.PopInt();
+					int64 MsgSize = Info.PopInt();
+					int64 SendNum = Info.PopInt();
 
+					int64 Per = SendNum/MsgSize*100;
+
+					tstring MsgName = MsgID2Str(MsgID);				
+				}
+				return;
+			}
+		} //注意这里不要break,
+	case LIGHT_LEVEL:
+		{
+			switch(NotifyID)
+			{
+			case LINKER_PUSH_MSG:
+				{
+					assert(Info.Size()==6);
+					int64 MsgID = Info.PopInt();
+					int64 EventID = Info.PopInt();
+					int64 TimeStamp = Info.PopInt();
+					int64 PendingMsgID = Info.PopInt();
+					int64 MsgNum = Info.PopInt();
+					int64 UrgMsgNum = Info.PopInt();
+
+					tstring MsgName = MsgID2Str(MsgID);
+					tstring PendingMsgName = PendingMsgID==0?_T("NULL"):MsgID2Str(PendingMsgID);
+
+					tstring s = Format1024(_T("LINKER_PUSH_MSG: %s EventID:%I64ld PendingMsg=%s CurMsgNum=%I64ld"),MsgName.c_str(),EventID,PendingMsgName.c_str(),MsgNum+UrgMsgNum);
+					OutputLog(LOG_MSG_IO_PUSH,s.c_str());
+				}
+				return;
+			case LINKER_MSG_SENDED:
+				{		
+
+					assert (Info.Size());
+
+					ePipeline* Msg = (ePipeline*)Info.GetData(0);
+					if (Msg->GetID()<100)
+					{
+						//OutputLog(LOG_MSG_IO_SENDED,_T("LINKER_MSG_SENDED: internal feedback send"));
+					}else{
+						CMsg SendMsg;
+						Info.PopMsg(SendMsg);
+						int64 MsgID = SendMsg.GetMsgID();
+						tstring MsgName = MsgID2Str(MsgID);
+						tstring s  = Format1024(_T("LINKER_MSG_SENDED: MsgID:%s  EventID:%I64ld"),MsgName.c_str(),SendMsg.GetEventID());
+						OutputLog(LOG_MSG_IO_SENDED,s.c_str());
+					}
+
+				}
+				return;
+			case LINKER_MSG_RECEIVED:
+				{
+					int64 MsgID = Info.PopInt();
+					if (MsgID == LINKER_FEEDBACK)
+					{
+						int64 ReceiveResult = Info.PopInt();				
+						int64 PendingMsgID =  Info.PopInt();
+						tstring PendingMsgName = MsgID2Str(PendingMsgID);
+						if (ReceiveResult == RECEIVE_ERROR)
+						{
+							tstring s = Format1024(_T("LINKER_MSG_RECEIVED: Remote receive %s fail"),PendingMsgName.c_str());
+
+							OutputLog(LOG_MSG_IO_REMOTE_RECEIVED,s.c_str());
+							//AddRTInfo(s.c_str());
+						} 
+						else
+						{	
+							tstring s = Format1024(_T("LINKER_MSG_RECEIVED: Remote received msg:%s ok"),PendingMsgName.c_str());
+							OutputLog(LOG_MSG_IO_REMOTE_RECEIVED,s.c_str());
+							//AddRTInfo(s.c_str());
+						}
+					} 
+					else
+					{	
+						tstring MsgName = MsgID2Str(MsgID);
+						tstring s = Format1024(_T("LINKER_MSG_RECEIVED:Msg received: %s ok"),MsgName.c_str());
+						OutputLog(LOG_MSG_I0_RECEIVED,s.c_str());
+						//AddRTInfo(s.c_str());
+					}	
+				}
+				return;
+			}
+		}
+	case NORMAL_LEVEL:
+		{
+			switch(NotifyID)
+			{
+			case LINKER_BEGIN_ERROR_STATE:
+				{
+					int64 ErrorType = Info.PopInt();
+					eElectron CurRevMsg;
+					Info.Pop(&CurRevMsg);
+					AnsiString text;
+					CurRevMsg.ToString(text);
+
+					tstring s = Format1024(_T("LINKER_BEGIN_ERROR: SourceID=%I64ld ErrorType=%I64ld\n CurrentRevMsg:%s \n"),SourceID,ErrorType,UTF8toWS(text).c_str());
+
+					OutputLog(LOG_ERROR,s.c_str());
+					//AddRTInfo(s.c_str());
+				}
+				return;
+			case LINKER_END_ERROR_STATE:
+				{
+					tstring s = Format1024(_T("LINKER_END_ERROR: SourceID=%I64ld"),SourceID);
+					OutputLog(LOG_TIP,s.c_str());
+					//AddRTInfo(s.c_str());
+				}
+				return;
+			case LINKER_INVALID_ADDRESS:
+				{
+					CMsg Msg;
+					Info.PopMsg(Msg);
+					int64 MsgID = Msg.GetMsgID();
+					tstring MsgName = MsgID2Str(MsgID);
+
+					tstring s = Format1024(_T("LINKER_INVALID_ADDRESS: SourceID=%I64ld MsgID:%s "),SourceID,MsgName.c_str());
+
+					OutputLog(LOG_WARNING,s.c_str());
+					//AddRTInfo(s.c_str());
+				}
+				return;
+			case LINKER_ILLEGAL_MSG:
+				{
+					ePipeline* CurRevMsg = (ePipeline*)Info.GetData(0);
+
+					AnsiString text;
+					CurRevMsg->ToString(text);
+
+					tstring s = Format1024(_T("LINKER_ILLEGAL_MSG: SourceID=%I64ld Msg:%s "),SourceID,UTF8toWS(text).c_str());
+
+					OutputLog(LOG_WARNING,s.c_str());
+					//AddRTInfo(s.c_str());	
+				}
+				return;
+			case LINKER_EXCEPTION_ERROR:
+				{
+					tstring Error = Info.PopString();
+					tstring s = Format1024(_T("LINKER_EXCEPTION_ERROR:%s SourceID=%I64ld was closed"),Error.c_str(),SourceID);
+
+					OutputLog(LOG_WARNING,s.c_str());
+
+					//由于SpacePort负责帮Client执行Executer，所以其中一方关闭都要通知另一方（不会引起锁死）
+					if (Linker->GetRecoType() == LINKER_ORGAN)//Executer linker
+					{   
+						ExecuteLinkerClosedProc(SourceID);
+					}else{ 
+						CheckoutVisitor(SourceID);
+						UserLinkerClosedProc(SourceID);
+					}
+
+					LinkerType Type = Linker->GetLinkerType();
+					if (Type == CLIENT_LINKER)
+					{
+						bool ret = m_ClientLinkerList.DeleteLinker(SourceID);
+						if(!ret)return; //链接并不存在
+
+					}else /*if(Type == SERVER_LINKER)*/{
+						bool ret = m_SuperiorList.DeleteLinker(SourceID);
+						if(!ret)return; //链接并不存在
+					}
+				}
+				return;
+			case LINKER_IO_ERROR:
+				{
+					//通常是远端关闭
+					tstring s = Format1024(_T("LINKER_IO_ERROR: SourceID=%I64ld may be closed by remote"),SourceID);
+
+					OutputLog(LOG_WARNING,s.c_str());
+
+					//由于SpacePort负责帮Client执行Executer，所以其中一方关闭都要通知另一方（不会引起锁死）
+					if (Linker->GetRecoType() == LINKER_ORGAN)//Executer linker
+					{   
+						ExecuteLinkerClosedProc(SourceID);
+					}else{ 
+						CheckoutVisitor(SourceID);
+
+						UserLinkerClosedProc(SourceID);
+					}
+
+					LinkerType Type = Linker->GetLinkerType();
+					if (Type == CLIENT_LINKER)
+					{
+						bool ret = m_ClientLinkerList.DeleteLinker(SourceID);
+						if(!ret)return; //链接并不存在
+
+					}else /*if(Type == SERVER_LINKER)*/{
+						bool ret = m_SuperiorList.DeleteLinker(SourceID);
+						if(!ret)return; //链接并不存在
+					}
+
+				}
+				return;
+			case LINKER_CONNECT_ERROR:
+				{
+					tstring Error = Info.PopString();
+					tstring s = Format1024(_T("LINKER_EXCEPTION_ERROR: SourceID=%I64ld %s "),SourceID,Error.c_str());
+
+					OutputLog(LOG_WARNING,s.c_str());
+					//AddRTInfo(s.c_str());	
+
+					assert(Linker->GetLinkerType()== SERVER_LINKER);
+					GetSuperiorLinkerList()->DeleteLinker(SourceID);
+				}
+				return;
+			}
+		} 
+		break;
+	default:
+		break;
+	}
+
+};
 
 
 void  CSpacePortal::OnObjectFeedback(CMsg& Msg)
 {
 	int64 ExecuterID  = Msg.GetSourceID();
-    int64 EventID = Msg.GetEventID();
+    int64 SpaceEventID = Msg.GetEventID();
     ePipeline& Letter = Msg.GetLetter();
 	
-	if (EventID==0) //Feedback from object
-	{
-		return;
-	}
+	assert (SpaceEventID!=0);
 
-	int64 RobotID = PopExecuterEvent(ExecuterID,EventID);
-    if (RobotID==0)
+	CExecuter* Executer = FindExecuterByLinker(ExecuterID);
+	assert (Executer);
+    
+	CSpaceEvent SpaceEvent;
+	bool ret = Executer->PopEvent(SpaceEventID,SpaceEvent);
+    assert(ret);
+	if (!ret)
     {
 		return;
     }
 
-	WriteLogDB(_T("Executer Feedback Event:%I64ld"),EventID);
-
 	CLinker RobotLinker;
-	GetLinker(RobotID,RobotLinker);
+	GetLinker(SpaceEvent.m_ClientLinkerID,RobotLinker);
 	if (RobotLinker.IsValid())
 	{
-		CMsg FeedbackMsg(MSG_TASK_FEEDBACK,NULL,EventID);
+		CMsg FeedbackMsg(MSG_TASK_FEEDBACK,DEFAULT_DIALOG,SpaceEvent.m_ClientEventID);
 		ePipeline& rLetter = FeedbackMsg.GetLetter();
 		rLetter << Letter;  
 		RobotLinker().PushMsgToSend(FeedbackMsg);
 	}
 
-}
-void CSpacePortal::OnLinkerError(CMsg& Msg){
-	ePipeline& Letter = Msg.GetLetter();
-	int64 SourceID = Letter.PopInt();
-    		
-    CLinker Linker;
-	GetLinker(SourceID,Linker);
-	
-	if (!Linker.IsValid())
-	{
-		return;
-	}
-	
-	if (Linker().GetRecoType()==LINKER_DEL)
-	{
-		return;
-	}
-	
-	if (Linker().IsClientLinker())
-	{
-		GetClientLinkerList()->DeleteLinker(SourceID);
-	}else{
-		GetSuperiorLinkerList()->DeleteLinker(SourceID);
-	}
-
-	if (Linker().m_Owner == NULL)
-	{   
-		ExecuteLinkerClosedProc(SourceID);
-	}else{ 
-		People* Robot = (People*)Linker().m_Owner;
-		if(Robot != NULL){
-			delete Robot;  
-			Linker().m_Owner = NULL;
-		};
-           
-		UserLinkerClosedProc(SourceID);
-	}
 }
 
 
@@ -742,7 +853,7 @@ void CSpacePortal::OnI_AM(CMsg& Msg){
 	int64 SourceID = Msg.GetSourceID();
     
 	CLinker Who;
-	GetLinker(SourceID,Who);
+	m_ClientLinkerList.GetLinker(SourceID,Who);
     if (!Who.IsValid())
     {
 		return;
@@ -752,48 +863,34 @@ void CSpacePortal::OnI_AM(CMsg& Msg){
 	ePipeline& Letter = Msg.GetLetter();
 
 	Letter.AutoTypeAB();	
-	if(Letter.GetTypeAB() != 0x33100000 ){ //one ID+ two string
+	if(Letter.GetTypeAB() != 0x33100000 ){ //two string+one ID
 		assert(0);
-		CloseLinker(SourceID);
+		GetClientLinkerList()->DeleteLinker(SourceID);
 		return ;
 	};
 
-	tstring  Name        = *(tstring*)Letter.GetData(0);  
-	tstring  Cryptograhp = *(tstring*)Letter.GetData(1);
+	tstring  Name        = Letter.PopString();  
+	tstring  Cryptograhp = Letter.PopString();  
 		
-    if (EventID == 102)//From executer
+    if (Name == _T("executer"))//From executer
 	{
-		int64 ExecuterID = _ttoi64(Cryptograhp.c_str());
-
-		if (ExecuterID==0)
-		{  
-			if (m_ExecuterPool.size()>19)
-			{
-				CloseLinker(SourceID);
-			}
-			m_ExecuterPool.push_back(SourceID);
-
-			Who().SetRecoType(LINKER_FRIEND);
-			CMsg rMsg(MSG_CONNECT_OK,NULL,0);
-			rMsg.GetLetter().PushString(GetName());
-			Who().PushMsgToSend(rMsg);
-			return; 
-		}else{
-			int64 RobotID    = PopExecuterEvent(ExecuterID,EventID);
-
-			if (RobotID != 1)
-			{
-				//Not invited to connect， illegally
-				CloseLinker(SourceID);
-			}
-		}
-
-		Who().SetRecoType(LINKER_FRIEND);
-		GetClientLinkerList()->SetLinkerID(SourceID,ExecuterID);
+		Who().SetRecoType(LINKER_ORGAN);
 		
-		CMsg rMsg(MSG_CONNECT_OK,NULL,0);
+		CMsg rMsg(MSG_CONNECT_OK,DEFAULT_DIALOG,0);
 		rMsg.GetLetter().PushString(GetName());
 		Who().PushMsgToSend(rMsg);
+
+		int64 ExecuterLinkerID =  Who().GetSourceID();
+		int64 Type = Letter.PopInt();
+
+		CExecuter* Executer = FindExecuter((DLL_TYPE)Type);
+		if (Executer) 
+		{
+			Executer->m_ID = ExecuterLinkerID;
+			Executer->ProcessPendingEvent(Who);
+		}else{//手动启动
+			Executer = AddExecuter((DLL_TYPE)Type,ExecuterLinkerID);
+		}
 		return;
 	}
 
@@ -803,8 +900,13 @@ void CSpacePortal::OnI_AM(CMsg& Msg){
 	//NOTE: In fact it may be a outer space to  require a connection, but here to ignore 
     bool ret = false;
 	
-	People*  p = new People(Name,Cryptograhp);
-
+	People*  p = CheckinVisitor(Who().GetSourceID(),Name,Cryptograhp);
+	
+	if (!p)
+	{
+		Who().Close();
+		return;
+	}
 	try
     {	
 		ROOM_SPACE& RootRoom = GetRootRoom();
@@ -814,14 +916,14 @@ void CSpacePortal::OnI_AM(CMsg& Msg){
     }
 
  	if(!ret){
+		tstring info = Format1024(_T("The linker(%s) be closed"),Name.c_str());
+		OutputLog(LOG_WARNING,info.c_str());
 		delete p;
-		CloseLinker(SourceID);
+		GetClientLinkerList()->DeleteLinker(SourceID);
 		return;
 	}  
 
-    Who().m_Owner = p;
-    
-	CMsg rMsg(MSG_CONNECT_OK,NULL,0);
+	CMsg rMsg(MSG_CONNECT_OK,DEFAULT_DIALOG,0);
 	rMsg.GetLetter().PushString(GetName());
 	Who().PushMsgToSend(rMsg);
 	
@@ -838,8 +940,11 @@ void CSpacePortal::OnGotoSpace(CMsg& Msg){
 		return;
     }
 	
-	People* Body = (People*)Who().m_Owner;
-	assert(Body != NULL);
+	People* Robot = GetVisitor(SourceID);
+	if(Robot == NULL){
+		Who().Close();	
+		return;
+	};
 
 
 	ePipeline& Letter = Msg.GetLetter();
@@ -866,8 +971,8 @@ void CSpacePortal::OnGotoSpace(CMsg& Msg){
 	
 	ROOM_SPACE Room(Addr.ParentID,Addr.ChildID);
 	
-	if(Room.AllowInto(*Body)){
-		Body->GoInto(SourceID,Room);
+	if(Room.AllowInto(*Robot)){
+		Robot->GoInto(SourceID,Room);
 	}else{
 		CMsg rMsg(MSG_SPACE_ACCESS_DENIED,NULL,NULL);
 		ePipeline& rLetter = rMsg.GetLetter();
@@ -880,7 +985,7 @@ void CSpacePortal::OnGotoSpace(CMsg& Msg){
 	
 
 	ePipeline Pipe;
-	GetAllChildList(Body->GetParentID(),Pipe,Body->GetSpaceID());
+	GetAllChildList(Robot->GetParentID(),Pipe,Robot->GetSpaceID());
 		
     if (Addr.ChildID == LOCAL_SPACEID)
     {
@@ -898,7 +1003,7 @@ void CSpacePortal::OnGotoSpace(CMsg& Msg){
 
 	//Notify the other CLinkers of this space , Send  MSG_ADD_SPACE
 	vector<int64> SiblingList;
-	GetAllVisiter(Body->GetParentID(),SiblingList,Body->GetSpaceID());
+	GetAllVisiter(Robot->GetParentID(),SiblingList,Robot->GetSpaceID());
 	for(uint32 i=0; i<SiblingList.size(); i++){
 		int64 WhoID = SiblingList[i];
 
@@ -909,13 +1014,13 @@ void CSpacePortal::OnGotoSpace(CMsg& Msg){
 			continue;
 		}
 
-		People* Owner = (People*)Who().m_Owner;
+		People* Owner = GetVisitor(WhoID);
 		assert(Owner != NULL);
         assert(Owner->IsValid());
 		
 		ePipeline* ChildPipe  = new ePipeline(Owner->GetParentID());
 
-		tstring Name = Body->GetName();
+		tstring Name = Robot->GetName();
 		//Name = GetFileNoPathName(Name);
 		ChildPipe->PushString(Name);
 		ChildPipe->PushInt(ROBOT_VISITER);
@@ -982,7 +1087,10 @@ void  CSpacePortal::OnCreateSpace(CMsg& Msg){
 		return;
     }
 
-	int64 ParentID = ((CSpace*)Who().m_Owner)->GetParentID();
+	People* Robot = GetVisitor(SourceID);
+	assert(Robot);
+
+	int64 ParentID = Robot->GetParentID();
 
 	ePipeline& Letter = Msg.GetLetter();
 	SPACETYPE  Type = (SPACETYPE)Letter.PopInt();    
@@ -1072,7 +1180,7 @@ void  CSpacePortal::CreateObject(int64 ParentID,ePipeline& Letter){
 		{
 			continue;
 		}
-		People* Owner = (People*)Linker().m_Owner;
+		People* Owner = GetVisitor(WhoID);
 		assert(Owner != NULL);
         assert(Owner->IsValid());
 
@@ -1085,7 +1193,7 @@ void  CSpacePortal::CreateObject(int64 ParentID,ePipeline& Letter){
 		Msg.GetLetter().PushPipe(ChildPipe);		
 		Linker().PushMsgToSend(Msg);	 
 	}
-
+		
 };
 
 
@@ -1109,7 +1217,7 @@ void CSpacePortal::CreateRoom(int64 ParentID,SPACETYPE RoomType,ePipeline& Lette
 		{
 			continue;
 		}
-		People* Owner = (People*)Linker().m_Owner;
+		People* Owner = GetVisitor(WhoID);
 		assert(Owner != NULL);
         assert(Owner->IsValid());
 
@@ -1184,7 +1292,8 @@ void CSpacePortal::OnDeleteSpace(CMsg& Msg)
 	Who().PushMsgToSend(rMsg);	
 
 	//Notify all current CLinker update room info
-	People* p = (People*)Who().m_Owner;
+	People* p = GetVisitor(SourceID);
+	assert(p);
 	vector<int64> SiblingList;
 	GetAllVisiter(p->GetParentID(),SiblingList,p->GetSpaceID());
 	for(uint32 i=0; i<SiblingList.size(); i++){
@@ -1249,29 +1358,29 @@ void CSpacePortal::OnExportObject(CMsg& Msg){
 void CSpacePortal::OnTaskRequest(CMsg& Msg){
 	int64 SourceID = Msg.GetSourceID();
 
-	
+	int64 EventID = Msg.GetEventID();
 	ePipeline& Letter = Msg.GetLetter();
     ePipeline& RequestInfo = *(ePipeline*)Letter.GetData(0);
     int64 RequestID = RequestInfo.GetID();
 	switch(RequestID){
 	case REQUEST_START_OBJECT:
 		{
-			OnRequestStartObject(SourceID,RequestInfo);
+			OnRequestStartObject(SourceID,EventID,RequestInfo);
 		}
 		break;
 	case REQUEST_USE_OBJECT:
 		{
-			OnRequestUseObject(SourceID,RequestInfo);
+			OnRequestUseObject(SourceID,EventID,RequestInfo);
 		}
 		break;
 	case REQUEST_CLOSE_OBJECT:
 		{
-			OnRequestCloseObject(SourceID,RequestInfo);
+			OnRequestCloseObject(SourceID,EventID,RequestInfo);
 		}
 		break;
 	case REQUEST_GET_OBJECT_DOC:
 		{
-			OnRequestGetObjectDoc(SourceID,RequestInfo);
+			OnRequestGetObjectDoc(SourceID,EventID,RequestInfo);
 		}
 		break;
 	default:
@@ -1282,234 +1391,71 @@ void CSpacePortal::OnTaskRequest(CMsg& Msg){
 
 }
 
-void CSpacePortal::Layout(bool Redraw /* = true */){
-	CWSFrameView::Layout(Redraw);
-	if(m_Created){
-		RECT rc = m_rcClient;
-		rc.bottom -= 20;
-		if(rc.bottom<rc.top)rc.bottom=rc.top;
-		::MoveWindow(m_Log.GetHwnd(),rc.left,rc.top,RectWidth(rc),RectHeight(rc),TRUE);
- 		rc = rc;
-		rc.top   = rc.bottom-1;
-		rc.bottom=m_rcClient.bottom;
-		::MoveWindow(m_Status.GetHwnd(),rc.left,rc.top,RectWidth(rc),RectHeight(rc),TRUE);    
-	}
-}
-
-LRESULT CSpacePortal::Reaction(UINT message, WPARAM wParam, LPARAM lParam){
-	switch(message){
-	case WM_TIMER:
-		return OnTimer(wParam,lParam);
-    case WM_DESTROY:
-		::PostQuitMessage(0);
-		return 0;
-	case WM_CREATE:
-		return OnCreate(wParam,lParam);
-	default:
-		return CWSFrameView::Reaction(message,wParam,lParam);
-	}
-}
-LRESULT CSpacePortal::OnCreate( WPARAM wParam, LPARAM lParam) 
-{
-	DWORD style = GetWindowLong(m_hWnd,GWL_STYLE);
-	style |=WS_CLIPCHILDREN;
-	SetWindowLong(m_hWnd,GWL_STYLE,style);
-	
-	RECT rc;
-	::SetRect(&rc,0,0,0,0);
-	if(!m_Log.Create(GetHinstance(),NULL,WS_CHILD|WS_VISIBLE,rc,GetHwnd())){
-		return -1;
-	}
-	
-	if(!m_Status.Create(GetHinstance(),NULL,WS_CHILD|WS_VISIBLE,rc,GetHwnd())){
-		return -1;
-	}
-	
-    m_Status.SetProgressAlpha(127);
-	
-	AddRTInfo(_T("Enter SpacePortal ... "));
-	m_Created = TRUE;
-    return 0;
-}
-
-LRESULT CSpacePortal::OnTimer(WPARAM wParam, LPARAM lParam) 
-{
-	long nIDEvent = wParam;
-    if(nIDEvent == TIMER_HIDEWIN){
-		m_Second--;
-	    tstring s = Format1024(_T("%d second..."),m_Second);
-		m_Status.SetTip(s.c_str());
-		if(m_Second==0){
-			m_Second = m_SecondHide;
-			m_Status.SetTip(_T(""));
-			::KillTimer(GetHwnd(),TIMER_HIDEWIN);
-			::ShowWindow(GetHwnd(),SW_HIDE);
-		}
-	}
-	else return CWSFrameView::OnTimer(wParam,lParam);
-	return 0;
-}
-
-BOOL CALLBACK SetPasswordDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam){
-	switch (message)
-	{
-		case WM_INITDIALOG:
-			{
-			 CenterWindow(hDlg,GetParent(hDlg));
-             SPACE_ACCOUNT* ac = &AfxAccount; 
-			::SetFocus(GetDlgItem(hDlg,IDC_SETNAME));
-			 return TRUE;
-            }
-		case WM_COMMAND:
-			if (LOWORD(wParam) == IDOK ) 
-			{
-				SPACE_ACCOUNT* ac = &AfxAccount; 
-				HWND hName = GetDlgItem(hDlg,IDC_SETNAME);
-				HWND hPassword = GetDlgItem(hDlg,IDC_SETPASSWORD);
-				HWND hConfirm  = GetDlgItem(hDlg,IDC_SETCONFIRM);
-				HWND hLocalName = GetDlgItem(hDlg,IDC_LOCALNAME);
-				
-				//目前不可用
-				HWND hOuterIP  = GetDlgItem(hDlg,IDC_OUTER_IP);
-				::EnableWindow(hOuterIP,FALSE);
-
-				TCHAR buf[100];
-				::GetWindowText(hName,buf,99);
-			    ac->Name = buf;
-				::GetWindowText(hPassword,buf,99);
-			    ac->Password = buf;
-				::GetWindowText(hConfirm,buf,99);
-			    ac->Confirm = buf;
-				::GetWindowText(hLocalName,buf,99);
-				ac->LocalName  = buf;
-				if(ac->Name.size()>0 && ac->Confirm.size()>0 && ac->Confirm == ac->Password){
-					::SetWindowText(hName,_T(""));
-					::SetWindowText(hPassword,_T(""));		
-					::SetWindowText(hConfirm,_T(""));
-					::SetWindowText(hLocalName,_T(""));
-					if (ac->LocalName.size() == 0)
-					{ 
-						ac->LocalName == _T("");
-					}
-					::EndDialog(hDlg, 1);
-				}
-				return TRUE;
-			}else if(LOWORD(wParam) == IDCANCEL){
-                ::EndDialog(hDlg, 0);
-				return TRUE;
-			}
-			break;
-	}
-    return FALSE;
-};
-
-BOOL CALLBACK GetPasswordDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam){
-	
-	switch (message)
-	{
-		case WM_INITDIALOG:
-			{
-             CenterWindow(hDlg,GetParent(hDlg));
-             SPACE_ACCOUNT* ac = (SPACE_ACCOUNT*)lParam;
-			 AfxAccount = *ac;
-			 ac = &AfxAccount;
-			::SetFocus(GetDlgItem(hDlg,IDC_SETNAME));
-			return TRUE;
-			}
-		case WM_COMMAND:
-			if (LOWORD(wParam) == IDOK ) 
-			{
-				SPACE_ACCOUNT* ac = &AfxAccount; 
-				HWND hName = GetDlgItem(hDlg,IDC_SETNAME);
-				HWND hPassword = GetDlgItem(hDlg,IDC_EDITPASSWORD);
-				TCHAR buf[100];
-				::GetWindowText(hName,buf,99);
-			    ac->Name = buf;
-				::GetWindowText(hPassword,buf,99);
-			    ac->Password = buf;
-				if(ac->Name.size()>0 && ac->Password.size()>0 ){
-					::SetWindowText(hName,_T(""));
-					::SetWindowText(hPassword,_T(""));
-					::EndDialog(hDlg, 1);
-				}
-				return TRUE;
-			}else if(LOWORD(wParam) == IDCANCEL){
-                ::EndDialog(hDlg, 0);
-				return TRUE;
-			}
-	}
-    return FALSE;
-};
     
 void CSpacePortal::PrintMsg(int64 MsgID,bool Send){
 	tstring s = MsgID2Str(MsgID);
 	if (Send)
 	{
 		s = Format1024(_T("Send : %s"),s.c_str());
-		AddRTInfo(s);
+		OutputLog(LOG_TIP,s.c_str());
 	} 
 	else
 	{
 		s = Format1024(_T("Get  : %s"),s.c_str());
-		AddRTInfo(s);
+		OutputLog(LOG_TIP,s.c_str());
 	}		
 }
 
-bool CSpacePortal::Do(Energy* E){
+void CSpacePortal::CentralNerveMsgProc(CMsg& Msg){
+	int64 MsgID = Msg.GetMsgID();
 
+	PrintMsg(MsgID,false);
 
-	   if (E==NULL)
-	   {
-		
-		  return true;
-	   }
+	switch(MsgID){
+	case MSG_OBJECT_FEEDBACK:
+		OnObjectFeedback(Msg);
+		break;
+	case MSG_ROBOT_GOTO_SPACE: 
+		OnGotoSpace(Msg);
+		break;
+	case MSG_ROBOT_CREATE_SPACE:
+		OnCreateSpace(Msg);
+		break;
+	case MSG_ROBOT_DEL_SPACE:
+		OnDeleteSpace(Msg);
+		break;
+	case MSG_ROBOT_EXPORT_OBJECT:
+		OnExportObject(Msg);
+		break;
+	case MSG_ROBOT_GET_OBJECT:
+		OnAskforSpaceBody(Msg);
+		break;
+	case MSG_WHO_ARE_YOU:
+		break;
+	case MSG_I_AM: 
+		OnI_AM(Msg);
+		break;
+	default:
+		{
+			PushNerveMsg(Msg,false,false);
+		}
+	}	
 
-	   ePipeline* Pipe = (ePipeline*)E;
-	   CMsg Msg(Pipe);
+}
 
-		int64 MsgID = Msg.GetMsgID();
+void    CSpacePortal::NerveMsgProc(CMsg& Msg){
+	int64 MsgID = Msg.GetMsgID();
 
-		PrintMsg(MsgID);
-		
-		switch(MsgID){
+	switch(MsgID){
 
-		case MSG_TASK_REQUEST:
-			OnTaskRequest(Msg);
-			break;
-		case MSG_OBJECT_FEEDBACK:
-			OnObjectFeedback(Msg);
-			break;
-		case MSG_ROBOT_GOTO_SPACE: 
-			OnGotoSpace(Msg);
-			break;
-		case MSG_ROBOT_CREATE_SPACE:
-			OnCreateSpace(Msg);
-			break;
-		case MSG_ROBOT_DEL_SPACE:
-			OnDeleteSpace(Msg);
-			break;
-		case MSG_ROBOT_EXPORT_OBJECT:
-			OnExportObject(Msg);
-			break;
-		case MSG_ROBOT_GET_OBJECT:
-			OnAskforSpaceBody(Msg);
-			break;
-		case MSG_LINKER_ERROR:
-			OnLinkerError(Msg);
-			break;
-		case MSG_WHO_ARE_YOU:
-			return true;
-		case MSG_I_AM: 
-			OnI_AM(Msg);
-			return true;
-		default:
-			{
-				tstring MsgStr = MsgID2Str(MsgID);
-				tstring s = Format1024(_T("Unkown Msg: %I64ld(%s)"),MsgID,MsgStr.c_str());
-				AddRTInfo(s);
-			}
-		}	
-	
-	
-	return true;
+	case MSG_TASK_REQUEST:
+		OnTaskRequest(Msg);
+		break;
+	default:
+		{
+			tstring MsgStr = MsgID2Str(MsgID);
+			tstring s = Format1024(_T("Unkown Msg: %I64ld(%s)"),MsgID,MsgStr.c_str());
+			OutputLog(LOG_WARNING,s.c_str());
+		}
+	}	
 }

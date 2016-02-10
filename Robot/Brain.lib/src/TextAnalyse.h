@@ -133,7 +133,7 @@ public:
     uint32    		 m_ActionType;
     //=0 表示还没有分析 <0xFFFF 为错误ID 
 	int64            m_MemoryID;	 
-	Energy*          m_Param;        //TokenList中作为参数的token数。
+	Energy*          m_Param;          //TokenList中作为参数的token数。
 	LogicRelation    m_LogicRelation;
 
 	CClause():m_BeginPos(0),m_TokenNum(0),m_MemoryID(0),m_Param(NULL),m_LogicRelation(UNKOWN_RELATION),m_ActionType(0){};
@@ -150,7 +150,7 @@ public:
 enum ACTIONSTATE{
 	COMMON_ACTION   =    0x0001,      //抽象命令，既可以和外部也可以和内部组合执行
 	OUTER_ACTION    =    0x0002,      //需要依赖外部资源执行
-	INTER_ACTION    =    0x0004,      //不意外外部资源执行的命令
+	INTER_ACTION    =    0x0004,      //不依赖外部资源执行的命令
 	INDE_INTER_ACTION  = 0x0008,      //独立内部行为，一次只能执行一个
 	EXE_COMPLETED   =    0x0010
 };
@@ -160,8 +160,7 @@ public:
     bool			       m_IsError; //只有所含子句或Token有任何错误都会让m_Error = true;
 	uint32    		   	   m_State;
 
-	//相对位置
-	uint32                 m_BeginPos;  //第一个子句位置
+	uint32                 m_BeginPos;  //第一个子句位置，相对位置
 	uint32                 m_ClauseNum;
   
 	ePipeline              m_AnalyseResult;

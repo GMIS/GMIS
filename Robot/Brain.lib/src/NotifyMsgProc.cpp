@@ -6,115 +6,176 @@
 
 
 
-void CBrain::NotifySysState(int64 NotifyID,ePipeline* Data /*=NULL*/){
+void CBrain::NotifySysState(int64 NotifyType,int64 NotifyID,ePipeline* Data){
 	ePipeline Receiver;
 	Receiver.PushInt(SYSTEM_SOURCE);
 	Receiver.PushInt(DEFAULT_DIALOG);
 	CMsg GuiMsg(Receiver,MSG_BRAIN_TO_GUI,0);
 	
-	switch(NotifyID){
-	case MNOTIFY_CENTRAL_NERVE_MSG_NUM:
+    //return;
+	switch (NotifyType)
+	{
+	case NOTIFY_MODEL_SCENE:
 		{
-			assert(Data);
-			ePipeline Cmd(GUI_PFM_MSG_UPDATE);
-			Cmd.PushInt(CENTRALNERVE_MSG_NUM);
-			Cmd.PushPipe(*Data);
-			GuiMsg.GetLetter().PushPipe(Cmd);
 			
-			int64 GuiID = LOCAL_GUI;
-			SendMsgToGUI(GuiID,GuiMsg);
+			switch(NotifyID){
+			case NTID_NERVE_MSG_NUM:
+				{
+					ePipeline Cmd(GUI_PFM_MSG_UPDATE);
+					Cmd.PushInt(CENTRALNERVE_MSG_NUM);
+					Cmd.PushPipe(*Data);
+					GuiMsg.GetLetter().PushPipe(Cmd);
+
+					GetBrainData()->SendMsgToGUI(this,SYSTEM_SOURCE,GuiMsg);
+				}
+				break;	
+	
+			case NTID_NERVE_THREAD_JOIN:
+				{
+					int64 n = Data->PopInt();
+
+					ePipeline Cmd(GUI_PFM_THREAD_UPDATE);
+					Cmd.PushInt(THREAD_CENTRAL_NERVE);
+					Cmd.PushInt(n);
+					GuiMsg.GetLetter().PushPipe(Cmd);
+
+					GetBrainData()->SendMsgToGUI(this,SYSTEM_SOURCE,GuiMsg);
+				}
+				break;
+			case NTID_NERVE_THREAD_CLOSED:
+				{
+					int64 nThreadNum = Data->PopInt();
+					int64 nClosedThreadID = Data->PopInt();
+					CLockedModelData*  LockedData = GetModelData();
+					LockedData->DeleteThreadWorker(this,nClosedThreadID,MODEL_CENTRAL_NEVER_WORK_TYPE);
+
+					ePipeline Cmd(GUI_PFM_THREAD_UPDATE);
+					Cmd.PushInt(THREAD_CENTRAL_NERVE);
+					Cmd.PushInt(nThreadNum);
+					GuiMsg.GetLetter().PushPipe(Cmd);
+
+					GetBrainData()->SendMsgToGUI(this,SYSTEM_SOURCE,GuiMsg);
+				}
+				break;
+			case NTID_NERVE_THREAD_LIMIT:
+				{
+
+
+				}
+				break;
+			case NTID_NERVE_THREAD_FAIL:
+				{
+
+				}
+				break;
+			case NTID_IO_WORKER_CLOSED:
+				{
+					int64 ID = Data->PopInt();
+					CLockedModelData* ModelData = GetModelData();
+					ModelData->DeleteThreadWorker(this,ID,MODEL_IO_WORK_TYPE);
+				}
+				break;
+			case NTID_CONNECT_FAIL:
+				{
+
+				}
+				break;
+			case NTID_CONNECT_OK:
+				{
+
+				}
+				break;
+			case NTID_LISTEN_FAIL:
+				{
+					tstring s=Data->PopString();
+					OutSysInfo(s.c_str());
+				}
+				break;
+			}
 			
 		}
 		break;
-		case SNOTIFY_NERVE_MSG_NUM:
+	case NOTIFY_SYSTEM_SCENE:
 		{
-			assert(Data);
-			ePipeline Cmd(GUI_PFM_MSG_UPDATE);
-			Cmd.PushInt(NERVE_MSG_NUM);
-			Cmd.PushPipe(*Data);
-			GuiMsg.GetLetter().PushPipe(Cmd);
-			
-			int64 GuiID = LOCAL_GUI;
-			SendMsgToGUI(GuiID,GuiMsg);
-		};
-		break;
-	case MNOTIFY_CENTRAL_NERVE_THREAD_JOIN:
-		{
-			int64 n = Data->PopInt();
-			
-			ePipeline Cmd(GUI_PFM_THREAD_UPDATE);
-			Cmd.PushInt(THREAD_CENTRAL_NERVE);
-			Cmd.PushInt(n);
-			GuiMsg.GetLetter().PushPipe(Cmd);
-			
-			int64 GuiID = LOCAL_GUI;
-			SendMsgToGUI(GuiID,GuiMsg);
-			
-		};
-		break;
-	case MNOTIFY_CENTRAL_NERVE_THREAD_FAIL:
-		{
-			//OutSysInfo(_T("Create New CentralNerve Thread Fail"));
-		};
-		break;
-	case MNOTIFY_CENTRAL_NERVE_THREAD_CLOSE:
-		{
-			int64 nThreadNum = Data->PopInt();
-			int64 nClosedThreadID = Data->PopInt();
-			CLockedModelData*  LockedData = GetModelData();
-			LockedData->DeleteCentralNerveWork(nClosedThreadID);
+			switch(NotifyID){
+			case NTID_NERVE_MSG_NUM:
+				{
+					ePipeline Cmd(GUI_PFM_MSG_UPDATE);
+					Cmd.PushInt(NERVE_MSG_NUM);
+					Cmd.PushPipe(*Data);
+					GuiMsg.GetLetter().PushPipe(Cmd);
 
-			ePipeline Cmd(GUI_PFM_THREAD_UPDATE);
-			Cmd.PushInt(THREAD_CENTRAL_NERVE);
-			Cmd.PushInt(nThreadNum);
-			GuiMsg.GetLetter().PushPipe(Cmd);
-			
-			int64 GuiID = LOCAL_GUI;
-			SendMsgToGUI(GuiID,GuiMsg);
-		};
-		break;
-	case SNOTIFY_NERVE_THREAD_JOIN:
-		{
-			int64 n = Data->PopInt();
-			ePipeline Cmd(GUI_PFM_THREAD_UPDATE);
-			Cmd.PushInt(THREAD_NERVE);
-			Cmd.PushInt(n);
-			GuiMsg.GetLetter().PushPipe(Cmd);
-			
-			int64 GuiID = LOCAL_GUI;
-			SendMsgToGUI(GuiID,GuiMsg);
-			
-		};
-		break;
-	case SNOTIFY_NERVE_THREAD_FAIL:
-		{
-			//OutSysInfo(_T("Create New Nerve Thread Fail"));
-		};
-		break;
-	case SNOTIFY_NERVE_THREAD_CLOSE:
-		{
-			int64 nThreadNum = Data->PopInt();
-			int64 nClosedThreadID = Data->PopInt();
+					GetBrainData()->SendMsgToGUI(this,SYSTEM_SOURCE,GuiMsg);
+				}
+				break;
+			case NTID_NERVE_THREAD_JOIN:
+				{
+					int64 n = Data->PopInt();
+					ePipeline Cmd(GUI_PFM_THREAD_UPDATE);
+					Cmd.PushInt(THREAD_NERVE);
+					Cmd.PushInt(n);
+					GuiMsg.GetLetter().PushPipe(Cmd);
 
-			CLockedSystemData*  LockedData = GetSystemData();
-			LockedData->DeleteNerveWork(nClosedThreadID);
+					GetBrainData()->SendMsgToGUI(this,SYSTEM_SOURCE,GuiMsg);		
+				}
+				break;
+			case NTID_NERVE_THREAD_CLOSED:
+				{
+					int64 nThreadNum = Data->PopInt();
+					int64 nClosedThreadID = Data->PopInt();
 
-			ePipeline Cmd(GUI_PFM_THREAD_UPDATE);
-			Cmd.PushInt(THREAD_NERVE);
-			Cmd.PushInt(nThreadNum);
-			GuiMsg.GetLetter().PushPipe(Cmd);
-			
-			int64 GuiID = LOCAL_GUI;
-			SendMsgToGUI(GuiID,GuiMsg);
-		};
+					CLockedSystemData*  LockedData = GetSystemData();
+					LockedData->DeleteThreadWorker(this,nClosedThreadID,SYSTEM_NEVER_WORK_TYPE);
+
+					ePipeline Cmd(GUI_PFM_THREAD_UPDATE);
+					Cmd.PushInt(THREAD_NERVE);
+					Cmd.PushInt(nThreadNum);
+					GuiMsg.GetLetter().PushPipe(Cmd);
+
+					GetBrainData()->SendMsgToGUI(this,SYSTEM_SOURCE,GuiMsg);
+				}
+				break;
+			case NTID_NERVE_THREAD_LIMIT:
+				{
+
+
+				}
+				break;
+			case NTID_NERVE_THREAD_FAIL:
+				{
+
+				}
+				break;
+			case NTID_IO_WORKER_CLOSED:
+				{
+					int64 ID = Data->PopInt();
+					CLockedSystemData* SystemData = GetSystemData();
+					SystemData->DeleteThreadWorker(this,ID,SYSTEM_IO_WORK_TYPE);
+				}
+				break;
+			case NOTIFY_EXCEPTION_OCCURRED:
+				{
+					tstring ErrorInfo = Data->PopString();
+					OutSysInfo(ErrorInfo.c_str());
+			    }
+				break;
+			default:
+				{
+
+				}
+			}
+		}
 		break;
-	case SNOTIFY_LISTEN_FAIL:
+	case NOTIFY_BRAIN_SCENE:
 		{
-			tstring s=Data->PopString();
-			OutSysInfo(s);
-		};
+			if(NotifyID == NTID_IO_WORKER_CLOSED)
+			{
+				int64 ID = Data->PopInt();
+				m_BrainData.DeleteThreadWorker(this,ID,BRAIN_WEBSOCKET_IO_WORK_TYPE);
+			}
+		}
 		break;
-	case MNOTIFY_ILLEGAL_MSG:
+	case NOTIFY_ILLEGAL_MSG:
 		{
 			CMsg Msg(Data);
 			int64 MsgID = Msg.GetMsgID();
@@ -122,12 +183,14 @@ void CBrain::NotifySysState(int64 NotifyID,ePipeline* Data /*=NULL*/){
 			tstring s = Format1024(_T("Receive illegal msg: %I64ld(%s)"),MsgID,MsgStr.c_str());
 			Msg.Release(); //避免delete Data;
 			OutSysInfo(s.c_str());	
-		};
-		break;
-	default:
-		{
-			System::NotifySysState(NotifyID,Data);
 		}
+		break;
+	case NOTIFY_EXCEPTION_OCCURRED:
+		{
+			tstring ErrorInfo = Data->PopString();
+			OutputLog(LOG_TIP,ErrorInfo.c_str());
+		}
+		break;
 	}
 	
 };
@@ -136,182 +199,327 @@ void CBrain::NotifyLinkerState(CLinkerPipe* LinkerPipe,int64 NotifyID,ePipeline&
 	CUserLinkerPipe* Linker = (CUserLinkerPipe*)LinkerPipe;
 
 	STATE_OUTPUT_LEVEL Flag = Linker->GetOutputLevel();
+
+	int64 SourceID = Linker->GetSourceID();
+
 	switch(Flag){
 	case WEIGHT_LEVEL:
-	{
-		switch(NotifyID)
 		{
-		case LINKER_RECEIVE_STEP:
+			switch(NotifyID)
 			{
-				//目前没有处理必要
-				int64 DataSize = Info.PopInt();
-				int64 ParentSize  = Info.PopInt();
-                ePipeline* Data = (ePipeline*)Info.GetData(0);
-			}
-			return;
-		case LINKER_SEND_STEP:
-			{
-				int64 MsgID   = Info.PopInt();
-				int64 MsgSize = Info.PopInt();
-				int64 SendNum = Info.PopInt();
-				
-				int64 Per = SendNum/MsgSize*100;
-
-				tstring MsgName = MsgID2Str(MsgID);				
-			}
-			return;
-		default:
-			break;
-		}
-	}
-	case LIGHT_LEVEL:
-	{
-		switch(NotifyID)
-		{
-		case LINKER_PUSH_MSG:
-			{
-				assert(Info.Size()==6);
-				int64 MsgID = Info.PopInt();
-				int64 EventID = Info.PopInt();
-				int64 TimeStamp = Info.PopInt();
-				int64 PendingMsgID = Info.PopInt();
-				int64 MsgNum = Info.PopInt();
-				int64 UrgMsgNum = Info.PopInt();
-
-				tstring MsgName = MsgID2Str(MsgID);
-				tstring PendingMsgName = PendingMsgID==0?_T("NULL"):MsgID2Str(PendingMsgID);
-				OutputLog(LOG_MSG_IO_PUSH,_T("Msg push: %s EventID:%I64ld PendingMsg=%s CurMsgNum=%I64ld"),MsgName.c_str(),EventID,PendingMsgName.c_str(),MsgNum+UrgMsgNum);
-
-			}
-			return;
-		case LINKER_MSG_SENDED:
-			{		
-				/*
-				int64 SenderID = (int64)Linker->m_CurSendMsg.GetSenderID();
-
-				CMsg Msg(SYSTEM_SOURCE,SenderID,MSG_LINKER_NOTIFY,DEFAULT_DIALOG);
-
-				//通知原始信息的发送者
-				ePipeline LocalAddress;
-				Linker->ReceiverID2LocalAddress(SenderID,LocalAddress);
-				Msg.GetReceiver() = LocalAddress;
-
-				//附上原始发送信息
-				ePipeline& Letter = Msg.GetLetter();
-				Letter.PushInt32(NotifyID);
-				Letter.Push_Directly(Linker->m_CurSendMsg.Release());
-				*/
-
-				assert (Info.Size());
-
-				ePipeline* Msg = (ePipeline*)Info.GetData(0);
-				if (Msg->GetID()<100)
+			case LINKER_RECEIVE_STEP:
 				{
-					//WriteLogDB(_T("Msg Sended: internal feedback sended"));
-				}else{
-					CMsg SendedMsg;
-					Info.PopMsg(SendedMsg);
-					int64 MsgID = SendedMsg.GetMsgID();
-					tstring MsgName = MsgID2Str(MsgID);
-					OutputLog(LOG_MSG_IO_SENDED,_T("Msg Sended: %s  EventID:%I64ld"),MsgName.c_str(),SendedMsg.GetEventID());
+					//目前没有处理必要
+					int64 DataSize = Info.PopInt();
+					int64 ParentSize  = Info.PopInt();
+					ePipeline* Data = (ePipeline*)Info.GetData(0);
 				}
-
-			}
-			return;
-		case LINKER_MSG_RECEIVED:
-			{
-				int64 MsgID = Info.PopInt();
-				if (MsgID == LINKER_FEEDBACK)
+				return;
+			case LINKER_SEND_STEP:
 				{
-					int64 ReceiveResult = Info.PopInt();				
-					int64 PendingMsgID =  Info.PopInt();
-					tstring PendingMsgName = MsgID2Str(PendingMsgID);
-					if (ReceiveResult == RECEIVE_ERROR)
+					int64 MsgID   = Info.PopInt();
+					int64 MsgSize = Info.PopInt();
+					int64 SendNum = Info.PopInt();
+
+					int64 Per = SendNum/MsgSize*100;
+
+					tstring MsgName = MsgID2Str(MsgID);				
+				}
+				return;
+			}
+		}//注意：这里不要break
+	case LIGHT_LEVEL:
+		{
+			switch(NotifyID)
+			{
+			case LINKER_PUSH_MSG:
+				{
+					assert(Info.Size()==6);
+					int64 MsgID = Info.PopInt();
+					int64 EventID = Info.PopInt();
+					int64 TimeStamp = Info.PopInt();
+					int64 PendingMsgID = Info.PopInt();
+					int64 MsgNum = Info.PopInt();
+					int64 UrgMsgNum = Info.PopInt();
+
+					tstring MsgName = MsgID2Str(MsgID);
+					tstring PendingMsgName = PendingMsgID==0?_T("NULL"):MsgID2Str(PendingMsgID);
+
+					tstring s = Format1024(_T("LINKER_PUSH_MSG: %s EventID:%I64ld PendingMsg=%s CurMsgNum=%I64ld"),MsgName.c_str(),EventID,PendingMsgName.c_str(),MsgNum+UrgMsgNum);
+					OutputLog(LOG_MSG_IO_PUSH,s.c_str());
+					OutSysInfo(s.c_str());
+				}
+				return;
+			case LINKER_MSG_SENDED:
+				{		
+
+					assert (Info.Size());
+
+					ePipeline* Msg = (ePipeline*)Info.GetData(0);
+					if (Msg->GetID()<100)
 					{
-						tstring s = Format1024(_T("ERROR: Remote receive %s"),PendingMsgName.c_str());
-						
-						OutputLog(LOG_MSG_IO_REMOTE_RECEIVED,s.c_str());
-						OutSysInfo(s);
+						//OutputLog(LOG_MSG_IO_SENDED,_T("LINKER_MSG_SENDED: internal feedback send"));
+					}else{
+						CMsg SendMsg;
+						Info.PopMsg(SendMsg);
+						int64 MsgID = SendMsg.GetMsgID();
+						tstring MsgName = MsgID2Str(MsgID);
+						tstring s  = Format1024(_T("LINKER_MSG_SENDED: MsgID:%s  EventID:%I64ld"),MsgName.c_str(),SendMsg.GetEventID());
+						OutputLog(LOG_MSG_IO_SENDED,s.c_str());
+					}
+
+				}
+				return;
+			case LINKER_MSG_RECEIVED:
+				{
+					int64 MsgID = Info.PopInt();
+					if (MsgID == LINKER_FEEDBACK)
+					{
+						int64 ReceiveResult = Info.PopInt();				
+						int64 PendingMsgID =  Info.PopInt();
+						tstring PendingMsgName = MsgID2Str(PendingMsgID);
+						if (ReceiveResult == RECEIVE_ERROR)
+						{
+							tstring s = Format1024(_T("LINKER_MSG_RECEIVED: Remote receive %s fail"),PendingMsgName.c_str());
+
+							OutputLog(LOG_MSG_IO_REMOTE_RECEIVED,s.c_str());
+							OutSysInfo(s.c_str());
+						} 
+						else
+						{	
+							tstring s = Format1024(_T("LINKER_MSG_RECEIVED: Remote received msg:%s ok"),PendingMsgName.c_str());
+							OutputLog(LOG_MSG_IO_REMOTE_RECEIVED,s.c_str());
+							OutSysInfo(s.c_str());
+						}
 					} 
 					else
 					{	
-						OutputLog(LOG_MSG_IO_REMOTE_RECEIVED,_T("Remote received msg:%s "),PendingMsgName.c_str());
-					}
-				} 
-				else
-				{	
-					tstring MsgName = MsgID2Str(MsgID);
-					OutputLog(LOG_MSG_I0_RECEIVED,_T("Msg received: %s "),MsgName.c_str());
-				}	
+						tstring MsgName = MsgID2Str(MsgID);
+						tstring s = Format1024(_T("LINKER_MSG_RECEIVED:Msg received: %s ok"),MsgName.c_str());
+						OutputLog(LOG_MSG_I0_RECEIVED,s.c_str());
+						OutSysInfo(s.c_str());
+					}	
+				}
+				return;
 			}
-			return;
-		default:
-		    break;
 		}
-
-	}
 	case NORMAL_LEVEL:
-	{
-		switch(NotifyID)
 		{
-		case LINKER_COMPILE_ERROR:
+			switch(NotifyID)
 			{
-				int64 ErrorType = Info.PopInt();
-				tstring s = Format1024(_T("ERROR: linker compile msg error(%I64ld)"),ErrorType);
-				
-				OutputLog(LOG_ERROR,s.c_str());
-				OutSysInfo(s);
-			}
-			return;
-		case LINKER_RECEIVE_RESUME:
-			{
-				OutputLog(LOG_TIP,_T("Linker Notify: receive resumed"));
-			}
-			return;
-		case LINKER_INVALID_ADDRESS:
-			{
-				CMsg Msg;
-				Info.PopMsg(Msg);
-				int64 MsgID = Msg.GetMsgID();
-				tstring MsgName = MsgID2Str(MsgID);
-				
-				tstring s = Format1024(_T("WARNING: %s receiver address invalid"),MsgName.c_str());
-				
-				OutputLog(LOG_WARNING,s.c_str());
-				OutSysInfo(s);
-			}
-			return;
-		case LINKER_ILLEGAL_MSG:
-			{
-				ePipeline* Msg = (ePipeline*)Info.GetData(0);
-				
-				CPipeView PipeView(Msg);
-				
-				tstring text = PipeView.GetString();
-				
-				tstring s = Format1024(_T("Linker Notify: receive illegal msg \n<<\n%s\n>>\n"),text.c_str());
-				
-				OutputLog(LOG_WARNING,s.c_str());
-				OutSysInfo(s);	
-			}
-			return;
+			case LINKER_BEGIN_ERROR_STATE:
+				{
+					int64 ErrorType = Info.PopInt();
+					eElectron CurRevMsg;
+					Info.Pop(&CurRevMsg);
+					AnsiString text;
+					CurRevMsg.ToString(text);
+
+					tstring s = Format1024(_T("LINKER_BEGIN_ERROR: SourceID=%I64ld ErrorType=%I64ld CurrentRevMsg:%s"),Linker->GetSourceID(),ErrorType,UTF8toWS(text).c_str());
+
+					OutputLog(LOG_ERROR,s.c_str());
+					OutSysInfo(s.c_str());
+				}
+				return;
+			case LINKER_END_ERROR_STATE:
+				{
+					tstring s = Format1024(_T("LINKER_END_ERROR: SourceID=%I64ld"),Linker->GetSourceID());
+					OutputLog(LOG_TIP,s.c_str());
+					OutSysInfo(s.c_str());
+				}
+				return;
+			case LINKER_INVALID_ADDRESS:
+				{
+					CMsg Msg;
+					Info.PopMsg(Msg);
+					int64 MsgID = Msg.GetMsgID();
+					tstring MsgName = MsgID2Str(MsgID);
+
+					tstring s = Format1024(_T("LINKER_INVALID_ADDRESS: SourceID=%I64ld MsgID:%s "),Linker->GetSourceID(),MsgName.c_str());
+
+					OutputLog(LOG_WARNING,s.c_str());
+					OutSysInfo(s.c_str());
+				}
+				return;
+			case LINKER_ILLEGAL_MSG:
+				{
+					ePipeline* CurRevMsg = (ePipeline*)Info.GetData(0);
+
+					AnsiString text;
+					CurRevMsg->ToString(text);
+
+					tstring s = Format1024(_T("LINKER_ILLEGAL_MSG: SourceID=%I64ld Msg:%s "),Linker->GetSourceID(),UTF8toWS(text).c_str());
+
+					OutputLog(LOG_WARNING,s.c_str());
+					OutSysInfo(s.c_str());	
+				}
+				return;
+			case LINKER_EXCEPTION_ERROR:
+				{
+					tstring Error = Info.PopString();
+					tstring s = Format1024(_T("LINKER_EXCEPTION_ERROR: %s SourceID=%I64ld was closed "),Error.c_str(),SourceID);
+
+					OutputLog(LOG_WARNING,s.c_str());
+					OutSysInfo(s.c_str());	
+
+					LinkerType Type = Linker->GetLinkerType();
+					if (Type == CLIENT_LINKER)
+					{
+						bool ret = m_ClientLinkerList.DeleteLinker(SourceID);
+						if(!ret)return; //链接并不存在
+
+					}else if(Type == SERVER_LINKER){
+						bool ret = m_SuperiorList.DeleteLinker(SourceID);
+						if(!ret)return; //链接并不存在
+					}else if (Type == WEBSOCKET_LINKER){
+						bool ret = m_WebsocketClientList.DeleteLinker(SourceID);
+						if(!ret)return; //链接并不存在
+					}
+					
+
+
+					//得到链接失效的 Dialog
+					CLogicDialog* InvalidDialog = GetBrainData()->GetDialog(SourceID,DEFAULT_DIALOG);
+
+					if (InvalidDialog==NULL)
+					{
+						return;
+					}
+
+					if (SourceID==SPACE_SOURCE)
+					{
+						GetBrainData()->DeleteDialogOfSource(SourceID);
+
+						tstring ip ;
+
+						ePipeline Receiver;
+						Receiver.PushInt(InvalidDialog->m_SourceID);
+						Receiver.PushInt(InvalidDialog->m_DialogID);
+
+						CMsg GuiMsg2(Receiver,MSG_BRAIN_TO_GUI,0);		
+						ePipeline Cmd(GUI_CONNECT_STATE);
+						Cmd.PushInt(CON_END);
+						Cmd.PushString(ip);
+						Cmd.PushInt(FALSE);	
+						GuiMsg2.GetLetter().PushPipe(Cmd);
+
+						GetBrainData()->SendMsgToGUI(this,GuiMsg2,-1);
+						return;
+					}
+
+					GetBrainData()->DeleteDialogOfSource(SourceID);
 			
-		default:
-			return;
+					ePipeline Receiver;
+					Receiver.PushInt(SYSTEM_SOURCE);
+					Receiver.PushInt(DEFAULT_DIALOG);
+					CMsg GuiMsg(Receiver,MSG_BRAIN_TO_GUI,0);
+
+					ePipeline Cmd1(GUI_LINKVIEW_OUTPUT);
+					Cmd1.PushInt(DEL_ITEM);
+					Cmd1.PushInt(InvalidDialog->m_SourceID);
+					Cmd1.PushInt(InvalidDialog->m_DialogID);
+					Cmd1.PushString(InvalidDialog->m_DialogName);
+
+					GuiMsg.GetLetter().PushPipe(Cmd1);
+					//通知其它GUI删除此对话
+					GetBrainData()->SendMsgToGUI(this,GuiMsg,SourceID);
+					
+				}
+				return;
+			case LINKER_IO_ERROR:
+				{
+					//通常是远端关闭
+					tstring s = Format1024(_T("LINKER_IO_ERROR: SourceID=%I64ld may be closed by remote"),SourceID);
+
+					OutputLog(LOG_WARNING,s.c_str());
+					OutSysInfo(s.c_str());	
+
+					LinkerType Type = Linker->GetLinkerType();
+					if (Type == CLIENT_LINKER)
+					{
+						bool ret = m_ClientLinkerList.DeleteLinker(SourceID);
+						if(!ret)return; //链接并不存在
+
+					}else if(Type == SERVER_LINKER){
+						bool ret = m_SuperiorList.DeleteLinker(SourceID);
+						if(!ret)return; //链接并不存在
+					}else if (Type == WEBSOCKET_LINKER){
+						bool ret = m_WebsocketClientList.DeleteLinker(SourceID);
+						if(!ret)return; //链接并不存在
+					}
+
+
+					//得到链接失效的 Dialog
+					CLogicDialog* InvalidDialog = GetBrainData()->GetDialog(SourceID,DEFAULT_DIALOG);
+
+					if (InvalidDialog==NULL)
+					{
+						return;
+					}
+
+					if (SourceID==SPACE_SOURCE)
+					{
+						GetBrainData()->DeleteDialogOfSource(SourceID);
+
+						tstring ip ;
+
+						ePipeline Receiver;
+						Receiver.PushInt(InvalidDialog->m_SourceID);
+						Receiver.PushInt(InvalidDialog->m_DialogID);
+
+						CMsg GuiMsg2(Receiver,MSG_BRAIN_TO_GUI,0);		
+						ePipeline Cmd(GUI_CONNECT_STATE);
+						Cmd.PushInt(CON_END);
+						Cmd.PushString(ip);
+						Cmd.PushInt(FALSE);	
+						GuiMsg2.GetLetter().PushPipe(Cmd);
+
+						GetBrainData()->SendMsgToGUI(this,GuiMsg2,-1);
+						return;
+					}
+
+					CNotifyDialogState nf(NOTIFY_DIALOG_LIST);
+					nf.PushInt(DL_DEL_DIALOG);
+					nf.Notify(InvalidDialog);
+
+					GetBrainData()->DeleteDialogOfSource(SourceID);
+
+				}
+				return;
+			case LINKER_CONNECT_ERROR:
+				{
+					tstring Error = Info.PopString();
+					tstring s = Format1024(_T("LINKER_CONNECT_ERROR: SourceID=%I64ld %s "),SourceID,Error.c_str());
+
+					OutputLog(LOG_WARNING,s.c_str());
+					OutSysInfo(s.c_str());	
+
+					assert(Linker->GetLinkerType() == SERVER_LINKER);
+					GetSuperiorLinkerList()->DeleteLinker(SourceID);
+				}
+				return;
+			case LINKER_CREATE_ERROR:
+				{
+					tstring Error = Info.PopString();
+					tstring s = Format1024(_T("LINKER_CREATE_ERROR: %s "),Error.c_str());
+
+					OutputLog(LOG_WARNING,s.c_str());
+					OutSysInfo(s.c_str());	
+				}
+				return;
+			} 
 		}
-	} 
-	break;
 	default:
 		break;
 	}
-	
+
 }
 
 
 
 
 void CBrain::NoitfyDialogState(CLogicDialog* Dialog, ePipeline* NotifyInfo){
-	CLock lk(&Dialog->m_Mutex);
+	//CLock lk(&Dialog->m_DialogMutex,this); 避免大范围锁定，只在具体需要时加锁
 
 	int64 NotifyID = NotifyInfo->GetID();
 	
@@ -352,7 +560,7 @@ void CBrain::NoitfyDialogState(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 		break;
 	default:
 		tstring s = Format1024(_T("The notify(%I64ld) has not been processed."),NotifyID);
-		OutSysInfo(s);
+		OutSysInfo(s.c_str());
 		assert(0);
 	};
 }
@@ -376,7 +584,7 @@ void CBrain::OnNotifyDialogError(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 
 			//构建一个临时输出，但是并不正式做记录
 			ePipeline Cmd0(GUI_RUNTIME_OUTPUT);
-			ePipeline Item;
+			ePipeline Item(AbstractSpace::CreateTimeStamp());
 			Item.PushInt(0);
 			Item.PushString(error);
 			Cmd0.PushPipe(Item);
@@ -397,7 +605,7 @@ void CBrain::OnNotifyDialogError(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 
 			//构建一个临时输出，但是并不正式做记录
 			ePipeline Cmd0(GUI_RUNTIME_OUTPUT);
-			ePipeline Item;
+			ePipeline Item(AbstractSpace::CreateTimeStamp());
 			Item.PushInt(0);
 			Item.PushString(error);
 			Cmd0.PushPipe(Item);
@@ -416,8 +624,7 @@ void CBrain::OnNotifyDialogError(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 		return;
 	}
 
-	int64 GuiID = Dialog->m_OutputSourceID;
-	SendMsgToGUI(GuiID,GuiMsg);
+	GetBrainData()->SendMsgToGUI(this,Dialog->m_SourceID,GuiMsg);
 }
 
 void CBrain::OnNotifyDialogState(CLogicDialog* Dialog, ePipeline* NotifyInfo){
@@ -566,7 +773,7 @@ void CBrain::OnNotifyDialogState(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 			ePipeline Cmd1(GUI_STATUS_SET_TEXT);
 			
 			ePipeline Info;
-			Dialog->m_Brain->GetBrainData()->GetBrainInfo(Info);
+			Dialog->m_Brain->GetBrainData()->GetBrainStateInfo(Info);
 			
 			int64 EventNum = Info.PopInt();
 			int64 DialogNum = Info.PopInt();
@@ -688,8 +895,7 @@ void CBrain::OnNotifyDialogState(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 		break;
 	}
 
-	int64 GuiID = Dialog->m_OutputSourceID;
-	SendMsgToGUI(GuiID,GuiMsg);
+	GetBrainData()->SendMsgToGUI(this,Dialog->m_SourceID,GuiMsg);
 }
 
 void CBrain::OnNotifyDialogOutput(CLogicDialog* Dialog, ePipeline* NotifyInfo){	
@@ -702,12 +908,16 @@ void CBrain::OnNotifyDialogOutput(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 	
 	CMsg GuiMsg(Receiver,MSG_BRAIN_TO_GUI,0);
 
+	
+
 	switch(Type){
 	case DIALOG_INFO:
 		{
 			eElectron e;
 			NotifyInfo->Pop(&e);
 			ePipeline* Item = (ePipeline*)e.Value();
+
+			CLock lk(&Dialog->m_DialogMutex,Dialog);
 
 			Dialog->m_DialogHistory.Push_Directly(e.Release());
 
@@ -722,6 +932,7 @@ void CBrain::OnNotifyDialogOutput(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 			NotifyInfo->Pop(&e);
 			ePipeline* Item = (ePipeline*)e.Value();
 		
+			CLock lk(&Dialog->m_DialogMutex,Dialog);
 			Dialog->m_RuntimeOutput.Push_Directly(e.Release());
 
 			ePipeline Cmd0(GUI_RUNTIME_OUTPUT);
@@ -770,8 +981,7 @@ void CBrain::OnNotifyDialogOutput(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 		break;
 	}
 
-	int64 GuiID = Dialog->m_OutputSourceID;
-	SendMsgToGUI(GuiID,GuiMsg);
+	GetBrainData()->SendMsgToGUI(this,Dialog->m_SourceID,GuiMsg);
 
 }
 
@@ -787,8 +997,7 @@ void CBrain::OnNotifyLogicView(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 	Cmd1<<*NotifyInfo;
 	GuiMsg.GetLetter().PushPipe(Cmd1);
 	
-	int64 GuiID = Dialog->m_OutputSourceID;;
-	SendMsgToGUI(GuiID,GuiMsg);
+	GetBrainData()->SendMsgToGUI(this,Dialog->m_SourceID,GuiMsg);
 };
 
 void CBrain::OnNotifyObjectList(CLogicDialog* Dialog, ePipeline* NotifyInfo){
@@ -803,8 +1012,7 @@ void CBrain::OnNotifyObjectList(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 	Cmd1<<*NotifyInfo;
 	GuiMsg.GetLetter().PushPipe(Cmd1);
 	
-	int64 GuiID = Dialog->m_OutputSourceID;;
-	SendMsgToGUI(GuiID,GuiMsg);
+	GetBrainData()->SendMsgToGUI(this,Dialog->m_SourceID,GuiMsg);
 }
 
 void CBrain::OnNotifyDialogList(CLogicDialog* Dialog, ePipeline* NotifyInfo){
@@ -817,6 +1025,7 @@ void CBrain::OnNotifyDialogList(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 	
 	int64 Act = NotifyInfo->PopInt();
 	switch(Act){
+
 	case DL_ADD_DIALOG:
 		{
 			int64 bFocusDialog = NotifyInfo->PopInt();
@@ -854,16 +1063,60 @@ void CBrain::OnNotifyDialogList(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 			if (NotifyInfo->Size())
 			{
 				tstring Reason = NotifyInfo->PopString();
-				OutSysInfo(Reason);
+				OutSysInfo(Reason.c_str());
 			}
 		}
 		break;
+
+	case DL_LOGIN_ONE:
+		{
+			
+			int64 SourceID = NotifyInfo->PopInt();
+			CLogicDialog* TheDialog = GetBrainData()->GetDialog(SourceID,DEFAULT_DIALOG);
+			assert(TheDialog);
+			if(!TheDialog)return;
+
+			//初始化当前对话列表，
+			ePipeline DialogListInfo;
+			GetBrainData()->GetAllDialogListInfo(DialogListInfo);
+
+			ePipeline Cmd1(GUI_LINKVIEW_OUTPUT);
+			Cmd1.PushInt(INIT_LIST);
+			Cmd1.PushPipe(DialogListInfo);
+			GuiMsg.GetLetter().PushPipe(Cmd1);
+
+			//设置此登录对话为当前焦点对话
+			ePipeline Pipe;  //历史对话记录
+			GetBrainData()->GetFocusDialogData(TheDialog->m_SourceID,TheDialog->m_DialogID,Pipe,false);
+			ePipeline Cmd2(GUI_SET_CUR_DIALOG);
+			Cmd2.PushInt(TheDialog->m_SourceID);
+			Cmd2.PushInt(TheDialog->m_DialogID);
+			Cmd2<<Pipe;
+			GuiMsg.GetLetter().PushPipe(Cmd2);
+
+			GetBrainData()->SendMsgToGUI(this,SourceID,GuiMsg);
+
+			//通知其它GUI用户，增加一个对话条目。
+			ePipeline Receiver;
+			Receiver.PushInt(SYSTEM_SOURCE);
+			Receiver.PushInt(DEFAULT_DIALOG);
+			CMsg GuiMsg(Receiver,MSG_BRAIN_TO_GUI,0);
+
+			ePipeline Cmd(GUI_LINKVIEW_OUTPUT);
+			Cmd.PushInt(ADD_ITEM);
+			Cmd.PushInt(TheDialog->m_SourceID);
+			Cmd.PushInt(TheDialog->m_DialogID);
+			Cmd.PushInt(TheDialog->m_ParentDialogID);
+			Cmd.PushString(TheDialog->m_DialogName);
+			GuiMsg.GetLetter().PushPipe(Cmd);
+			GetBrainData()->SendMsgToGUI(this,GuiMsg,SourceID);
+			return;
+		}
 	default:
 		break;
 	}
 
-	int64 GuiID = Dialog->m_OutputSourceID;;
-	SendMsgToGUI(GuiID,GuiMsg);
+	GetBrainData()->SendMsgToGUI(this,Dialog->m_SourceID,GuiMsg);
 }
 
 void CBrain::OnNotifyProgressOutput(CLogicDialog* Dialog, ePipeline* NotifyInfo)
@@ -889,8 +1142,7 @@ void CBrain::OnNotifyProgressOutput(CLogicDialog* Dialog, ePipeline* NotifyInfo)
 		break;
 	}
 	
-	int64 GuiID = Dialog->m_OutputSourceID;;
-	SendMsgToGUI(GuiID,GuiMsg);
+	GetBrainData()->SendMsgToGUI(this,Dialog->m_SourceID,GuiMsg);
 	
 }
 void CBrain::OnNotifyDebugView(CLogicDialog* Dialog, ePipeline* NotifyInfo){
@@ -907,8 +1159,7 @@ void CBrain::OnNotifyDebugView(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 	
 	GuiMsg.GetLetter().PushPipe(Cmd1);
 
-	int64 GuiID = Dialog->m_OutputSourceID;;
-	SendMsgToGUI(GuiID,GuiMsg);
+	GetBrainData()->SendMsgToGUI(this,Dialog->m_SourceID,GuiMsg);
 }
 
 void CBrain::OnNotifyBrainInit(CLogicDialog* Dialog, ePipeline* NotifyInfo){
@@ -944,7 +1195,6 @@ void CBrain::OnNotifyBrainInit(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 				
 	}else if (Type == END_INIT)
 	{
-
 		tstring tip;
 		ePipeline Cmd(GUI_STATUS_SET_TEXT);
 		Cmd.PushString(tip);
@@ -960,25 +1210,12 @@ void CBrain::OnNotifyBrainInit(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 		Cmd3.PushInt(FALSE);  //PAUSE BNT Enable
 		Cmd3.PushInt(FALSE);  //STOP BNT Enable
 		GuiMsg.GetLetter().PushPipe(Cmd3);
-	}else if (Type == INIT_DIALOG_LIST)
-	{
-		int64 SourceID = NotifyInfo->PopInt(); //login user id
-
-		ePipeline DialogList;
-		GetBrainData()->GetAllDialogListInfo(DialogList);
-
-		ePipeline Cmd1(GUI_LINKVIEW_OUTPUT);
-		Cmd1.PushInt(INIT_LIST);
-		Cmd1.PushPipe(DialogList);
-		GuiMsg.GetLetter().PushPipe(Cmd1);
 
 	}else{
 		return ;
 	}
 
-	
-	int64 GuiID = Dialog->m_OutputSourceID;;
-	SendMsgToGUI(GuiID,GuiMsg);	
+	GetBrainData()->SendMsgToGUI(this,Dialog->m_SourceID,GuiMsg);
 }
 
 void CBrain::OnNotifyFindInfo(CLogicDialog* Dialog, ePipeline* NotifyInfo){
@@ -993,8 +1230,7 @@ void CBrain::OnNotifyFindInfo(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 	Cmd1<< *NotifyInfo;
 	GuiMsg.GetLetter().PushPipe(Cmd1);
 
-	int64 GuiID = Dialog->m_OutputSourceID;;
-	SendMsgToGUI(GuiID,GuiMsg);	
+	GetBrainData()->SendMsgToGUI(this,Dialog->m_SourceID,GuiMsg);
 }
 
 
@@ -1010,6 +1246,5 @@ void CBrain::OnNotifyMemoryList(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 	Cmd1<< *NotifyInfo;
 	GuiMsg.GetLetter().PushPipe(Cmd1);
 	
-	int64 GuiID = Dialog->m_OutputSourceID;;
-	SendMsgToGUI(GuiID,GuiMsg);	
+	GetBrainData()->SendMsgToGUI(this,Dialog->m_SourceID,GuiMsg);
 }

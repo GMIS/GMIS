@@ -1,8 +1,8 @@
 ﻿// BrainRoomView.cpp: implementation of the CBrainObjectView class.
 //
 //////////////////////////////////////////////////////////////////////
-#pragma warning(disable: 4786)
-
+#pragma warning (disable: 4786)
+#pragma warning (disable: 4244)
 #include "ObjectView.h"
 #include "BrainMemory.h"
 #include "SystemSetting.h"

@@ -3,8 +3,8 @@
 * author: ZhangHongBing(hongbing75@gmail.com)  
 */
 
-#ifndef _WORLDLOG_H__
-#define _WORLDLOG_H__
+#ifndef _LOGVIEW_H__
+#define _LOGVIEW_H__
 
 
 #include "PhysicSpace.h"
@@ -27,13 +27,13 @@ public:
 #define ADD_INFO 1
 #define CLR_INFO 2
 
-class CWorldLog : public CWSListView  
+class CLogView : public CWSListView  
 {
 	int32             m_MaxItemNum; //default = 200;
 
 public:
-	CWorldLog();
-	virtual ~CWorldLog();
+	CLogView();
+	virtual ~CLogView();
 
 	InfoItem* AddInfo(const TCHAR* text);
 	void      ClearAllItem();
@@ -45,4 +45,4 @@ protected:
 
 };
 
-#endif // _WORLDLOG_H__
+#endif // _LOGVIEW_H__

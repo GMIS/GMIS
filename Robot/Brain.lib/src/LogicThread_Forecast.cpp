@@ -3,6 +3,7 @@
 //////////////////////////////////////////////////////////////////////
 #pragma warning(disable: 4786)
 
+#include "Brain.h"
 #include "LogicThread.h"
 #include "InstinctDefine.h"
 #include "NotifyMsgDef.h"
@@ -121,7 +122,7 @@ void  CLogicThread::SetForecast(CLogicDialog* Dialog,TextType Type,void* Text){
 
 
 	if(Type==NULL_TEXT ){
-	    CNotifyState nf(NOTIFY_DIALOG_OUTPUT);
+	    CNotifyDialogState nf(NOTIFY_DIALOG_OUTPUT);
 		nf.PushInt(FORECAST_INFO);
 		nf.PushString(_T(""));
 		nf.Notify(Dialog);
@@ -144,7 +145,7 @@ void CLogicThread::Forecast(CLogicDialog* Dialog,CToken* Token){
 			m_ForecastRoom->RoomText = Token->m_Str;
 		}
 
-		CNotifyState nf(NOTIFY_DIALOG_OUTPUT);
+		CNotifyDialogState nf(NOTIFY_DIALOG_OUTPUT);
 		nf.PushInt(FORECAST_INFO);
 		nf.PushString(_T(""));
 		nf.Notify(Dialog);
@@ -180,7 +181,7 @@ void CLogicThread::Forecast(CLogicDialog* Dialog,CToken* Token){
 			CurRoom = CurRoom->Parent;
 		}
 		if(Word.size()){
-			CNotifyState nf(NOTIFY_DIALOG_OUTPUT);
+			CNotifyDialogState nf(NOTIFY_DIALOG_OUTPUT);
 			nf.PushInt(FORECAST_INFO);
 			nf.PushString(Word);
 			nf.Notify(Dialog);

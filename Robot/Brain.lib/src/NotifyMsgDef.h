@@ -19,8 +19,7 @@
 	#define BEGIN_INIT      100
 	#define INIT_PROGRESS   101
 	#define END_INIT        102
-	#define INIT_DIALOG_LIST     103
-  
+
 #define NOTIFY_DIALOG_OUTPUT 30000
 	#define DIALOG_INFO       101
 	#define RUNTIME_INFO      102
@@ -36,9 +35,9 @@
     #define THINK_PROGRESS    103
  
 #define NOTIFY_DIALOG_LIST   23000
-	#define DL_ADD_DIALOG        101
+ 	#define DL_ADD_DIALOG        101
 	#define DL_DEL_DIALOG        102 
-    #define DL_ADD_EVENT         103
+    #define DL_LOGIN_ONE         103
 
 #define NOTIFY_FIND_VIEW     24000
 		#define FIND_START       100

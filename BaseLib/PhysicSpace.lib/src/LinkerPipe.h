@@ -1,13 +1,10 @@
 ﻿/*
 *author: ZhangHongBing(hongbing75@gmail.com)  
 *  
-*The LinkerPipe encapsulates a transport protocol that does not rely on any OS. 
-*Its main points are :
-*1)All data can be expressed and directly use in a ePipeline
-*2)It is completely transparent to users when a ePipeline sent or received
-*3)Both ends of the same LinkerPipe can distinguish the different local interlocutors.
-*4)LinkerPipe has a host,the data sending and receiving state, including the received data,all is as a message transfer to host for handling. it is thread safe.
-*5)When used, this class must be inherited and overloading to implement specific physical transmission methods.
+*The LinkerPipe attempt to encapsulates a transport protocol that does not rely on any OS. 
+*All data can be expressed and directly use by a ePipeline,and it is completely transparent to 
+*users when a ePipeline sent or received data.
+*NOTE: For using, this class must be inherited and overloading to implement specific physical transmission methods.
 */
 
 
@@ -21,6 +18,10 @@
 #include "LockPipe.h"
 #include "Msg.h"
 
+
+namespace PHYSIC{
+
+
 #define LINKER_RESET     1
 #define LINKER_FEEDBACK  2
 
@@ -32,41 +33,52 @@
 #define ERROR_RESUME_LENGTH   5
 
 
-#define ERROR_TYPE_PART       1
-#define ERROR_LENGTH_PART     2
-#define ERROR_ID_PART         3
-#define ERROR_NAMELEN_PART    4
-#define ERROR_NAME_PART       5
-#define ERROR_DATA_PART       6
-#define ERROR_OTHER_PARNT     7
-
-namespace PHYSIC{
+enum{
+	ERROR_TYPE_PART  =  1,
+	ERROR_LENGTH_PART,
+	ERROR_ID_PART,
+	ERROR_NAMELEN_PART,
+	ERROR_NAME_PART,
+	ERROR_DATA_PART,
+	ERROR_OTHER_PART
+};
 
 //identification State
-#define LINKER_DEL      -2
-#define	LINKER_BAN      -1  
-#define LINKER_INVALID   0  
-#define LINKER_STRANGER  1
-#define	LINKER_FRIEND    2
+enum {
+	LINKER_DEL = -2,
+	LINKER_BAN = -1, 
+	LINKER_INVALID =0, 
+	LINKER_STRANGER,
+	LINKER_FRIEND,
+	LINKER_ORGAN
+};
 
-enum STATE_OUTPUT_LEVEL{ NORMAL_LEVEL, LIGHT_LEVEL,WEIGHT_LEVEL};
+
+enum STATE_OUTPUT_LEVEL{ 
+	WEIGHT_LEVEL,
+	LIGHT_LEVEL,
+	NORMAL_LEVEL, 
+};
 
 //output level:
  
 //1 NORMAL_LEVEL
-#define LINKER_COMPILE_ERROR    101  //If there is any error occured when a received string data being compiled into a ePipeline
-#define LINKER_RECEIVE_RESUME   102  //Inform the linker to exit the error state and start receiving information
+#define LINKER_BEGIN_ERROR_STATE  101  //linker will be in error state If there is any error occurred when a received string is compiled into msg
+#define LINKER_END_ERROR_STATE    102  //Inform the linker to exit the error state and resume receiving information
 #define LINKER_INVALID_ADDRESS  103  
-#define LINKER_ILLEGAL_MSG      104  
-
+#define LINKER_ILLEGAL_MSG      104
+#define LINKER_EXCEPTION_ERROR  106
+#define LINKER_IO_ERROR         107
+#define LINKER_CONNECT_ERROR    108
+#define LINKER_CREATE_ERROR     109
 //2 LIGHT_LEVEL
-#define LINKER_PUSH_MSG         200  //Pushes a message waiting to be sent and reports the current delivery status
+#define LINKER_PUSH_MSG         200  //Pushes a message to be sent and reports the current delivery status
 #define LINKER_MSG_SENDED       201  //A message has been sent
 #define LINKER_MSG_RECEIVED     202  //A message has been received
 
 //3 WEIGHT_LEVEL
-#define LINKER_RECEIVE_STEP     300  //Report receiving progress and data,in each TYPE_PIPELINE data type as a unit 
-#define LINKER_SEND_STEP        301  //Report Sending progress,in all bytes of message as a unit
+#define LINKER_RECEIVE_STEP     300  //Report receiving progress and data
+#define LINKER_SEND_STEP        301  //Report Sending progress
   
 
 enum SendState{ 
@@ -86,10 +98,13 @@ enum MsgPhase{
 	NAME_PART
 };
 
-
+enum LinkerType{
+	SERVER_LINKER,
+	CLIENT_LINKER,
+	WEBSOCKET_LINKER
+};
 
 class Model;
-//class CLinker;
 class CLinkerPipe;
 
 bool IsEqualAddress(ePipeline& Address1,ePipeline& Address2);
@@ -129,6 +144,7 @@ public:
 
 
 	//only used in ThreadInputProc and ThreadOutputProc
+	/*
 	class  _CInnerIOLock  
 	{
 	private:
@@ -140,10 +156,10 @@ public:
 	};
 	
 	friend  class CInnerIOLock;
+	*/
 	friend  class CLinker;
 private:
 		int32                m_UseCounter;    //For Linker reference counting, when there are other threads to use it to avoid being deleted
-		bool                 m_bThreadUse;    //marked whether there was a thread has used the IO func of this class, to avoid a few theads use same IO func at same time
 
 protected:
 	
@@ -153,7 +169,7 @@ protected:
 
 		int32                m_RecoType;         //LINKER_STRANGER or LINKER_FRIEND?
 	    
-		bool                 m_bClientLink;     // =true if created by Accept();
+		LinkerType           m_LinkerType;     
 		Model*               m_Parent;     
 
 
@@ -190,7 +206,6 @@ protected: //below functions no need to lock (for thead safe)
 	void CompileMsg(const char* s, int32 size);
 	void RevOneMsg(eElectron& E);
 	
-	
 	//call this func to go into error state,if there was a error occured when receiving data
 	void BeginErrorState(RevContextInfo* Info,int32 ErrorType);
 	void EndErrorState(RevContextInfo* Info);
@@ -214,7 +229,6 @@ protected:
 	void   DecreUserNum();
 
 public:
-	ePipeline*       m_Owner;
 
     //int64 GetPendingMsgID_unlock(){ return m_PendingMsgID;};
 	//int32 GetGetWaitToSendMsgNum_unlock(){ return Size()+m_UrgenceMsg.Size();};
@@ -223,19 +237,26 @@ public:
 	//int32 GetSendPos_unlock(){return m_SendPos;};
 public: 
 	//Below public functions must be locked to ensure thread safe, but also avoiding recursive lock
-	CLinkerPipe(CABMutex* m,Model* Parent,bool m_bClientLink);
-	CLinkerPipe(CABMutex* m,Model* Parent,bool m_bClientLink,int64 SourceID,tstring Name);
+	CLinkerPipe(CABMutex* m,Model* Parent,LinkerType LinkType);
+	CLinkerPipe(CABMutex* m,Model* Parent,LinkerType LinkType,int64 SourceID,tstring Name);
 	
 	virtual ~CLinkerPipe();
 
+	int64 GetID(){
+		return m_ID;
+	}
+	void SetID(int64 ID){
+		m_ID = ID;
+	}
 	void  SetLabel(tstring Text){ m_Label=Text;}; 
     tstring& GetLabel(){return m_Label;};
 
 	void   SetSourceID(int64 SourceID);
 	int64  GetSourceID();
 
-	bool   IsClientLinker(){ return m_bClientLink;};
-
+	LinkerType GetLinkerType(){
+		return m_LinkerType;
+	}
 	void   SetStateOutputLevel(STATE_OUTPUT_LEVEL  Level);
     STATE_OUTPUT_LEVEL   GetOutputLevel();
 
@@ -254,10 +275,6 @@ public:
 	void   SetRecoType(int32 Type);
 
 	int32  GetUserNum();
-
-    bool   IOBusy(){
-		return m_bThreadUse;
-	};
 
 	SendState GetSendState();
 

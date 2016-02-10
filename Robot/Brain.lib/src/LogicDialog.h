@@ -7,10 +7,9 @@
 #ifndef _LOGICDIALOG_H__
 #define _LOGICDIALOG_H__
 
-
-#include "Brain.h"
+//#include "SpaceMsgList.h"
 #include "Element.h"
-#include "UserMutex.h"
+#include "SpaceMutex.h"
 #include "LogicThread.h"
 #include "LogicTask.h"
 #include "LogicThread.h"
@@ -28,11 +27,9 @@ enum TASK_STATE{
 		TASK_WAIT       	//等待外部任务返回
 };
 
-enum POS_TYPE{
-	LOCAL,
-	REMOTE
-};
 
+#define LOCAL  0
+#define	REMOTE 1 
 
 enum WORK_MODE{
 		WORK_TASK,
@@ -45,8 +42,7 @@ enum WORK_MODE{
 //helper class 简单调用Brain->NotifyDialogState(...)
 class CRequestBrain: public ePipeline{
 public:
-	CRequestBrain(REQUEST_ITEM RequestID,int64 EventID):ePipeline(RequestID){
-		PushInt(EventID);
+	CRequestBrain(REQUEST_ITEM RequestID):ePipeline(RequestID){
 	};
 
 	CRequestBrain(ePipeline& RequestInfo){
@@ -81,54 +77,58 @@ public:
 
 };
 
+class CBrain;
+
+enum TASK_OUT_TYPE{
+	TASK_OUT_DEFAULT, //output actions
+	TASK_OUT_THINK,   //output think result
+};
+
+
 class CLogicDialog  
 {
 	friend CBrain;
 	friend CLocalInfoAuto;
-public:
-	CBrain*				m_Brain;
-	CUserMutex			m_Mutex;
 
+public:
 	int64				m_SourceID;       //对话源ID 
 	int64				m_DialogID;       //对话ID
 
+	CBrain*				m_Brain;
+	int64               m_ParentDialogID; //逻辑父对话ID
+
 	tstring             m_SourceName;
-	tstring				m_DialogName;     //对话者名,也就是对方的称呼
+	tstring				m_DialogName;     
 
     DIALOG_TYPE			m_DialogType;     //对话类型
 	TASK_OUT_TYPE       m_TaskOutType;    //任务类型
  
-	int64               m_ParentDialogID;  //逻辑父对话ID
-	int64               m_OutputSourceID;  //信息输出对象ID
-
+	tstring             m_CompileError;    //编译如果不能进行，存储错误提示
 
 protected:
     
+	static CSpaceMutex  m_DialogMutex;
+
 	WORK_MODE           m_WorkMode;
 
 	volatile TASK_STATE m_TaskState;
-	int64               m_TaskStateLastTimeStamp;    //状态更新的时间戳
+	//int64               m_TaskStateLastTimeStamp;    //状态更新的时间戳
 
 	map<int64,int64>    m_PauseEventList;    //map<PauseID,EventID> 
 	int64               m_FocusPauseItemID;  //=0表示无效
-
-
 	int64               m_ControlDialogID;
-	
-	tstring             m_CompileError;       //编译如果不能进行，存储错误提示
-	
+
 	int32				m_SysProcCounter;     //统计有多少个控制线程，避免控制执行时删除任务
 
 	ePipeline           m_ExePipe;            //执行管道
 	CLockPipe           m_TaskMsgList;        //待处理信息列表
-public:
-	
+
+public:	
 	int64         		m_ThinkID;	
 	int64    			m_TaskID;
 
 	tstring             m_CurLogicName;
 	int64               m_CurTaskMsgID;       //正在处理的任务信息ID
-
 
 public:
     /*
@@ -149,10 +149,9 @@ public:
 	bool				m_bEditValid;
     tstring				m_EditText;       //暂存输出窗口未完成的编辑文本
 	tstring				m_StatusText;
-	
-	ePipeline			m_LogicItemTree;  //用户DEBUG显示，时间戳负责识别
 
-
+	int64               m_LastDebugTimeStamp;	
+	ePipeline			m_LogicItemTree;  //用于DEBUG显示，ID=最近更改时间戳
 
 public:
 	int64                         m_ObjectFocus;
@@ -173,16 +172,14 @@ public:
 
 public:
 	CLogicDialog(CBrain* Frame,int64 SourceID,int64 DialogID,int64 ParentDialogID,tstring SourceName,tstring DialogName,
-		       DIALOG_TYPE Type,int64 OutputSourceID,TASK_OUT_TYPE TaskType);
+		       DIALOG_TYPE Type,TASK_OUT_TYPE TaskType);
 
 	virtual ~CLogicDialog();
 
 	void Reset(CBrain* Frame,int64 SourceID,int64 DialogID,int64 ParentDialogID,tstring SourceName,tstring DialogName,
-		       DIALOG_TYPE Type,int64 OutputSourceID,TASK_OUT_TYPE TaskType);
+		       DIALOG_TYPE Type,TASK_OUT_TYPE TaskType);
 
 	virtual void Do(CMsg& Msg); //只能Brain调用,并且可能多线程调用
-
-	void  SendMsg(CMsg& Msg,POS_TYPE Type); 
 
 	void NotifyPause(ePipeline& ExePipe,ePipeline& Address);
     
@@ -218,10 +215,6 @@ public:
 
 	void  ResetThink();
 	void  ResetTask();
-
-	int64 GetDialogID(){
-		return m_DialogID==0? m_SourceID: m_DialogID;
-	}
 
 	void ClearTaskMsgList();
 
@@ -392,11 +385,38 @@ public:
 	void  PrintLogic(CLogicThread* Think,ePipeline& SearchResult,int32 n,int64 RoomID,int64 RoomValue);
 	void  PrintObject(CLogicThread* Think,ePipeline& SearchResult,int32 n,int64 RoomID,int64 RoomValue);	
 	
-	public:
-		//没找到返回0，否则返回找到的种子
-		void FindFirst(tstring& text,FindTypeExpected FindType = FIND_ALL);
-		void  FindContinue(CLogicThread* Think,uint32 Index, ePipeline& SearchResult); 
-		void  SetFindCellSize(int32 size){  m_Interval = size;};
+
+	//没找到返回0，否则返回找到的种子
+	void  FindFirst(tstring& text,FindTypeExpected FindType = FIND_ALL);
+	void  FindContinue(CLogicThread* Think,uint32 Index, ePipeline& SearchResult); 
+	void  SetFindCellSize(int32 size){  m_Interval = size;};
+
+
+//任务对话的信息处理
+//////////////////////////////////////////////////////////////////////////
+
+	void DialogMsgProc(ePipeline* ExePipe,CMsg& Msg);		
+		void OnBroadcaseMsg(ePipeline* ExePipe,CMsg& Msg);  //对方BroadcastMsg()发来的信息
+		void OnMsgFromBrain(ePipeline* ExePipe,CMsg& Msg);    //处理用户界面发来的信息
+		void OnBrainTextInputing(ePipeline* ExePipe,CMsg& Msg);
+		void OnBrainTextInputEnd(ePipeline* ExePipe,CMsg& Msg);
+		void OnBrainGetMoreLog(ePipeline* ExePipe,CMsg& Msg);
+		void OnBrainSetFocusDialog(ePipeline* ExePipe,CMsg& Msg);
+		void OnBrainTaskControl(ePipeline* ExePipe,CMsg& Msg);
+		void OnBrainGetDebugItem(ePipeline* ExePipe,CMsg& Msg);
+		void OnBrainLogicOperate(ePipeline* ExePipe,CMsg& Msg);
+		void OnBrainObjectOperate(ePipeline* ExePipe,CMsg& Msg);
+		void OnBrainMemoryOperate(ePipeline* ExePipe,CMsg& Msg);
+		void OnBrainGetThinkResult( ePipeline* ExePipe,CMsg& Msg);
+		void OnBrainGetAnalyseResult(ePipeline* ExePipe,CMsg& Msg);
+		void OnBrainClearDialogOutput(ePipeline* ExePipe,CMsg& Msg);
+		void OnBrainGetFindResult(ePipeline* ExePipe,CMsg& Msg);
+		void OnBrainClearThink(ePipeline* ExePipe,CMsg& Msg);		
+		void OnBrainConnectTo(ePipeline* ExePipe,CMsg& Msg);
+		void OnBrainDisconnect(ePipeline* ExePipe,CMsg& Msg);
+		void OnBrainSetLogFlag(ePipeline* ExePipe,CMsg& Msg);
+		void OnTaskResult(ePipeline* ExePipe,CMsg& Msg);
+		void OnEventTick(ePipeline* ExePipe,CMsg& Msg);
 
 public:
 	class AutoSysProcCounter
@@ -407,15 +427,17 @@ public:
 	public:
 		AutoSysProcCounter(CLogicDialog* Dialog):m_Dialog(Dialog)
 		{
-			m_Dialog->m_Mutex.Acquire();
+			bool ret = m_Dialog->m_DialogMutex.AcquireThis(Dialog);
+			assert(ret);
 			m_Dialog->m_SysProcCounter++;
 			m_Counter = m_Dialog->m_SysProcCounter;
-			m_Dialog->m_Mutex.Release();
+			m_Dialog->m_DialogMutex.ReleaseThis(Dialog);
 		};
 		~AutoSysProcCounter(){
-			m_Dialog->m_Mutex.Acquire();
+			bool ret = m_Dialog->m_DialogMutex.AcquireThis(m_Dialog);
+			assert(ret);
 			m_Dialog->m_SysProcCounter--;
-			m_Dialog->m_Mutex.Release();
+			m_Dialog->m_DialogMutex.ReleaseThis(m_Dialog);
 		};
 
 		int GetProcNum(){
