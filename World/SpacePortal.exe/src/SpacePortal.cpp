@@ -113,7 +113,7 @@ CSpacePortal::CSpacePortal(CUserTimer* Timer,CUserSpacePool* Pool)
 :System(Timer,Pool)
 {
 
-	m_LogFlag = LOG_WARNING|LOG_TIP|LOG_MSG_I0_RECEIVED|LOG_MSG_IO_PUSH|LOG_MSG_IO_SENDED|LOG_MSG_IO_REMOTE_RECEIVED;
+	m_LogFlag = LOG_WARNING|LOG_TIP;//|LOG_MSG_I0_RECEIVED|LOG_MSG_IO_PUSH|LOG_MSG_IO_SENDED|LOG_MSG_IO_REMOTE_RECEIVED;
 
 	m_bWriteLogToDatabase = FALSE;
 
@@ -192,7 +192,7 @@ bool CSpacePortal::Activation(){
 };
 
 CExecuter*  CSpacePortal::AddExecuter(DLL_TYPE Type,int64 ExecuterLinkerID){
-	CLock lk(&m_Mutex);
+	_CLOCK(&m_Mutex);
 	CExecuter* Executer = new  CExecuter(Type,ExecuterLinkerID);
 	if(!Executer)return NULL;
 
@@ -200,7 +200,7 @@ CExecuter*  CSpacePortal::AddExecuter(DLL_TYPE Type,int64 ExecuterLinkerID){
 	return Executer;
 };
 CExecuter*  CSpacePortal::FindExecuter(DLL_TYPE Type){
-	CLock lk(&m_Mutex);
+	_CLOCK(&m_Mutex);
 	map<int32,CExecuter*>::iterator it = m_ExecuterList.find(Type);
 	if (it != m_ExecuterList.end())
 	{
@@ -210,7 +210,7 @@ CExecuter*  CSpacePortal::FindExecuter(DLL_TYPE Type){
 	return NULL;
 };
 CExecuter*  CSpacePortal::FindExecuterByLinker(int64 ExecuterLinkerID){
-	CLock lk(&m_Mutex);
+	_CLOCK(&m_Mutex);
 	map<int32,CExecuter*>::iterator it = m_ExecuterList.begin();
 	while (it != m_ExecuterList.end())
 	{
@@ -225,7 +225,7 @@ CExecuter*  CSpacePortal::FindExecuterByLinker(int64 ExecuterLinkerID){
 };
 
 void CSpacePortal::DeleteExecuter(int64 ExecuterLinkerID){
-	CLock lk(&m_Mutex);
+	_CLOCK(&m_Mutex);
 	map<int32,CExecuter*>::iterator it = m_ExecuterList.begin();
 	while (it != m_ExecuterList.end())
 	{
@@ -240,7 +240,7 @@ void CSpacePortal::DeleteExecuter(int64 ExecuterLinkerID){
 	}
 };
 void CSpacePortal::DeleteAllExecuter(){
-	CLock lk(&m_Mutex);
+	_CLOCK(&m_Mutex);
 	map<int32,CExecuter*>::iterator it = m_ExecuterList.begin();
 	while (it != m_ExecuterList.end())
 	{
@@ -256,7 +256,7 @@ void  CSpacePortal::PushExecuterEvent(int64 ExecuterID,int64 RobotID,int64 Event
 	assert(RobotID);
 	assert(EventID);
 
-	CLock lk(&m_Mutex);
+	_CLOCK(&m_Mutex);
 	map<int64,int64>& EventList = m_ExecuterEventList[ExecuterID];
 	EventList[EventID] = RobotID;
 };
@@ -264,7 +264,7 @@ int64 CSpacePortal::PopExecuterEvent(int64 ExecuterID,int64 EventID){
 	assert(ExecuterID);
 	assert(EventID);
 	
-	CLock lk(&m_Mutex);
+	_CLOCK(&m_Mutex);
 	map<int64,map < int64,int64 > >::iterator it = m_ExecuterEventList.find(ExecuterID);
 	if(it == m_ExecuterEventList.end()){
 		return 0;
@@ -288,13 +288,13 @@ void  CSpacePortal::RegisterExecuterUser(int64 RobotID,int64 ExecuterID){
 	assert(ExecuterID);
 	assert(RobotID);
 
-	CLock lk(&m_Mutex);
+	_CLOCK(&m_Mutex);
 	set < int64 >& ExecuterList = m_ExecuterUserList[RobotID];
 	ExecuterList.insert(ExecuterID);
 }
 */
 People*  CSpacePortal::CheckinVisitor(int64 SourceID,tstring& Name,tstring& CryptText){
-	CLock lk(&m_Mutex);
+	_CLOCK(&m_Mutex);
 	People* robot = NULL;
 	if(m_VisitorPool.size()){
 		robot = *m_VisitorPool.begin();
@@ -312,14 +312,14 @@ People*  CSpacePortal::CheckinVisitor(int64 SourceID,tstring& Name,tstring& Cryp
 	return robot;
 }
 People*  CSpacePortal::GetVisitor(int64 SourceID){
-	CLock lk(&m_Mutex);
+	_CLOCK(&m_Mutex);
 	map<int64,People*>::iterator it = m_VisitorList.find(SourceID);
 	if(it==m_VisitorList.end())return NULL;
 	People* robot = it->second;
 	return robot;
 };
 void     CSpacePortal::CheckoutVisitor(int64 SourceID){
-	CLock lk(&m_Mutex);
+	_CLOCK(&m_Mutex);
 	map<int64,People*>::iterator it = m_VisitorList.find(SourceID);
 	if(it==m_VisitorList.end())return;
 	People* robot = it->second;
@@ -405,7 +405,7 @@ bool  CSpacePortal::StartExecuter(int64 ExecuterID,tstring FileName){
 /*
 void   CSpacePortal::UserLinkerClosedProc(int64 RobotID)
 {
-	CLock lk(&m_Mutex);
+	_CLOCK(&m_Mutex);
 	
 	//According to RobotID find  all  ExecuterID
     map<int64,set < int64 > >::iterator it = m_ExecuterUserList.find(RobotID);
@@ -447,7 +447,7 @@ void   CSpacePortal::UserLinkerClosedProc(int64 RobotID)
 
 
 void   CSpacePortal::ExecuteLinkerClosedProc(int64 ExecuterID){
-	CLock lk(&m_Mutex);
+	_CLOCK(&m_Mutex);
 
 	//send feedback for executer execution fail
     map< int64, map < int64, int64 > >::iterator it = m_ExecuterEventList.find(ExecuterID);
@@ -494,7 +494,7 @@ void   CSpacePortal::ExecuteLinkerClosedProc(int64 ExecuterID){
 */
 void   CSpacePortal::UserLinkerClosedProc(int64 RobotID)
 {
-	CLock lk(&m_Mutex);
+	_CLOCK(&m_Mutex);
 	map<int32,CExecuter*>::iterator it = m_ExecuterList.begin();
 	while(it != m_ExecuterList.end()){
 		CExecuter* Executer = it->second;
@@ -528,7 +528,7 @@ void   CSpacePortal::ExecuteLinkerClosedProc(int64 ExecuterID){
 	if(Executer == NULL)return;
 
 	
-	CLock lk(&m_Mutex);
+	_CLOCK(&m_Mutex);
 	map<int64, CSpaceEvent>::iterator it = Executer->m_EventList.begin();
 
 	while (it != Executer->m_EventList.end())
@@ -578,12 +578,7 @@ void  CSpacePortal::OutputLog(uint32 Type,const TCHAR* text){
 
 };
 
-void  CSpacePortal::NotifyLinkerState(CLinkerPipe* LinkerPtr,int64 NotifyID,ePipeline& Info){
-	
-	CUserLinkerPipe* Linker = (CUserLinkerPipe*)LinkerPtr;
-
-	STATE_OUTPUT_LEVEL Flag = Linker->GetOutputLevel();
-	int64 SourceID = Linker->GetSourceID();
+void  CSpacePortal::NotifyLinkerState(int64 SourceID,int64 NotifyID,STATE_OUTPUT_LEVEL Flag,ePipeline& Info){
 
 	switch(Flag){
 	case WEIGHT_LEVEL:
@@ -630,6 +625,8 @@ void  CSpacePortal::NotifyLinkerState(CLinkerPipe* LinkerPtr,int64 NotifyID,ePip
 
 					tstring s = Format1024(_T("LINKER_PUSH_MSG: %s EventID:%I64ld PendingMsg=%s CurMsgNum=%I64ld"),MsgName.c_str(),EventID,PendingMsgName.c_str(),MsgNum+UrgMsgNum);
 					OutputLog(LOG_MSG_IO_PUSH,s.c_str());
+
+					PrintMsg(MsgID,true);
 				}
 				return;
 			case LINKER_MSG_SENDED:
@@ -671,7 +668,7 @@ void  CSpacePortal::NotifyLinkerState(CLinkerPipe* LinkerPtr,int64 NotifyID,ePip
 						{	
 							tstring s = Format1024(_T("LINKER_MSG_RECEIVED: Remote received msg:%s ok"),PendingMsgName.c_str());
 							OutputLog(LOG_MSG_IO_REMOTE_RECEIVED,s.c_str());
-							//AddRTInfo(s.c_str());
+							
 						}
 					} 
 					else
@@ -738,13 +735,16 @@ void  CSpacePortal::NotifyLinkerState(CLinkerPipe* LinkerPtr,int64 NotifyID,ePip
 				return;
 			case LINKER_EXCEPTION_ERROR:
 				{
+					int32 RecoType = Info.PopInt();
+					int32 LinkerType = Info.PopInt();
+
 					tstring Error = Info.PopString();
 					tstring s = Format1024(_T("LINKER_EXCEPTION_ERROR:%s SourceID=%I64ld was closed"),Error.c_str(),SourceID);
 
 					OutputLog(LOG_WARNING,s.c_str());
 
 					//由于SpacePort负责帮Client执行Executer，所以其中一方关闭都要通知另一方（不会引起锁死）
-					if (Linker->GetRecoType() == LINKER_ORGAN)//Executer linker
+					if (RecoType == LINKER_ORGAN)//Executer linker
 					{   
 						ExecuteLinkerClosedProc(SourceID);
 					}else{ 
@@ -752,8 +752,7 @@ void  CSpacePortal::NotifyLinkerState(CLinkerPipe* LinkerPtr,int64 NotifyID,ePip
 						UserLinkerClosedProc(SourceID);
 					}
 
-					LinkerType Type = Linker->GetLinkerType();
-					if (Type == CLIENT_LINKER)
+					if (LinkerType  == CLIENT_LINKER)
 					{
 						bool ret = m_ClientLinkerList.DeleteLinker(SourceID);
 						if(!ret)return; //链接并不存在
@@ -766,13 +765,16 @@ void  CSpacePortal::NotifyLinkerState(CLinkerPipe* LinkerPtr,int64 NotifyID,ePip
 				return;
 			case LINKER_IO_ERROR:
 				{
+					int32 RecoType = Info.PopInt();
+					int32 LinkerType = Info.PopInt();
+
 					//通常是远端关闭
 					tstring s = Format1024(_T("LINKER_IO_ERROR: SourceID=%I64ld may be closed by remote"),SourceID);
 
 					OutputLog(LOG_WARNING,s.c_str());
 
 					//由于SpacePort负责帮Client执行Executer，所以其中一方关闭都要通知另一方（不会引起锁死）
-					if (Linker->GetRecoType() == LINKER_ORGAN)//Executer linker
+					if (RecoType == LINKER_ORGAN)//Executer linker
 					{   
 						ExecuteLinkerClosedProc(SourceID);
 					}else{ 
@@ -781,8 +783,7 @@ void  CSpacePortal::NotifyLinkerState(CLinkerPipe* LinkerPtr,int64 NotifyID,ePip
 						UserLinkerClosedProc(SourceID);
 					}
 
-					LinkerType Type = Linker->GetLinkerType();
-					if (Type == CLIENT_LINKER)
+					if (LinkerType == CLIENT_LINKER)
 					{
 						bool ret = m_ClientLinkerList.DeleteLinker(SourceID);
 						if(!ret)return; //链接并不存在
@@ -797,12 +798,12 @@ void  CSpacePortal::NotifyLinkerState(CLinkerPipe* LinkerPtr,int64 NotifyID,ePip
 			case LINKER_CONNECT_ERROR:
 				{
 					tstring Error = Info.PopString();
-					tstring s = Format1024(_T("LINKER_EXCEPTION_ERROR: SourceID=%I64ld %s "),SourceID,Error.c_str());
+					tstring s = Format1024(_T("LINKER_CONNECT_ERROR: SourceID=%I64ld %s "),SourceID,Error.c_str());
 
 					OutputLog(LOG_WARNING,s.c_str());
 					//AddRTInfo(s.c_str());	
 
-					assert(Linker->GetLinkerType()== SERVER_LINKER);
+					//assert(Linker->GetLinkerType()== SERVER_LINKER);
 					GetSuperiorLinkerList()->DeleteLinker(SourceID);
 				}
 				return;
@@ -932,7 +933,7 @@ void CSpacePortal::OnI_AM(CMsg& Msg){
 void CSpacePortal::OnGotoSpace(CMsg& Msg){
 
 	int64 SourceID = Msg.GetSourceID();
-    
+
 	CLinker Who;
 	GetLinker(SourceID,Who);
     if (!Who.IsValid())
@@ -1396,7 +1397,7 @@ void CSpacePortal::PrintMsg(int64 MsgID,bool Send){
 	tstring s = MsgID2Str(MsgID);
 	if (Send)
 	{
-		s = Format1024(_T("Send : %s"),s.c_str());
+		s = Format1024(_T("Send : %s\n"),s.c_str());
 		OutputLog(LOG_TIP,s.c_str());
 	} 
 	else

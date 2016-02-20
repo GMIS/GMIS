@@ -38,7 +38,7 @@ public:
 	};
 
 	int64 GetLastPopTimeStamp(){
-		CLock lk(m_Mutex,this);
+		_CLOCK2(m_Mutex,this);
 		return m_LastPopTimeStamp;
 	}
 
@@ -47,17 +47,17 @@ public:
 	}
 
     int32 DataNum(){
-		CLock lk(m_Mutex,this);
+		_CLOCK2(m_Mutex,this);
         int32 n = m_UrgenceMsg.Size() + Size();
 		return n;
 	}
 
 	void ClearData(){
-		CLock lk(m_Mutex,this);
+		_CLOCK2(m_Mutex,this);
 		Clear();
 	}
 	void ToString(AnsiString& s){
-		CLock lk(m_Mutex,this);
+		_CLOCK2(m_Mutex,this);
 
 		ePipeline Pipe;
 		Pipe.Push_Copy(&m_UrgenceMsg);
@@ -66,13 +66,13 @@ public:
 	};
 
 	void CopyTo(ePipeline& Pipe){
-		CLock lk(m_Mutex,this);
+		_CLOCK2(m_Mutex,this);
 		Pipe.Push_Copy(&m_UrgenceMsg);
 		Pipe.Push_Copy(this);
 	}
 	//the string format is：type@len{type@len@data1,type@len@data2 ... type@len@dataN}
 	bool   FromString(AnsiString& s,uint32& pos){ 
-		CLock lk(m_Mutex,this);
+		_CLOCK2(m_Mutex,this);
 
 		ePipeline Pipe;
 		bool ret = Pipe.FromString(s,pos);
@@ -94,7 +94,7 @@ public:
 	*/
 	int64 Push(ePipeline* Data){
 		assert(Data != NULL);
-		CLock lk(m_Mutex,this);
+		_CLOCK2(m_Mutex,this);
 		Push_Directly(Data);
 		return m_LastPopTimeStamp--; 
 	};
@@ -102,13 +102,13 @@ public:
 	//the emergency data will be gived priority to process
 	int64 PushUrgence(ePipeline* Data){
 		assert(Data != NULL);
-		CLock lk(m_Mutex,this);
+		_CLOCK2(m_Mutex,this);
 		m_UrgenceMsg.Push_Directly(Data);
 		return m_LastPopTimeStamp--;
 	};
 	
 	void Pop(eElectron* E){	
-		CLock lk(m_Mutex,this);
+		_CLOCK2(m_Mutex,this);
 		if(m_UrgenceMsg.Size()){
 		    m_UrgenceMsg.Pop(E);
 		}
@@ -118,7 +118,7 @@ public:
 		m_LastPopTimeStamp = CreateTimeStamp();
 	}
 	void Pop(CMsg& Msg ){
-		CLock lk(m_Mutex,this);
+		_CLOCK2(m_Mutex,this);
 		if(m_UrgenceMsg.Size()){
 			m_LastPopTimeStamp = CreateTimeStamp();
 			m_UrgenceMsg.PopMsg(Msg);
@@ -135,7 +135,7 @@ public:
       NOTE: the data may not be valid, users must check it before use
    
 	eData<ePipeline> Pop(){	
-		CLock lk(m_Mutex);		
+		_CLOCK(m_Mutex);		
 		eData<ePipeline> Data;
 		
 		if(m_UrgenceMsg.Size()){

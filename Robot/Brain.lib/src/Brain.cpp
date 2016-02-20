@@ -100,7 +100,7 @@ void CBrainThreadWorker::WebsocketWorkProc(){
 
 
 void CWebsocketLinkerList::CreateLinker(CLinker& Linker,CBrain* Parent,int64 SourceID,const WebSocket& ws){
-	CLock lk(&m_Mutex);
+	_CLOCK(&m_Mutex);
 	deque<CLinkerPipe*>::iterator it = m_LinkerPool.begin();
 	if (it != m_LinkerPool.end())
 	{
@@ -153,7 +153,7 @@ CBrain::CLockedBrainData::~CLockedBrainData(){
 };
 
 void CBrain::CLockedBrainData::Clear(){
-	CLock lk(&m_BrainMutex);
+	_CLOCK(&m_BrainMutex);
 
 	map<int64,CLogicThread*>::iterator  It_int64_thread = m_LogicThreadList.begin();
 	while (It_int64_thread != m_LogicThreadList.end())
@@ -216,7 +216,7 @@ void CBrain::CLockedBrainData::Clear(){
 #ifdef _DEBUG
 
 void CBrain::CLockedBrainData::PushBrainEvent(int64 EventID,int64 ClientEventID,ePipeline& ExePipe,ePipeline& LocalAddress,int64 EventInterval, bool bEventOnce,tstring& Memo){
-	CLock lk(&m_EventMutex);
+	_CLOCK(&m_EventMutex);
 	CBrainEvent& Event = m_EventList[EventID];
 
 	Event.m_Interval = EventInterval<MIN_EVENT_INTERVAL? MIN_EVENT_INTERVAL:EventInterval;
@@ -233,7 +233,7 @@ void CBrain::CLockedBrainData::PushBrainEvent(int64 EventID,int64 ClientEventID,
 #else
 
 void CBrain::CLockedBrainData::PushBrainEvent(int64 EventID,int64 ClientEventID,ePipeline& ExePipe,ePipeline& LocalAddress,int64 EventInterval, bool bEventOnce){
-	CLock lk(&m_EventMutex);
+	_CLOCK(&m_EventMutex);
 
 	CBrainEvent& Event = m_EventList[EventID];
 
@@ -247,7 +247,7 @@ void CBrain::CLockedBrainData::PushBrainEvent(int64 EventID,int64 ClientEventID,
 #endif
 
 bool CBrain::CLockedBrainData::PopBrainEvent(int64 EventID,CBrainEvent& EventInfo){
-	CLock lk(&m_EventMutex);
+	_CLOCK(&m_EventMutex);
 	
 	map<int64,CBrainEvent>::iterator it = m_EventList.find(EventID);
 	if (it != m_EventList.end())
@@ -262,7 +262,7 @@ bool CBrain::CLockedBrainData::PopBrainEvent(int64 EventID,CBrainEvent& EventInf
 };
 
 void CBrain::CLockedBrainData::ResetEventTickCount(int64 EventID){
-	CLock lk(&m_EventMutex);
+	_CLOCK(&m_EventMutex);
 	map<int64, CBrainEvent>::iterator it = m_EventList.find(EventID);
     if (it != m_EventList.end())
     {
@@ -276,7 +276,7 @@ CLogicThread* CBrain::CLockedBrainData::CreateLogicThread(int64 UserID,int64 Thr
 	if(ThreadID==0){
 		ThreadID = AbstractSpace::CreateTimeStamp();
 	}
-	CLock lk(&m_BrainMutex);
+	_CLOCK(&m_BrainMutex);
 
 	deque<CLogicThread*>::iterator it = m_LogicThreadPool.begin();
 	if (it != m_LogicThreadPool.end())
@@ -300,7 +300,7 @@ CLogicThread* CBrain::CLockedBrainData::GetLogicThread(int64 ThreadID,bool bRequ
 		CLogicThread* LogicThread =  it->second;
 		return LogicThread;
     }
-	CLock lk(&m_BrainMutex);
+	_CLOCK(&m_BrainMutex);
 	map<int64,CLogicThread*>::iterator it = m_LogicThreadList.find(ThreadID);
 	assert(it != m_LogicThreadList.end());
     CLogicThread* LogicThread =  it->second;
@@ -308,7 +308,7 @@ CLogicThread* CBrain::CLockedBrainData::GetLogicThread(int64 ThreadID,bool bRequ
 };
 
 void    CBrain::CLockedBrainData::DeleteLogicThread(int64 ThreadID){
-	CLock lk(&m_BrainMutex);
+	_CLOCK(&m_BrainMutex);
 	map<int64,CLogicThread*>::iterator it = m_LogicThreadList.find(ThreadID);
 	assert(it != m_LogicThreadList.end());
     CLogicThread* LogicThread =  it->second;
@@ -322,7 +322,7 @@ void  CBrain::CLockedBrainData::SetLogicThreadUser(int64 ThreadID,int64 UserID){
 	{
 		return;
 	}
-	CLock lk(&m_BrainMutex);
+	_CLOCK(&m_BrainMutex);
 	map<int64,CLogicThread*>::iterator it = m_LogicThreadList.find(ThreadID);
 	assert(it != m_LogicThreadList.end());
     if(it == m_LogicThreadList.end())return;
@@ -337,7 +337,7 @@ CLogicTask*   CBrain::CLockedBrainData::CreateLogicTask(int64 UserID,int64 TaskI
 		TaskID = AbstractSpace::CreateTimeStamp();
 	}
 
-	CLock lk(&m_BrainMutex);
+	_CLOCK(&m_BrainMutex);
 	deque<CLogicTask*>::iterator it = m_LogicTaskPool.begin();
 	if (it != m_LogicTaskPool.end())
 	{   
@@ -361,7 +361,7 @@ CLogicTask* CBrain::CLockedBrainData::GetLogicTask(int64 TaskID,bool bRequirLock
 		CLogicTask* Task =  it->second;
 		return Task;
 	}
-    CLock lk(&m_BrainMutex);
+    _CLOCK(&m_BrainMutex);
 	map<int64,CLogicTask*>::iterator it = m_LogicTaskList.find(TaskID);
 	assert(it != m_LogicTaskList.end());
     CLogicTask* Task =  it->second;
@@ -370,7 +370,7 @@ CLogicTask* CBrain::CLockedBrainData::GetLogicTask(int64 TaskID,bool bRequirLock
 
 void  CBrain::CLockedBrainData::DeleteLogicTask(int64 TaskID){
 	
-	CLock lk(&m_BrainMutex);
+	_CLOCK(&m_BrainMutex);
 	map<int64,CLogicTask*>::iterator it = m_LogicTaskList.find(TaskID);
 	assert(it != m_LogicTaskList.end());
     CLogicTask* LogicTask =  it->second;
@@ -384,7 +384,7 @@ void  CBrain::CLockedBrainData::SetLogicTaskUser(int64 TaskID,int64 UserID){
 	{
 		return;
 	}
-	CLock lk(&m_BrainMutex);
+	_CLOCK(&m_BrainMutex);
 	map<int64,CLogicTask*>::iterator it = m_LogicTaskList.find(TaskID);
 	assert(it != m_LogicTaskList.end());
     if(it == m_LogicTaskList.end())return;
@@ -400,7 +400,7 @@ CLogicDialog* CBrain::CLockedBrainData::CreateNewDialog(CBrain* Frame,int64 Sour
 {
 
 	CLogicDialog* NewDialog = NULL;
-	CLock lk(&m_BrainMutex);
+	_CLOCK(&m_BrainMutex);
 	deque<CLogicDialog*>::iterator it = m_DialogPool.begin();
 	while(it != m_DialogPool.end()){
 		CLogicDialog* Old = *it;
@@ -432,7 +432,19 @@ CLogicDialog* CBrain::CLockedBrainData::CreateNewDialog(CBrain* Frame,int64 Sour
 CLogicDialog* CBrain::CLockedBrainData::GetDialog(int64 SourceID,int64 DialogID){
 	DialogID = DialogID==DEFAULT_DIALOG? SourceID:DialogID;
 
-	CLock lk(&m_BrainMutex);
+	_CLOCK(&m_BrainMutex);
+	CLogicDialog* Dialog = NULL;
+	map<int64,CLogicDialog*>::iterator it = m_DialogList.find(DialogID);
+	if (it != m_DialogList.end())
+	{
+		Dialog =  it->second;
+
+	}
+	return Dialog;
+}
+
+CLogicDialog* CBrain::CLockedBrainData::Interal_GetDialog(int64 SourceID,int64 DialogID){
+	DialogID = DialogID==DEFAULT_DIALOG? SourceID:DialogID;
 	CLogicDialog* Dialog = NULL;
 	map<int64,CLogicDialog*>::iterator it = m_DialogList.find(DialogID);
 	if (it != m_DialogList.end())
@@ -445,7 +457,7 @@ CLogicDialog* CBrain::CLockedBrainData::GetDialog(int64 SourceID,int64 DialogID)
 
 CLogicDialog* CBrain::CLockedBrainData::FindDialog(int64 DialogID){
 
-	CLock lk(&m_BrainMutex);
+	_CLOCK(&m_BrainMutex);
 	CLogicDialog* Dialog = NULL;
 	map<int64,CLogicDialog*>::iterator it = m_DialogList.find(DialogID);
 	if (it != m_DialogList.end())
@@ -474,8 +486,25 @@ void   CBrain::CLockedBrainData::DeleteDialog(int64 SourceID,int64 DialogID){
 	Dialog->NotifyTaskState();
 }
 
+void   CBrain::CLockedBrainData::Interal_DeleteDialog(int64 SourceID,int64 DialogID){
+	DialogID = DialogID==DEFAULT_DIALOG? SourceID:DialogID;
+
+	map<int64,CLogicDialog*>::iterator it= m_DialogList.find(DialogID);
+	if (it == m_DialogList.end())
+	{
+		return;
+	}
+	CLogicDialog* Dialog = it->second;	
+	m_DialogList.erase(it);				
+	m_DialogPool.push_back(Dialog);	
+
+	//以下会调用m_DialogMutex，所以必须小心排除在m_BrianMutex锁定范围之外
+	Dialog->SetTaskState(TASK_DELELTE);
+	Dialog->NotifyTaskState();
+}
+
 void CBrain::CLockedBrainData::DeleteAllDialog(){
-	CLock lk(&m_BrainMutex);
+	_CLOCK(&m_BrainMutex);
 	map<int64,CLogicDialog*>::iterator it= m_DialogList.begin();
 	while (it != m_DialogList.end())
 	{
@@ -487,7 +516,7 @@ void CBrain::CLockedBrainData::DeleteAllDialog(){
 	}				
 }
 int   CBrain::CLockedBrainData::DeleteDialogOfSource(int64 SourceID){
-	CLock lk(&m_BrainMutex);
+	_CLOCK(&m_BrainMutex);
 	int n=0;
 	map<int64,CLogicDialog*>::iterator it= m_DialogList.begin();
 	while (it != m_DialogList.end())
@@ -513,7 +542,7 @@ void  CBrain::CLockedBrainData::GetFocusDialogData(int64 SourceID,int64 DialogID
 {
 	DialogID = DialogID==DEFAULT_DIALOG? SourceID:DialogID;
 
-	CLock lk(&m_BrainMutex);	
+	_CLOCK(&m_BrainMutex);	
 
 	CLogicDialog* Dialog = NULL;
 	
@@ -701,7 +730,7 @@ void  CBrain::CLockedBrainData::GetInvalidDialogData(ePipeline& Pipe){
 
 void  CBrain::CLockedBrainData::GetMoreLog(int64 SourceID,int64 DialogID,int64 LastItemID,ePipeline& Pipe){
 	DialogID = DialogID==DEFAULT_DIALOG? SourceID:DialogID;
-	CLock lk(&m_BrainMutex);	
+	_CLOCK(&m_BrainMutex);	
 
 	map<int64,CLogicDialog*>::iterator it = m_DialogList.find(DialogID);
 	assert(it != m_DialogList.end());
@@ -753,7 +782,7 @@ void  CBrain::CLockedBrainData::GetMoreLog(int64 SourceID,int64 DialogID,int64 L
 
 void CBrain::CLockedBrainData::GetAllDialogListInfo(ePipeline& DialogListInfo){
 
-	CLock lk(&m_BrainMutex);	
+	_CLOCK(&m_BrainMutex);	
 
 	CLogicDialog* Dialog = NULL;
 	map<int64,CLogicDialog*>::iterator it = m_DialogList.begin();
@@ -777,7 +806,7 @@ void CBrain::CLockedBrainData::GetAllDialogListInfo(ePipeline& DialogListInfo){
 }
 void CBrain::CLockedBrainData::BrainIdleProc(CBrain* Brain){
 
-    CLock lk(&m_BrainMutex);
+    _CLOCK(&m_BrainMutex);
 
 	//检查Thread的有效性，无效的则归还给内存池
 	if(m_LogicThreadList.size() > m_DialogList.size() ){
@@ -917,12 +946,16 @@ void CBrain::CLockedBrainData::EventProc(CBrain* Brain){
 
 	while (Brain->IsAlive())
 	{
+
 		int64 NewTimeStamp = AbstractSpace::CreateTimeStamp();	
 
-		CLock lk(&m_EventMutex);	
+		m_EventMutex.Acquire();	
+		
 		map<int64, CBrainEvent>::iterator it = m_EventList.begin();
 		while (it != m_EventList.end())
 		{
+			
+
 			int64 EventID = it->first;
 			CBrainEvent& EventInfo = it->second;
 			int64 OldTimeStamp = EventInfo.m_TimeStamp;
@@ -958,8 +991,8 @@ void CBrain::CLockedBrainData::EventProc(CBrain* Brain){
 
 					if (Address.m_ID < MAX_LOCAL_SOURCE_ID ) //本地事件则
 					{
-						
-						CLogicDialog* Dialog = GetDialog(Address.m_ID,DialogID);
+					
+						CLogicDialog* Dialog = Interal_GetDialog(Address.m_ID,DialogID);
 						if (!Dialog )
 						{	
 							it = m_EventList.erase(it);
@@ -971,14 +1004,14 @@ void CBrain::CLockedBrainData::EventProc(CBrain* Brain){
 							int64 TaskID   = *(int64*)Address.GetData(1);
 							if ( Dialog->m_TaskID != TaskID)
 							{												
-								CLogicDialog* Dlg = GetDialog(Address.m_ID,EventID);
+								CLogicDialog* Dlg = Interal_GetDialog(Address.m_ID,EventID);
 								if (Dlg)
 								{
 									CNotifyDialogState nf(NOTIFY_DIALOG_LIST);
 									nf.PushInt(DL_DEL_DIALOG);
 									nf.Notify(Dlg);
 
-									DeleteDialog(Address.m_ID,EventID);
+									Interal_DeleteDialog(Address.m_ID,EventID);
 								}
 								it = m_EventList.erase(it);
 								continue;
@@ -992,7 +1025,7 @@ void CBrain::CLockedBrainData::EventProc(CBrain* Brain){
 					else
 					{
 						int64 DialogID = EventID;
-						CLogicDialog* Dialog = GetDialog(Address.m_ID,DialogID);
+						CLogicDialog* Dialog = Interal_GetDialog(Address.m_ID,DialogID);
 						if (!Dialog)
 						{
 							//如果事件没有反馈对象，那么事件本身所对应的对话就应该停止，然后被删除
@@ -1015,8 +1048,10 @@ void CBrain::CLockedBrainData::EventProc(CBrain* Brain){
 			}			
 			it++;
 		}
-	}
+		m_EventMutex.Release();	
 
+	}
+	assert(!Brain->IsAlive());
 }
 
 
@@ -1025,8 +1060,78 @@ Energy*  CBrain::CLockedBrainData::ToEnergy(){
 	ePipeline* Pipe = new ePipeline;
 	eElectron e(Pipe);
 
-	CLock lk2(&m_EventMutex);
+	//先通知所有对话正在运行的任务暂停
+    m_BrainMutex.Acquire();
+	map<int64,CLogicDialog*>::iterator it = m_DialogList.begin();
+	while(it != m_DialogList.end()){
+		CLogicDialog* Dialog = it->second;
+		assert(Dialog);
 
+		TASK_STATE State = Dialog->GetTaskState();
+		if(State == TASK_RUN){
+			Dialog->NotifySuspendTask();
+		}
+		it++;
+	}
+	m_BrainMutex.Release();
+
+	//然后等候十秒并确认所有对话暂停
+	int n = 20;
+	int RunningNum;
+
+	CLogicDialog* SystemDialog = m_DialogList[DEFAULT_DIALOG];
+	do 
+	{
+		SLEEP_MILLI(500);
+		RunningNum =0;
+		m_BrainMutex.Acquire();
+		map<int64,CLogicDialog*>::iterator it = m_DialogList.begin();
+		while(it != m_DialogList.end()){
+			CLogicDialog* Dialog = it->second;
+			assert(Dialog);
+			TASK_STATE State = Dialog->GetTaskState();
+
+			if(State == TASK_RUN){
+				RunningNum++;
+			}
+			it++;
+		}
+		m_BrainMutex.Release();
+		n--;
+
+		CNotifyDialogState nf(NOTIFY_PROGRESS_OUTPUT);
+		nf.PushInt(COMMON_PROGRESS);
+		nf.PushString(_T("Waiting for system closing..."));
+		nf.PushInt(n*100/20);
+		nf.Notify(SystemDialog);
+
+	} while (n>0 && RunningNum >0);
+
+	//十秒后对话后理论上所有对话都应该暂停
+	//如果没有暂停也暂时保存当前对话信息
+	assert(RunningNum==0);
+
+	ePipeline DialogListInfo;
+	m_BrainMutex.Acquire();
+    it = m_DialogList.begin();
+	while(it != m_DialogList.end()){
+		CLogicDialog* Dialog = it->second;
+		assert(Dialog);
+		if (Dialog->m_DialogID != BRAIN_MEMORY_CHECH_DIALOG_ID && Dialog->m_ParentDialogID != BRAIN_MEMORY_CHECH_DIALOG_ID)
+		{
+			Energy* E = Dialog->ToEnergy();
+			if(E){
+				ePipeline* p = (ePipeline*)E;
+				DialogListInfo.Push_Directly(E);
+			}			
+		}
+		it++;
+	}
+	m_BrainMutex.Release();
+
+	Pipe->PushPipe(DialogListInfo);
+
+	m_EventMutex.Acquire();
 	ePipeline EventList;
 	map<int64, CBrainEvent>::iterator it3= m_EventList.begin();
 	while(it3!=m_EventList.end()){
@@ -1039,28 +1144,8 @@ Energy*  CBrain::CLockedBrainData::ToEnergy(){
 		it3++;
 	}
 	Pipe->PushPipe(EventList);
+	m_EventMutex.Release();
 
-
-	CLock lk(&m_BrainMutex);
-	ePipeline DialogList;
-	map<int64,CLogicDialog*>::iterator it = m_DialogList.begin();
-	while(it != m_DialogList.end()){
-		CLogicDialog* Dialog = it->second;
-	    bool ret = Dialog->SuspendTask();
-		assert(ret);
-		if (!ret)
-		{
-			continue;
-		}
-		Energy* E = Dialog->ToEnergy();
-		if(E){
-			ePipeline* p = (ePipeline*)E;
-			DialogList.Push_Directly(E);
-		}
-		it++;
-	}
-	Pipe->PushPipe(DialogList);
-	
 	return e.Release();
 }
 
@@ -1071,25 +1156,15 @@ bool  CBrain::CLockedBrainData::FromEnergy(CBrain* Brain,Energy* E){
 	assert(Pipe->Size()==2);
 
 	int i;
+
 	
-	m_EventMutex.Acquire();
-	ePipeline* EventList = (ePipeline*)Pipe->GetData(0);
-	for (i=0; i<EventList->Size(); i++)
-	{
-		ePipeline* EventInfo = (ePipeline*)EventList->GetData(i);
-	    int64 EventID = EventInfo->GetID();
-        EventInfo->SetID(0);
-		CBrainEvent& Event = m_EventList[EventID];
-		Event.FromPipeline(*EventInfo);
-	}
-	m_EventMutex.Release();
-	
-	//CLock lk2(&m_Mutex); 会导致嵌套死锁，也无必要
-	ePipeline* DialogList = (ePipeline*)Pipe->GetData(1);
+	ePipeline* DialogList = (ePipeline*)Pipe->GetData(0);
 	for (i=0; i<DialogList->Size();i++)
-    {
+	{
+		_CLOCK(&m_BrainMutex); //会导致嵌套死锁，也无必要
+
 		ePipeline* p = (ePipeline*)DialogList->GetData(i);
-		
+
 		int64 SourceID = *(int64*)p->GetData(0);
 		int64 DialogID = *(int64*)p->GetData(1);
 
@@ -1107,13 +1182,26 @@ bool  CBrain::CLockedBrainData::FromEnergy(CBrain* Brain,Energy* E){
 		Dialog->NotifyTaskState();
 		//Dialog->ResumeTask();
 	}
+
+	m_EventMutex.Acquire();
+	ePipeline* EventList = (ePipeline*)Pipe->GetData(1);
+	for (i=0; i<EventList->Size(); i++)
+	{
+		ePipeline* EventInfo = (ePipeline*)EventList->GetData(i);
+	    int64 EventID = EventInfo->GetID();
+        EventInfo->SetID(0);
+		CBrainEvent& Event = m_EventList[EventID];
+		Event.FromPipeline(*EventInfo);
+	}
+	m_EventMutex.Release();
+	
 	return true;
 }
 
 CThreadWorker* CBrain::CLockedBrainData::CreateThreadWorker(int64 ID,System* Parent,int32 Type){
 	if(!Parent->IsAlive())return NULL;
 
-	CLock lk(&m_BrainMutex);
+	_CLOCK(&m_BrainMutex);
 	CThreadWorker* Worker = NULL;
 	deque<CThreadWorker*>::iterator it = m_ThreadWorkerPool.begin();
 	if (it != m_ThreadWorkerPool.end())
@@ -1143,14 +1231,14 @@ CThreadWorker* CBrain::CLockedBrainData::CreateThreadWorker(int64 ID,System* Par
 };
 
 int32 CBrain::CLockedBrainData::GetWebIOWorkerNum(){
-	CLock lk(&m_BrainMutex);
+	_CLOCK(&m_BrainMutex);
 	return m_WebsocketIOWorkerList.size();
 }
 
 void   CBrain::CLockedBrainData::DeleteThreadWorker(System* Parent,int64 ID,int32 Type){
 	if(!Parent->IsAlive())return;
 
-	CLock lk(&m_BrainMutex);
+	_CLOCK(&m_BrainMutex);
 	CThreadWorker* Worker = NULL;
 	if (Type == BRAIN_WEBSOCKET_IO_WORK_TYPE)
 	{
@@ -1270,7 +1358,8 @@ void CBrain::Dead(){
 
 	m_GUI_WebServer->stop();
 
-	
+//	m_Alive = FALSE;
+
 	Energy* E = NULL; 
 	ePipeline* Pipe = NULL;
 	try{
@@ -1288,7 +1377,9 @@ void CBrain::Dead(){
 		CBrainMemory::SetSystemItem(SYS_DIALOG,s);
 		if (E)delete E;
 	}
+
 	System::Dead();
+
 	m_BrainData.WaitAllWorkThreadClosed();
 	m_BrainData.Clear();
 
@@ -1401,14 +1492,14 @@ void CBrain::GetLinker(int64 SourceID,CLinker& Linker){
 }
 
 void  CBrain::CLockedBrainData::LoadUserAccountList(){
-	CLock lk(&m_BrainMutex);
+	_CLOCK(&m_BrainMutex);
 	AnsiString UserListText = CBrainMemory::GetSystemItem(SYS_ACCOUNT);
 	uint32 pos=0; 
 	m_UAStaticList.FromString(UserListText,pos);
 }
 
 int CBrain::CLockedBrainData::GetUserAccountNum(){
-	CLock lk(&m_BrainMutex);
+	_CLOCK(&m_BrainMutex);
 	return m_UAStaticList.Size();
 }
 
@@ -1478,7 +1569,7 @@ void CBrain::CheckMemory(){
 }
 
 void CBrain::CLockedBrainData::RegisterUserAccount(tstring Name,tstring CrypStr,DIALOG_TYPE DialogType){
-	CLock lk(&m_BrainMutex);
+	_CLOCK(&m_BrainMutex);
 
 	bool bChanged = false;
 	//修改
@@ -1518,7 +1609,7 @@ void CBrain::CLockedBrainData::RegisterUserAccount(tstring Name,tstring CrypStr,
 }
 
 int64    CBrain::CLockedBrainData::DeleteUserAccount(tstring Name,tstring CrypStr){
-	CLock lk(&m_BrainMutex);
+	_CLOCK(&m_BrainMutex);
 	for(uint32 i=0; i<m_UAStaticList.Size();i++){
 		ePipeline* Item = (ePipeline*)m_UAStaticList.GetData(i);
 		tstring srcName = *(tstring*)Item->GetData(0);
@@ -1545,7 +1636,7 @@ int64    CBrain::CLockedBrainData::DeleteUserAccount(tstring Name,tstring CrypSt
 }
 
 void CBrain::CLockedBrainData::UpdateUserDialogID(tstring Name,tstring Cryptograhp,int64 DialogID){
-	CLock lk(&m_BrainMutex);
+	_CLOCK(&m_BrainMutex);
 
 	for(uint32 i=0; i<m_UAStaticList.Size();i++){
 		ePipeline* Item = (ePipeline*)m_UAStaticList.GetData(i);
@@ -1563,7 +1654,7 @@ void CBrain::CLockedBrainData::UpdateUserDialogID(tstring Name,tstring Cryptogra
 	}
 }
 bool CBrain::CLockedBrainData::FindRegisterUserInfo(tstring Name,tstring Cryptograhp,ePipeline& UserInfo){
-	CLock lk(&m_BrainMutex);
+	_CLOCK(&m_BrainMutex);
 
     for(uint32 i=0; i<m_UAStaticList.Size();i++){
 		ePipeline* Item = (ePipeline*)m_UAStaticList.GetData(i);
@@ -1584,13 +1675,13 @@ bool CBrain::CLockedBrainData::FindRegisterUserInfo(tstring Name,tstring Cryptog
 
 
 void CBrain::CLockedBrainData::RegisterOrgan(tstring UserName,tstring CryptTxt,int64 SourceID,DIALOG_TYPE Type){
-	CLock lk(&m_BrainMutex);
+	_CLOCK(&m_BrainMutex);
 	COrgan User(UserName,CryptTxt,SourceID,Type);
 	m_GUI_List.push_back(User);
 }
 
 void CBrain::CLockedBrainData::DelOrgan(int64 SourceID){
-	CLock lk(&m_BrainMutex);
+	_CLOCK(&m_BrainMutex);
 	list<COrgan>::iterator it = m_GUI_List.begin();
 	while(it != m_GUI_List.end()){
 		COrgan& User = *it;
@@ -1604,7 +1695,7 @@ void CBrain::CLockedBrainData::DelOrgan(int64 SourceID){
 }
 const COrgan&  CBrain::CLockedBrainData::GetOrgan(int64 SourceID){
 	static COrgan DefaultOrgan;
-	CLock lk(&m_BrainMutex);
+	_CLOCK(&m_BrainMutex);
 	list<COrgan>::iterator it = m_GUI_List.begin();
 	while(it != m_GUI_List.end()){
 		COrgan& Organ = *it;
@@ -1632,7 +1723,7 @@ void CBrain::CLockedBrainData::SendMsgToGUI(CBrain* Brain,int64 SourceID,CMsg& M
 }
 
 void CBrain::CLockedBrainData::SendMsgToGUI(CBrain* Brain,CMsg& Msg,int64 ExcludeSourceID){
-	CLock lk(&m_BrainMutex);
+	_CLOCK(&m_BrainMutex);
 	
 	CLinker Linker;
 	list<COrgan>::iterator it = m_GUI_List.begin();

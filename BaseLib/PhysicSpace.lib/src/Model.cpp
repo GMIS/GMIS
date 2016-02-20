@@ -10,7 +10,7 @@ namespace PHYSIC{
 	};
 
 	CSuperiorLinkerList::~CSuperiorLinkerList(){
-		CLock lk(&m_Mutex);
+		_CLOCK(&m_Mutex);
 		list<CLinkerPipe*>::iterator it = m_LinkerList.begin();
 		while(it != m_LinkerList.end()){
 			CLinkerPipe* Linker = *it;
@@ -27,7 +27,7 @@ namespace PHYSIC{
 	};
 
 	int32  CSuperiorLinkerList::GetLinkerNum(){
-		CLock lk(&m_Mutex);
+		_CLOCK(&m_Mutex);
 		return m_LinkerList.size() + m_ActivelyLinker.size();
 	}
 	void CSuperiorLinkerList::CreateLinker(CLinker& Linker,Model* Parent,int64 SourceID,ePipeline& Param){
@@ -43,7 +43,7 @@ namespace PHYSIC{
 	void   CSuperiorLinkerList::AddLinker(CLinkerPipe* Linker){
 		assert(Linker);
 
-		CLock lk(&m_Mutex);
+		_CLOCK(&m_Mutex);
 		int64 SourceID = Linker->GetSourceID();
 
 #ifdef _DEBUG
@@ -58,7 +58,7 @@ namespace PHYSIC{
 	};
 
 	bool   CSuperiorLinkerList::DeleteLinker(int64 SourceID){
-		CLock lk(&m_Mutex);
+		_CLOCK(&m_Mutex);
 		CLinkerPipe* LinkPtr = NULL;
 		list<CLinkerPipe*>::iterator it = m_LinkerList.begin();
 		while(it != m_LinkerList.end()){
@@ -91,7 +91,7 @@ namespace PHYSIC{
 	};  
 
 	void   CSuperiorLinkerList::GetLinker(int64 SourceID,CLinker& Linker){
-		CLock lk(&m_Mutex);
+		_CLOCK(&m_Mutex);
 		CLinkerPipe* LinkPtr = NULL;
 		list<CLinkerPipe*>::iterator it = m_LinkerList.begin();
 		while(it != m_LinkerList.end()){
@@ -117,7 +117,7 @@ namespace PHYSIC{
 	};
 
 	bool   CSuperiorLinkerList::HasLinker(const AnsiString& Address,const int32 Port){
-		CLock lk(&m_Mutex);
+		_CLOCK(&m_Mutex);
 		list<CLinkerPipe*>::iterator it = m_LinkerList.begin();
 		while(it != m_LinkerList.end()){
 			CLinkerPipe* LinkerPtr = *it;
@@ -141,7 +141,7 @@ namespace PHYSIC{
 		return false;
 	}
 	void   CSuperiorLinkerList::PopLinker(CLinker& Linker){
-		CLock lk(&m_Mutex);
+		_CLOCK(&m_Mutex);
 		list<CLinkerPipe*>::iterator it = m_LinkerList.begin();
 		while(it != m_LinkerList.end()){
 			CLinkerPipe* LinkerPtr = *it;
@@ -165,7 +165,7 @@ namespace PHYSIC{
 	};
 	
 	void   CSuperiorLinkerList::ReturnLinker(CLinker& Linker){
-		CLock lk(&m_Mutex);
+		_CLOCK(&m_Mutex);
 		int64 SourceID = Linker().GetSourceID();
 		list<CLinkerPipe*>::iterator it = m_ActivelyLinker.begin();
 		while(it != m_ActivelyLinker.end()){
@@ -205,12 +205,12 @@ CThreadWorker::~CThreadWorker(){
 void CThreadWorker::ModelIOWorkProc(){
 	try
 	{
+		char buf[MODEL_IO_BUFFER_SIZE];
 		CLinker Linker;
 		while(m_Alive && m_Parent->IsAlive()){
 
 			m_Parent->GetSuperiorLinkerList()->PopLinker(Linker);
-
-			char buf[MODEL_IO_BUFFER_SIZE];
+			
 			if (Linker.IsValid())
 			{
  				Linker().ThreadIOWorkProc(buf,MODEL_IO_BUFFER_SIZE);
@@ -323,7 +323,7 @@ Model::CLockedModelData::~CLockedModelData(){
 
 }
 void    Model::CLockedModelData::Clear(){
-	CLock lk(&m_Mutex);
+	_CLOCK(&m_Mutex);
 
 	map<int64,CThreadWorker*>::iterator ita =  m_ModelIOWorkerList.begin();
 	while (ita != m_ModelIOWorkerList.end())
@@ -360,32 +360,32 @@ void    Model::CLockedModelData::Clear(){
 }
 
 int64   Model::CLockedModelData::GetNerveMsgInterval(){
-	CLock lk(&m_Mutex);
+	_CLOCK(&m_Mutex);
 	return m_NerveMsgMaxInterval;
 }
 void    Model::CLockedModelData::SetNerveMsgInterval(int32 n){
-	CLock lk(&m_Mutex);
+	_CLOCK(&m_Mutex);
 	m_NerveMsgMaxInterval = n;
 }
 	
 int32   Model::CLockedModelData::GetNerveMaxIdleCount(){
-	CLock lk(&m_Mutex);
+	_CLOCK(&m_Mutex);
 	return m_NerveIdleMaxCount;	
 }
 	
 void   Model::CLockedModelData::SetNerveMaxIdleCount(int32 n){
-	CLock lk(&m_Mutex);
+	_CLOCK(&m_Mutex);
 	m_NerveIdleMaxCount = n;
 }
 
 int32  Model::CLockedModelData::GetCentralNerveWorkerNum(){
-	CLock lk(&m_Mutex);
+	_CLOCK(&m_Mutex);
 	int32 n = m_CentralNerveWorkerList.size();
 	return n;
 }
 
 int32 Model::CLockedModelData::GetIOWorkerNum(){
-	CLock lk(&m_Mutex);
+	_CLOCK(&m_Mutex);
 	return m_ModelIOWorkerList.size();
 }
 
@@ -393,7 +393,7 @@ CThreadWorker* Model::CLockedModelData::CreateThreadWorker(int64 ID,Model* Paren
 	
 	if(!Parent->IsAlive())return NULL;
 
-	CLock lk(&m_Mutex);
+	_CLOCK(&m_Mutex);
 	
 	CThreadWorker* Worker = NULL;
 	deque<CThreadWorker*>::iterator it = m_ThreadWorkerPool.begin();
@@ -427,7 +427,7 @@ CThreadWorker* Model::CLockedModelData::CreateThreadWorker(int64 ID,Model* Paren
 }
 void   Model::CLockedModelData::DeleteThreadWorker(Model* Parent,int64 ID,int32 Type){
 
-	CLock lk(&m_Mutex);
+	_CLOCK(&m_Mutex);
 	
 	assert(Type == MODEL_CENTRAL_NEVER_WORK_TYPE  || Type == MODEL_IO_WORK_TYPE);
 
@@ -477,14 +477,14 @@ void  Model::CLockedModelData::WaitAllWorkerThreadClosed(Model* Parent){
 	while (n)
 	{
 		SLEEP_MILLI(100);
-		CLock lk(&m_Mutex);	
+		_CLOCK(&m_Mutex);	
 		n = m_ModelIOWorkerList.size();	
 	}
 
     n = 1;
 	while(n){
 		SLEEP_MILLI(100);
-		CLock lk(&m_Mutex);	
+		_CLOCK(&m_Mutex);	
 		n = m_CentralNerveWorkerList.size();
 	}
 	
@@ -501,7 +501,7 @@ void  Model::CLockedModelData::WaitAllWorkerThreadClosed(Model* Parent){
 
  bool Model::CLockedModelData::RequestCreateNewCentralNerveWorker(uint32 MsgNum,int64 Interval,uint32& Reason){
 	
-	CLock lk(&m_Mutex);		
+	_CLOCK(&m_Mutex);		
 	if (m_CentralNerveWorkerList.size() == m_MaxNerveWorkerNum)
 	{
 		Reason =  REASON_LIMIT;

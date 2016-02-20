@@ -194,6 +194,9 @@ void CLogicDialog::Reset(CBrain* Brain,int64 SourceID,int64 DialogID,int64 Paren
 };
 
 Energy*  CLogicDialog::ToEnergy(){
+
+	_CLOCK2(&m_DialogMutex,this);
+
 	ePipeline* Pipe = new ePipeline;
 	eElectron e(Pipe);
 	if (Pipe)
@@ -374,6 +377,8 @@ Energy*  CLogicDialog::ToEnergy(){
 }
 bool   CLogicDialog::FromEnergy(Energy* e){
 	
+	_CLOCK2(&m_DialogMutex,this);
+
 	ePipeline* Pipe = (ePipeline*)e;
 
 	m_SourceID = Pipe->PopInt();
@@ -583,8 +588,7 @@ bool   CLogicDialog::FromEnergy(Energy* e){
 
 
 void CLogicDialog::NotifyPause(ePipeline& ExePipe,ePipeline& Address){  
-
-
+	
 	int64 PauseID = *(int64*)Address.GetLastData();
 	int64 EventID = AbstractSpace::CreateTimeStamp();
 
@@ -1113,25 +1117,32 @@ void CLogicDialog::NotifyTaskState()
 	nf.PushInt(State);
 	nf.Notify(this);
 }
+/*
+void CLogicDialog::NotifyStopTask(){
+	if(GetTaskState() != TASK_STOP){
 
-bool CLogicDialog::SuspendTask(){
+		ePipeline Address;
+		Address.PushInt(m_DialogID);
+		Address.PushInt(m_TaskID);
+
+		CMsg EltMsg(Address,MSG_ELT_TASK_CTRL,0);
+		ePipeline& Letter = EltMsg.GetLetter();
+		Letter.PushInt(CMD_STOP);
+
+		//给Element发信息
+		m_Brain->PushNerveMsg(EltMsg,false,false);
+	}
+}
+*/
+void CLogicDialog::NotifySuspendTask(){
 	TASK_STATE State = GetTaskState();
 
-	if(State != TASK_RUN){
-		return true;
+	if(State == TASK_RUN){
+		m_ExePipe.SetID(RETURN_BREAK);
+		m_ExePipe.Break();
 	}
-	
-	m_ExePipe.SetID(RETURN_BREAK);
-	m_ExePipe.Break();
-   
-	int n = 2000;
-	while (n-->0 && GetTaskState() != TASK_PAUSE)
-	{
-		SLEEP_MILLI(50);
-	}
-	return n>0;
 }
-
+/*
 bool CLogicDialog::ResumeTask(){
 
 	map<int64,int64>::iterator it = m_PauseEventList.begin();
@@ -1168,10 +1179,12 @@ bool CLogicDialog::ResumeTask(){
 		}
 	}
 	*/
+/*
 	SetWorkMode(WORK_DEBUG);
 	SetTaskState(TASK_PAUSE);
 	return true;
 }
+*/
 int32 CLogicDialog::GetSysProcNum(){
 	CLock((CABMutex*)&m_DialogMutex,this);
 	int32 n = m_SysProcCounter;
@@ -1211,12 +1224,12 @@ void  CLogicDialog::ResetTask(){
 
 
 void CLogicDialog::SetWorkMode(WORK_MODE Mode){
-	CLock lk(&m_DialogMutex,this);
+	_CLOCK2(&m_DialogMutex,this);
     m_WorkMode = Mode;
 }
 
 WORK_MODE CLogicDialog::GetWorkMode(){
-	CLock lk(&m_DialogMutex,this);
+	_CLOCK2(&m_DialogMutex,this);
 	WORK_MODE Mode = m_WorkMode;
 	return Mode;
 }

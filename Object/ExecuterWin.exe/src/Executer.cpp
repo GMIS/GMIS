@@ -212,8 +212,8 @@ void CExObject::GetDoc(CExecuter* Executer,int64 EventID,ePipeline* ExePipe){
 		}
 		ExePipe->PushString(Doc);
 
-		tstring s = Format1024(_T("Get Object Doc(%s) ok \n"),m_FileAddress.c_str());
-		Executer->OutputLog(LOG_TIP,s.c_str());		
+		//tstring s = Format1024(_T("Get Object Doc(%s) ok \n"),m_FileAddress.c_str());
+		//Executer->OutputLog(LOG_TIP,s.c_str());		
 				
 		Executer->SendFeedback(EventID,*ExePipe);
 		return;
@@ -244,7 +244,7 @@ CExecuter::CExecuter(int64 ID,tstring CryptText,CUserTimer* Timer,CUserSpacePool
 :Model(Timer,Pool)
 {
 	
-	m_LogFlag =  LOG_TIP|LOG_WARNING|LOG_MSG_IO_PUSH|LOG_MSG_I0_RECEIVED|LOG_MSG_IO_SENDED;
+	m_LogFlag =  LOG_TIP|LOG_WARNING|LOG_MSG_PROC_BEGIN;//|LOG_MSG_IO_PUSH|LOG_MSG_I0_RECEIVED|LOG_MSG_IO_SENDED;
 	m_ID = ID;
 	m_Name = _T("Executer");
 
@@ -256,14 +256,14 @@ CExecuter::~CExecuter()
 };
 
 CExObject& CExecuter::CreateNewObject(int64 EventID){
-	CLock lk(&m_ObjectListMutex);
+	_CLOCK(&m_ObjectListMutex);
 	assert(m_ObjectList.find(EventID) == m_ObjectList.end());
 	CExObject& Object = m_ObjectList[EventID];
 	return Object;
 };
 
 CExObject& CExecuter::FindObject(int64 EventID){
-	CLock lk(&m_ObjectListMutex);
+	_CLOCK(&m_ObjectListMutex);
 	static CExObject EmptyObject;
 	map<int64,CExObject>::iterator it = m_ObjectList.find(EventID);
 	if(it== m_ObjectList.end()){
@@ -274,7 +274,7 @@ CExObject& CExecuter::FindObject(int64 EventID){
 };
 
 void CExecuter::DeleteObject(int64 EventID){
-	CLock lk(&m_ObjectListMutex);
+	_CLOCK(&m_ObjectListMutex);
 	map<int64,CExObject>::iterator it = m_ObjectList.find(EventID);
 	if(it!= m_ObjectList.end()){
 		m_ObjectList.erase(it);
@@ -282,7 +282,7 @@ void CExecuter::DeleteObject(int64 EventID){
 };
 
 void CExecuter::DeleteAllObject(){
-	CLock lk(&m_ObjectListMutex);
+	_CLOCK(&m_ObjectListMutex);
 	map<int64,CExObject>::iterator it = m_ObjectList.begin();
 	
 	try
@@ -351,12 +351,7 @@ void CExecuter::OutputLog(uint32 Flag,TCHAR* Format, ...){
 
 };
 
-void CExecuter::NotifyLinkerState(CLinkerPipe* LinkerPipe,int64 NotifyID,ePipeline& Info){
-	CUserLinkerPipe* Linker = (CUserLinkerPipe*)LinkerPipe;
-
-	STATE_OUTPUT_LEVEL Flag = Linker->GetOutputLevel();
-
-	int64 SourceID = Linker->GetSourceID();
+void CExecuter::NotifyLinkerState(int64 SourceID,int64 NotifyID,STATE_OUTPUT_LEVEL Flag,ePipeline& Info){
 
 	switch(Flag){
 	case WEIGHT_LEVEL:
@@ -476,14 +471,14 @@ void CExecuter::NotifyLinkerState(CLinkerPipe* LinkerPipe,int64 NotifyID,ePipeli
 					AnsiString text;
 					CurRevMsg.ToString(text);
 
-					tstring s = Format1024(_T("LINKER_BEGIN_ERROR: SourceID=%I64ld ErrorType=%I64ld CurrentRevMsg:%s"),Linker->GetSourceID(),ErrorType,UTF8toWS(text).c_str());
+					tstring s = Format1024(_T("LINKER_BEGIN_ERROR: SourceID=%I64ld ErrorType=%I64ld CurrentRevMsg:%s"),SourceID,ErrorType,UTF8toWS(text).c_str());
 
 					OutputLog(LOG_ERROR,s.c_str());
 				}
 				return;
 			case LINKER_END_ERROR_STATE:
 				{
-					tstring s = Format1024(_T("LINKER_END_ERROR: SourceID=%I64ld"),Linker->GetSourceID());
+					tstring s = Format1024(_T("LINKER_END_ERROR: SourceID=%I64ld"),SourceID);
 					OutputLog(LOG_ERROR,s.c_str());
 				}
 				return;
@@ -494,7 +489,7 @@ void CExecuter::NotifyLinkerState(CLinkerPipe* LinkerPipe,int64 NotifyID,ePipeli
 					int64 MsgID = Msg.GetMsgID();
 					tstring MsgName = MsgID2Str(MsgID);
 
-					tstring s = Format1024(_T("LINKER_INVALID_ADDRESS: SourceID=%I64ld MsgID:%s "),Linker->GetSourceID(),MsgName.c_str());
+					tstring s = Format1024(_T("LINKER_INVALID_ADDRESS: SourceID=%I64ld MsgID:%s "),SourceID,MsgName.c_str());
 
 					OutputLog(LOG_WARNING,s.c_str());
 				}
@@ -506,7 +501,7 @@ void CExecuter::NotifyLinkerState(CLinkerPipe* LinkerPipe,int64 NotifyID,ePipeli
 					AnsiString text;
 					CurRevMsg->ToString(text);
 
-					tstring s = Format1024(_T("LINKER_ILLEGAL_MSG: SourceID=%I64ld Msg:%s "),Linker->GetSourceID(),UTF8toWS(text).c_str());
+					tstring s = Format1024(_T("LINKER_ILLEGAL_MSG: SourceID=%I64ld Msg:%s "),SourceID,UTF8toWS(text).c_str());
 
 					OutputLog(LOG_WARNING,s.c_str());
 
@@ -514,12 +509,14 @@ void CExecuter::NotifyLinkerState(CLinkerPipe* LinkerPipe,int64 NotifyID,ePipeli
 				return;
 			case LINKER_EXCEPTION_ERROR:
 				{
+					int32 RecoType = Info.PopInt();
+					int32 LinkerType = Info.PopInt();
+
 					tstring Error = Info.PopString();
 					tstring s = Format1024(_T("LINKER_EXCEPTION_ERROR: SourceID=%I64ld %s will be closed "),SourceID,Error.c_str());
 
 					OutputLog(LOG_WARNING,s.c_str());
 
-					assert (Linker->GetLinkerType()==SERVER_LINKER);					
 					GetSuperiorLinkerList()->DeleteLinker(SourceID);
 					m_Alive=false;
 				}
@@ -527,11 +524,15 @@ void CExecuter::NotifyLinkerState(CLinkerPipe* LinkerPipe,int64 NotifyID,ePipeli
 			case LINKER_IO_ERROR:
 				{
 					//通常是远端关闭
+
+					int32 RecoType = Info.PopInt();
+					int32 LinkerType = Info.PopInt();
+
 					tstring s = Format1024(_T("LINKER_IO_ERROR: SourceID=%I64ld may be closed by remote"),SourceID);
 
 					OutputLog(LOG_WARNING,s.c_str());
 
-					assert (Linker->GetLinkerType()==SERVER_LINKER);	
+					assert (LinkerType==SERVER_LINKER);	
 
 					GetSuperiorLinkerList()->DeleteLinker(SourceID);
 					m_Alive=false;
@@ -545,7 +546,6 @@ void CExecuter::NotifyLinkerState(CLinkerPipe* LinkerPipe,int64 NotifyID,ePipeli
 
 					OutputLog(LOG_WARNING,s.c_str());
 
-					assert (Linker->GetLinkerType()==SERVER_LINKER);	
 					GetSuperiorLinkerList()->DeleteLinker(SourceID);
 					m_Alive=false;
 				}
@@ -581,33 +581,34 @@ void  CExecuter::SendFeedback(int64 EventID,ePipeline& Param){
 	{
 		int64 MsgID = rMsg.GetMsgID();
 		tstring MsgStr = MsgID2Str(MsgID);
-		tstring s = Format1024(_T("Send Msg: %s"),MsgStr.c_str());
+		tstring s = Format1024(_T("Send Msg: %s\n"),MsgStr.c_str());
 		OutputLog(LOG_TIP,s.c_str());
 		Linker().PushMsgToSend(rMsg);
 	} 
 	else
 	{
-		tstring s = _T("Msg send fail: Linker invalid");
+		int64 MsgID = rMsg.GetMsgID();
+		tstring MsgStr = MsgID2Str(MsgID);
+
+		tstring s = Format1024(_T("Msg(%s) send fail: Linker invalid\n"),MsgStr.c_str());
 		OutputLog(LOG_TIP,s.c_str());
 	}
 }
 
 void CExecuter::CentralNerveMsgProc(CMsg& Msg){
 
-		uint32 LogFlag = m_LogFlag;
-		if (LogFlag & LOG_MSG_PROC_BEGIN)
+		int64 MsgID = Msg.GetMsgID();
+
+		if (m_LogFlag & LOG_MSG_PROC_BEGIN)
 		{
-			int64 MsgID = Msg.GetMsgID();
+			
 			int64 EventID = Msg.GetEventID();
 
 			tstring CmdStr = MsgID2Str(MsgID);
 			tstring& Tip = Msg.GetMsg().GetLabel();
-			OutputLog(LOG_MSG_PROC_BEGIN,_T("-->Dialog Pop Msg:%s EventID:%I64ld %s"),CmdStr.c_str(),EventID,Tip.c_str());
-			
+			OutputLog(LOG_MSG_PROC_BEGIN,_T("Get Msg:%s EventID:%I64ld %s"),CmdStr.c_str(),EventID,Tip.c_str());		
 		}
 
-	
-		int64 MsgID=Msg.GetMsgID();
 		switch(MsgID){
 		case MSG_OBJECT_START:
 			OnObjectStart(Msg);

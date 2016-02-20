@@ -82,18 +82,18 @@ public:
 
 
 	bool IsValid(){
-	    CLock lk(&m_Mutex);
+	    _CLOCK(&m_Mutex);
 		return m_ID!=0;
 	};
 
 	void PushEvent(int64 SpaceEventID,CSpaceEvent& Event){
-		CLock lk(&m_Mutex);
+		_CLOCK(&m_Mutex);
 		assert(m_EventList.find(SpaceEventID) == m_EventList.end());
 		CSpaceEvent& SpaceEvent = m_EventList[SpaceEventID];
 		SpaceEvent = Event;
 	}
 	bool PopEvent(int64 SpaceEventID, CSpaceEvent& Event){
-		CLock lk(&m_Mutex);
+		_CLOCK(&m_Mutex);
 		map<int64, CSpaceEvent>::iterator it = m_EventList.find(SpaceEventID);
 		if(it == m_EventList.end())return false;
 		CSpaceEvent& SpaceEvent = it->second;
@@ -102,7 +102,7 @@ public:
 		return true;
 	}
 	void ProcessPendingEvent(CLinker& Linker){
-		CLock lk(&m_Mutex);
+		_CLOCK(&m_Mutex);
 		assert(Linker().GetSourceID() == m_ID);
 		map<int64, CSpaceEvent>::iterator it = m_EventList.begin();
 		while(it != m_EventList.end()){
@@ -199,7 +199,7 @@ protected:
 	void    CreateRoom(int64 ParentID,SPACETYPE RoomType,ePipeline& Letter);
   	
 
-	virtual void  NotifyLinkerState(CLinkerPipe* Linker,int64 NotifyID,ePipeline& Data);
+	virtual void  NotifyLinkerState(int64 SourceID,int64 NotifyID,STATE_OUTPUT_LEVEL Flag,ePipeline& Data);
 	
 	virtual void    NerveMsgProc(CMsg& Msg);
 

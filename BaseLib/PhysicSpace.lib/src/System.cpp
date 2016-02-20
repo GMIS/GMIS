@@ -120,7 +120,7 @@ CClientLinkerList::CClientLinkerList()
 
 }
 CClientLinkerList::~CClientLinkerList(){
-	CLock lk(&m_Mutex);
+	_CLOCK(&m_Mutex);
 	deque<CLinkerPipe*>::iterator it = m_LinkerPool.begin();
 	while (it != m_LinkerPool.end())
 	{
@@ -132,7 +132,7 @@ CClientLinkerList::~CClientLinkerList(){
 }	
 
 void CClientLinkerList::CreateLinker(CLinker& Linker,Model* Parent,int64 ID,ePipeline& Param){
-	CLock lk(&m_Mutex);
+	_CLOCK(&m_Mutex);
 	deque<CLinkerPipe*>::iterator it = m_LinkerPool.begin();
 	while (it != m_LinkerPool.end())
 	{
@@ -161,7 +161,7 @@ void CClientLinkerList::CreateLinker(CLinker& Linker,Model* Parent,int64 ID,ePip
 };
 
 bool   CClientLinkerList::DeleteLinker(int64 SourceID){
-	CLock lk(&m_Mutex);
+	_CLOCK(&m_Mutex);
 
 	CLinkerPipe* LinkPtr = NULL;
 	list<CLinkerPipe*>::iterator it = m_LinkerList.begin();
@@ -190,7 +190,7 @@ bool   CClientLinkerList::DeleteLinker(int64 SourceID){
 }; 
 
 void   CClientLinkerList::PopLinker(CLinker& Linker){
-	CLock lk(&m_Mutex);
+	_CLOCK(&m_Mutex);
 	list<CLinkerPipe*>::iterator it = m_LinkerList.begin();
 	if(it != m_LinkerList.end()){
 		CLinkerPipe* LinkerPtr = *it;
@@ -200,7 +200,7 @@ void   CClientLinkerList::PopLinker(CLinker& Linker){
 	}
 };
 void   CClientLinkerList::ReturnLinker(CLinker& Linker){
-	CLock lk(&m_Mutex);
+	_CLOCK(&m_Mutex);
 	int64 SourceID = Linker().GetSourceID();
 	list<CLinkerPipe*>::iterator it = m_ActivelyLinker.begin();
 	while(it != m_ActivelyLinker.end()){
@@ -450,7 +450,7 @@ bool System::CNetListenWorker::Do(Energy* E){
 	}
 
 	void    System::CLockedSystemData::Clear(){
-		CLock lk(&m_Mutex);
+		_CLOCK(&m_Mutex);
 
 		map<int64,CThreadWorker*>::iterator ita =  m_SystemIOWorkerList.begin();
 		while (ita != m_SystemIOWorkerList.end())
@@ -488,57 +488,57 @@ bool System::CNetListenWorker::Do(Energy* E){
 
 
 	void  System::CLockedSystemData::IncreNerveWorkerCount(){
-		CLock lk(&m_Mutex);
+		_CLOCK(&m_Mutex);
 		++m_NerveWorkingNum ;
 	}
 	void  System::CLockedSystemData::DecreNerveWorkerCount(){
-		CLock lk(&m_Mutex);
+		_CLOCK(&m_Mutex);
 		--m_NerveWorkingNum;
 	}
 
 	int64   System::CLockedSystemData::GetNerveMsgInterval(){
-		CLock lk(&m_Mutex);
+		_CLOCK(&m_Mutex);
 		return m_NerveMsgMaxInterval;
 	}
 	void    System::CLockedSystemData::SetNerveMsgInterval(int32 n){
-		CLock lk(&m_Mutex);
+		_CLOCK(&m_Mutex);
 		m_NerveMsgMaxInterval = n;
 	}
 
 	int32   System::CLockedSystemData::GetNerveMaxIdleCount(){
-		CLock lk(&m_Mutex);
+		_CLOCK(&m_Mutex);
 		return m_NerveIdleMaxCount;	
 	}
 
 	void   System::CLockedSystemData::SetNerveMaxIdleCount(int32 n){
-		CLock lk(&m_Mutex);
+		_CLOCK(&m_Mutex);
 		m_NerveIdleMaxCount = n;
 	}
 
 	int32   System::CLockedSystemData::GetBusyNerveWorkerNum(){
-		CLock lk(&m_Mutex);
+		_CLOCK(&m_Mutex);
 		return m_NerveWorkingNum;		
 	};
 
 	int32  System::CLockedSystemData::GetNerveWorkerNum(){
-		CLock lk(&m_Mutex);
+		_CLOCK(&m_Mutex);
 		int32 n = m_NerveWorkerList.size();
 		return n;
 	}
 	int32   System::CLockedSystemData::GetIdleWorkerNum(){
-		CLock lk(&m_Mutex);
+		_CLOCK(&m_Mutex);
 		return m_NerveWorkerList.size() - m_NerveWorkingNum;
 	}
 
 	int32 System::CLockedSystemData::GetIOWorkerNum(){
-		CLock lk(&m_Mutex);
+		_CLOCK(&m_Mutex);
 		return m_SystemIOWorkerList.size();
 	}
 
 	CThreadWorker* System::CLockedSystemData::CreateThreadWorker(int64 ID,System* Parent,int32 Type){
 		if(!Parent->IsAlive())return NULL;
 
-		CLock lk(&m_Mutex);
+		_CLOCK(&m_Mutex);
 		CThreadWorker* Worker = NULL;
 		deque<CThreadWorker*>::iterator it = m_ThreadWorkerPool.begin();
 		if (it != m_ThreadWorkerPool.end())
@@ -575,7 +575,7 @@ bool System::CNetListenWorker::Do(Energy* E){
 
 		assert(Type == SYSTEM_NEVER_WORK_TYPE || Type == SYSTEM_IO_WORK_TYPE);
 
-		CLock lk(&m_Mutex);
+		_CLOCK(&m_Mutex);
 		CThreadWorker* Worker = NULL;
 		if (Type == SYSTEM_NEVER_WORK_TYPE)
 		{
@@ -632,19 +632,19 @@ bool System::CNetListenWorker::Do(Energy* E){
 
 		int n =1;
 		while(n){
-			CLock lk(&m_Mutex);
+			_CLOCK(&m_Mutex);
 			n = m_AcceptorList.size();
 		}
 
 		n =1;
 		while(n){
-			CLock lk(&m_Mutex);
+			_CLOCK(&m_Mutex);
 			n = m_SystemIOWorkerList.size();
 		}
 		
 		n =1;
 		while(n){
-			CLock lk(&m_Mutex);
+			_CLOCK(&m_Mutex);
 			n = m_NerveWorkerList.size();
 		}
 
@@ -669,7 +669,7 @@ bool System::CNetListenWorker::Do(Energy* E){
 
 	bool  System::CLockedSystemData::RequestCreateNewNerveWorker(uint32 MsgNum,int64 Interval,uint32& Reason) 
 	{
-		CLock lk(&m_Mutex);
+		_CLOCK(&m_Mutex);
 
 		if (m_NerveWorkerList.size() == m_MaxNerveWorkerNum)
 		{
@@ -698,7 +698,7 @@ bool System::CNetListenWorker::Do(Energy* E){
 		return FALSE;
 	}
 	System::CNetListenWorker* System::CLockedSystemData::CreateAcceptor(System* Parent,int32 Port){
-		CLock lk(&m_Mutex);
+		_CLOCK(&m_Mutex);
 		deque<CNetListenWorker*>::iterator it = m_AcceptorPool.begin();
 		if (it != m_AcceptorPool.end())
 		{
@@ -720,7 +720,7 @@ bool System::CNetListenWorker::Do(Energy* E){
 	};
 
 	bool System::CLockedSystemData::HasAcceptor(int32 Port){
-		CLock lk(&m_Mutex);
+		_CLOCK(&m_Mutex);
 		map<int32,CNetListenWorker*>::iterator it = m_AcceptorList.find(Port);
 		while (it != m_AcceptorList.end())
 		{
@@ -733,7 +733,7 @@ bool System::CNetListenWorker::Do(Energy* E){
 		return false;
 	}
 	void System::CLockedSystemData::DelAcceptor(int32 Port,bool bWaitDead){
-		CLock lk(&m_Mutex);
+		_CLOCK(&m_Mutex);
 		map<int32,CNetListenWorker*>::iterator it = m_AcceptorList.find(Port);
 		if (it == m_AcceptorList.end())
 		{
@@ -756,7 +756,7 @@ bool System::CNetListenWorker::Do(Energy* E){
 	};
 
 	void System::CLockedSystemData::DelAllAcceptor(){
-		CLock lk(&m_Mutex);
+		_CLOCK(&m_Mutex);
 		map<int32,CNetListenWorker*>::iterator it = m_AcceptorList.begin();
 		while (it != m_AcceptorList.end())
 		{

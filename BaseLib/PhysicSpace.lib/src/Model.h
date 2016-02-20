@@ -216,7 +216,7 @@ public:
 
 
 	// note: Linker already in locked state
-	virtual void       NotifyLinkerState(CLinkerPipe* Linker,int64 NotifyID,ePipeline& Data)=0;
+	virtual void       NotifyLinkerState(int64 SourceID,int64 NotifyID,STATE_OUTPUT_LEVEL Flag,ePipeline& Info)=0;
 	
 	virtual void       NotifySysState(int64 NotifyType,int64 NotifyID,ePipeline* Data);
 

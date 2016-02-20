@@ -53,7 +53,7 @@ public:
 		
 		Acquire();
 
-		//First check whether the User has sat down
+		//Check whether the User has sat down
         map<void*,SeatMutex*>::iterator it = m_UseSeatList.find(User);
 		if (it != m_UseSeatList.end())
 		{
@@ -75,6 +75,10 @@ public:
 		Release(); 
 
         Seat->Mutex->Acquire();
+#if _DEBUG
+		Seat->Mutex->m_Memo = m_Memo;
+#endif
+		
 		return TRUE;
 
 	};
@@ -84,12 +88,14 @@ public:
         map<void*,SeatMutex*>::iterator it = m_UseSeatList.find(User);
 		assert(it != m_UseSeatList.end());
 		SeatMutex* sm = it->second;
-	    --sm->RefNum;
-
+	    
 		sm->Mutex->Release();
-		
+		--sm->RefNum;
+
 		if (sm->RefNum==0)
 		{
+			m_UseSeatList.erase(it);	
+			
 			//The increased  seat ,if it is greater than the number of appointed seats, will be  deleted after used 
 			if (m_UseSeatList.size()+m_BlankSeatList.size()>m_SeatNum)
 			{
@@ -99,7 +105,6 @@ public:
 			{
 				m_BlankSeatList.push_back(sm);
 			}
-			m_UseSeatList.erase(it);	
 		}
 
 		Release();

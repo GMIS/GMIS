@@ -99,7 +99,7 @@ public:
 	virtual void	OutputLog(uint32 Type,const TCHAR* text);
 	void OutputLog(uint32 Flag,TCHAR* Format, ...);
 
-	virtual void NotifyLinkerState(CLinkerPipe* LinkerPipe,int64 NotifyID,ePipeline& Info);
+	virtual void NotifyLinkerState(int64 SourceID,int64 NotifyID,STATE_OUTPUT_LEVEL Flag,ePipeline& Info);
 
 	void  SendFeedback(int64 EventID,ePipeline& Param);
 public:

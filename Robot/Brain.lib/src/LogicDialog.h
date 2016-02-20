@@ -231,8 +231,9 @@ public:
 	TASK_STATE  GetTaskState();
 
 	//等候10秒让任务暂停
-	bool SuspendTask();
-    bool ResumeTask();
+	void NotifySuspendTask();
+  //  bool ResumeTask();
+	//void NotifyStopTask();
 
 	TASK_OUT_TYPE GetTaskType();
 

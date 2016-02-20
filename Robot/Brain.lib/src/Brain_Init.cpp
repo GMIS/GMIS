@@ -285,8 +285,9 @@ bool  CBrainInit::Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAdd
 			}
 		}
 
-		Dialog->m_Brain->OutSysInfo(_T("Checking memory....OK"));
-
+		if(ExePipe.IsAlive()){
+			Dialog->m_Brain->OutSysInfo(_T("Checking memory....OK"));
+		}
 	}catch(CppSQLite3Exception &e ){ 
 		
 		AnsiString s = e.errorMessage();
@@ -327,7 +328,7 @@ bool CBrainInit::CheckWord(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& Lo
 			int64 State = ExePipe.GetID();
 
 			if( !ExePipe.IsAlive() ){
-				//Dialog->SetTaskState(TASK_STOP);
+				Dialog->SetTaskState(TASK_STOP);
 				return false;
 			}else if(State == RETURN_BREAK){
 				Dialog->NotifyPause(ExePipe,LocalAddress);
@@ -400,7 +401,7 @@ bool CBrainInit::CheckInstinct(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline
 			int64 State = ExePipe.GetID();
 
 			if( !ExePipe.IsAlive() ){
-				//Dialog->SetTaskState(TASK_STOP);
+				Dialog->SetTaskState(TASK_STOP);
 				return false;
 			}else if(State == RETURN_BREAK){
 

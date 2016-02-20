@@ -48,7 +48,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <LibraryPath>D:\poco-1.6.0\lib;$(LibraryPath)</LibraryPath>
-    <IncludePath>D:\work\GMIS\World\VirtualSpace.lib\src;D:\work\GMIS\Robot\Brain.lib\src;D:\poco-1.6.0\Net\include;D:\poco-1.6.0\Foundation\include;D:\work\GMIS\BaseLib\VisualSpace.lib\src;D:\work\GMIS\BaseLib\PhysicSpace.lib\src;D:\work\GMIS\BaseLib\AbstractSpace.lib\src;$(IncludePath)</IncludePath>
+    <IncludePath>D:\work\GMIS\World\VirtualSpace.lib\src;D:\work\GMIS\Robot\Brain.lib\src;D:\poco-1.6.0\Net\include;D:\poco-1.6.0\Foundation\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>

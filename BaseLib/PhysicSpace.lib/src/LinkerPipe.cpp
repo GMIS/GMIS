@@ -134,7 +134,7 @@ namespace PHYSIC{
 	{
 		assert(LocalAddress.Size()!=0);
 		
-		//CLock lk(m_Mutex);
+		//_CLOCK(m_Mutex);
 		map<int64,ePipeline>::iterator It = m_LocalAddressList.begin();
 		while (It != m_LocalAddressList.end())
 		{
@@ -268,7 +268,7 @@ namespace PHYSIC{
 								NotifData.PushInt(Info->DataLen); 
 								NotifData.PushInt(0);            
 								NotifData.Push_Directly(Info->Data->Clone());
-								m_Parent->NotifyLinkerState(this,LINKER_RECEIVE_STEP,NotifData);
+								m_Parent->NotifyLinkerState(m_SourceID,LINKER_RECEIVE_STEP,m_StateOutputLevel,NotifData);
 								
 
 														
@@ -452,7 +452,7 @@ namespace PHYSIC{
 							NotifData.PushInt(Len);   							
 							NotifData.PushInt(PreInfo->InfoLen); 
 							NotifData.Push_Directly(Data->Clone());								
-							m_Parent->NotifyLinkerState(this,LINKER_RECEIVE_STEP,NotifData);
+							m_Parent->NotifyLinkerState(m_SourceID,LINKER_RECEIVE_STEP,m_StateOutputLevel,NotifData);
 															
 							delete Info;
 							m_ContextStack.pop_front();
@@ -503,7 +503,7 @@ namespace PHYSIC{
             {
 				ePipeline Info;
 				Info.Push_Directly(E.Release());
-				m_Parent->NotifyLinkerState(this,LINKER_ILLEGAL_MSG,Info);
+				m_Parent->NotifyLinkerState(m_SourceID,LINKER_ILLEGAL_MSG,m_StateOutputLevel,Info);
 				return;
             }
 
@@ -526,7 +526,7 @@ namespace PHYSIC{
 				Info.PushInt(LINKER_FEEDBACK);
 				Info.PushInt(RevResult);
 				Info.PushInt(m_PendingMsgID);
-				m_Parent->NotifyLinkerState(this,LINKER_MSG_RECEIVED,Info);
+				m_Parent->NotifyLinkerState(m_SourceID,LINKER_MSG_RECEIVED,m_StateOutputLevel,Info);
 				
 				m_PendingMsgID = 0;
 				m_PendMsgSenderID = 0;
@@ -544,7 +544,7 @@ namespace PHYSIC{
 				Info.PushInt(LINKER_FEEDBACK);
 				Info.PushInt(RevResult);
 				Info.PushInt(m_PendingMsgID);
-				m_Parent->NotifyLinkerState(this,LINKER_MSG_RECEIVED,Info);
+				m_Parent->NotifyLinkerState(m_SourceID,LINKER_MSG_RECEIVED,m_StateOutputLevel,Info);
 
 				m_PendingMsgID = 0;
 				m_PendMsgSenderID = 0;
@@ -557,7 +557,7 @@ namespace PHYSIC{
 			if(Msg->GetTypeAB() != 0x44400000){ 
 				ePipeline Info;
 				Info.Push_Directly(E.Release());
-				m_Parent->NotifyLinkerState(this,LINKER_ILLEGAL_MSG,Info);
+				m_Parent->NotifyLinkerState(m_SourceID,LINKER_ILLEGAL_MSG,m_StateOutputLevel,Info);
 				return;
 			}
 			
@@ -584,7 +584,7 @@ namespace PHYSIC{
 			{
 				ePipeline Info;
 				Info.Push_Directly(m.Release());
-				m_Parent->NotifyLinkerState(this,LINKER_INVALID_ADDRESS,Info);
+				m_Parent->NotifyLinkerState(m_SourceID,LINKER_INVALID_ADDRESS,m_StateOutputLevel,Info);
 				return;
 			}
 			
@@ -610,7 +610,7 @@ namespace PHYSIC{
 		ePipeline Data;
 		Data.PushInt(ErrorType);
 		Data.Push_Directly(m_CurRevMsg.Clone());
-		m_Parent->NotifyLinkerState(this,LINKER_BEGIN_ERROR_STATE,Data);
+		m_Parent->NotifyLinkerState(m_SourceID,LINKER_BEGIN_ERROR_STATE,m_StateOutputLevel,Data);
 	};
 	
 	void CLinkerPipe::EndErrorState(RevContextInfo* Info)
@@ -627,7 +627,7 @@ namespace PHYSIC{
 //        ePipeline* Msg = (ePipeline*)E.Release();
 		
 		ePipeline Data;
-        m_Parent->NotifyLinkerState(this,LINKER_END_ERROR_STATE,Data);
+        m_Parent->NotifyLinkerState(m_SourceID,LINKER_END_ERROR_STATE,m_StateOutputLevel,Data);
 		
 		deque<RevContextInfo*>::iterator it = m_ContextStack.begin();
         while (it != m_ContextStack.end())
@@ -642,11 +642,11 @@ namespace PHYSIC{
 	}
 
     void   CLinkerPipe::IncreUserNum(){
-		CLock lk(m_Mutex);
+		_CLOCK(m_Mutex);
 		m_UseCounter++;
 	}
 	void   CLinkerPipe::DecreUserNum(){
-		CLock lk(m_Mutex);
+		_CLOCK(m_Mutex);
 		m_UseCounter--;
 	}
 	void CLinkerPipe::ClearSendMsgList(){
@@ -686,18 +686,18 @@ namespace PHYSIC{
 //////////////////////////////////////////////////////////////////////////
 
 	void   CLinkerPipe::SetSourceID(int64 SourceID){ 
-		CLock lk(m_Mutex,this);
+		_CLOCK2(m_Mutex,this);
 		m_SourceID = SourceID;
 	}
 	
 	int64  CLinkerPipe::GetSourceID(){
-		CLock lk(m_Mutex,this);
+		_CLOCK2(m_Mutex,this);
         int64 ID = m_SourceID;
 		return ID;
 	};
 
 	void  CLinkerPipe::SetStateOutputLevel(STATE_OUTPUT_LEVEL  Level){
-		CLock lk(m_Mutex,this);
+		_CLOCK2(m_Mutex,this);
 		m_StateOutputLevel = Level;
 	}
 
@@ -706,12 +706,12 @@ namespace PHYSIC{
 	}
 
 	bool  CLinkerPipe::IsValid(){
-		CLock lk(m_Mutex,this);
+		_CLOCK2(m_Mutex,this);
 		return m_RecoType>LINKER_INVALID;
 	};
 	
 	void CLinkerPipe::Close(){
-		CLock lk(m_Mutex,this);
+		_CLOCK2(m_Mutex,this);
 
 		Clear();
 		m_RecoType = LINKER_INVALID;
@@ -720,7 +720,7 @@ namespace PHYSIC{
 	};
 	
 	void CLinkerPipe::Reset(){
-		CLock lk(m_Mutex,this);
+		_CLOCK2(m_Mutex,this);
 		m_ID = 0;
 		m_LocalAddressList.clear();
 		m_RecoType    = LINKER_INVALID;
@@ -742,7 +742,7 @@ namespace PHYSIC{
 	}
 
 	void   CLinkerPipe::CloseDialog(int64 LocalID){
-		CLock lk(m_Mutex,this);
+		_CLOCK2(m_Mutex,this);
 		
 		map<int64,ePipeline>::iterator It = m_LocalAddressList.begin();
 		while (It != m_LocalAddressList.end())
@@ -759,31 +759,31 @@ namespace PHYSIC{
 	};
 		
 	int32  CLinkerPipe::GetDialogCount(){
-		CLock lk(m_Mutex,this);
+		_CLOCK2(m_Mutex,this);
 		return m_LocalAddressList.size();
 	};
 
 	int32 CLinkerPipe::GetRecoType(){
-		CLock lk(m_Mutex,this);
+		_CLOCK2(m_Mutex,this);
 		int32 r =  m_RecoType;
 		return r;
 	};
 	
 	void  CLinkerPipe::SetRecoType(int32  Type)
 	{
-		CLock lk(m_Mutex,this);
+		_CLOCK2(m_Mutex,this);
 		m_RecoType = Type;
 	}
 	  
 
 	int32  CLinkerPipe::GetUserNum(){
-		CLock lk(m_Mutex,this);
+		_CLOCK2(m_Mutex,this);
 		int n = m_UseCounter;
 		return n;
 	}
 
 	SendState CLinkerPipe::GetSendState(){
-		CLock lk(m_Mutex,this);
+		_CLOCK2(m_Mutex,this);
 		SendState s = m_SendState;
 		return s;
 	};
@@ -798,8 +798,9 @@ namespace PHYSIC{
 		
 		assert(Msg.IsValid());
 		
-		CLock lk(m_Mutex,this);
-		
+		//CLock lk(m_Mutex,this);
+		_CLOCK2(m_Mutex,this);
+
 		ePipeline& Sender = Msg.GetSender();
 //		ePipeline& Receiver = Msg.GetReceiver();
         ePipeline& Letter   = Msg.GetLetter();
@@ -831,7 +832,7 @@ namespace PHYSIC{
 		Info.PushInt(m_PendingMsgID);
 		Info.PushInt(Size());
 		Info.PushInt(m_UrgenceMsg.Size());
-		m_Parent->NotifyLinkerState(this,LINKER_PUSH_MSG,Info);
+		m_Parent->NotifyLinkerState(m_SourceID,LINKER_PUSH_MSG,m_StateOutputLevel,Info);
 
 		if (bUrgence)
 		{
@@ -845,7 +846,7 @@ namespace PHYSIC{
 	
 	void CLinkerPipe::BreakSend()
 	{
-		CLock lk(m_Mutex,this);
+		_CLOCK2(m_Mutex,this);
 		
 		if(m_SendState == SEND_MSG)
 		{
@@ -858,7 +859,7 @@ namespace PHYSIC{
 	bool  CLinkerPipe::ThreadIOWorkProc(char* Buffer,uint32 BufSize){
 		
 		try{
-			CLock lk(m_Mutex,this);
+			
 			InputProc(Buffer,BufSize);
 			OutputProc(Buffer,BufSize);	
 		}
@@ -867,16 +868,20 @@ namespace PHYSIC{
 		{
 			tstring s = UTF8toWS(NetError.displayText());
 			ePipeline  ErrorInfo;
+			ErrorInfo.PushInt(m_RecoType);
+			ErrorInfo.PushInt(m_LinkerType);
 			ErrorInfo.PushString(s);
-			m_Parent->NotifyLinkerState(this,LINKER_EXCEPTION_ERROR,ErrorInfo);
+			m_Parent->NotifyLinkerState(m_SourceID,LINKER_EXCEPTION_ERROR,m_StateOutputLevel,ErrorInfo);
 		}
 #endif
 		catch(...)
 		{
 			tstring s = _T("ThreadIOWorkProc() throw a unkown exception");
 			ePipeline  ErrorInfo;
+			ErrorInfo.PushInt(m_RecoType);
+			ErrorInfo.PushInt(m_LinkerType);
 			ErrorInfo.PushString(s);
-			m_Parent->NotifyLinkerState(this,LINKER_EXCEPTION_ERROR,ErrorInfo);
+			m_Parent->NotifyLinkerState(m_SourceID,LINKER_EXCEPTION_ERROR,m_StateOutputLevel,ErrorInfo);
 		}
 		return TRUE;
 	}
@@ -892,7 +897,8 @@ namespace PHYSIC{
 			return 0;
 		}
 		if(RevBytes > 0)
-		{				
+		{
+			_CLOCK2(m_Mutex,this);
 			CompileMsg(Buffer, RevBytes); 
 		}
 		return RevBytes;
@@ -901,7 +907,7 @@ namespace PHYSIC{
 	uint32 CLinkerPipe::OutputProc(char* Buffer,uint32 BufSize){
 
 		uint32 SendBytes =0;
-
+		_CLOCK2(m_Mutex,this);
 		if(m_SendState == WAIT_MSG ){
 
 			//Preparing to send a new message
@@ -978,7 +984,7 @@ namespace PHYSIC{
 				Data.PushInt(MsgID);
 				Data.PushInt(m_SendBuffer.size());
 				Data.PushInt(0);
-				m_Parent->NotifyLinkerState(this,LINKER_SEND_STEP,Data);		   
+				m_Parent->NotifyLinkerState(m_SourceID,LINKER_SEND_STEP,m_StateOutputLevel,Data);		   
 
 			}
 		}
@@ -1000,13 +1006,13 @@ namespace PHYSIC{
 				Data.PushInt(m_PendingMsgID);
 				Data.PushInt(m_SendBuffer.size());
 				Data.PushInt(m_SendPos);
-				m_Parent->NotifyLinkerState(this,LINKER_SEND_STEP,Data);		   
+				m_Parent->NotifyLinkerState(m_SourceID,LINKER_SEND_STEP,m_StateOutputLevel,Data);		   
 
 				if(m_SendBuffer.size() == m_SendPos){
 
 					ePipeline Info;
 					Info.Push_Directly(m_CurSendMsg.Release());
-					m_Parent->NotifyLinkerState(this,LINKER_MSG_SENDED,Info);
+					m_Parent->NotifyLinkerState(m_SourceID,LINKER_MSG_SENDED,m_StateOutputLevel,Info);
 
 					m_SendState = WAIT_MSG;	 				
 					m_SendPos = 0;

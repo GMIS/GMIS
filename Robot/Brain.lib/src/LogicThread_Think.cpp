@@ -53,7 +53,7 @@ void CLogicThread::ThinkProc(CLogicDialog* Dialog,CMsg& Msg){
 	int64 EventID = Msg.GetEventID();
 	assert(EventID);
 	
-	CLock lk(&m_Mutex);
+	_CLOCK(&m_Mutex);
 	ePipeline& Letter = m_TextMsgQueue[EventID];
 	assert(Letter.Size()==0);
 	
@@ -85,7 +85,7 @@ void CLogicThread::ThinkProc(CLogicDialog* Dialog,CMsg& Msg){
 }
 void CLogicThread::ThinkProc(CLogicDialog* Dialog,int32 Pos,tstring& Msg,bool Forecast ,int64 EventID){
  
-	//CLock lk(&m_Mutex);
+	//_CLOCK(&m_Mutex);
 	Dialog->SetTaskState(TASK_THINK);
 	Dialog->NotifyTaskState();
 

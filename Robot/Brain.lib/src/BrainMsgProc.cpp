@@ -97,7 +97,7 @@ void CBrain::CentralNerveMsgProc(CMsg& Msg){
 
 void CBrain::OnInitBrain(CLogicDialog* Dialog,CMsg& Msg){
 	//生成一个临时对话和事件
-	int64 DialogID = AbstractSpace::CreateTimeStamp();
+	int64 DialogID = BRAIN_MEMORY_CHECH_DIALOG_ID;
 	CLogicDialog* ChildDialog = m_BrainData.CreateNewDialog(this,SYSTEM_SOURCE,DialogID,0,_T("System"),_T("Init Brain"),
 		DIALOG_SYSTEM_MAIN,TASK_OUT_DEFAULT);
 

@@ -199,7 +199,7 @@ protected: //receive message
 		//The specify length that system continue to receive the data when it has gone into error state
 		uint32                  m_ErrorSaveLen;
 	
-protected: //below functions no need to lock (for thead safe) 
+protected: //below functions do not to lock(internal call) 
 	bool ReceiverID2LocalAddress(ePipeline& Receiver,ePipeline& LocalAddress);
 	int64 LocalAddress2SenderID(ePipeline& LocalAddress);
 

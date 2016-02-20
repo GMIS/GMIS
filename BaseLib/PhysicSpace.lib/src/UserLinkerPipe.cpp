@@ -93,7 +93,9 @@ bool  CUserLinkerPipe::PhysicalRev(char* Buf,uint32 BufSize, uint32& RevLen, uin
 		if (RevLen==0)
 		{
 			ePipeline ErrorInfo;
-			m_Parent->NotifyLinkerState(this,LINKER_IO_ERROR,ErrorInfo);
+			ErrorInfo.PushInt(m_RecoType);
+			ErrorInfo.PushInt(m_LinkerType);
+			m_Parent->NotifyLinkerState(m_SourceID,LINKER_IO_ERROR,m_StateOutputLevel,ErrorInfo);
 			return false;
 		}
 		Buf[RevLen] = '\0';
@@ -122,7 +124,9 @@ bool  CUserLinkerPipe::PhysicalRev(char* Buf,uint32 BufSize, uint32& RevLen, uin
 				m_RecoType = LINKER_INVALID;
 
 				ePipeline ErrorInfo;
-				m_Parent->NotifyLinkerState(this,LINKER_IO_ERROR,ErrorInfo);			
+				ErrorInfo.PushInt(m_RecoType);
+				ErrorInfo.PushInt(m_LinkerType);
+				m_Parent->NotifyLinkerState(m_SourceID,m_StateOutputLevel,LINKER_IO_ERROR,ErrorInfo);			
 				return FALSE;
 			}
 
@@ -132,7 +136,9 @@ bool  CUserLinkerPipe::PhysicalRev(char* Buf,uint32 BufSize, uint32& RevLen, uin
 				m_RecoType = LINKER_INVALID;
 
 				ePipeline ErrorInfo;
-				m_Parent->NotifyLinkerState(this,LINKER_IO_ERROR,ErrorInfo);		
+				ErrorInfo.PushInt(m_RecoType);
+				ErrorInfo.PushInt(m_LinkerType);
+				m_Parent->NotifyLinkerState(m_SourceID,m_StateOutputLevel,LINKER_IO_ERROR,ErrorInfo);			
 				return FALSE;
 			}
 
@@ -146,7 +152,10 @@ bool  CUserLinkerPipe::PhysicalRev(char* Buf,uint32 BufSize, uint32& RevLen, uin
 		m_RecoType = LINKER_INVALID;
 
 		ePipeline ErrorInfo;
-		m_Parent->NotifyLinkerState(this,LINKER_IO_ERROR,ErrorInfo);
+		ErrorInfo.PushInt(m_RecoType);
+		ErrorInfo.PushInt(m_LinkerType);
+		m_Parent->NotifyLinkerState(m_SourceID,m_StateOutputLevel,LINKER_IO_ERROR,ErrorInfo);			
+
 
 		return FALSE;
 	}
@@ -190,7 +199,10 @@ bool  CUserLinkerPipe::PhysicalSend(char* Buf,uint32 BufSize, uint32& SendLen, u
 				m_RecoType = LINKER_INVALID;
 
 				ePipeline ErrorInfo;
-				m_Parent->NotifyLinkerState(this,LINKER_IO_ERROR,ErrorInfo);			
+				ErrorInfo.PushInt(m_RecoType);
+				ErrorInfo.PushInt(m_LinkerType);
+				m_Parent->NotifyLinkerState(m_SourceID,m_StateOutputLevel,LINKER_IO_ERROR,ErrorInfo);			
+
 				return FALSE;
 			}
 			SendLen = nBytes;
@@ -203,7 +215,10 @@ bool  CUserLinkerPipe::PhysicalSend(char* Buf,uint32 BufSize, uint32& SendLen, u
 		m_RecoType = LINKER_INVALID;
 
 		ePipeline ErrorInfo;
-		m_Parent->NotifyLinkerState(this,LINKER_IO_ERROR,ErrorInfo);
+		ErrorInfo.PushInt(m_RecoType);
+		ErrorInfo.PushInt(m_LinkerType);
+		m_Parent->NotifyLinkerState(m_SourceID,m_StateOutputLevel,LINKER_IO_ERROR,ErrorInfo);			
+
 
 		return FALSE;
 	}
@@ -403,17 +418,18 @@ bool CUserConnectLinkerPipe::Connect(tstring& error){
 }
 
 bool  CUserConnectLinkerPipe::ThreadIOWorkProc(char* Buffer,uint32 BufSize){
-	CLock lk(m_Mutex,this);
 
 	if (!m_bConnected)
 	{
+		_CLOCK2(m_Mutex,this);
+
 		tstring Error;
 		bool ret = Connect(Error);
 		if (!ret)
 		{
 			ePipeline ErrorInfo;
 			ErrorInfo.PushString(Error);
-			m_Parent->NotifyLinkerState(this,LINKER_CONNECT_ERROR,ErrorInfo);
+			m_Parent->NotifyLinkerState(m_SourceID,LINKER_CONNECT_ERROR,m_StateOutputLevel,ErrorInfo);
 		}
 	}else{
 		CUserLinkerPipe::ThreadIOWorkProc(Buffer,BufSize);

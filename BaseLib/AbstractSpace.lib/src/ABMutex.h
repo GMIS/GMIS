@@ -18,6 +18,13 @@ namespace ABSTRACT{
 class CABMutex  
 {
 public:
+
+#ifdef _DEBUG
+public:
+	tstring m_Memo; //for deadlock detection;
+#endif
+
+public:
 	CABMutex(){};
 	virtual ~CABMutex(){};
 
@@ -43,16 +50,37 @@ public:
 	};
 };
 
+
 class  CLock
 {
 private:
 	CABMutex*  m_Mutex;
 	void*      m_User;
 public:
+
+#ifdef _DEBUG
+	CLock( CABMutex* mutex,tstring s): m_Mutex(mutex),m_User(NULL){
+		assert(mutex);
+		m_Mutex->Acquire();
+		m_Mutex->m_Memo = s;
+	}
+
+	CLock( CABMutex* mutex,void* User,tstring s): m_Mutex(mutex),m_User(User){
+		assert(mutex);
+		if(m_User==NULL) {
+			m_Mutex->Acquire();
+		}else {
+			bool ret = m_Mutex->AcquireThis(m_User);
+			assert(ret);
+		}
+		m_Mutex->m_Memo = s;
+	}
+#endif
     CLock( CABMutex* mutex): m_Mutex(mutex),m_User(NULL){
 		assert(mutex);
 		m_Mutex->Acquire();
 	}
+
     CLock( CABMutex* mutex,void* User): m_Mutex(mutex),m_User(User){
 		assert(mutex);
 		if(m_User==NULL) {
@@ -62,10 +90,23 @@ public:
 			assert(ret);
 		}
 	}
+
     ~CLock (){
 		m_User==NULL?m_Mutex->Release():m_Mutex->ReleaseThis(m_User);
 	}   
 };
+
+#if _DEBUG
+#define _CLOCK(m) \
+	CLock lk(m,Format1024(_T("%s %d"),_T(__FILE__),__LINE__));
+#define _CLOCK2(m,u)\
+	CLock lk(m,u,Format1024(_T("%s %d"),_T(__FILE__),__LINE__));
+#else
+#define _CLOCK(m) \
+	CLock lk(m);
+#define _CLOCK2(m,u)\
+	CLock lk(m,u);
+#endif
 
 }
 

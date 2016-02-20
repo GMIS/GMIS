@@ -34,26 +34,26 @@ CABSpacePool::~CABSpacePool()
 	}
 }
 void CABSpacePool::SetMaxReserveNum(uint32 n){
-	CLock lk(m_Mutex);
+	_CLOCK(m_Mutex);
 	m_MaxReserveNum = n;
 };
 
 uint32 CABSpacePool::GetMaxReserveNum(){
-	CLock lk(m_Mutex);
+	_CLOCK(m_Mutex);
     return m_MaxReserveNum;
 };
 
 void CABSpacePool::SetMaxTypeNum(uint32 n){
-	CLock lk(m_Mutex);
+	_CLOCK(m_Mutex);
 	m_MaxTypeNum = n;	
 }
 uint32 CABSpacePool::GetMaxTypeNum(){
-	CLock lk(m_Mutex);
+	_CLOCK(m_Mutex);
 	return m_MaxTypeNum;
 }
 
 AbstractSpace* CABSpacePool::RequireAbstractSpace(int32 Type){
-	CLock lk(m_Mutex);
+	_CLOCK(m_Mutex);
 	std::map<size_t,AbstractSpaceList>::iterator it = m_AbstractSpacePool.find(Type);
 	if (it != m_AbstractSpacePool.end())
 	{
@@ -75,7 +75,7 @@ void  CABSpacePool::ReleaseAbstractSpace(int32 Type,AbstractSpace* Space){
 		free(Space);
 		return;
 	}
-	CLock lk(m_Mutex);
+	_CLOCK(m_Mutex);
 	//memset(Space,0,Type); i don't know why it lead to the deleting fail
 	std::map<size_t,AbstractSpaceList>::iterator it = m_AbstractSpacePool.find(Type);
 	if (it != m_AbstractSpacePool.end())

@@ -21,6 +21,7 @@
 using namespace PHYSIC;
 
 #define LOGIC_TASK 1
+#define  BRAIN_MEMORY_CHECH_DIALOG_ID 1
 
 class CLogicDialog;
 class CObjectData;
@@ -167,6 +168,8 @@ public:
 		*/
 		ePipeline                      m_UAStaticList;      //从数据库中取出所有注册的用户信息      
 
+		CLogicDialog* Interal_GetDialog(int64 SourceID,int64 DialogID); // no using m_BrainMutex
+		void          Interal_DeleteDialog(int64 SourceID,int64 DialogID);
 	public:
 		CLockedBrainData(CBrain* Brain);
         ~CLockedBrainData();
@@ -333,7 +336,7 @@ public:
 ////////////////////////////////////////////////////////////////////////// 
 	
 	virtual void NotifySysState(int64 NotifyType,int64 NotifyID,ePipeline* Data = NULL);	
-	virtual void NotifyLinkerState(CLinkerPipe* Linker,int64 NotifyID,ePipeline& Info);	
+	virtual void NotifyLinkerState(int64 SourceID,int64 NotifyID,STATE_OUTPUT_LEVEL Flag,ePipeline& Info);	
 	
 	//NOTE:会调用Dialog.m_Mutex锁定，因此应该仅用于信息输出，避免递归嵌套导致死锁
 	//目前共用此锁的函数还有：Set\GetTaskState,Set\GetWorkMode,GetSysProcNum

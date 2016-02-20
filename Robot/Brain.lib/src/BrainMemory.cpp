@@ -150,7 +150,7 @@ AnsiString CBrainMemory::GetSystemItem(int64 Item){
 
 
 void CBrainMemory::ClearMemory(){
-	CLock lk(&m_MemoryMutex);
+	_CLOCK(&m_MemoryMutex);
 	
 	m_GlobalLogicList.Clear();	
     
@@ -166,7 +166,7 @@ ePipeline* CBrainMemory::FindGlobalLogic(tstring& Name){
 		TrueName = Name.substr(1,Name.size()-2);
 	}
 
-	CLock lk(&m_MemoryMutex);
+	_CLOCK(&m_MemoryMutex);
 	for(int i=0; i<m_GlobalLogicList.Size(); i++){
         ePipeline* LogicItem = (ePipeline*)m_GlobalLogicList.GetData(i);
 		tstring& LogicName = LogicItem->GetLabel(); 
@@ -192,7 +192,7 @@ void CBrainMemory::RegisterGlobalLogic(tstring& Name, const tstring& LogicText, 
 	ePipeline RefList;
 	LogicItem.PushPipe(RefList); //引用名：谁引用，字符串成对保存
 
-	CLock lk(&m_MemoryMutex);
+	_CLOCK(&m_MemoryMutex);
 	m_GlobalLogicList.PushPipe(LogicItem);
 };
 
@@ -202,7 +202,7 @@ ePipeline* CBrainMemory::ReferenceGlobalLogic(tstring& scrName,const tstring& re
     ePipeline* LogicItem = FindGlobalLogic(scrName);
 	if(LogicItem == NULL)return NULL;
    
-	CLock lk(&m_MemoryMutex);
+	_CLOCK(&m_MemoryMutex);
 	
 	ePipeline* RefList = (ePipeline*)LogicItem->GetLastData();
 	if(Add){
@@ -232,7 +232,7 @@ ePipeline* CBrainMemory::ReferenceGlobalLogic(tstring& scrName,const tstring& re
 */
 ePipeline* CBrainMemory::DeleteGlobalLogic(tstring& Name)
 {
-	CLock lk(&m_MemoryMutex);
+	_CLOCK(&m_MemoryMutex);
 	int i;
 	ePipeline* LogicItem = NULL;
     for(i=0; i<m_GlobalLogicList.Size(); i++){
@@ -255,7 +255,7 @@ ePipeline* CBrainMemory::DeleteGlobalLogic(tstring& Name)
 	
 ePipeline* CBrainMemory::FindGlobalObject(tstring& Name){
 	_tcsupr(&Name[0]);
-	CLock lk(&m_MemoryMutex);
+	_CLOCK(&m_MemoryMutex);
     map<tstring,ePipeline>::iterator It = m_GlobalObjectList.find(Name);
 	while(It!=m_GlobalObjectList.end()){
 		ePipeline& ObjectData = It->second;
@@ -270,7 +270,7 @@ void  CBrainMemory::RegisterGlobalObject(ePipeline& ObjectData){
 	_tcslwr(&Name[0]);
 //	_tcsupr(&Fingerprint[0]);
 	
-	CLock lk(&m_MemoryMutex);
+	_CLOCK(&m_MemoryMutex);
 	map<tstring,ePipeline>::iterator It = m_GlobalObjectList.find(Name);
 	if(It!=m_GlobalObjectList.end()){
 		return;
@@ -283,7 +283,7 @@ void  CBrainMemory::RegisterGlobalObject(ePipeline& ObjectData){
 
 void CBrainMemory::DeleteGlobalObject(tstring& CrcName){
 	_tcsupr(&CrcName[0]);
-	CLock lk(&m_MemoryMutex);
+	_CLOCK(&m_MemoryMutex);
 	m_GlobalObjectList.erase(CrcName);
 };
 
@@ -291,7 +291,7 @@ void CBrainMemory::DeleteGlobalObject(tstring& CrcName){
 ePipeline* CBrainMemory::FindGlobalPeople(tstring& Name){
 	
 	_tcsupr(&Name[0]);
-	CLock lk(&m_MemoryMutex);
+	_CLOCK(&m_MemoryMutex);
     map<tstring,ePipeline>::iterator It = m_GlobalPeopleList.find(Name);
 	while(It!=m_GlobalPeopleList.end()){
 		ePipeline& Item = It->second;
@@ -304,14 +304,14 @@ void  CBrainMemory::RegisterGlobalPeople(ePipeline& PeopleData){
 	tstring& Name = *(tstring*)PeopleData.GetData(0);
 	_tcsupr(&Name[0]);
 
-	CLock lk(&m_MemoryMutex);
+	_CLOCK(&m_MemoryMutex);
 	m_GlobalPeopleList[Name] = PeopleData;	
 };
 
 
 void CBrainMemory::DeleteGlobalPeople(tstring& Name){
 	_tcsupr(&Name[0]);
-	CLock lk(&m_MemoryMutex);
+	_CLOCK(&m_MemoryMutex);
     m_GlobalPeopleList.erase(Name);
 };
 

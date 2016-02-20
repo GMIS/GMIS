@@ -195,13 +195,8 @@ void CBrain::NotifySysState(int64 NotifyType,int64 NotifyID,ePipeline* Data){
 	
 };
 
-void CBrain::NotifyLinkerState(CLinkerPipe* LinkerPipe,int64 NotifyID,ePipeline& Info){
-	CUserLinkerPipe* Linker = (CUserLinkerPipe*)LinkerPipe;
-
-	STATE_OUTPUT_LEVEL Flag = Linker->GetOutputLevel();
-
-	int64 SourceID = Linker->GetSourceID();
-
+void CBrain::NotifyLinkerState(int64 SourceID,int64 NotifyID,STATE_OUTPUT_LEVEL Flag,ePipeline& Info){
+	
 	switch(Flag){
 	case WEIGHT_LEVEL:
 		{
@@ -315,7 +310,7 @@ void CBrain::NotifyLinkerState(CLinkerPipe* LinkerPipe,int64 NotifyID,ePipeline&
 					AnsiString text;
 					CurRevMsg.ToString(text);
 
-					tstring s = Format1024(_T("LINKER_BEGIN_ERROR: SourceID=%I64ld ErrorType=%I64ld CurrentRevMsg:%s"),Linker->GetSourceID(),ErrorType,UTF8toWS(text).c_str());
+					tstring s = Format1024(_T("LINKER_BEGIN_ERROR: SourceID=%I64ld ErrorType=%I64ld CurrentRevMsg:%s"),SourceID,ErrorType,UTF8toWS(text).c_str());
 
 					OutputLog(LOG_ERROR,s.c_str());
 					OutSysInfo(s.c_str());
@@ -323,7 +318,7 @@ void CBrain::NotifyLinkerState(CLinkerPipe* LinkerPipe,int64 NotifyID,ePipeline&
 				return;
 			case LINKER_END_ERROR_STATE:
 				{
-					tstring s = Format1024(_T("LINKER_END_ERROR: SourceID=%I64ld"),Linker->GetSourceID());
+					tstring s = Format1024(_T("LINKER_END_ERROR: SourceID=%I64ld"),SourceID);
 					OutputLog(LOG_TIP,s.c_str());
 					OutSysInfo(s.c_str());
 				}
@@ -335,7 +330,7 @@ void CBrain::NotifyLinkerState(CLinkerPipe* LinkerPipe,int64 NotifyID,ePipeline&
 					int64 MsgID = Msg.GetMsgID();
 					tstring MsgName = MsgID2Str(MsgID);
 
-					tstring s = Format1024(_T("LINKER_INVALID_ADDRESS: SourceID=%I64ld MsgID:%s "),Linker->GetSourceID(),MsgName.c_str());
+					tstring s = Format1024(_T("LINKER_INVALID_ADDRESS: SourceID=%I64ld MsgID:%s "),SourceID,MsgName.c_str());
 
 					OutputLog(LOG_WARNING,s.c_str());
 					OutSysInfo(s.c_str());
@@ -348,7 +343,7 @@ void CBrain::NotifyLinkerState(CLinkerPipe* LinkerPipe,int64 NotifyID,ePipeline&
 					AnsiString text;
 					CurRevMsg->ToString(text);
 
-					tstring s = Format1024(_T("LINKER_ILLEGAL_MSG: SourceID=%I64ld Msg:%s "),Linker->GetSourceID(),UTF8toWS(text).c_str());
+					tstring s = Format1024(_T("LINKER_ILLEGAL_MSG: SourceID=%I64ld Msg:%s "),SourceID,UTF8toWS(text).c_str());
 
 					OutputLog(LOG_WARNING,s.c_str());
 					OutSysInfo(s.c_str());	
@@ -356,22 +351,24 @@ void CBrain::NotifyLinkerState(CLinkerPipe* LinkerPipe,int64 NotifyID,ePipeline&
 				return;
 			case LINKER_EXCEPTION_ERROR:
 				{
+					int32 RecoType = Info.PopInt();
+					int32 LinkerType = Info.PopInt();
+
 					tstring Error = Info.PopString();
 					tstring s = Format1024(_T("LINKER_EXCEPTION_ERROR: %s SourceID=%I64ld was closed "),Error.c_str(),SourceID);
 
 					OutputLog(LOG_WARNING,s.c_str());
 					OutSysInfo(s.c_str());	
 
-					LinkerType Type = Linker->GetLinkerType();
-					if (Type == CLIENT_LINKER)
+					if (LinkerType  == CLIENT_LINKER)
 					{
 						bool ret = m_ClientLinkerList.DeleteLinker(SourceID);
 						if(!ret)return; //链接并不存在
 
-					}else if(Type == SERVER_LINKER){
+					}else if(LinkerType == SERVER_LINKER){
 						bool ret = m_SuperiorList.DeleteLinker(SourceID);
 						if(!ret)return; //链接并不存在
-					}else if (Type == WEBSOCKET_LINKER){
+					}else if (LinkerType == WEBSOCKET_LINKER){
 						bool ret = m_WebsocketClientList.DeleteLinker(SourceID);
 						if(!ret)return; //链接并不存在
 					}
@@ -429,21 +426,24 @@ void CBrain::NotifyLinkerState(CLinkerPipe* LinkerPipe,int64 NotifyID,ePipeline&
 			case LINKER_IO_ERROR:
 				{
 					//通常是远端关闭
+
+					int32 RecoType = Info.PopInt();
+					int32 LinkerType = Info.PopInt();
+
 					tstring s = Format1024(_T("LINKER_IO_ERROR: SourceID=%I64ld may be closed by remote"),SourceID);
 
 					OutputLog(LOG_WARNING,s.c_str());
 					OutSysInfo(s.c_str());	
 
-					LinkerType Type = Linker->GetLinkerType();
-					if (Type == CLIENT_LINKER)
+					if (LinkerType == CLIENT_LINKER)
 					{
 						bool ret = m_ClientLinkerList.DeleteLinker(SourceID);
 						if(!ret)return; //链接并不存在
 
-					}else if(Type == SERVER_LINKER){
+					}else if(LinkerType == SERVER_LINKER){
 						bool ret = m_SuperiorList.DeleteLinker(SourceID);
 						if(!ret)return; //链接并不存在
-					}else if (Type == WEBSOCKET_LINKER){
+					}else if (LinkerType == WEBSOCKET_LINKER){
 						bool ret = m_WebsocketClientList.DeleteLinker(SourceID);
 						if(!ret)return; //链接并不存在
 					}
@@ -494,7 +494,6 @@ void CBrain::NotifyLinkerState(CLinkerPipe* LinkerPipe,int64 NotifyID,ePipeline&
 					OutputLog(LOG_WARNING,s.c_str());
 					OutSysInfo(s.c_str());	
 
-					assert(Linker->GetLinkerType() == SERVER_LINKER);
 					GetSuperiorLinkerList()->DeleteLinker(SourceID);
 				}
 				return;
@@ -519,7 +518,7 @@ void CBrain::NotifyLinkerState(CLinkerPipe* LinkerPipe,int64 NotifyID,ePipeline&
 
 
 void CBrain::NoitfyDialogState(CLogicDialog* Dialog, ePipeline* NotifyInfo){
-	//CLock lk(&Dialog->m_DialogMutex,this); 避免大范围锁定，只在具体需要时加锁
+	//_CLOCK(&Dialog->m_DialogMutex,this); 避免大范围锁定，只在具体需要时加锁
 
 	int64 NotifyID = NotifyInfo->GetID();
 	
@@ -908,8 +907,6 @@ void CBrain::OnNotifyDialogOutput(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 	
 	CMsg GuiMsg(Receiver,MSG_BRAIN_TO_GUI,0);
 
-	
-
 	switch(Type){
 	case DIALOG_INFO:
 		{
@@ -917,7 +914,7 @@ void CBrain::OnNotifyDialogOutput(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 			NotifyInfo->Pop(&e);
 			ePipeline* Item = (ePipeline*)e.Value();
 
-			CLock lk(&Dialog->m_DialogMutex,Dialog);
+			_CLOCK2(&Dialog->m_DialogMutex,Dialog);
 
 			Dialog->m_DialogHistory.Push_Directly(e.Release());
 
@@ -932,7 +929,7 @@ void CBrain::OnNotifyDialogOutput(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 			NotifyInfo->Pop(&e);
 			ePipeline* Item = (ePipeline*)e.Value();
 		
-			CLock lk(&Dialog->m_DialogMutex,Dialog);
+			_CLOCK2(&Dialog->m_DialogMutex,Dialog);
 			Dialog->m_RuntimeOutput.Push_Directly(e.Release());
 
 			ePipeline Cmd0(GUI_RUNTIME_OUTPUT);
@@ -1129,6 +1126,19 @@ void CBrain::OnNotifyProgressOutput(CLogicDialog* Dialog, ePipeline* NotifyInfo)
 	
 	int64 Act = NotifyInfo->PopInt();
 	switch(Act){
+	case COMMON_PROGRESS:
+		{
+			tstring s = NotifyInfo->PopString();
+			ePipeline Cmd(GUI_STATUS_SET_TEXT);
+			Cmd.PushString(s);
+			GuiMsg.GetLetter().PushPipe(Cmd);
+
+			int64 Per = NotifyInfo->PopInt();
+			ePipeline Cmd1(GUI_STATUS_PROGRESS);
+			Cmd1.PushInt(Per);
+			GuiMsg.GetLetter().PushPipe(Cmd1);
+		}
+		break;
 	case COMPILE_PROGRESS:
 	case THINK_PROGRESS:
 		{

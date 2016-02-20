@@ -21,7 +21,7 @@ void WebSocketRequestHandler::handleRequest(HTTPServerRequest& request, HTTPServ
 
 				ePipeline Info;
 				Info.PushString(s);
-				m_Brain->NotifyLinkerState(NULL,LINKER_CREATE_ERROR,Info);
+				m_Brain->NotifyLinkerState(SourceID,LINKER_CREATE_ERROR,NORMAL_LEVEL,Info);
 				ws.close();
 				return;
 		}
