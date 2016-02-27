@@ -7,7 +7,6 @@
 
 #include "space.h"
 #include "VisibleSpace.h"
-#include "CLog.h"
 #include "EditLog.h"
 #include "editlog_stream.h"
 #include "WSFrameView.h"

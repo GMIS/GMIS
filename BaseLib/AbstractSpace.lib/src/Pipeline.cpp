@@ -42,7 +42,9 @@ namespace ABSTRACT{
 		Clear();
 		ConstEnergyPtr It=C.m_EnergyList.begin();
 		while(It !=C.m_EnergyList.end()){
-			m_EnergyList.push_back((*It)->Clone());
+			Energy* e = (*It)->Clone();
+			assert(e);
+			m_EnergyList.push_back(e);
 			It++;
 		}
 		m_TypeAB = C.m_TypeAB;

@@ -60,6 +60,7 @@ void CBrainThreadWorker::EventProc(){
 void CBrainThreadWorker::WebsocketWorkProc(){
 	CBrain* Brain = (CBrain*)m_Parent;
 	try{
+		    char buf[MODEL_IO_BUFFER_SIZE];
 			while(IsAlive() && Brain->IsAlive()){
 
 				int64 SourceID = 0;
@@ -67,7 +68,7 @@ void CBrainThreadWorker::WebsocketWorkProc(){
 				CLinker Linker;
 				Brain->m_WebsocketClientList.PopLinker(Linker);
 
-				char buf[MODEL_IO_BUFFER_SIZE];
+				
 				if ( Linker.IsValid())
 				{
 					Linker().ThreadIOWorkProc(buf,MODEL_IO_BUFFER_SIZE);
@@ -1129,7 +1130,7 @@ Energy*  CBrain::CLockedBrainData::ToEnergy(){
 	}
 	m_BrainMutex.Release();
 
-	Pipe->PushPipe(DialogListInfo);
+	Pipe->PushList(DialogListInfo);
 
 	m_EventMutex.Acquire();
 	ePipeline EventList;
@@ -1143,7 +1144,7 @@ Energy*  CBrain::CLockedBrainData::ToEnergy(){
 		EventList.Push_Directly(TempPipe.Clone());
 		it3++;
 	}
-	Pipe->PushPipe(EventList);
+	Pipe->PushList(EventList);
 	m_EventMutex.Release();
 
 	return e.Release();
@@ -1161,19 +1162,20 @@ bool  CBrain::CLockedBrainData::FromEnergy(CBrain* Brain,Energy* E){
 	ePipeline* DialogList = (ePipeline*)Pipe->GetData(0);
 	for (i=0; i<DialogList->Size();i++)
 	{
-		_CLOCK(&m_BrainMutex); //会导致嵌套死锁，也无必要
+		//_CLOCK(&m_BrainMutex); //会导致嵌套死锁，也无必要
 
 		ePipeline* p = (ePipeline*)DialogList->GetData(i);
 
 		int64 SourceID = *(int64*)p->GetData(0);
 		int64 DialogID = *(int64*)p->GetData(1);
 
-		if (SourceID!=0) //外部对话忽略
+		if (SourceID>MAX_LOCAL_SOURCE_ID) //外部对话忽略
 		{
 			continue;
 		}
 		CLogicDialog* Dialog =  CreateNewDialog(Brain,SourceID,DialogID,0,_T(""),_T(""),DIALOG_SYSTEM_MAIN,TASK_OUT_DEFAULT);
 		bool ret = Dialog->FromEnergy(p);
+		assert(ret);
 		if (!ret)
 		{
 			return false;
@@ -1310,30 +1312,13 @@ bool CBrain::Activation(){
 		return true;
     }
 
-	if(!System::Activation()){
-	    m_ErrorInfo = _T("System activate fail.");
-		return false;
-	}
-
-	if(!m_EventWorker.Activation()){
-		m_ErrorInfo = Format1024(_T("Event proc thread started fail."));
-		return false;
-	}
-
-
-//	m_LeftArm.OpenSerialPort("COM3");
-
-	m_GUI_WebServer= new HTTPServer(new BrainRequestHandlerFactory(this),80);
-	m_GUI_WebServer->start();
-
-
 	//从长期记忆中恢复大脑当前场景
 
 	m_BrainMemory.Open();
 	
 
 	AnsiString DialogInfo = CBrainMemory::GetSystemItem(SYS_DIALOG);
-	DialogInfo=""; //仅用于测试时忽略
+	//DialogInfo=""; //仅用于测试时忽略
 
 	if (DialogInfo.size())
 	{
@@ -1348,6 +1333,21 @@ bool CBrain::Activation(){
 	}
 	m_BrainData.LoadUserAccountList();
 	
+	if(!System::Activation()){
+		m_ErrorInfo = _T("System activate fail.");
+		return false;
+	}
+
+	if(!m_EventWorker.Activation()){
+		m_ErrorInfo = Format1024(_T("Event proc thread started fail."));
+		return false;
+	}
+
+	//	m_LeftArm.OpenSerialPort("COM3");
+
+	m_GUI_WebServer= new HTTPServer(new BrainRequestHandlerFactory(this),80);
+	m_GUI_WebServer->start();
+
 	return true;
 }
 
@@ -1521,14 +1521,23 @@ bool CBrain::Login(int64 SourceID,tstring UserName, tstring CrypStr)
 
 	//如果用户对应的对话还活着就直接使用(这样临时网络断线后可以直接恢复）
 	CLogicDialog* Dialog = NULL;
-	int64 HistoryDialogID = *(int64*)UserInfo.GetData(3);
-	if(HistoryDialogID != -1 && HistoryDialogID == SourceID){
-		Dialog = m_BrainData.FindDialog(HistoryDialogID); 
-		Dialog->m_SourceID = SourceID;
+
+	if (SourceID > MAX_LOCAL_SOURCE_ID)
+	{
+		int64 HistoryDialogID = *(int64*)UserInfo.GetData(3);
+		if(HistoryDialogID != -1 && HistoryDialogID == SourceID){
+			Dialog = m_BrainData.FindDialog(HistoryDialogID); 
+			Dialog->m_SourceID = SourceID;
+		}
+	} 
+	else
+	{
+		//可能已经存在
+		Dialog = m_BrainData.FindDialog(SourceID);
 	}
 
 	if (!Dialog)
-	{
+	{	
 		tstring SourceName;
 		if (SourceID == LOCAL_GUI_SOURCE)
 		{
@@ -1537,8 +1546,8 @@ bool CBrain::Login(int64 SourceID,tstring UserName, tstring CrypStr)
 		}else{
 			SourceName = _T("System");
 		}
-
 		Dialog = m_BrainData.CreateNewDialog(this,SourceID,DEFAULT_DIALOG,NO_PARENT,SourceName,UserName,DIALOG_SYSTEM_MAIN,TASK_OUT_DEFAULT);
+
 		if (!Dialog)
 		{
 			m_ErrorInfo = _T("Create dialog fail");

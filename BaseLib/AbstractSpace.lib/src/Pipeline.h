@@ -323,6 +323,12 @@ public:
 		m_EnergyList.push_back(Pipe);   
 	};
 		
+	void PushList(ePipeline& List){
+		ePipeline* Pipe = new ePipeline;
+		assert(Pipe);
+		*Pipe<<List;
+		m_EnergyList.push_back(Pipe);
+	}
 	/*
       eElectron is a auto_ptr
     */

@@ -27,7 +27,7 @@ CUserMutex::~CUserMutex()
 
 void CUserMutex::Acquire(){
 #if defined(USING_POCO)
-#ifdef _DEBUG
+#ifdef _CHECK_MUTEX_DEADLOCK_
 try{
 	m_Mutex.lock(1000);
 	//m_Mutex.lock();

@@ -151,10 +151,18 @@ private:
 public:
 
 	CShunt(int64 ID,const TCHAR* Name=_T("Shunt"))
-		:CElement(ID,Name){};
+		:CElement(ID,Name){
+
+	};
     
-	virtual ~CShunt(){};
-    LogicRelation RealtionType(){ return SHUNT_RELATION;};
+	virtual ~CShunt(){
+
+	};
+	virtual Energy*  ToEnergy();	
+	virtual bool     FromEnergy(Energy* E);
+	
+	LogicRelation RealtionType(){ return SHUNT_RELATION;};
+
 
 	void ShuntBegin(ePipeline& ExePipe);
 	void ShuntEnd(ePipeline& ExePipe);

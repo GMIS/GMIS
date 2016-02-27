@@ -843,9 +843,11 @@ bool Model::Do(Energy* E){
 			if (Msg.IsValid())
 			{			
 				CentralNerveMsgProc(Msg);
-			}else{
-				SLEEP_MILLI(20);
 			}
+			else{
+				SLEEP_MILLI(10);
+			}
+			
 		}
 	}
 	catch(...){

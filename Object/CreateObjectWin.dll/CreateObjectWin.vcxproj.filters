@@ -1,48 +1,45 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{7a9ff5b3-1b6c-4f8a-b217-d2b4ba2e49ff}</UniqueIdentifier>
-      <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
+    <Filter Include="uArm">
+      <UniqueIdentifier>{dfea6ed1-25c0-41bc-b60a-74147f6dd740}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{51a12b23-1494-4f59-83c8-a5f89d072cb5}</UniqueIdentifier>
-      <Extensions>h;hpp;hxx;hm;inl</Extensions>
+    <Filter Include="curl">
+      <UniqueIdentifier>{91fbdd59-1b18-4586-965f-a3c7d684d14e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{62a513fa-e8bf-461d-a529-afb4fe769538}</UniqueIdentifier>
-      <Extensions>ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe</Extensions>
+    <Filter Include="win_api">
+      <UniqueIdentifier>{73329ef5-f52f-474b-b07a-7d9339fdd2ce}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\CreateObject.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="curl\CurlObject.cpp">
+      <Filter>curl</Filter>
     </ClCompile>
-    <ClCompile Include="src\WinAPIObject.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="uArm\ThinDataTransProtocal.cpp">
+      <Filter>uArm</Filter>
     </ClCompile>
-    <ClCompile Include="src\uArmObject.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="uArm\uArmObject.cpp">
+      <Filter>uArm</Filter>
     </ClCompile>
-    <ClCompile Include="src\ThinDataTransProtocal.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="win_api\WinAPIObject.cpp">
+      <Filter>win_api</Filter>
     </ClCompile>
+    <ClCompile Include="CreateObject.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\CreateObject.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="curl\CurlObject.h">
+      <Filter>curl</Filter>
     </ClInclude>
-    <ClInclude Include="src\WinAPIObject.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="uArm\ThinDataTransProtocal.h">
+      <Filter>uArm</Filter>
     </ClInclude>
-    <ClInclude Include="src\uArmObject.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="uArm\uArmObject.h">
+      <Filter>uArm</Filter>
     </ClInclude>
-    <ClInclude Include="src\ObjectList.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="win_api\WinAPIObject.h">
+      <Filter>win_api</Filter>
     </ClInclude>
-    <ClInclude Include="src\ThinDataTransProtocal.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
+    <ClInclude Include="ObjectList.h" />
+    <ClInclude Include="CreateObject.h" />
   </ItemGroup>
 </Project>

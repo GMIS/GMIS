@@ -96,7 +96,7 @@ public:
 	}   
 };
 
-#if _DEBUG
+#ifdef _CHECK_MUTEX_DEADLOCK_
 #define _CLOCK(m) \
 	CLock lk(m,Format1024(_T("%s %d"),_T(__FILE__),__LINE__));
 #define _CLOCK2(m,u)\

@@ -32,9 +32,15 @@ public:
 	eNULL(){};
 	virtual ~eNULL(){}; 		
     
-	eType EnergyType(){return TYPE_NULL;};
-    void* Value()const{	return NULL; };
-	Energy* Clone(){return NULL;};
+	eType EnergyType(){
+		return TYPE_NULL;
+	};
+    void* Value()const{
+		return NULL; 
+	};
+	Energy* Clone(){
+		return  new eNULL;
+	};
 
 
 public:  
@@ -54,16 +60,32 @@ class  eINT : public Energy
 
     SUPPORT_ABSTRACT_SAPCE_POOL(eINT);
 public:
-	eINT():m_Value(0){};
-	eINT(const int64 &Int64):m_Value(Int64){};
-	virtual ~eINT(){};
+	eINT():m_Value(0){
 
-    operator int64(){return m_Value;};
-	int64& operator()(){return m_Value;};
+	};
+	eINT(const int64 &Int64):m_Value(Int64){
 
-	eType EnergyType(){return TYPE_INT;};
-	void* Value()const{ return (void*)&m_Value;};
-	Energy*  Clone(){ return new eINT(m_Value);};
+	};
+	virtual ~eINT(){
+
+	};
+
+    operator int64(){
+		return m_Value;
+	};
+	int64& operator()(){
+		return m_Value;
+	};
+
+	eType EnergyType(){
+		return TYPE_INT;
+	};
+	void* Value()const{
+		return (void*)&m_Value;
+	};
+	Energy*  Clone(){ 
+		return new eINT(m_Value);
+	};
 
 	void ToString(AnsiString& s);
 	bool  FromString(AnsiString& s,uint32& pos);
@@ -79,16 +101,32 @@ class  eFLOAT : public Energy
 	float64  m_Value; 
     SUPPORT_ABSTRACT_SAPCE_POOL(eFLOAT);
 public:
-	eFLOAT():m_Value(0){};
-	eFLOAT(const float64 &V):m_Value(V){};
-	virtual ~eFLOAT(){};
+	eFLOAT():m_Value(0){
 
-    operator float64(){return m_Value;};
-	float64& operator()(){return m_Value;};
+	};
+	eFLOAT(const float64 &V):m_Value(V){
 
-	eType EnergyType(){return TYPE_FLOAT;};
-    void* Value()const{return (void*)&m_Value;};
-	Energy*  Clone(){ return new eFLOAT(m_Value);};
+	};
+	virtual ~eFLOAT(){
+
+	};
+
+    operator float64(){
+		return m_Value;
+	};
+	float64& operator()(){
+		return m_Value;
+	};
+
+	eType EnergyType(){
+		return TYPE_FLOAT;
+	};
+    void* Value()const{
+		return (void*)&m_Value;
+	};
+	Energy*  Clone(){ 
+		return new eFLOAT(m_Value);
+	};
 
 	void ToString(AnsiString& s);
 	bool  FromString(AnsiString& s,uint32& pos);	
@@ -103,18 +141,35 @@ class eSTRING:public Energy
 	tstring   m_Value;
 	SUPPORT_ABSTRACT_SAPCE_POOL(eSTRING);
 public:
-	eSTRING():m_Value(){};
-	eSTRING(const tstring &V):m_Value(V){};
-	eSTRING(const wchar_t* s):m_Value(s){};
+	eSTRING():m_Value(){
+
+	};
+	eSTRING(const tstring &V):m_Value(V){
+
+	};
+	eSTRING(const wchar_t* s):m_Value(s){
+
+	};
 	virtual ~eSTRING(){
+
 	};
 
-    operator tstring(){return m_Value;};
-	tstring& operator()(){return m_Value;};
+    operator tstring(){
+		return m_Value;
+	};
+	tstring& operator()(){
+		return m_Value;
+	};
 
-	eType EnergyType(){return TYPE_STRING;};
-	void* Value()const{return (void*)&m_Value;};
-	Energy*  Clone(){return (new eSTRING(m_Value));};
+	eType EnergyType(){
+		return TYPE_STRING;
+	};
+	void* Value()const{
+		return (void*)&m_Value;
+	};
+	Energy*  Clone(){
+		return (new eSTRING(m_Value));
+	};
 
 	//Note: it will be convert into utf8,no matter whether the m_Value is unicode
 	void ToString(AnsiString& s);
@@ -135,17 +190,33 @@ class  eBLOB : public Energy
 	AnsiString  m_Value; 
     SUPPORT_ABSTRACT_SAPCE_POOL(eBLOB);
 public:
-	eBLOB():m_Value(){};
-	eBLOB(const char* buf,int32 Len):m_Value(buf,Len){};
-	virtual ~eBLOB(){};
-	
-    operator AnsiString(){return m_Value;};
-	AnsiString& operator()(){return m_Value;};
-	
-	eType EnergyType(){return TYPE_BLOB;};
-	void* Value()const{return (void*)&m_Value;};
+	eBLOB():m_Value(){
 
-	Energy*  Clone(){return new eBLOB(m_Value.c_str(),m_Value.size());};
+	};
+	eBLOB(const char* buf,int32 Len):m_Value(buf,Len){
+
+	};
+	virtual ~eBLOB(){
+
+	};
+	
+    operator AnsiString(){
+		return m_Value;
+	};
+	AnsiString& operator()(){
+		return m_Value;
+	};
+	
+	eType EnergyType(){
+		return TYPE_BLOB;
+	};
+	void* Value()const{
+		return (void*)&m_Value;
+	};
+
+	Energy*  Clone(){
+		return new eBLOB(m_Value.c_str(),m_Value.size());
+	};
 	
 	//Note: it will be convert into utf8,no matter whether the m_Value is unicode
 	void ToString(AnsiString& s);

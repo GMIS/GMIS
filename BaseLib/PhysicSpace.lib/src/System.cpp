@@ -28,6 +28,7 @@ bool CSysThreadWorker::Do(Energy* E){
 void CSysThreadWorker::SystemIOWorkProc(){
 	System* Parent = (System*)m_Parent;
 	try{	
+		    char buf[MODEL_IO_BUFFER_SIZE];
 			while(IsAlive() && Parent->IsAlive()){
 
 				int64 SourceID = 0;
@@ -35,7 +36,6 @@ void CSysThreadWorker::SystemIOWorkProc(){
 				CLinker Linker;
 				Parent->GetClientLinkerList()->PopLinker(Linker);
 
-				char buf[MODEL_IO_BUFFER_SIZE];
 				if ( Linker.IsValid())
 				{
 					Linker().ThreadIOWorkProc(buf,MODEL_IO_BUFFER_SIZE);
@@ -88,11 +88,11 @@ void CSysThreadWorker::NerveWorkProc(){
 				if (m_IdleCount>LockedData->GetNerveMaxIdleCount()) //Around 600 milliseconds to exit if without information can be handled
 				{						
 					int IdleNum = LockedData->GetIdleWorkerNum();
-					if (IdleNum > 1 )//Keep at least one free
+					if (IdleNum > 1 )
 					{
 						m_IdleCount = 0;
-						break;
-					}else{
+						break;  //thread exit
+					}else{  //Keep at least one free
 						m_IdleCount = 0;
 					}
 				}

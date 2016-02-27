@@ -130,14 +130,15 @@ void CMainFrame::SendMsgToBrainFocuse( ePipeline& Msg,int64 EventID)
 
 void CMainFrame::GUIMsgProc(){
 
-	if (m_MsgList.DataNum()==0)
-	{
-		SLEEP_MILLI(20);
-		return;
-	}
+	
 	CMsg Msg; 
 	m_MsgList.Pop(Msg);
 
+	if (!Msg.IsValid())
+	{
+		SLEEP_MILLI(30);
+		return;
+	}
 	assert(Msg.GetMsgID() == MSG_BRAIN_TO_GUI);
 
 REPEAT:

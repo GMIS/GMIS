@@ -53,10 +53,12 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>F:\boost\;$(IncludePath)</IncludePath>
+    <IncludePath>D:\curl-7.47.1\include;F:\boost\;$(IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)bin\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)obj\$(ProjectName)\$(Configuration)\</IntDir>
     <LibraryPath>F:\boost\bin\vc10\lib;$(LibraryPath)</LibraryPath>
+    <ReferencePath>$(ReferencePath)</ReferencePath>
+    <SourcePath>D:\curl-7.47.1\src;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -126,17 +128,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\CreateObject.cpp" />
-    <ClCompile Include="src\ThinDataTransProtocal.cpp" />
-    <ClCompile Include="src\uArmObject.cpp" />
-    <ClCompile Include="src\WinAPIObject.cpp" />
+    <ClCompile Include="CreateObject.cpp" />
+    <ClCompile Include="curl\CurlObject.cpp" />
+    <ClCompile Include="uArm\ThinDataTransProtocal.cpp" />
+    <ClCompile Include="uArm\uArmObject.cpp" />
+    <ClCompile Include="win_api\WinAPIObject.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\CreateObject.h" />
-    <ClInclude Include="src\ObjectList.h" />
-    <ClInclude Include="src\ThinDataTransProtocal.h" />
-    <ClInclude Include="src\uArmObject.h" />
-    <ClInclude Include="src\WinAPIObject.h" />
+    <ClInclude Include="CreateObject.h" />
+    <ClInclude Include="curl\CurlObject.h" />
+    <ClInclude Include="ObjectList.h" />
+    <ClInclude Include="uArm\ThinDataTransProtocal.h" />
+    <ClInclude Include="uArm\uArmObject.h" />
+    <ClInclude Include="win_api\WinAPIObject.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

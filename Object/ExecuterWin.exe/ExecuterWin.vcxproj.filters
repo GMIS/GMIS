@@ -15,9 +15,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\CLog.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\EditLog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -44,9 +41,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\RESOURCE.H">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\CLog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\EditLog.h">

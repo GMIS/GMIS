@@ -234,7 +234,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 				
 			    ret = MainBrain.Login(LOCAL_GUI_SOURCE,TempAccount.Name,CrypStr);
 				if(ret){
-					CLogicDialog* Dialog = MainBrain.GetBrainData()->GetDialog(SYSTEM_SOURCE,DEFAULT_DIALOG);
+					CLogicDialog* Dialog = MainBrain.GetBrainData()->GetDialog(LOCAL_GUI_SOURCE,DEFAULT_DIALOG);
 					CNotifyDialogState nf(NOTIFY_DIALOG_LIST);
 					nf.PushInt(DL_LOGIN_ONE);
 					nf.PushInt(LOCAL_GUI_SOURCE);
@@ -265,7 +265,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 				DispatchMessage(&msg);
 
 			}else{
-				SLEEP_MILLI(1);
+				SLEEP_MILLI(20);
 			}	
 		}
 

@@ -1,0 +1,41 @@
+{
+  "name": "GMIS",
+  "version": "0.1.0",
+  "description": "A client with web GUI for GMIS brain",
+  "main": "main.js",
+  "builder": {
+    "win": {
+      "title": "GMIS",
+      "version": "0.1.0.0",
+      "publisher": "hongbing75@gmail.com",
+      "icon": "Main.ico"
+    }
+  },
+  "scripts": {
+    "start": "electron main.js",
+    "packager": "electron-packager ..\\gmis_web  gmis  --platform=win32 --arch=ia32 --version=0.36.8 --app-version=0.1.0  --icon =Main.ico  --overwrite --out=..\\..\\compile\\bin\\web\\",
+    "built-setup": "electron-builder  ..\\..\\compile\\bin\\web\\gmis-win32-ia32 --platform=win --config=config.json --out=..\\..\\compile\\bin\\web\\gmis_win_setup"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gmis/gmis.git"
+  },
+  "keywords": [
+    "gmis",
+    "robot",
+    "brain",
+    "client"
+  ],
+  "author": "hongbing75@gmail.com",
+  "license": "GPL",
+  "bugs": {
+    "url": "https://github.com/gmis/gmis/issues"
+  },
+  "homepage": "gmis.github.io",
+  "devDependencies": {
+    "electron-prebuilt": "^0.36.0"
+  },
+  "dependencies": {
+    "electron-builder": "^2.7.2"
+  }
+}

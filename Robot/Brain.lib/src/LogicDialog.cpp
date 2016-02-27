@@ -211,7 +211,7 @@ Energy*  CLogicDialog::ToEnergy(){
 	    Pipe->PushInt(m_TaskOutType);
 		
 		Pipe->PushInt(m_ParentDialogID);
-		Pipe->PushInt(m_LastDebugTimeStamp);
+		Pipe->PushInt(m_LastDebugTimeStamp-1); //使其与m_LogicItemTree.GetID()不相等，这样恢复的时候才能发送调试数据;
 
 		Pipe->PushInt(m_WorkMode);
 		Pipe->PushInt(m_TaskState);
@@ -262,38 +262,59 @@ Energy*  CLogicDialog::ToEnergy(){
 		while(It!=m_LogicList.end()){
 			CLocalLogicCell*  Item = *It;
 			Energy* e = Item->ToEnergy();
-			List.Push_Directly(e);
+			assert(e);
+			if (e)
+			{
+				List.Push_Directly(e);
+			}
+			
 			It++;
 		}
 		Pipe->PushPipe(List);
-		
+		List.Clear();
+
 		vector<CElementCell*>::iterator Ita = m_CapaList.begin();
 		while(Ita!=m_CapaList.end()){
 			CElementCell* Item = *Ita;
 			Energy* e = Item->ToEnergy();
-			List.Push_Directly(e);
+			assert(e);
+			if (e)
+			{
+				List.Push_Directly(e);
+			}
 			Ita++;
 		}
 		Pipe->PushPipe(List);
-		
+		List.Clear();
+
 		vector<CElementCell*>::iterator Itb = m_InduList.begin();
 		while(Itb!=m_InduList.end()){
 			CElementCell* Item = *Itb;
 			Energy* e = Item->ToEnergy();
-			List.Push_Directly(e);
+			assert(e);
+			if (e)
+			{
+				List.Push_Directly(e);
+			}
 			Itb++;
 		}
 		Pipe->PushPipe(List);
-		
+		List.Clear();
+
 		vector<CObjectData*>::iterator Itc = m_ObjectList.begin();
 		while(Itc != m_ObjectList.end())
 		{
 			CObjectData* ob = *Itc;
 			ePipeline* Item = ob->GetItemData();
-			List.Push_Directly(Item);
+			assert(Item);
+			if (Item)
+			{
+				List.Push_Directly(Item);
+			}
 			Itc++;
 		}
 		Pipe->PushPipe(List);
+		List.Clear();
 
 		map<int64, ePipeline>::iterator itd = m_ObjectInstanceList.begin();
 		while (itd != m_ObjectInstanceList.end())
@@ -305,7 +326,7 @@ Energy*  CLogicDialog::ToEnergy(){
 			List.PushPipe(Instance);
 			itd++;
 		}
-		Pipe->PushPipe(List);
+		Pipe->PushList(List);
 
 		map<int64, ePipeline>::iterator ite = m_TableInstanceList.begin();
 		while (ite != m_TableInstanceList.end())
@@ -317,7 +338,7 @@ Energy*  CLogicDialog::ToEnergy(){
 			List.PushPipe(Instance);
 			ite++;
 		}
-		Pipe->PushPipe(List);
+		Pipe->PushList(List);
 
 		map<int64, CElement*>::iterator itf = m_LogicInstanceList.begin();
 		while (itf != m_LogicInstanceList.end())
@@ -326,14 +347,14 @@ Energy*  CLogicDialog::ToEnergy(){
 			CElement* Instance = itf->second;
 			Energy* E = ToEnergy();
 			if(!E){
-				return false;
+				return NULL;
 			}
 
 			List.PushInt(ID);
 			List.Push_Directly(E);
 			itf++;
 		}
-		Pipe->PushPipe(List);
+		Pipe->PushList(List);
 
 
 		Energy* e1 = m_NamedObjectList.ToEnergy();
@@ -453,8 +474,9 @@ bool   CLogicDialog::FromEnergy(Energy* e){
 		List->Pop(&E1);
 		ePipeline* Logic = (ePipeline*)E1.Get();
 		CLocalLogicCell* Cell = new CLocalLogicCell();
-		
-		if(!Cell->FromEnergy(Logic)){
+		assert(Cell);
+		if(!Cell || !Cell->FromEnergy(Logic)){
+			if(Cell)delete Cell;
 			return false;
 		}
 		
@@ -470,7 +492,9 @@ bool   CLogicDialog::FromEnergy(Energy* e){
 		List->Pop(&E1);
 		ePipeline* CellData = (ePipeline*)E1.Get();
 		CElementCell* Cell = new CElementCell(_T(""),_T(""));
-        if(!Cell->FromEnergy(CellData)){
+		assert(Cell);
+        if(!Cell || !Cell->FromEnergy(CellData)){
+			if(Cell)delete Cell;
 			return false;
 		}
 		m_CapaList.push_back(Cell);
@@ -485,7 +509,9 @@ bool   CLogicDialog::FromEnergy(Energy* e){
 		List->Pop(&E1);
 		ePipeline* CellData = (ePipeline*)E1.Get();
 		CElementCell* Cell = new CElementCell(_T(""),_T(""));
-        if(!Cell->FromEnergy(CellData)){
+		assert(Cell);
+        if(!Cell || !Cell->FromEnergy(CellData)){
+			if(Cell)delete Cell;
 			return false;
 		}
 		m_InduList.push_back(Cell);
@@ -540,7 +566,8 @@ bool   CLogicDialog::FromEnergy(Energy* e){
 		ePipeline* Instance = (ePipeline*)E1.Get();
 		
 		CElement* Elt = new CElement(0,_T(""));
-		if (Elt->FromEnergy(E1.Get()))
+		assert(Elt);
+		if (!Elt || !Elt->FromEnergy(Instance))
 		{
 			delete Elt;
 			return false;

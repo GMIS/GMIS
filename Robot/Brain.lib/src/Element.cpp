@@ -455,6 +455,43 @@ bool CSeries::Do(CLogicDialog* Dialog,ePipeline& ExePipe, ePipeline& LocalAddres
 	return true;
 }
 //////////////////////////////////////////////////////////////////////////
+
+Energy*  CShunt::ToEnergy(){
+	Energy* e = CElement::ToEnergy();
+	if (!e)
+	{
+		return NULL;
+	}
+	ePipeline* Pipe = new ePipeline;
+	assert(Pipe);
+	if(!Pipe)return NULL;
+
+	Pipe->Push_Directly(e);
+	Pipe->PushPipe(m_TempPipe);
+	Pipe->PushPipe(m_TempResultList);
+
+	return Pipe;
+
+}
+bool    CShunt::FromEnergy(Energy* E){
+	ePipeline* Pipe = (ePipeline*)E;
+	assert(Pipe->Size()==3);
+
+	Energy* e0 = Pipe->GetEnergy(0);
+	assert(e0->EnergyType()==TYPE_PIPELINE);
+	bool ret = CElement::FromEnergy(e0);
+	if(!ret){
+		return false;
+	}
+	Energy* e1 = Pipe->GetEnergy(1);
+	assert(e1->EnergyType()==TYPE_PIPELINE);
+	m_TempPipe = (*(ePipeline*)e1);
+
+	Energy* e2 = Pipe->GetEnergy(2);
+	assert(e2->EnergyType()==TYPE_PIPELINE);
+	m_TempResultList = (*(ePipeline*)e2);
+}
+
 void CShunt::InsertLogic(int64 Index,CElement* e){
 
 	ActomPtr It = m_ActomList.begin();

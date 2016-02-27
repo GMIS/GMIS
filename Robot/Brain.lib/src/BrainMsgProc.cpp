@@ -8,6 +8,7 @@ void CBrain::CentralNerveMsgProc(CMsg& Msg){
 
 	int64 SourceID = Msg.GetSourceID();
 	int64 DialogID = Msg.GetReceiverID();
+	int64 MsgID=Msg.GetMsgID();
 
 	if(DialogID!=DEFAULT_DIALOG){	
 		//转向子神经处理，避免中枢神经阻塞
@@ -18,20 +19,28 @@ void CBrain::CentralNerveMsgProc(CMsg& Msg){
 	CLogicDialog* MainDialog = m_BrainData.GetDialog(SourceID,DialogID);
 	if (MainDialog==NULL) //对于网络登录，对方发来MSG_I_AM信息时，还没有建立对话，此时交给系统缺省对话处理
 	{
-		MainDialog = m_BrainData.GetDialog(SYSTEM_SOURCE,DEFAULT_DIALOG);
+		if (MsgID == MSG_I_AM)
+		{
+			MainDialog = m_BrainData.GetDialog(SYSTEM_SOURCE,DEFAULT_DIALOG);
+			assert(MainDialog);
+		}else{
+			return ;
+		}
 	}
+
 	CLogicDialog::AutoSysProcCounter  Counter(MainDialog);
 
-	int64 MsgID=Msg.GetMsgID();
-	int64 EventID = Msg.GetEventID();
 	switch(MsgID)
 	{
 	case MSG_EVENT_TICK:
-		m_BrainData.ResetEventTickCount(EventID);
-		if(SourceID==SYSTEM_SOURCE){
-			m_BrainData.BrainIdleProc(this);
+		{
+			int64 EventID = Msg.GetEventID();
+			m_BrainData.ResetEventTickCount(EventID);
+			if(SourceID==SYSTEM_SOURCE){
+				m_BrainData.BrainIdleProc(this);
+			}
+			//MainDialog->SaveReceiveItem(_T("ResetEventTickCount"),0);
 		}
-		//MainDialog->SaveReceiveItem(_T("ResetEventTickCount"),0);
 		break;
 	case MSG_WHO_ARE_YOU:
 		OnWhoAreYou(MainDialog,Msg);

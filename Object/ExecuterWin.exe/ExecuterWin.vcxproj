@@ -133,7 +133,6 @@
     <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\CLog.cpp" />
     <ClCompile Include="src\EditLog.cpp" />
     <ClCompile Include="src\Executer.cpp" />
     <ClCompile Include="src\Main.cpp" />
@@ -148,7 +147,6 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\CLog.h" />
     <ClInclude Include="src\DEBUG.H" />
     <ClInclude Include="src\EditLog.h" />
     <ClInclude Include="src\editlog_stream.h" />
