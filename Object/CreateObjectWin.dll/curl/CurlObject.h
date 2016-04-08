@@ -11,10 +11,9 @@
 
 #if defined _COMPILE_CURL_OBJECT
 
-#include "Mass.h"
-#include "Pipeline.h"
-#include <curl/curl.h>
 
+
+#include <curl/curl.h>
 
 class CCurlObject : public Mass
 {
@@ -30,16 +29,21 @@ public:
 		*/
 
 	tstring m_Name;
-
+	struct curl_slist*  m_Headers;
+	CURL*               m_Curl;
+	char*               m_buf;
+	int32               m_bufsize;
 public:
 	CCurlObject(tstring Name,int64 ID=0);
 	virtual ~CCurlObject();
 	virtual tstring GetName(){ return m_Name;};
 	virtual TypeAB GetTypeAB(){ return 0x00000000;}
 
-	bool Get(ePipeline* Pipe);
+	bool Header(ePipeline* Pipe);
+	bool Set(ePipeline* Pipe);
+	bool Run(ePipeline* Pipe);
 	bool CmdLine(ePipeline* pipe);
-
+	bool Reset(ePipeline* Pipe);
 	virtual bool Do(Energy* E);
 	
 	/*如果Object的执行依赖其内部状态信息则应该实现下面两个函数来实现初始化

@@ -124,7 +124,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 		static CMainBrain MainBrain(&Timer,&SpacePool,AppName);
 		AfxBrain = &MainBrain;
 
-		if(!MainBrain.Activation()){
+		if(!MainBrain.Activate()){
 			if (MainBrain.m_ErrorInfo.size()==0)
 			{
 				MainBrain.m_ErrorInfo = _T("unkown error");

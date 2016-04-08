@@ -184,9 +184,9 @@ protected:
 	CSuperiorLinkerList  m_SuperiorList;               
 	CLockedModelData     m_ModelData;
 	
-	int32          m_nCPU;     //default = 2
-	uint32         m_LogFlag;  //default = 0
-	
+	int32          m_nCPU;       //default = 2
+	uint32         m_LogFlag;    //default = 0
+	bool           m_bAutoWork;  //auto create CThreadWorker in Activate() to run Do(Energy* e), default =  true;
 
 	/*
 	Detecting the state to determine whether system need to increase Workers (threads)，
@@ -199,7 +199,7 @@ public:
 	virtual ~Model();
 
 	virtual MASS_TYPE  MassType(){ return MASS_MODEL;};
-    virtual bool	   Activation();
+    virtual bool	   Activate();
 	virtual void       Dead();
 	
 		

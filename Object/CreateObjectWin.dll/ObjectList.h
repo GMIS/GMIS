@@ -1,6 +1,8 @@
 #ifndef _OBJECT_LIST_H
 #define _OBJECT_LIST_H
 
+#include "Mass.h"
+#include "Pipeline.h"
 
 //#define _COMPILE_WIMAPI_OBJECT
 

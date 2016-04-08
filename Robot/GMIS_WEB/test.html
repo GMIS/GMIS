@@ -1,0 +1,49 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<link href="cssConsole.css" type="text/css" rel="stylesheet">
+<script src="jquery-min.js" type="text/javascript"></script>
+<script src="cssConsole.js"></script>
+<style>
+
+body{
+background: #370f29;
+font-family: courier;
+}
+
+#inputview {
+top:30px;
+width: 910px;
+display:inline-block;
+position:relative;
+background: black;
+float:left;
+}
+</style>
+
+
+<meta charset="utf-8"/>
+<title>GMIS TEST</title>
+
+
+</head>
+
+<body>
+
+   <div id="inputview"></div>
+    
+<script>
+
+$(document).ready(function() {
+    $('#inputview').find('input').focus();
+});
+
+$('#inputview').cssConsole({
+	inputName:'console',
+	charLimit: 160
+});
+
+</script>
+ 
+</body>
+</html>

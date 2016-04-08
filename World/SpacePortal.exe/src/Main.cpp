@@ -174,7 +174,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	
 
 	CSpacePortal SpacePortal(&Timer,&SpacePool);	
-	if(!SpacePortal.Activation()){
+	if(!SpacePortal.Activate()){
 		return 0;
 	}
 
@@ -203,7 +203,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 
 
 	CCheckDBWork  CheckDBWork(&SpacePortal);
-    CheckDBWork.Activation();
+    CheckDBWork.Activate();
 
 	//CenterWindow(MainFrame.GetHwnd(),NULL);
 	::ShowWindow(MainFrame.GetHwnd(), SW_SHOW);

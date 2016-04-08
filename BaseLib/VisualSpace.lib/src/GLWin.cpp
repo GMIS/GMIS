@@ -24,7 +24,7 @@ CGLWin::~CGLWin()
 
 }
 	
-bool CGLWin::Activation(){ 
+bool CGLWin::Activate(){ 
 	m_PauseRender = false;
 	return true;
 }

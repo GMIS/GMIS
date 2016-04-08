@@ -9,10 +9,11 @@
 #include <stdio.h>
 #include <string>
 
-#include "ObjectList.h"
 
-#include "WinAPIObject.h"
-#include "uArmObject.h"
+#include "ObjectList.h"
+#include "win_api\WinAPIObject.h"
+#include "uarm\uArmObject.h"
+#include "curl\CurlObject.h"
 
 #define _LinkDLL __declspec(dllexport)
 

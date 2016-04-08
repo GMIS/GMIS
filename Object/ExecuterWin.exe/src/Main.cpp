@@ -82,7 +82,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 
 	CExecuter  Executer(DllType,CryptText,&Timer,&SpacePool);
 
-	if(!Executer.Activation()){
+	if(!Executer.Activate()){
 		return 0;
 	}
 

@@ -187,10 +187,10 @@ public:
 		   "Label": "string"
 		   "Data": [
 				"eNULL":"NULL",
-				"eINT": int64,
-				"eFloat":float,
-				"eSTRING": "string",
-				Pipe: {
+				"eINT": 123,
+				"eFloat":123.56f,
+				"eSTRING": "hello world",
+				Pipe: { 
 					....
 				}
 		   ]

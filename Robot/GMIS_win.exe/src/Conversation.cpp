@@ -547,13 +547,13 @@ void CConversation::ClearDialogInfo(){
 
 
 void CConversation::AddRuntimeInfo(ePipeline& Item){
-	int64 TimeStamp = Item.GetID();
-	tstring timeStr = AbstractSpace::GetTimer()->GetHMSM(TimeStamp);
+
+	tstring timeStr = Item.GetLabel();
 	
-	int64 ID = Item.PopInt();
+	int64 MassID = Item.GetID();
 	tstring text = Item.PopString();
 	
-	tstring s = Format1024(_T("%s  %I64ld \n%s"),timeStr.c_str(),ID,text.c_str());
+	tstring s = Format1024(_T("%s  %I64ld \n%s"),timeStr.c_str(),MassID,text.c_str());
 	m_OutputWin.m_OutputView.AddText(s.c_str());
 
 	::SetFocus(m_InputWin.m_Edit.GetHandle());
@@ -697,7 +697,7 @@ void CConversation::SetCurDialog(int64 SourceID,int64 DialogID,ePipeline& Pipe){
 	for (int i=1; i<RuntimeData->Size(); i++)
 	{
 		ePipeline* Item = (ePipeline*)RuntimeData->GetData(i);
-		int64 ID = Item->PopInt();
+		
 		tstring s = Item->PopString();
 		m_OutputWin.m_OutputView.AddText(s.c_str());
 	}

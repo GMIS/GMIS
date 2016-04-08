@@ -123,7 +123,7 @@ void CAutoObjectView::Show(){
 void CAutoObjectView::Hide(){
 	assert(m_Parent && ::IsWindow(m_Parent->GetHwnd()));
 	SetWindowPos(GetHwnd(),NULL,0,0,0,0,SWP_HIDEWINDOW);
-	m_Parent->Activation();
+	m_Parent->Activate();
 }
 
 void CAutoObjectView::SetHeaderText(tstring Title,BOOL Enable/*=TRUE*/){
@@ -490,7 +490,7 @@ LRESULT CAutoObjectView::OnMouseMove(int64 wParam, int64 lParam){
 	}else {
 		::ReleaseCapture();
 		SetWindowPos(GetHwnd(),NULL,0,0,0,0,SWP_HIDEWINDOW);
-		m_Parent->Activation();
+		m_Parent->Activate();
 	}
 	return 0;
 };

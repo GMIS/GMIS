@@ -176,11 +176,11 @@ REPEAT:
 			break;
 		case GUI_RUNTIME_OUTPUT:
 			{
-				ePipeline* LastItem = (ePipeline*)Cmd.GetData(0);
+				ePipeline* Item = (ePipeline*)Cmd.GetData(0);
 				
 				if (GetGUI()->IsFocusDialog(SourceID,DialogID))
 				{
-					m_ConvView.AddRuntimeInfo(*LastItem);
+					m_ConvView.AddRuntimeInfo(*Item);
 				} 
 				else
 				{

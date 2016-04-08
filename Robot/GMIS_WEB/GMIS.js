@@ -1,287 +1,242 @@
+Ôªø
+//È¢ÑÂÆö‰πâÁöÑ‰ø°ÊÅØID
+(function() {
+    msgid = {
+        LINKER_FEEDBACK: '2',
+        MSG_BASE: '127282417797660000',
+        MSG_WHO_ARE_YOU: '127282417797660001',
+        MSG_I_AM: '127282417797660201',
+        MSG_CONNECT_OK: '127282417797660102',
+        MSG_BRAIN_TO_GUI: '127283417797660101'
+    }„ÄÄ
+    Object.freeze(msgid); // ÂÜªÁªìÂÜÖÈÉ®Â±ûÊÄß
+    „ÄÄ„ÄÄ
+    Object.defineProperties(window, {
+        MSG_ID: {„ÄÄ„ÄÄ„ÄÄ„ÄÄ
+            configurable: false,
+            „ÄÄ„ÄÄ„ÄÄ„ÄÄwritable: false,
+            „ÄÄ„ÄÄ„ÄÄ„ÄÄvalue: msgid // ÊåáÂêë‰∏äÈù¢ÂÜªÁªìÁöÑÂØπË±°user
+                „ÄÄ„ÄÄ
+        }„ÄÄ„ÄÄ
+    });
+}())
 
-      var ws;
-      var SocketCreated = false;
-      var isUserloggedout = false;
-      var SendedMsgTimeStamp = 0;
-      var SendedMsgID = 0;
-      	  
-  	  (function(){
-  	  	 msgid = {
-  	  	 	LINKER_FEEDBACK: '2',
-  	     	MSG_BASE: '127282417797660000',
-  	     	MSG_WHO_ARE_YOU: '127282417797660001',
-  	     	MSG_I_AM: '127282417797660201',
-            MSG_CONNECT_OK: '127282417797660102',
-            MSG_BRAIN_TO_GUI:'127283417797660101'
-  	     } 
-  	     °°
-  	     Object.freeze(msgid); // ∂≥Ω·ƒ⁄≤ø Ù–‘
-    °°°°
-    °°°° Object.defineProperties(window, {
-        °°°°MSG_ID: {
-        °°°°°°°°configurable: false,
-        °°°°°°°°writable: false,
-        °°°°°°°°value: msgid // ÷∏œÚ…œ√Ê∂≥Ω·µƒ∂‘œÛuser
-        °°°°}
-    °°°°}); 
-  	  }())
+//////////////////////////////
 
-      function  MsgProc(s)
-      {
-      	m = new GMIS_Msg();
-      	ret = m.FromString(s);
-      	if(!ret){ 
-      		Pipe = new ePipeline();
-      		ret = Pipe.FromString(s);
-      		if(ret){
-      			if(Pipe.ID == window.MSG_ID.LINKER_FEEDBACK){
-      				//info = "‘∂∂À ’µΩMSG:"+SendedMsgID;
-      				//Log(info,"OK");
-      				return;
-      			};
-      		}
-      	   Log(" ’µΩ“ª∏ˆ∏Ò Ω≤ª∑˚µƒ–≈œ¢:"+s,"ERROR");
-      	   return;
-    	}else{ // ◊œ»∑¢ÀÕ“ª∏ˆ∑¥¿°–≈œ¢“‘±„∂‘∑Ωƒ‹ºÃ–¯∑¢ÀÕœ¬“ª∏ˆ–≈œ¢
-    		TimeStamp = m.ID;
-    	    SenderID  = m.GetSenderID();
-    		rMsg = new ePipeline();
-    	    rMsg.ID = window.MSG_ID.LINKER_FEEDBACK;
-			rMsg.PushInt('1'); //RECEIVE_OK
-			rMsg.PushInt(TimeStamp);
-			rMsg.PushInt(SenderID);
-			s = rMsg.ToString();
-			ws.send(s);
-    	}
-      	MsgID = m.GetMsgID();
-      	switch(MsgID){
-      	case window.MSG_ID.MSG_WHO_ARE_YOU:
-      		OnWhoAreYou(m);
+var GMIS = {}; //ÂëΩÂêçÁ©∫Èó¥
+GMIS.ws = null;
+GMIS.bUserLogin = false;
+GMIS.SendedMsgTimeStamp = 0;
+GMIS.SendedMsgID = 0;
+
+GMIS.Log = function(Text, MessageType) {
+    if (MessageType == "OK") Text = "<span style='color: green;'>" + Text + "</span>";
+    if (MessageType == "ERROR") Text = "<span style='color: red;'>" + Text + "</span>";
+    document.getElementById("LogView").innerHTML = document.getElementById("LogView").innerHTML + Text + "<br />";
+    var LogContainer = document.getElementById("LogView");
+    LogContainer.scrollTop = LogContainer.scrollHeight;
+};
+
+GMIS.MsgProc = function(s) {
+    m = new GMIS_Msg();
+    ret = m.FromString(s);
+    if (!ret) {
+        Pipe = new ePipeline();
+        ret = Pipe.FromString(s);
+        if (ret) {
+            if (Pipe.ID == window.MSG_ID.LINKER_FEEDBACK) {
+                //info = "ËøúÁ´ØÊî∂Âà∞MSG:"+SendedMsgID;
+                //Log(info,"OK");
+                m = NULL;
+                return;
+            };
+        }
+        GMIS.Log("Êî∂Âà∞‰∏Ä‰∏™Ê†ºÂºè‰∏çÁ¨¶ÁöÑ‰ø°ÊÅØ:" + s, "ERROR");
+        return;
+    } else { //È¶ñÂÖàÂèëÈÄÅ‰∏Ä‰∏™ÂèçÈ¶à‰ø°ÊÅØ‰ª•‰æøÂØπÊñπËÉΩÁªßÁª≠ÂèëÈÄÅ‰∏ã‰∏Ä‰∏™‰ø°ÊÅØ
+        TimeStamp = m.ID;
+        SenderID = m.GetSenderID();
+        rMsg = new ePipeline();
+        rMsg.ID = window.MSG_ID.LINKER_FEEDBACK;
+        rMsg.PushInt('1'); //RECEIVE_OK
+        rMsg.PushInt(TimeStamp);
+        rMsg.PushInt(SenderID);
+        s = rMsg.ToString();
+        ws.send(s);
+    }
+    MsgID = m.GetMsgID();
+    switch (MsgID) {
+        case window.MSG_ID.MSG_WHO_ARE_YOU:
+            OnWhoAreYou(m);
             break;
-	    case window.MSG_ID.MSG_CONNECT_OK:
+        case window.MSG_ID.MSG_CONNECT_OK:
             OnConnectOK(m);
-	        break;
-	    case window.MSG_ID.MSG_BRAIN_TO_GUI:
-	    	OnBrainToGUI(m);
-	        break;
-	    default:
-	        s = " ’µΩŒ¥∂®“Â–≈œ¢£∫"+MsgID;
-	        Log(s,"ERROR");
-	        break;
-      	}
-  	  }
-  	  
-  	  function OnWhoAreYou(m){
-  	  	  SenderID = m.GetSenderID();
-  	  	  rMsg = new GMIS_Msg();
-  	  	  rMsg.WriteEnvelope(SenderID,window.MSG_ID.MSG_I_AM,0,0);
-	
-		  rMsg.Letter.PushString("zhb1");   //user name
-         	  rMsg.Letter.PushString("zhb1123"); //
-	  	  
-	  	  SendToBrain(rMsg);
-  	  }
-  	  	 
-      function OnConnectOK(m){
-  	  	 Log("µ«¬º≥…π¶", "OK");
-  	  }
+            break;
+        case window.MSG_ID.MSG_BRAIN_TO_GUI:
+            OnBrainToGUI(m);
+            break;
+        default:
+            s = "Êî∂Âà∞Êú™ÂÆö‰πâ‰ø°ÊÅØÔºö" + MsgID;
+            Log(s, "ERROR");
+            break;
+    }
+    m = NULL;
+}
 
-      function OnBrainToGUI(m){
-  	  	 Log(" ’µΩ“ª∏ˆBrain to GUI–≈œ¢", "OK");
-  	  }
-      function SendToBrain(m){
-      	   m.ID = new Date().getTime();
-      	   s = m.ToString();
-      	   
-      	   SendedMsgTimeStamp = m.ID;
-      	   SendedMsgID = m.GetMsgID();
-      	   
-      	   ws.send(s);
-      }
+GMIS.OnWhoAreYou = function (m) {
+    SenderID = m.GetSenderID();
+    rMsg = new GMIS_Msg();
+    rMsg.WriteEnvelope(SenderID, window.MSG_ID.MSG_I_AM, 0, 0);
 
-      function ViewportLocked(str) 
-      { 
-         var view = document.getElementById('Viewport'); 
-         if (view) 
-            view.className = 'ViewportLocked'; 
-         view.innerHTML = str; 
-      } 
+    rMsg.Letter.PushString("zhb1"); //user name
+    rMsg.Letter.PushString("zhb1123"); //
 
-      function ViewportNormal()
-      {
-         var view = document.getElementById('Viewport'); 
-         view.className = 'ViewportNormal'; 
-      }
+    SendToBrain(rMsg);
+    $('#LoginTip').show().html("Verifying user ...");
+}
 
-      function ClickConnectionBnt() {
-            if (SocketCreated && (ws.readyState == 0 || ws.readyState == 1)) {
-                 SocketCreated = false;
-       	         isUserloggedout = true;
-         	     ws.close();
-                 ViewportLocked("¿Îø™¡ƒÃÏ “...");  
-        } else {
-            	
-                ViewportLocked("Ω¯»Î¡ƒÃÏ “...");  
-                Log("◊º±∏¡¨Ω”µΩ¡ƒÃÏ∑˛ŒÒ∆˜ ...");
-                try {
-                    if ("WebSocket" in window) {
-                    	ws = new WebSocket("ws://" + document.getElementById("IP_address").value);
-                    }
-                    else if("MozWebSocket" in window) {
-                    	ws = new MozWebSocket("ws://" + document.getElementById("IP_address").value);
-                    }
-                    
-                    SocketCreated = true;
-                    isUserloggedout = false;
-                } catch (ex) {
-                    Log(ex, "ERROR");
-                    return;
-                }
-                
-                document.getElementById("ConnecttionBnt").innerHTML = "∂œø™";
-                ws.onopen = WSonOpen;
-                ws.onmessage = WSonMessage;
-                ws.onclose = WSonClose;
-                ws.onerror = WSonError;
+GMIS.OnConnectOK = function (m) {
+	GMIS.EndConnection(true);
+    GMIS.Log("ÁôªÂΩïÊàêÂäü", "OK");
+}
+
+GMIS.OnBrainToGUI = function (m) {
+    Log("Êî∂Âà∞‰∏Ä‰∏™Brain to GUI‰ø°ÊÅØ", "OK");
+}
+
+GMIS.SendToBrain = function (m) {
+    m.ID = new Date().getTime();
+    s = m.ToString();
+
+    SendedMsgTimeStamp = m.ID;
+    SendedMsgID = m.GetMsgID();
+
+    ws.send(s);
+}
+
+GMIS.StartConnection = function () {
+	$('#LoginForm p').hide();	
+    $('#LoginTip').show().html("Connecting...");
+}
+
+GMIS.EndConnection = function (success,str) {
+    
+    if(success){
+    	$('#LoginTip').hide().html("");
+    	#('#LoginView').hide();
+    	$('#LoginForm p').show();;
+    }else{
+    	$('#LoginTip').html(str);
+    	setTimeout(function(){
+    		$('#LoginForm p').show();
+    		$('#LoginTip').hide();
+	    },1000); 
+    }
+}
+
+GMIS.ClickLoginBnt = function () {
+    if (GMIS.isUserloggedout) {
+        return false;
+    } else {
+    	
+    	var address = document.getElementById('ip_address').value;
+    	if(address==""){
+    		address = "127.0.0.1";
+    	}
+    	
+        GMIS.StartConnection();
+        try {
+            if ("WebSocket" in window) {
+                ws = new WebSocket("ws://" + address);
+            } else if ("MozWebSocket" in window) {
+                ws = new MozWebSocket("ws://" + address);
             }
-        };
 
-
-        function WSonOpen() {
-            ViewportNormal();
-            Log("¡¨Ω”“—æ≠Ω®¡¢°£", "OK");
-            $("#SendView").show();
-   			//ws.send("login:" + document.getElementById("UserName").value);
-   			//TestMsg();
-        };
-
-        function WSonMessage(event) {
-
-            MsgProc(event.data);
-            
-            //Log(event.data);            
-        };
-
-        function WSonClose() {
-            ViewportNormal();
-            if (isUserloggedout)
-                Log("°æ"+document.getElementById("UserName").value+"°ø¿Îø™¡À¡ƒÃÏ “£°");
-            document.getElementById("ConnecttionBnt").innerHTML = "¡¨Ω”";
-            $("#SendView").hide();
-            
-        };
-
-		function TestPipe()
-		{
-	      		childpipe = new ePipeline();
-            	childpipe.PushInt(135);
-            	childpipe.PushFloat(53.23);
-            	childpipe.PushString("hello ƒ„∫√");
-            	s = childpipe.ToString();
-            	
-            	pipe = new ePipeline();
-            	pipe.PushInt(135);
-            	pipe.PushFloat(53.23);
-            	pipe.PushString("hello ƒ„∫√");
-            	pipe.PushNull();
-            	pipe.PushPipe(childpipe);
-            	
-            	s = pipe.ToString();
-            	//s = "4@2@4@3@0@@5@1@1@04@2123103235307301495@4@3@0@@104@4@0@4@3@0@@5@1@1@04@127282417797660001@4@3@0@@0@4@2123103235307301493@4@3@0@@24@1@19@2123103235307301494";
-            	ret = pipe.FromString(s);
-            	
-            	
-            	if(ret){
-            		Log("pipe ≤‚ ‘’˝»∑", "OK");
-            	}else{
-            		Log("pipe ≤‚ ‘¥ÌŒÛ", "ERROR");
-            	}
+        } catch (ex) {
+        	
+            GMIS.EndConnection(false,"Connection fail<br/>The browser don't support this app");
+            return false;
         }
+
+        ws.onopen = GMIS.WSonOpen;
+        ws.onmessage = GMIS.WSonMessage;
+        ws.onclose = GMIS.WSonClose;
+        ws.onerror = GMIS.WSonError;
         
-        function TestMsg(){
-        	m = new GMIS_Msg();
-        	m.ID = 12;
-        	m.Label="this is test";
-        	m.ReceiverInfo.PushInt(127282417797660001);
-        	m.SenderInfo.PushFloat(465.6);
-        	m.Letter.PushString("this is letter text");
-        	
-        	s = m.ToString();
-        	
-        	//s = "4@2123105954992588378@0@@92@4@0@0@@5@1@1@04@127282417797660001@0@@0@4@2123105954992588376@0@@24@1@19@2123105954992588377";
-        	s = "4@2123215871002256258@0@@267@4@0@0@@29@1@19@21232158709445293361@1@04@127283417797660101@0@@148@4@4001@0@@134@1@3@1064@0@0@@116@1@1@01@1@01@2@-13@6@System1@1@11@2@101@1@01@2@-13@10@zhb(Local)1@1@11@19@21232158709445293361@1@01@2@-13@4@zhb11@1@14@2123215871002246254@0@@24@1@19@2123215870944529356"
+    }
+    return false;
+};
 
-        	ret = m.FromString(s);
-                 
-            ID = m.GetMsgID();
-            if(ret){
-            	Log("Msg ≤‚ ‘’˝»∑", "OK");
-            }else{
-            	Log("Msg ≤‚ ‘¥ÌŒÛ", "ERROR");
-            }	
+
+GMIS.WSonOpen = function () {
+    GMIS.EndConnection(true);
+    Log("ËøûÊé•Â∑≤ÁªèÂª∫Á´ã„ÄÇ", "OK");
+    $("#SendView").show();
+    //ws.send("login:" + document.getElementById("UserName").value);
+    //TestMsg();
+};
+GMIS.Layout = function(){
+   //alert("test");
+};
+GMIS.WSonMessage = function (event) {
+
+    MsgProc(event.data);
+
+    //Log(event.data);            
+};
+
+GMIS.WSonClose = function () {
+    if (GMIS.isUserloggedout)
+        Log("„Äê" + document.getElementById("UserName").value + "„ÄëÁ¶ªÂºÄ‰∫ÜËÅäÂ§©ÂÆ§ÔºÅ");
+    document.getElementById("ConnecttionBnt").innerHTML = "ËøûÊé•";
+    $("#SendView").hide();
+
+};
+
+GMIS.WSonError = function () {
+    GMIS.EndConnection(false,"Connection fail<br/>Network is not available");
+   
+};
+
+
+GMIS.ClicktSendBnt = function () {
+    if (document.getElementById("InputEdit").value.trim() != "") {
+
+        s = document.getElementById("InputEdit").value;
+        rMsg = new GMIS_Msg();
+
+        rMsg.WriteEnvelope(0, window.MSG_ID.MSG_I_AM, 0, 0);
+        rMsg.Letter.PushString(s);
+
+        SendToBrain(rMsg);
+        document.getElementById("InputEdit").value = "";
+    }
+};
+$(document).ready(function() {
+    $("#SendView").hide();
+    
+    //window.onresize=GMIS.Layout();
+    
+    var WebSocketsExist = true;
+    try {
+        var dummy = new WebSocket("ws://localhost");
+    } catch (ex) {
+        try {
+            webSocket = new MozWebSocket("ws://localhost");
+        } catch (ex) {
+            WebSocketsExist = false;
         }
-        function WSonError() {
-            ViewportNormal();
-            Log("‘∂≥Ã¡¨Ω”÷–∂œ°£", "ERROR");
-            
-        };
+    }
 
+    if (!WebSocketsExist) {
+        Log("ÊÇ®ÁöÑÊµèËßàÂô®‰∏çÊîØÊåÅWebSocket„ÄÇËØ∑ÈÄâÊã©ÂÖ∂‰ªñÁöÑÊµèËßàÂô®ÂÜçÂ∞ùËØïËøûÊé•ÊúçÂä°Âô®„ÄÇ", "ERROR");
+        document.getElementById("ConnecttionBnt").disabled = true;
+    }
 
-        function ClicktSendBnt() {
-            if (document.getElementById("InputEdit").value.trim() != "") {
-             	
-             	s = document.getElementById("InputEdit").value;
-             	rMsg = new GMIS_Msg();
-  	  	 	
-  	  	 		rMsg.WriteEnvelope(0,window.MSG_ID.MSG_I_AM,0,0);
-		  		rMsg.Letter.PushString(s);   
-   	  	  
-	  	  		SendToBrain(rMsg);
-                document.getElementById("InputEdit").value = "";
-            }
-        };
-
-
-        function Log(Text, MessageType) {
-            if (MessageType == "OK") Text = "<span style='color: green;'>" + Text + "</span>";
-            if (MessageType == "ERROR") Text = "<span style='color: red;'>" + Text + "</span>";
-            document.getElementById("LogView").innerHTML = document.getElementById("LogView").innerHTML + Text + "<br />";
-            var LogContainer = document.getElementById("LogView");
-            LogContainer.scrollTop = LogContainer.scrollHeight;
-        };
-
-
-        $(document).ready(function () {
-            $("#SendView").hide();
-            var WebSocketsExist = true;
-            try {
-                var dummy = new WebSocket("ws://localhost:8989/test");
-            } catch (ex) {
-                try
-                {
-                	webSocket = new MozWebSocket("ws://localhost:8989/test");
-                }
-                catch(ex)
-                {
-                	WebSocketsExist = false;
-                }
-            }
-
-            if (WebSocketsExist) {
-                document.getElementById("IP_address").value = "127.0.0.1:80";
-            } else {
-                Log("ƒ˙µƒ‰Ø¿¿∆˜≤ª÷ß≥÷WebSocket°£«Î—°‘Ò∆‰À˚µƒ‰Ø¿¿∆˜‘Ÿ≥¢ ‘¡¨Ω”∑˛ŒÒ∆˜°£", "ERROR");
-                document.getElementById("ConnecttionBnt").disabled = true;
-            }    
-            
-            $("#InputEdit").keypress(function(evt)
-            {
-            		if (evt.keyCode == 13)
-            		{
-            				$("#SendBnt").click();
-            				evt.preventDefault();
-            		}
-            })        
-        });
-        	
-        	
+    $("#InputEdit").keypress(function(evt) {
+        if (evt.keyCode == 13) {
+            $("#SendBnt").click();
+            evt.preventDefault();
+        }
+    })
+});

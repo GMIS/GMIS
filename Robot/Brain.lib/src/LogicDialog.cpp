@@ -1305,14 +1305,13 @@ CLogicDialog& CLogicDialog::operator << (CLogicDialog& Dialog){
 
 void CLogicDialog::RuntimeOutput(tstring s){
 		
-	int64 ID = AbstractSpace::CreateTimeStamp();
-	ePipeline* Item = new ePipeline(ID);
+
+	ePipeline* Item = new ePipeline(0);
 	if (!Item)
 	{
 		return;
 	}
-
-    Item->PushInt(0);
+	Item->m_Label = AbstractSpace::GetTimer()->GetHMSM(AbstractSpace::CreateTimeStamp()); //时间戳
 	Item->PushString(s);
 		
 	CNotifyDialogState nf(NOTIFY_DIALOG_OUTPUT);
@@ -1323,14 +1322,13 @@ void CLogicDialog::RuntimeOutput(tstring s){
 
 void CLogicDialog::RuntimeOutput(int64 MassID,tstring s){
 
-	int64 ID = AbstractSpace::CreateTimeStamp();
-	ePipeline* Item = new ePipeline(ID);
+	ePipeline* Item = new ePipeline(MassID);
 	if (!Item)
 	{
 		return;
 	}
+	Item->m_Label = AbstractSpace::GetTimer()->GetHMSM(AbstractSpace::CreateTimeStamp()); //时间戳
 	tstring str = Format1024(_T("(%I64ld):\ns%"),MassID,s.c_str());
-    Item->PushInt(MassID);
 	Item->PushString(s);
 		
 	CNotifyDialogState nf(NOTIFY_DIALOG_OUTPUT);

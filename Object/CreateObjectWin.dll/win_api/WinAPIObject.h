@@ -7,7 +7,7 @@
 
 #pragma warning(disable: 4786)
 
-#include "ObjectList.h"
+#include "..\ObjectList.h"
 
 #if defined _COMPILE_WIMAPI_OBJECT
 

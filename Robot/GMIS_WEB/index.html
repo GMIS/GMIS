@@ -1,27 +1,64 @@
+<!DOCTYPE html>
 <html>
+
 <head>
-    <meta http-equiv="Content-Type" content="text/html;charset=gb2312">
     <title>GMIS</title>
-    <link rel="stylesheet" type="text/css" media="screen" href="gmis.css">
-    <script src="jquery-min.js" type="text/javascript"></script>
+    <link rel="stylesheet" type="text/css" media="screen" href="css/GMIS.css">
+    <script src="jquery-1.12.2.js" type="text/javascript"></script>
     <script src="GMIS_MSG.js" type="text/javascript"></script>
     <script src="GMIS.js" type="text/javascript"></script>
 
 </head>
-<body>
-    <div id="Viewport" class="ViewportNormal"></div>
-    <form id="form1" runat="server">
-        服务器地址: <input type="text" id="IP_address" /> 用户名： <input type="text" id="UserName" value=""/>
-        <button id='ConnecttionBnt' type="button" onclick='ClickConnectionBnt();'>连接</button>
-        <br />
-        <br />
-        <div id='LogView' class='Logview'></div>
-        <br />
-        <div id='SendView'>
-        <input type="text" id="InputEdit" size="88" />
-        <button id='SendBnt' type="button" onclick='ClicktSendBnt();'>发送</button>
+
+<body onresize="GMIS.Layout();">
+
+    <! 鐧诲綍 >
+    <div id="LoginView" class="LoginView">
+
+        <form id="LoginForm" class="LoginForm" onsubmit="return GMIS.ClickLoginBnt();">
+            <center>
+
+                <image src="img/GMIS.png" class="GMIS_ICON" width="64" height="64" />
+                <h1>Welcome TO GMIS</h1>
+                <div id="LoginTip" class="LoginTip"> </div>
+            </center>
+
+
+            <p>
+                <label type="tip" for="login">Username</label>
+                <input type="text" id="username" placeholder="Username " autofocus="autocfocus" required>
+            </p>
+
+            <p>
+                <label type="tip" for="password">Password</label>
+                <input type="password" id='password' placeholder="Password" required>
+            </p>
+
+            <p>
+                <label for="ip_address">Brain Address</label>
+                <input type="text" id='ip_address' placeholder="Brain IP address (default 127.0.0.1)">
+            </p>
+
+            <p>
+                <input id="LoginBtn" type="submit" value="Login">
+            </p>
+        </form>
+    </div>
+
+    <!涓荤晫闈�>
+
+    <div id="MainBar" class="MainBar"></div>
+    <div id="SpaceView" class="SpaceView"></div>
+    <div id="DialogView" class="DialogView"></div>
+    <div id="IO_view" class="IO_view">
+        <div id="OutputView" class="OutputView"></div>
+        <div id="InputTitle" class="InputTitle"></div>
+        <div id="InputEdit" class="InputEdit">
+            <div id="InputFoot" class="InputFoot"></div>
         </div>
-        <br />
-    </form>
+    </div>
+
+
 </body>
+
 </html>

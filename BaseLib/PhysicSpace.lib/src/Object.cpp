@@ -33,7 +33,7 @@ Object::~Object(){
 	}
 };
 
-bool Object::Activation(){
+bool Object::Activate(){
 	if(m_Alive)return TRUE;
 
 	m_Alive  = TRUE;

@@ -30,7 +30,7 @@ public:
 	virtual void Draw3D(float32* ParentMatrix=NULL,ePipeline* Pipe = NULL);
 	virtual void CloseScene();
 
-	bool Activation();
+	bool Activate();
 	void IdleRender();
 	void Dead();
 

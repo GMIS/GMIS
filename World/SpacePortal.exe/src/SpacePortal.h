@@ -162,7 +162,7 @@ public:
 	virtual ~CSpacePortal();
 	virtual tstring MsgID2Str(int64 MsgID);
 	
-	virtual bool Activation();
+	virtual bool Activate();
 
 	virtual void  OutputLog(uint32 Type,const TCHAR* text);
 

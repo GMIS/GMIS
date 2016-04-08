@@ -151,7 +151,7 @@ public:
 	virtual MASS_TYPE  MassType(){ return MASS_SYSTEM;};
 	virtual ~System();
 	
-    virtual bool Activation();
+    virtual bool Activate();
 	virtual void Dead();
 
 	//General nerve message processing function that need users to implement

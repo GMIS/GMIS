@@ -129,7 +129,7 @@ void CExObject::Start(CExecuter* Executer,int64 EventID,ePipeline* ExePipe){
 	{
 		PHYSIC::Object* Ob = (PHYSIC::Object*)m_Object;
 		assert(!Ob->IsAlive());
-		if(!Ob->Activation()){
+		if(!Ob->Activate()){
 
 			ExePipe->SetID(RETURN_ERROR);
 			ExePipe->GetLabel() = Format1024(_T("Object activation fail:%s"),m_FileAddress.c_str());

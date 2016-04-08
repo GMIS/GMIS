@@ -48,7 +48,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <TargetName>$(ProjectName)</TargetName>
-    <IncludePath>F:\boost\;$(IncludePath)</IncludePath>
+    <IncludePath>F:\boost\;D:\curl-7.47.1\include;$(IncludePath)</IncludePath>
     <LibraryPath>F:\boost\bin\vc10\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -56,7 +56,7 @@
     <IncludePath>D:\curl-7.47.1\include;F:\boost\;$(IncludePath)</IncludePath>
     <OutDir>$(SolutionDir)bin\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)obj\$(ProjectName)\$(Configuration)\</IntDir>
-    <LibraryPath>F:\boost\bin\vc10\lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>F:\boost\bin\vc10\lib;D:\curl-7.47.1\build\Win32\VC10\LIB Debug;$(LibraryPath)</LibraryPath>
     <ReferencePath>$(ReferencePath)</ReferencePath>
     <SourcePath>D:\curl-7.47.1\src;$(SourcePath)</SourcePath>
   </PropertyGroup>
@@ -102,7 +102,7 @@
       <WarningLevel>Level3</WarningLevel>
       <MinimalRebuild>true</MinimalRebuild>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <PreprocessorDefinitions>_DEBUG;UNICODE;WIN32;_WINDOWS;_USRDLL;USING_POCO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;UNICODE;WIN32;_WINDOWS;_USRDLL;USING_POCO;CURL_STATICLIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
     </ClCompile>
     <Midl>

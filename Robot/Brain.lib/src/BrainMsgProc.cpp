@@ -232,7 +232,7 @@ void CBrain::OnI_AM(CLogicDialog* Dialog,CMsg& Msg){
 	Linker().SetStateOutputLevel(LIGHT_LEVEL);
 #endif	
 	
-	if(!Letter.HasTypeAB(0x33000000)){ //两个字符串
+	if(!Letter.HasTypeAB(0x3300000)){ //两个字符串
 		if (Linker().GetLinkerType()== CLIENT_LINKER)
 		{
 			m_ClientLinkerList.DeleteLinker(SourceID);
@@ -254,7 +254,6 @@ void CBrain::OnI_AM(CLogicDialog* Dialog,CMsg& Msg){
 	bool ret = m_BrainData.FindRegisterUserInfo(Name,Cryptograhp,UserInfo);
 	if(!ret){
 		//非法连接
-		Linker().Close();
 		if (Linker().GetLinkerType()== CLIENT_LINKER)
 		{
 			m_ClientLinkerList.DeleteLinker(SourceID);
@@ -263,6 +262,7 @@ void CBrain::OnI_AM(CLogicDialog* Dialog,CMsg& Msg){
 		{
 			m_WebsocketClientList.DeleteLinker(SourceID);
 		}
+		return;
 	}
 
 	DIALOG_TYPE DialogType  = (DIALOG_TYPE)(*(int64*)UserInfo.GetData(2));

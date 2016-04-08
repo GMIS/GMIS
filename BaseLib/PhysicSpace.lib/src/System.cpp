@@ -41,7 +41,7 @@ void CSysThreadWorker::SystemIOWorkProc(){
 					Linker().ThreadIOWorkProc(buf,MODEL_IO_BUFFER_SIZE);
 					Parent->GetClientLinkerList()->ReturnLinker(Linker);
 				}else{
-					SLEEP_MILLI(20);
+					SLEEP_MILLI(1);
 				}			
 			}
 		}
@@ -96,7 +96,7 @@ void CSysThreadWorker::NerveWorkProc(){
 						m_IdleCount = 0;
 					}
 				}
-				SLEEP_MILLI(20);
+				SLEEP_MILLI(1);
 			}
 
 		}
@@ -272,7 +272,7 @@ bool System::CNetListenWorker::Activation(){
 	Ret = ioctlsocket(m_Socket,FIONBIO,(unsigned long*)&ul);
 	assert(Ret != SOCKET_ERROR);
 #endif
-	Object::Activation();
+	Object::Activate();
 	return TRUE;
 };
 void System::CNetListenWorker::Dead(){
@@ -791,12 +791,12 @@ bool System::CNetListenWorker::Do(Energy* E){
 
 	};
 
-	bool System::Activation(){
+	bool System::Activate(){
 		if(m_Alive){
 			return TRUE;
 		}
 
-		if(!Model::Activation()){
+		if(!Model::Activate()){
 			m_Alive = FALSE;
 			return FALSE;
 		}
@@ -909,7 +909,7 @@ bool System::CNetListenWorker::Do(Energy* E){
 			return FALSE;
 		}
 			
-		if(NerveWork->Activation())
+		if(NerveWork->Activate())
 		{
 			int n = m_SystemData.GetNerveWorkerNum();
 			ePipeline Data;
@@ -1020,7 +1020,7 @@ bool System::CNetListenWorker::Do(Energy* E){
 		{	
 			int64 ID = CreateTimeStamp();
 			CThreadWorker* IOWork = m_SystemData.CreateThreadWorker(ID,this,SYSTEM_IO_WORK_TYPE);
-			if(!IOWork || !IOWork->Activation()){
+			if(!IOWork || !IOWork->Activate()){
 				if(IOWork)m_SystemData.DeleteThreadWorker(this,ID,SYSTEM_IO_WORK_TYPE);
 
 				tstring s= Format1024(_T("Create new IO worker fail, listen port: %d "),Port);

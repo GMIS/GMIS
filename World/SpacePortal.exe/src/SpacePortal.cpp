@@ -176,10 +176,10 @@ tstring CSpacePortal::MsgID2Str(int64 MsgID){
 };
 
 
-bool CSpacePortal::Activation(){
+bool CSpacePortal::Activate(){
    
 
-	if(!System::Activation())return false;
+	if(!System::Activate())return false;
 
 	tstring error;
 	if(!OpenPort(SPACE_PORT,error,false)){

@@ -581,14 +581,8 @@ void CBrain::OnNotifyDialogError(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 		{
 			tstring error = NotifyInfo->PopString();
 
-			//构建一个临时输出，但是并不正式做记录
-			ePipeline Cmd0(GUI_RUNTIME_OUTPUT);
-			ePipeline Item(AbstractSpace::CreateTimeStamp());
-			Item.PushInt(0);
-			Item.PushString(error);
-			Cmd0.PushPipe(Item);
+			Dialog->RuntimeOutput(0,error);
 
-            GuiMsg.GetLetter().PushPipe(Cmd0);
 			
 			ePipeline Cmd1(GUI_CONTINUE_EDIT);
 			Cmd1.PushInt(FALSE);
@@ -602,14 +596,7 @@ void CBrain::OnNotifyDialogError(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 			tstring error = NotifyInfo->PopString();
 			tstring EditText = NotifyInfo->PopString();
 
-			//构建一个临时输出，但是并不正式做记录
-			ePipeline Cmd0(GUI_RUNTIME_OUTPUT);
-			ePipeline Item(AbstractSpace::CreateTimeStamp());
-			Item.PushInt(0);
-			Item.PushString(error);
-			Cmd0.PushPipe(Item);
-			
-            GuiMsg.GetLetter().PushPipe(Cmd0);
+			Dialog->RuntimeOutput(0,error);
 			
 			ePipeline Cmd1(GUI_CONTINUE_EDIT);
 			Cmd1.PushInt(TRUE);

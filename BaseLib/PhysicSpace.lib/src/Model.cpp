@@ -216,7 +216,7 @@ void CThreadWorker::ModelIOWorkProc(){
  				Linker().ThreadIOWorkProc(buf,MODEL_IO_BUFFER_SIZE);
 				m_Parent->GetSuperiorLinkerList()->ReturnLinker(Linker);
 			}else{
-				SLEEP_MILLI(20);
+				SLEEP_MILLI(1);
 			}
 		}
 	}
@@ -257,7 +257,7 @@ void CThreadWorker::CentralNerveWorkProc(){
 					m_IdleCount = 0;
 					break;
 				}			
-				SLEEP_MILLI(20);
+				SLEEP_MILLI(1);
 			}
 		}
 	}
@@ -536,7 +536,8 @@ Model::Model(CUserTimer* Timer,CUserSpacePool* Pool)
 m_CentralNerveMutex(),
 m_CentralNerve(&m_CentralNerveMutex,_T("CentralNerve"),1),
 m_LogFlag(0),
-m_nCPU(2)
+m_nCPU(2),
+m_bAutoWork(true)
 {
 	m_Name = _T("Model");
 #if defined(USING_POCO)	
@@ -550,7 +551,7 @@ Model::~Model()
 	
 };    
 
-bool Model::Activation(){
+bool Model::Activate(){
 	if(m_Alive){
 		return true;
 	}
@@ -568,10 +569,12 @@ bool Model::Activation(){
 			return false; 
 	}
 #endif
-
-	if(!Object::Activation()){
-		m_Alive = FALSE;
-		return false;
+	if (m_bAutoWork)
+	{
+		if(!Object::Activate()){
+			m_Alive = FALSE;
+			return false;
+		}
 	}
 
 	/*
@@ -716,7 +719,7 @@ BOOL  Model::CreateCentralNerveWorkerStrategy(int64 NewMsgPushTime,int64 LastMsg
 	{
 		return FALSE;
 	}
-	if (CentralNerveWork->Activation())
+	if (CentralNerveWork->Activate())
 	{
 		int n =m_ModelData.GetCentralNerveWorkerNum();
 		ePipeline Data;
@@ -820,7 +823,7 @@ bool Model::Connect(int64 ID,AnsiString Address,int32 Port,int32 TimeOut,tstring
 		int64 WorkerID = CreateTimeStamp();
 
 		CThreadWorker* IOWork = m_ModelData.CreateThreadWorker(WorkerID,this,MODEL_IO_WORK_TYPE);
-		if (!IOWork||!IOWork->Activation())
+		if (!IOWork||!IOWork->Activate())
 		{
 			if(IOWork)m_ModelData.DeleteThreadWorker(this,IOWork->m_ID,MODEL_IO_WORK_TYPE);
 			error = _T("Activate IOWorker fail");
@@ -845,7 +848,7 @@ bool Model::Do(Energy* E){
 				CentralNerveMsgProc(Msg);
 			}
 			else{
-				SLEEP_MILLI(10);
+				SLEEP_MILLI(1);
 			}
 			
 		}

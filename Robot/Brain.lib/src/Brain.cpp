@@ -74,7 +74,7 @@ void CBrainThreadWorker::WebsocketWorkProc(){
 					Linker().ThreadIOWorkProc(buf,MODEL_IO_BUFFER_SIZE);
 					Brain->m_WebsocketClientList.ReturnLinker(Linker);
 				}else{
-					SLEEP_MILLI(20);
+					SLEEP_MILLI(1);
 				}			
 			}
 		}
@@ -1048,8 +1048,10 @@ void CBrain::CLockedBrainData::EventProc(CBrain* Brain){
 				}
 			}			
 			it++;
+			
 		}
 		m_EventMutex.Release();	
+		SLEEP_MILLI(1);
 
 	}
 	assert(!Brain->IsAlive());
@@ -1306,7 +1308,7 @@ CBrain::~CBrain()
 	}
 }
 
-bool CBrain::Activation(){
+bool CBrain::Activate(){
     if (m_Alive)
     {
 		return true;
@@ -1333,12 +1335,12 @@ bool CBrain::Activation(){
 	}
 	m_BrainData.LoadUserAccountList();
 	
-	if(!System::Activation()){
+	if(!System::Activate()){
 		m_ErrorInfo = _T("System activate fail.");
 		return false;
 	}
 
-	if(!m_EventWorker.Activation()){
+	if(!m_EventWorker.Activate()){
 		m_ErrorInfo = Format1024(_T("Event proc thread started fail."));
 		return false;
 	}
@@ -1823,7 +1825,7 @@ BOOL  CBrain::CreateCentralNerveWorkerStrategy(int64 NewMsgPushTime,int64 LastMs
 	{
 		return FALSE;
 	}
-	if (CentralNerveWork->Activation())
+	if (CentralNerveWork->Activate())
 	{
 		int n =m_ModelData.GetCentralNerveWorkerNum();
 		ePipeline Data;
@@ -1881,7 +1883,7 @@ BOOL CBrain::CreateNerveWorkerStrategy(int64 NewMsgPushTime,int64 LastMsgPopTime
 		return FALSE;
 	}
 
-	if(NerveWork->Activation())
+	if(NerveWork->Activate())
 	{
 		int n = m_SystemData.GetNerveWorkerNum();
 		ePipeline Data;
@@ -1902,7 +1904,7 @@ void CBrain::CreateWebsokectWorkerStrategy(){
 	if(WorkerNum==0 || (LinkerNum >10 && WorkerNum < GetCpuNum())){
 		int64 ID = AbstractSpace::CreateTimeStamp();
 		CThreadWorker* IOWork = m_BrainData.CreateThreadWorker(ID,this,BRAIN_WEBSOCKET_IO_WORK_TYPE);
-		if(!IOWork || !IOWork->Activation()){
+		if(!IOWork || !IOWork->Activate()){
 			if(IOWork)m_BrainData.DeleteThreadWorker(this,ID,BRAIN_WEBSOCKET_IO_WORK_TYPE);
 			tstring s= Format1024(_T("Can not start websocket io worker thread"));
 			OutSysInfo(s.c_str());

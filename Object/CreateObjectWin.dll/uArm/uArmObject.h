@@ -1,7 +1,7 @@
 #ifndef _UARM_OBJECT_H
 #define _UARM_OBJECT_H
 
-#include "ObjectList.h"
+#include "..\ObjectList.h"
 
 #ifdef _COMPILE_UARM_OBJECT
 

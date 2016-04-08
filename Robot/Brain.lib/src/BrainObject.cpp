@@ -371,7 +371,7 @@ bool  CInterBrainObject::DoCreateAccount(CLogicDialog* Dialog,ePipeline& ExePipe
 		}
 	}
 
-	if (Dialog->m_SourceID != LOCAL_GUI_SOURCE && Dialog->m_DialogType != DIALOG_SYSTEM_MAIN)
+	if ((Dialog->m_SourceID != LOCAL_GUI_SOURCE && Dialog->m_SourceID != SYSTEM_SOURCE) || (Dialog->m_DialogType != DIALOG_SYSTEM_MAIN && Dialog->m_DialogType != DIALOG_SYSTEM_CHILD ))
 	{
 		ExePipe.GetLabel() =_T("this dialog not authorized to perform this operation");
 		ExePipe.SetID(RETURN_ERROR);

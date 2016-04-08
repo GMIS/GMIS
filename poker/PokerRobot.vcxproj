@@ -1,0 +1,162 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="AddressBar.h" />
+    <ClInclude Include="BitmapEx.h" />
+    <ClInclude Include="crc32.h" />
+    <ClInclude Include="EditWin.h" />
+    <ClInclude Include="LogDatabase.h" />
+    <ClInclude Include="MainFrame.h" />
+    <ClInclude Include="MsgList.h" />
+    <ClInclude Include="MyObject.h" />
+    <ClInclude Include="ObjectView.h" />
+    <ClInclude Include="OcrHost.h" />
+    <ClInclude Include="OcrResultView.h" />
+    <ClInclude Include="OptionPipe.h" />
+    <ClInclude Include="OptionView.h" />
+    <ClInclude Include="PokerDatabase.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="ResultView.h" />
+    <ClInclude Include="SplitterView.h" />
+    <ClInclude Include="StatusBar.h" />
+    <ClInclude Include="Tesseract.h" />
+    <ClInclude Include="TexasPokerEvaluate.h" />
+    <ClInclude Include="WebEye.h" />
+    <ClInclude Include="WebHost.h" />
+    <ClInclude Include="WebView.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="AddressBar.cpp" />
+    <ClCompile Include="BitmapEx.cpp" />
+    <ClCompile Include="crc32.cpp" />
+    <ClCompile Include="EditWin.cpp" />
+    <ClCompile Include="LogDatabase.cpp" />
+    <ClCompile Include="MainFrame.cpp" />
+    <ClCompile Include="MainFrameWork.cpp" />
+    <ClCompile Include="MsgList.cpp" />
+    <ClCompile Include="MyObject.cpp" />
+    <ClCompile Include="ObjectView.cpp" />
+    <ClCompile Include="OcrHost.cpp" />
+    <ClCompile Include="OcrResultView.cpp" />
+    <ClCompile Include="OptionPipe.cpp" />
+    <ClCompile Include="OptionView.cpp" />
+    <ClCompile Include="PokerDatabase.cpp" />
+    <ClCompile Include="PokerRobot.cpp" />
+    <ClCompile Include="ResultView.cpp" />
+    <ClCompile Include="SplitterView.cpp" />
+    <ClCompile Include="StatusBar.cpp" />
+    <ClCompile Include="Tesseract.cpp" />
+    <ClCompile Include="TexasPokerEvaluate.cpp" />
+    <ClCompile Include="WebEye.cpp" />
+    <ClCompile Include="WebHost.cpp" />
+    <ClCompile Include="WebView.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="PokerRobot.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="icon1.ico" />
+    <None Include="poker.bmp" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{2269C8E6-09A1-4703-87A4-FA9402EF3C84}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>PokerRobot</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <LibraryPath>D:\Visual Leak Detector\lib\Win32;D:\boost\bin\vc10\lib;D:\project\3Party\tesseract3.01\lib;D:\project\bin\VC10\Debug\TheorySpace;D:\project\bin\VC10\Debug\BaseSpace;D:\project\bin\VC10\Debug\UserSpace_Win32;D:\project\bin\VC10\Debug\Win3Party;D:\project\bin\VC10\Debug\VisualSpace;D:\project\bin\VC10\Debug\VirtualSpace;D:\project\bin\VC10\Debug\SQLITE3;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\work\GMIS\GMIS_BASE\TheorySpace\src;D:\work\GMIS\GMIS_SPACE\VirtualSpace\src;D:\work\GMIS\GMIS_SPACE\VirtualSpace\src\sqlite;D:\work\GMIS\GMIS_SHARE\win3party\src;D:\work\GMIS\GMIS_SPACE\VisualSpace\src;D:\work\GMIS\GMIS_BASE\UserSpace_win32\src;D:\Visual Leak Detector\include;D:\boost;D:\3Party\tesseract3.01\include\leptonica;D:\3Party\tesseract3.01\include;$(IncludePath)</IncludePath>
+    <TargetName>Poker</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>D:\project\3Party\tesseract3.01\include\leptonica;D:\project\3Party\tesseract3.01\include\;$(IncludePath);Z:\project\src\TheorySpace;Z:\project\src\BaseSpace;Z:\project\src\VisualSpace;Z:\project\src\SQLITE3;Z:\project\src\VirtualSpace;Z:\project\src\UserSpace_Win32;Z:\project\src\Brain;D:\boost;Z:\project\src\Win3Party;$(IncludePath)</IncludePath>
+    <OutDir>D:\project\bin\vc10\$(Configuration)\$(ProjectName)\</OutDir>
+    <IntDir>D:\project\obj\vc10\$(Configuration)\$(ProjectName)\</IntDir>
+    <LibraryPath>D:\project\bin\VC10\Release\TheorySpace;D:\project\bin\VC10\Release\BaseSpace;D:\project\bin\VC10\Release\VisualSpace;D:\project\bin\VC10\Release\SQLITE3;D:\project\bin\VC10\Release\Win3Party;D:\project\bin\VC10\Release\VirtualSpace;D:\project\bin\VC10\Release\UserSpace_Win32;D:\project\3Party\tesseract3.01\lib;D:\boost\bin\vc10\lib;$(LibraryPath)</LibraryPath>
+    <TargetExt>.dll</TargetExt>
+    <TargetName>Poker</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;UNICODE;USE_STD_NAMESPACE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>4819</DisableSpecificWarnings>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <DataExecutionPrevention>false</DataExecutionPrevention>
+      <AdditionalDependencies>opengl32.lib;Wininet.lib;Sqlite3_debug.lib;TheorySpace_debug.lib;VisualSpace_debug.lib;VirtualSpace_debug.lib;Win3Party_debug.lib;UserSpace_win32_debug.lib;BaseSpace_debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>copy $(TargetPath)  D:\work\Home\PokerD
+copy $(TargetPath) d:\project\bin\vc10\release\zsir(server)\Home\PokerD
+copy $(TargetPath) d:\project\bin\vc6\release\zsir(server)\Home\PokerD
+copy $(TargetPath) d:\project\bin\vc10\debug\spaceportal\Home\pokerd
+copy $(TargetPath) d:\project\bin\vc6\debug\spaceportal\Home\pokerd</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>Disabled</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;UNICODE;USE_STD_NAMESPACE;%(PreprocessorDefinitions))</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>TheorySpace.lib;UserSpace_Win32.lib;VirtualSpace.lib;VisualSpace.lib;Win3party.lib;BaseSpace.lib;opengl32.lib;Sqlite3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <DataExecutionPrevention>false</DataExecutionPrevention>
+    </Link>
+    <PostBuildEvent>
+      <Command>copy $(TargetPath)  D:\work\Home</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

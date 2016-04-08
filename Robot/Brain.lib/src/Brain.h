@@ -264,7 +264,7 @@ public:
 	
 	virtual ~CBrain();
    
-	virtual bool      Activation();
+	virtual bool      Activate();
 	virtual void      Dead();
 
 	virtual Energy*   ToEnergy(); 

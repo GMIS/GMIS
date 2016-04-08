@@ -67,7 +67,7 @@ public:
 	virtual MASS_TYPE  MassType(){ return MASS_OBJECT;};
 	virtual TypeAB   GetTypeAB(){ return 0;};  
 
-	virtual bool Activation();
+	virtual bool Activate();
 	virtual void Dead();
 
 	tstring GetName(){
