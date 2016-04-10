@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Brain", "..\Robot\Brain.lib
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GMIS_WIN", "..\Robot\GMIS_win.exe\GMIS_WIN.vcxproj", "{8514DA79-EDF5-DB57-582E-8A865EFE8A70}"
 	ProjectSection(ProjectDependencies) = postProject
+		{1FD29D2E-64B7-D2B4-AC26-7BDCE537BBE4} = {1FD29D2E-64B7-D2B4-AC26-7BDCE537BBE4}
+		{220D8EEA-1B6E-9375-F853-A29978D0D730} = {220D8EEA-1B6E-9375-F853-A29978D0D730}
 		{E61FD3FC-39A7-F48C-359F-315B1AC9D322} = {E61FD3FC-39A7-F48C-359F-315B1AC9D322}
 	EndProjectSection
 EndProject
@@ -25,8 +27,6 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VisualSpace", "..\BaseLib\VisualSpace.lib\VisualSpace.vcxproj", "{1FD29D2E-64B7-D2B4-AC26-7BDCE537BBE4}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ExecuterCli", "..\Object\ExecuterCli.exe\ExecuterCli.vcxproj", "{91C29346-987D-E897-52DD-5EF9327D9243}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PokerRobot", "..\poker\PokerRobot.vcxproj", "{2269C8E6-09A1-4703-87A4-FA9402EF3C84}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -203,24 +203,6 @@ Global
 		{91C29346-987D-E897-52DD-5EF9327D9243}.Release|Win32.Build.0 = Release|Win32
 		{91C29346-987D-E897-52DD-5EF9327D9243}.Template|Win32.ActiveCfg = Template|Win32
 		{91C29346-987D-E897-52DD-5EF9327D9243}.Template|Win32.Build.0 = Template|Win32
-		{2269C8E6-09A1-4703-87A4-FA9402EF3C84}.debug_shared|Win32.ActiveCfg = Debug|Win32
-		{2269C8E6-09A1-4703-87A4-FA9402EF3C84}.debug_shared|Win32.Build.0 = Debug|Win32
-		{2269C8E6-09A1-4703-87A4-FA9402EF3C84}.debug_static_md|Win32.ActiveCfg = Debug|Win32
-		{2269C8E6-09A1-4703-87A4-FA9402EF3C84}.debug_static_md|Win32.Build.0 = Debug|Win32
-		{2269C8E6-09A1-4703-87A4-FA9402EF3C84}.debug_static_mt|Win32.ActiveCfg = Debug|Win32
-		{2269C8E6-09A1-4703-87A4-FA9402EF3C84}.debug_static_mt|Win32.Build.0 = Debug|Win32
-		{2269C8E6-09A1-4703-87A4-FA9402EF3C84}.Debug|Win32.ActiveCfg = Debug|Win32
-		{2269C8E6-09A1-4703-87A4-FA9402EF3C84}.Debug|Win32.Build.0 = Debug|Win32
-		{2269C8E6-09A1-4703-87A4-FA9402EF3C84}.release_shared|Win32.ActiveCfg = Release|Win32
-		{2269C8E6-09A1-4703-87A4-FA9402EF3C84}.release_shared|Win32.Build.0 = Release|Win32
-		{2269C8E6-09A1-4703-87A4-FA9402EF3C84}.release_static_md|Win32.ActiveCfg = Release|Win32
-		{2269C8E6-09A1-4703-87A4-FA9402EF3C84}.release_static_md|Win32.Build.0 = Release|Win32
-		{2269C8E6-09A1-4703-87A4-FA9402EF3C84}.release_static_mt|Win32.ActiveCfg = Release|Win32
-		{2269C8E6-09A1-4703-87A4-FA9402EF3C84}.release_static_mt|Win32.Build.0 = Release|Win32
-		{2269C8E6-09A1-4703-87A4-FA9402EF3C84}.Release|Win32.ActiveCfg = Release|Win32
-		{2269C8E6-09A1-4703-87A4-FA9402EF3C84}.Release|Win32.Build.0 = Release|Win32
-		{2269C8E6-09A1-4703-87A4-FA9402EF3C84}.Template|Win32.ActiveCfg = Release|Win32
-		{2269C8E6-09A1-4703-87A4-FA9402EF3C84}.Template|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

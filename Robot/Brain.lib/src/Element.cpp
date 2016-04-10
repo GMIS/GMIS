@@ -490,6 +490,7 @@ bool    CShunt::FromEnergy(Energy* E){
 	Energy* e2 = Pipe->GetEnergy(2);
 	assert(e2->EnergyType()==TYPE_PIPELINE);
 	m_TempResultList = (*(ePipeline*)e2);
+	return true;
 }
 
 void CShunt::InsertLogic(int64 Index,CElement* e){
