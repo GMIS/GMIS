@@ -218,7 +218,7 @@ namespace PHYSIC{
 						}                                                          
 					
 						else if(Info->ParentPipe == this ){               							
-							BeginErrorState(Info,ERROR_TYPE_PART);
+							BeginErrorState(Info,i-1,ERROR_TYPE_PART);
 						}
 						else{
 						
@@ -234,7 +234,7 @@ namespace PHYSIC{
 						Info->DataLen = NUMBER_LENGTH_LIMIT;
 					}
 					else{
-						BeginErrorState(Info,ERROR_TYPE_PART);
+						BeginErrorState(Info,i-1,ERROR_TYPE_PART);
 					}
 				}
 				break;
@@ -286,7 +286,7 @@ namespace PHYSIC{
 						}else	if(Info->DataType == TYPE_NULL)
 						{
 							if(Info->DataLen != 0){
-								BeginErrorState(Info,ERROR_LENGTH_PART);
+								BeginErrorState(Info,i-1,ERROR_LENGTH_PART);
 							}else{
 								bCompleteOneData = TRUE;
 							}
@@ -297,18 +297,18 @@ namespace PHYSIC{
 								bCompleteOneData = TRUE;
 							}
 							else{//Ϊ0 error
-								BeginErrorState(Info,ERROR_LENGTH_PART);
+								BeginErrorState(Info,i-1,ERROR_LENGTH_PART);
 							}
 						}else if ((Info->DataType==TYPE_INT || Info->DataType==TYPE_FLOAT) && Info->DataLen>20)
 						{
-							BeginErrorState(Info,ERROR_LENGTH_PART);
+							BeginErrorState(Info,i-1,ERROR_LENGTH_PART);
 						}
 						else{	
 							Info->State = DATA_PART;   
 						}
 					}
 					else{
-						BeginErrorState(Info,ERROR_LENGTH_PART);
+						BeginErrorState(Info,i-1,ERROR_LENGTH_PART);
 					}
 				}
 				break;
@@ -325,7 +325,7 @@ namespace PHYSIC{
 						assert(ret);
 						if (!ret)
 						{
-							BeginErrorState(Info,ERROR_DATA_PART);
+							BeginErrorState(Info,i-1,ERROR_DATA_PART);
 						}
 						else{
 							bCompleteOneData = TRUE;
@@ -356,7 +356,7 @@ namespace PHYSIC{
 						Info->DataLen = DATA_LENGTH_LIMIT;
 					}
 					else{
-						BeginErrorState(Info,ERROR_ID_PART);						
+						BeginErrorState(Info,i-1,ERROR_ID_PART);						
 					}
 				}
 				break;
@@ -379,7 +379,7 @@ namespace PHYSIC{
 						Info->State = NAME_PART;
 					}
 					else{
-						BeginErrorState(Info,ERROR_NAMELEN_PART);		
+						BeginErrorState(Info,i-1,ERROR_NAMELEN_PART);		
 					}
 				}
 				break;
@@ -416,7 +416,7 @@ namespace PHYSIC{
 						//}
 					}
 					else{
-						BeginErrorState(Info,ERROR_NAME_PART);
+						BeginErrorState(Info,i-1,ERROR_NAME_PART);
 					}
 				}
 				break;
@@ -465,7 +465,7 @@ namespace PHYSIC{
 							Info->Reset();  
 							break;
 						}else{
-							BeginErrorState(Info,ERROR_OTHER_PART);
+							BeginErrorState(Info,i-1,ERROR_OTHER_PART);
 							Info->Reset();
 						}
 					}else{ 
@@ -596,7 +596,7 @@ namespace PHYSIC{
 
 	};
 	
-	void CLinkerPipe::BeginErrorState(RevContextInfo* Info,int32 ErrorType)
+	void CLinkerPipe::BeginErrorState(RevContextInfo* Info,int32 pos,int32 ErrorType)
 	{
 		m_bRevError = true;
 		Info->DataLen = 0;
@@ -610,6 +610,7 @@ namespace PHYSIC{
 		ePipeline Data;
 		Data.PushInt(ErrorType);
 		Data.Push_Directly(m_CurRevMsg.Clone());
+		Data.PushInt(pos);
 		m_Parent->NotifyLinkerState(m_SourceID,LINKER_BEGIN_ERROR_STATE,m_StateOutputLevel,Data);
 	};
 	

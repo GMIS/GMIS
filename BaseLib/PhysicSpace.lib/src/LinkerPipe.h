@@ -207,7 +207,7 @@ protected: //below functions do not to lock(internal call)
 	void RevOneMsg(eElectron& E);
 	
 	//call this func to go into error state,if there was a error occured when receiving data
-	void BeginErrorState(RevContextInfo* Info,int32 ErrorType);
+	void BeginErrorState(RevContextInfo* Info,int32 pos,int32 ErrorType);
 	void EndErrorState(RevContextInfo* Info);
 	
 	void    ClearSendMsgList();

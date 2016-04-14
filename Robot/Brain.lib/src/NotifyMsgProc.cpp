@@ -309,8 +309,9 @@ void CBrain::NotifyLinkerState(int64 SourceID,int64 NotifyID,STATE_OUTPUT_LEVEL 
 					Info.Pop(&CurRevMsg);
 					AnsiString text;
 					CurRevMsg.ToString(text);
+					int64 pos = Info.PopInt();
 
-					tstring s = Format1024(_T("LINKER_BEGIN_ERROR: SourceID=%I64ld ErrorType=%I64ld CurrentRevMsg:%s"),SourceID,ErrorType,UTF8toWS(text).c_str());
+					tstring s = Format1024(_T("LINKER_BEGIN_ERROR: SourceID=%I64ld ErrorType=%I64ld pos=%I64ld CurrentRevMsg:%s"),SourceID,ErrorType,pos,UTF8toWS(text).c_str());
 
 					OutputLog(LOG_ERROR,s.c_str());
 					OutSysInfo(s.c_str());
