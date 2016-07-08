@@ -234,12 +234,7 @@ void CInputEdit::DeleteSelText(CHARRANGE& cr)
 
 	ePipeline NewMsg;
 	NewMsg.PushInt(cr.cpMin-m_EditBeginPos);
-	tstring s;
-    while(n-->0)
-    {
-		s+=127;
-    }
-	NewMsg.PushString(s);
+	NewMsg.PushInt(n);
 	m_Parent->OnInputText(0, (LPARAM)&NewMsg);
 };
 
@@ -380,9 +375,7 @@ BOOL CInputEdit::ProcessWindowMessage( UINT uMsg, WPARAM wParam, LPARAM lParam, 
 				ePipeline NewMsg;
 				tstring s;
 				NewMsg.PushInt(cr.cpMin-m_EditBeginPos);
-				//NewMsg.PushInt64(BackCharNum);
-				s.resize(BackCharNum,127);
-				NewMsg.PushString(s);
+				NewMsg.PushInt(BackCharNum);
 				m_Parent->OnInputText(0, (LPARAM)&NewMsg);	
 				return FALSE;
 			}
@@ -397,12 +390,9 @@ BOOL CInputEdit::ProcessWindowMessage( UINT uMsg, WPARAM wParam, LPARAM lParam, 
 				{
 					DeleteSelText(cr);
 				}else {
-                    tstring Text;
-				    Text.resize(1,127);
 					ePipeline NewMsg;
 					NewMsg.PushInt(cr.cpMin-1-m_EditBeginPos);
-					//NewMsg.PushInt64(1);
-					NewMsg.PushString(Text.c_str());
+					NewMsg.PushInt(1);
 				    m_Parent->OnInputText(0, (LPARAM)&NewMsg);	
 				}
 				return FALSE;

@@ -146,8 +146,8 @@ bool  CWebsocketLinkerPipe::PhysicalRev(char* Buf,uint32 BufSize, uint32& RevLen
 			Poco::Net::NetException e("websocket closed by remote");
 			throw e;
 		}
-
 		Buf[RevLen] = '\0';
+			
 	}
 #else
 #error "Current implemention only support poco c++ lib";
@@ -162,7 +162,7 @@ bool  CWebsocketLinkerPipe::PhysicalSend(char* Buf,uint32 BufSize, uint32& SendL
 
 	bool ret = m_Socket.poll(timeout,Socket::SELECT_WRITE);
 	if(ret){
-		SendLen = m_Socket.sendFrame(Buf,BufSize,WebSocket::FRAME_TEXT);
+		SendLen = m_Socket.sendFrame(Buf,BufSize,WebSocket::FRAME_BINARY);
 	}
 
 #else

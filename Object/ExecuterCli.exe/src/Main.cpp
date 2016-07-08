@@ -8,6 +8,8 @@
 #include "UserMutex.h"
 #include "SpaceMsgList.h"
 #include <conio.h >
+#include <locale>  
+#include <codecvt> 
 
 #define MAX_LOADSTRING 100
 
@@ -17,16 +19,42 @@ using namespace ABSTRACT;
 
 #pragma comment(lib, "comctl32.lib")
 
-/*
-int APIENTRY WinMain(HINSTANCE hInstance,
-                     HINSTANCE hPrevInstance,
-                     LPSTR     lpCmdLine,
-                     int       nCmdShow)
-{
-*/
+std::wstring UTF8ToUTF16(const std::string &source)  
+{  
+
+	try  
+	{  
+		static std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> cvt;  
+		return cvt.from_bytes(source);  
+	}  
+	catch (std::range_error &e)  
+	{  
+		return std::wstring();  
+	}
+
+}  
+
+std::string UTF16ToUTF8(const std::wstring &source)  
+{  
+	try  
+	{  
+		static std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> cvt;  
+		return cvt.to_bytes(source);  
+	}  
+	catch (std::range_error &)  
+	{  
+		return std::string();  
+	}  
+}  
 
 int _tmain(int argc, _TCHAR* argv[])
 {
+
+	tstring ss=_T("hello定义整数");
+	AnsiString utf8s= WStoUTF8(ss);
+	AnsiString utf8s1 = UTF16ToUTF8(ss);
+	bool test = utf8s == utf8s1;
+
 
 	ePipeline CmdPipe;	
 	for(int i=1; i<argc; i++)

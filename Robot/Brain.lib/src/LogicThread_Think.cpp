@@ -76,11 +76,21 @@ void CLogicThread::ThinkProc(CLogicDialog* Dialog,CMsg& Msg){
 	};
 
 	int64 Pos  = Letter1.PopInt();
-	tstring text  = Letter1.PopString();
+	eElectron E;
+	Letter1.Pop(&E);
+	tstring text;
+	if (E.EnergyType() == TYPE_INT) //delete
+	{
+		int64 n = E.Int64();
+		text.resize(n,127);
+	}else{
+		text = E.String();
+	}
 	EventID    = Letter1.PopInt();
 
 	m_TextMsgQueue.erase(it);
 
+	if(text.size()==0)return;
 	ThinkProc(Dialog,Pos,text,true,EventID);
 }
 void CLogicThread::ThinkProc(CLogicDialog* Dialog,int32 Pos,tstring& Msg,bool Forecast ,int64 EventID){
