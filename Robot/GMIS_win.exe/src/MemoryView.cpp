@@ -44,7 +44,7 @@ void CMemoryView::CTextItem::Draw(HDC hDC, ePipeline* Pipe){
 	if (m_Alias<0xffffffff)
 	{
 		int32 ID = m_Alias;
-		tstring Text = Format1024(_T("%d	%s"),ID,m_Text.c_str());
+		tstring Text = Format1024(_T("%s"),m_Text.c_str());
 		::DrawText(hDC,Text.c_str(),Text.size(),&rc,DT_LEFT|DT_EXPANDTABS|
 			DT_NOPREFIX|DT_VCENTER);
 
@@ -105,18 +105,17 @@ void CMemoryView::ResetData(ePipeline& DataList){
 	Title->DeleteAll();
 	Title->m_ObjectCount=0;
 
-	for (int i=0; i<DataList.Size(); i+=2)
+	for (int i=0; i<DataList.Size(); i++)
 	{
-		int64 InstanceID = *(int64*)DataList.GetData(i);
-		ePipeline*  InstanceItem = (ePipeline*)DataList.GetData(i+1);
+		ePipeline*  InstanceItem = (ePipeline*)DataList.GetData(i);
 		tstring InstanceName = InstanceItem->GetLabel();
 		CreateDataInstance(InstanceName);
 
-		CTextItem* DataList = (CTextItem*)Title->m_ChildList[Title->m_ObjectCount-1];
+		CTextItem* ChildItemList = (CTextItem*)Title->m_ChildList[Title->m_ChildList.size()-1];
 		
 		for (int j=0; j<InstanceItem->Size(); j++)
 		{
-			ePipeline* Data = (ePipeline*)InstanceItem->GetData(j);
+			Energy* Data = InstanceItem->GetEnergy(j);
 			
 			CMemoryView::CTextItem*  DataItem = Data2Item(j,Data);
 
@@ -127,7 +126,7 @@ void CMemoryView::ResetData(ePipeline& DataList){
 
 			//DataItem->m_State = SPACE_NOTOOLABR;
 
-			DataList->PushChild(DataItem);
+			ChildItemList->PushChild(DataItem);
 		}
 	}
 	Layout();
@@ -386,10 +385,9 @@ CMemoryView::CTextItem* CMemoryView::Data2Item(int Index,Energy* Data)
 	   return NULL;
 }
 
-void CMemoryView::InsertData(tstring InstanceName,int32 Index,Energy* Data){
+void CMemoryView::InsertData(tstring InstanceName,ePipeline& Address,Energy* Data){
 	
 	CTitle* Title = (CTitle*)m_ChildList[1];
-	
 	
 	int i;
 	
@@ -410,144 +408,224 @@ void CMemoryView::InsertData(tstring InstanceName,int32 Index,Energy* Data){
 	}
 	
 	assert(InstanceItem);
-
-	if (Index<0 || Index> InstanceItem->m_ChildList.size())
-	{
-		return;
-	}
 	
+	CVSpace2*  Parent = InstanceItem;
+	CVSpace2*  Target = NULL;
+	int64 AddressLength = Address.Size();
 
-	CMemoryView::CTextItem*  DataItem = Data2Item(Index,Data);
-	
-	if (DataItem==NULL)
+	if (AddressLength==0)
 	{
-		return;
-	}	
-
-	DataItem->m_State = SPACE_NOTOOLABR;
-
-	InstanceItem->PushChild(DataItem,Index);
-};
-
-void CMemoryView::ImportData(tstring InstanceName,ePipeline* DataList){
-	CTextItem* InstanceItem = NULL;
-	int i;
-	CTitle* Title = (CTitle*)m_ChildList[1];
-
-	for (i=0; i<Title->m_ChildList.size(); i++)
-	{
-		InstanceItem = (CTextItem*)Title->m_ChildList[i];
-
-		if (InstanceItem->m_Text == InstanceName)
-		{
-			break;
-		}
-	}
-
-	if (i == Title->m_ChildList.size()) //不存在
-	{
-		return;
-	}
-
-	assert(InstanceItem);
-
-	int Index=0;
-	while (DataList->Size())
-	{
-		eElectron E;
-		DataList->Pop(&E);
-		ePipeline* Data = (ePipeline*)E.Get();
-		
-		CMemoryView::CTextItem*  DataItem = Data2Item(Index++,Data);
+		CMemoryView::CTextItem*  DataItem = Data2Item(0,Data);
 
 		if (DataItem==NULL)
 		{
 			return;
 		}	
-
 		DataItem->m_State = SPACE_NOTOOLABR;
-		InstanceItem->PushChild(DataItem);
-	}
-}
-void CMemoryView::ExportData(tstring InstanceName){
-	CTitle* Title = (CTitle*)m_ChildList[1];
-
-
-	int i;
-
-	CTextItem* InstanceItem = NULL;
-	for (i=0; i<Title->m_ChildList.size(); i++)
-	{
-		InstanceItem = (CTextItem*)Title->m_ChildList[i];
-
-		if (InstanceItem->m_Text == InstanceName)
+		Parent->PushChild(DataItem,0);
+		for (int i=1; i<Parent->m_ChildList.size();i++)
 		{
-			break;
+			CMemoryView::CTextItem* item = (CMemoryView::CTextItem*)Parent->m_ChildList[i];
+			item->m_Index++;
 		}
-	}
-
-	if (i == Title->m_ChildList.size()) //不存在
-	{
 		return;
 	}
 
-	assert(InstanceItem);
-
-	
-	m_Toolbar.m_Owner = NULL;
-	m_SpaceFocused = NULL;
-	
-
-	InstanceItem->DeleteAll();
-
-}
-void CMemoryView::ModifyData(tstring InstanceName,int32 Index,Energy* Data){
-
-	CTitle* Title = (CTitle*)m_ChildList[1];
-
-
-	int i;
-
-	CTextItem* InstanceItem = NULL;
-	for (i=0; i<Title->m_ChildList.size(); i++)
-	{
-		InstanceItem = (CTextItem*)Title->m_ChildList[i];
-
-		if (InstanceItem->m_Text == InstanceName)
-		{
-			break;
+	for (int i=0 ;i<AddressLength; i++){
+		int64 Index = *(int64*)Address.GetData(i);
+		if(Index<0 || Index>Parent->m_ChildList.size()){
+			assert(0);
+			return;
 		}
+
+		if(i==AddressLength-1){ //最后一个地址
+			CMemoryView::CTextItem*  DataItem = Data2Item(Index,Data);
+
+			if (DataItem==NULL)
+			{
+				return;
+			}	
+			DataItem->m_State = SPACE_NOTOOLABR;
+
+			Parent->PushChild(DataItem,Index++);
+			for (int i=Index; i<Parent->m_ChildList.size();i++)
+			{
+				CMemoryView::CTextItem* item = (CMemoryView::CTextItem*)Parent->m_ChildList[i];
+				item->m_Index++;
+			}
+			return;
+		}
+
+		Target = Parent->m_ChildList.at(Index);	
+		Parent = Target;	
 	}
 
-	if (i == Title->m_ChildList.size()) //不存在
-	{
-		return;
-	}
+	return;
 
-	assert(InstanceItem);
-
-	if (Index<0 || Index> InstanceItem->m_ChildList.size())
-	{
-		return;
-	}
-
-
-	CMemoryView::CTextItem*  DataItem = Data2Item(Index,Data);
-
-	if (DataItem==NULL)
-	{
-		return;
-	}	
-
-	DataItem->m_State = SPACE_NOTOOLABR;
-
-	deque<CVSpace2*>::iterator It = InstanceItem->m_ChildList.begin()+Index;
-	CVSpace2* Old = *It;
-	delete Old;
-	*It = DataItem;
 };
 
-void CMemoryView::RemoveData(tstring InstanceName,int32 Index){
+void CMemoryView::ImportData(tstring InstanceName,ePipeline& Address,ePipeline* DataList){
+	CTextItem* InstanceItem = NULL;
+	int i;
+	CTitle* Title = (CTitle*)m_ChildList[1];
+
+	for (i=0; i<Title->m_ChildList.size(); i++)
+	{
+		InstanceItem = (CTextItem*)Title->m_ChildList[i];
+
+		if (InstanceItem->m_Text == InstanceName)
+		{
+			break;
+		}
+	}
+
+	if (i == Title->m_ChildList.size()) //不存在
+	{
+		return;
+	}
+
+	assert(InstanceItem);
+	CVSpace2*  Parent = InstanceItem;
+	CVSpace2*  Target = NULL;
+	int64 AddressLength = Address.Size();
+
+	if (AddressLength==0)
+	{
+		int Index=Parent->m_ChildList.size();
+		int n = Index;
+		while (DataList->Size())
+		{
+			eElectron E;
+			DataList->Pop(&E);
+			ePipeline* Data = (ePipeline*)E.Get();
+
+			CMemoryView::CTextItem*  DataItem = Data2Item(Index++,Data);
+
+			if (DataItem==NULL)
+			{
+				return;
+			}	
+
+			DataItem->m_State = SPACE_NOTOOLABR;
+			Parent->PushChild(DataItem);
+		}
+		if(n==Index)return;
+
+		for (int i=Index; i<Parent->m_ChildList.size();i++)
+		{
+			CMemoryView::CTextItem* item = (CMemoryView::CTextItem*)Parent->m_ChildList[i];
+			item->m_Index++;
+		}
+		return;
+	}
+
+	for (int i=0 ;i<AddressLength; i++){
+		int64 Index = *(int64*)Address.GetData(i);
+		if(Index<0 || Index>Parent->m_ChildList.size()){
+			assert(0);
+			return;
+		}
+
+		if(i==AddressLength-1){ //最后一个地址
+			int Index=Parent->m_ChildList.size();
+			int n=Index;
+			while (DataList->Size())
+			{
+				eElectron E;
+				DataList->Pop(&E);
+				ePipeline* Data = (ePipeline*)E.Get();
+
+				CMemoryView::CTextItem*  DataItem = Data2Item(Index++,Data);
+
+				if (DataItem==NULL)
+				{
+					return;
+				}	
+
+				DataItem->m_State = SPACE_NOTOOLABR;
+				Parent->PushChild(DataItem);
+			}
+			if(n==Index)return;
+
+			for (int i=Index; i<Parent->m_ChildList.size();i++)
+			{
+				CMemoryView::CTextItem* item = (CMemoryView::CTextItem*)Parent->m_ChildList[i];
+				item->m_Index++;
+			}
+			return;
+		}
+
+		Target = Parent->m_ChildList.at(Index);	
+		Parent = Target;	
+	}
+
+	return;
+
+}
+
+void CMemoryView::ModifyData(tstring InstanceName,ePipeline& Address,Energy* Data){
+
+	CTitle* Title = (CTitle*)m_ChildList[1];
+
+
+	int i;
+
+	CTextItem* InstanceItem = NULL;
+	for (i=0; i<Title->m_ChildList.size(); i++)
+	{
+		InstanceItem = (CTextItem*)Title->m_ChildList[i];
+
+		if (InstanceItem->m_Text == InstanceName)
+		{
+			break;
+		}
+	}
+
+	if (i == Title->m_ChildList.size()) //不存在
+	{
+		return;
+	}
+
+	assert(InstanceItem);
+
+	CVSpace2*  Parent = InstanceItem;
+	CVSpace2*  Target = NULL;
+	int64 AddressLength = Address.Size();
+
+	if (AddressLength==0)
+	{
+		return;
+	}
+
+	for (int i=0 ;i<AddressLength; i++){
+		int64 Index = *(int64*)Address.GetData(i);
+		if(Index<0 || Index>=Parent->m_ChildList.size()){
+			assert(0);
+			return;
+		}
+
+		if(i==AddressLength-1){ //最后一个地址
+			CMemoryView::CTextItem*  DataItem = Data2Item(Index,Data);
+
+			if (DataItem==NULL)
+			{
+				return;
+			}	
+			DataItem->m_State = SPACE_NOTOOLABR;
+			DataItem->m_Parent = Parent;
+			deque<CVSpace2*>::iterator It = Parent->m_ChildList.begin()+Index;
+			CVSpace2* Old = *It;
+			delete Old;
+			*It = DataItem;
+			return;
+		}
+
+		Target = Parent->m_ChildList.at(Index);	
+		Parent = Target;	
+	}
+};
+
+void CMemoryView::RemoveData(tstring InstanceName,ePipeline& Address){
 	CTitle* Title = (CTitle*)m_ChildList[1];
 	
 	
@@ -570,28 +648,49 @@ void CMemoryView::RemoveData(tstring InstanceName,int32 Index){
 	}
 	
 	assert(InstanceItem);
-	
-	if (Index<0 || Index> InstanceItem->m_ChildList.size())
+
+
+	CVSpace2*  Parent = InstanceItem;
+	CVSpace2*  Target = NULL;
+	int64 AddressLength = Address.Size();
+
+	if (AddressLength==0) //空地址
 	{
 		return;
 	}
 
-	CMemoryView::CTextItem* DataItem = (CMemoryView::CTextItem*)InstanceItem->m_ChildList[Index];	
-	
-	if(m_Toolbar.m_Owner == DataItem)
-	{
-		m_Toolbar.m_Owner = NULL;
-		m_SpaceFocused = NULL;
-	}
-	delete DataItem;
-	
-	InstanceItem->m_ChildList.erase(InstanceItem->m_ChildList.begin()+Index);
+	for (int i=0 ;i<AddressLength; i++){
+		int64 Index = *(int64*)Address.GetData(i);
+		if(Index<0 || Index>=Parent->m_ChildList.size()){
+			assert(0);
+			return;
+		}
 
-	for (i=Index; i<InstanceItem->m_ChildList.size();i++)
-	{
-		DataItem = (CMemoryView::CTextItem*)InstanceItem->m_ChildList[i];
-		DataItem->m_Index--;
+		if(i==AddressLength-1){ //最后一个地址
+			CMemoryView::CTextItem* DataItem = (CMemoryView::CTextItem*)Parent->m_ChildList[Index];	
+
+			if(m_Toolbar.m_Owner == DataItem)
+			{
+				m_Toolbar.m_Owner = NULL;
+				m_SpaceFocused = NULL;
+			}
+			delete DataItem;
+
+			Parent->m_ChildList.erase(Parent->m_ChildList.begin()+Index);
+
+			for (i=Index; i<Parent->m_ChildList.size();i++)
+			{
+				DataItem = (CMemoryView::CTextItem*)Parent->m_ChildList[i];
+				DataItem->m_Index--;
+			}
+			return;
+		}
+
+		Target = Parent->m_ChildList.at(Index);	
+		Parent = Target;	
 	}
+
+	
 };
 
 void CMemoryView::CloseDataInstance(tstring InstanceName){
@@ -690,29 +789,29 @@ LRESULT CMemoryView::OnInfoProc(WPARAM wParam, LPARAM lParam){
 		case INSERT_DATA:
 			{
 				tstring InstanceName = Info->PopString();
-				int32 Index = Info->PopInt();
+			
+				ePipeline* Address = (ePipeline*)Info->GetData(0);
+				Energy* Data = Info->GetEnergy(1);
 
-				ePipeline* Data = (ePipeline*)Info->GetData(0);
-
-				InsertData(InstanceName,Index,Data);
+				InsertData(InstanceName,*Address,Data);
 			}
 			break;
 		case MODIFY_DATA:
 			{
 				tstring InstanceName = Info->PopString();
-				int32 Index = Info->PopInt();
+				ePipeline* Address = (ePipeline*)Info->GetData(0);
+				Energy* Data = Info->GetEnergy(1);
 
-				ePipeline* Data = (ePipeline*)Info->GetData(0);
 
-				ModifyData(InstanceName,Index,Data);
+				ModifyData(InstanceName,*Address,Data);
 
 			}
 			break;
 		case REMOVE_DATA:
 			{
 				tstring InstanceName = Info->PopString();
-				int32 Index = Info->PopInt();
-				RemoveData(InstanceName,Index);
+				ePipeline* Address = (ePipeline*)Info->GetData(0);
+				RemoveData(InstanceName,*Address);
 			}
 			break;
 		case CLOSE_INSTANCE:
@@ -724,14 +823,9 @@ LRESULT CMemoryView::OnInfoProc(WPARAM wParam, LPARAM lParam){
 		case IMPORT_DATA:
 			{
 				tstring InstanceName = Info->PopString();
-				ePipeline* DataList = (ePipeline*)Info->GetData(0);
-				ImportData(InstanceName,DataList);
-			}
-			break;
-		case EXPORT_DATA:
-			{
-				tstring InstanceName = Info->PopString();
-				ExportData(InstanceName);
+				ePipeline* Address = (ePipeline*)Info->GetData(0);
+				ePipeline* DataList = (ePipeline*)Info->GetData(1);
+				ImportData(InstanceName,*Address,DataList);
 			}
 			break;
 		default:
@@ -766,7 +860,7 @@ LRESULT CMemoryView::ToolbarReaction(ButtonItem* Bnt){
 	switch(Bnt->m_Alias){
 	case BNT_CLOSE_ONE:
 		{	
-			ePipeline Msg(GUI_MEMORY_OPERATE);		
+			ePipeline Msg(TO_BRAIN_MSG::GUI_MEMORY_OPERATE);		
 			Msg.PushInt(Type);
 			Msg.PushInt(CLOSE_INSTANCE);
 			if (Type == INSTANCE_OBJECT)
@@ -783,7 +877,7 @@ LRESULT CMemoryView::ToolbarReaction(ButtonItem* Bnt){
 		break;
 	case BNT_CLOSE_ALL:
 		{
-			ePipeline Msg(GUI_MEMORY_OPERATE);		
+			ePipeline Msg(TO_BRAIN_MSG::GUI_MEMORY_OPERATE);		
 			Msg.PushInt(Type);
 			Msg.PushInt(CLOSE_INSTANCE);
 			

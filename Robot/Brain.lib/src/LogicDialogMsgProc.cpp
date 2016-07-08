@@ -57,88 +57,88 @@ void CLogicDialog::OnMsgFromBrain(ePipeline* ExePipe,CMsg& Msg)
 	int64 ChildMsgID = Letter.PopInt();
 	
 	switch(ChildMsgID){
-	case GUI_IO_INPUTING:
+	case TO_BRAIN_MSG::GUI_IO_INPUTING:
 		{
 			OnBrainTextInputing(ExePipe,Msg);	
 		}
 		break;
-	case GUI_IO_INPUTED:
+	case TO_BRAIN_MSG::GUI_IO_INPUTED:
 		{
 			OnBrainTextInputEnd(ExePipe,Msg);
 		}
 		break;
-	case GUI_GET_DIALOG_MORE_ITME:
+	case TO_BRAIN_MSG::GUI_GET_DIALOG_MORE_ITME:
         {
 			OnBrainGetMoreLog(ExePipe,Msg);
 		}
 		break;
-	case GUI_SET_FOUCUS_DIALOG:
+	case TO_BRAIN_MSG::GUI_SET_FOUCUS_DIALOG:
         {
 			OnBrainSetFocusDialog(ExePipe,Msg);
 		}
 		break;
-	case GUI_TASK_CONTROL:
+	case TO_BRAIN_MSG::TASK_CONTROL::ID:
 		{
 			OnBrainTaskControl(ExePipe,Msg);
 		}
 		break;
-	case GUI_GET_DEBUG_ITEM:
+	case TO_BRAIN_MSG::GUI_GET_DEBUG_ITEM:
 		{
 			OnBrainGetDebugItem(ExePipe,Msg);
 		}
 		break;
-	case GUI_LOGIC_OPERATE:
+	case TO_BRAIN_MSG::GUI_LOGIC_OPERATE::ID:
 		{
 			OnBrainLogicOperate(ExePipe,Msg);
 		}
 		break;
-	case GUI_OBJECT_OPERATE:
+	case TO_BRAIN_MSG::GUI_OBJECT_OPERATE::ID:
 		{
 			OnBrainObjectOperate(ExePipe,Msg);
 		}
 		break;
-	case GUI_MEMORY_OPERATE:
+	case TO_BRAIN_MSG::GUI_MEMORY_OPERATE:
 		{
 			OnBrainMemoryOperate(ExePipe,Msg);
 		}
 		break;
-	case GUI_GET_THINK_RESULT:
+	case TO_BRAIN_MSG::GUI_GET_THINK_RESULT:
 		{
 			OnBrainGetThinkResult(ExePipe,Msg);
 		}
 		break;
-	case GUI_GET_ANALYSE_RESULT:
+	case TO_BRAIN_MSG::GUI_GET_ANALYSE_RESULT:
 		{
 			OnBrainGetAnalyseResult(ExePipe,Msg);
 		}
 		break;
-	case GUI_CLEAR_DIALOG_OUTPUT:
+	case TO_BRAIN_MSG::GUI_CLEAR_DIALOG_OUTPUT:
 		{
 			OnBrainClearDialogOutput(ExePipe,Msg);
 		}
 		break;
-	case GUI_GET_FIND_REUSLT:
+	case TO_BRAIN_MSG::GUI_GET_FIND_REUSLT:
 		{
 			OnBrainGetFindResult(ExePipe,Msg);
 		}
 		break;
-	case GUI_CLEAR_THINK:
+	case TO_BRAIN_MSG::GUI_CLEAR_THINK:
 		{
 			OnBrainClearThink(ExePipe,Msg);
 		}
 		break;
 
-	case GUI_CONNECT_TO:
+	case TO_BRAIN_MSG::GUI_CONNECT_TO:
 		{
 			OnBrainConnectTo(ExePipe,Msg);
 		}
 		break;
-	case GUI_DISCONNECT:
+	case TO_BRAIN_MSG::GUI_DISCONNECT:
 		{
 			OnBrainDisconnect(ExePipe,Msg);
 		}
 		break;
-	case GUI_SET_LOG_FLAG:
+	case TO_BRAIN_MSG::GUI_SET_LOG_FLAG:
 		{
 			OnBrainSetLogFlag(ExePipe,Msg);
 		}
@@ -176,22 +176,65 @@ void CLogicDialog::OnBrainTextInputEnd(ePipeline* ExePipe,CMsg& Msg){
 			SetTaskState(TASK_IDLE);
 			NotifyTaskState();
 			return;
-		};
-		
-		if(m_DialogType == DIALOG_SYSTEM_MAIN){
-		    //系统对话不执行具体逻辑任务，而是请求大脑生成一个子对话执行	
+		};	
+	
+		if(m_DialogType == DIALOG_SYSTEM){
+			Think2TaskList();
+
+		    //系统对话不执行具体逻辑任务，而是请求大脑生成一个任务对话执行	
 			int64 EventID = AbstractSpace::CreateTimeStamp();
-			CRequestBrain rq(REQUEST_TRANS_TASK);
-			rq.PushInt(EventID);
-			rq.PushInt(FALSE); //just once?
-			rq.Request(this);
-		}else{
-			ePipeline ChildMsg(GUI_TASK_CONTROL);
-			ChildMsg.PushInt(CMD_EXE);
+			bool  bJustOnce = false;
+
+			tstring TaskName = Format1024(_T("Task%I64ld"),m_TaskDialogCount++);
+
+			int64 ClientEventID = 0;
+			ePipeline ClientAddress(m_SourceID);
+			ClientAddress.PushInt(m_DialogID);
+
+			ePipeline  ClientExePipe;
+
+			CLogicDialog* TaskDialog = m_Brain->CreateChildDialog(this,EventID,TaskName,ClientEventID,ClientAddress,ClientExePipe,TIME_SEC,bJustOnce,true);
+			if (!TaskDialog)
+			{
+				tstring text = _T("The task transferred fail");
+				SaveSendItem(text,0);
+
+				SetTaskState(TASK_IDLE);
+				NotifyTaskState();
+				ResetThink();
+			}
+
+		}
+		else
+		{
+			TASK_STATE  State = GetTaskState();
+
+			if (State != TASK_IDLE)
+			{			
+
+				bool ret = m_Brain->CreateEventDialog(this,TIME_SEC);
+
+				if (!ret)
+				{
+					tstring text = Format1024(_T("Start event  failed: can't create dialog"));
+
+					SaveSendItem(text,0);
+
+					SetTaskState(TASK_IDLE);
+					NotifyTaskState();
+					ResetThink();
+				}
+			}else{
+				Think2TaskList();
+
+				CMsg Msg(SYSTEM_SOURCE,m_DialogID,MSG_FROM_BRAIN,DEFAULT_DIALOG,0);
+				ePipeline& Letter = Msg.GetLetter();
+				Letter.PushInt(TO_BRAIN_MSG::TASK_CONTROL::ID);
+				Letter.PushInt(TO_BRAIN_MSG::TASK_CONTROL::CMD_EXE);
+
+				m_Brain->PushNerveMsg(Msg,false,false);
+			}
 			
-			CMsg BrainMsg;
-			CreateBrainMsg(BrainMsg,m_DialogID,ChildMsg,0);	
-			m_Brain->PushNerveMsg(BrainMsg,false,false);
 		}
 	} 
 	else
@@ -252,14 +295,14 @@ void CLogicDialog::OnBrainTaskControl(ePipeline* ExePipe,CMsg& Msg){
 		
 	switch (Cmd)
 	{
-	case CMD_DEBUG_STEP:
+	case TO_BRAIN_MSG::TASK_CONTROL::CMD_DEBUG_STEP:
 		{
 			
 			int64 PauseID = Letter.PopInt();
-			StopPause(PauseID,CMD_DEBUG_STEP);
+			StopPause(PauseID,TO_BRAIN_MSG::TASK_CONTROL::CMD_DEBUG_STEP);
 		}
 		break;
-	case CMD_RUN: //这种只可能是在调试状态下要求继续执行
+	case TO_BRAIN_MSG::TASK_CONTROL::CMD_RUN: //这种只可能是在调试状态下要求继续执行
 		{
 			WORK_MODE WorkMode = GetWorkMode();
 			assert(WorkMode == WORK_DEBUG);
@@ -268,11 +311,11 @@ void CLogicDialog::OnBrainTaskControl(ePipeline* ExePipe,CMsg& Msg){
 
 			int64 PauseID = Letter.PopInt();
 
-			StopPause(PauseID,CMD_RUN);
+			StopPause(PauseID,TO_BRAIN_MSG::TASK_CONTROL::CMD_RUN);
 		}
 		break;
 
-	case CMD_EXE:
+	case TO_BRAIN_MSG::TASK_CONTROL::CMD_EXE:
 		{
 			ExePipe->Clear();
 		    ClearTaskMsgList();			
@@ -286,18 +329,18 @@ void CLogicDialog::OnBrainTaskControl(ePipeline* ExePipe,CMsg& Msg){
 				NotifyTaskState();
 				return ;	
 			}
-								
+			
 			ePipeline Receiver;
 			Receiver.PushInt(m_DialogID);
 			Receiver.PushInt(m_TaskID);
 			
-			CMsg TaskMsg(Receiver,MSG_ELT_TASK_CTRL,0);
-			TaskMsg.GetLetter().PushInt(CMD_RUN);
+			CMsg TaskMsg(m_SourceID,Receiver,MSG_ELT_TASK_CTRL,DEFAULT_DIALOG,0);
+			TaskMsg.GetLetter().PushInt(TO_BRAIN_MSG::TASK_CONTROL::CMD_RUN);
 			
 			m_Brain->PushNerveMsg(TaskMsg,false,false); //由于可能改变了任务内部，导致迭代器失效，所以必须经由系统分发信息
 		}
 		break;
-    case CMD_STOP:
+    case TO_BRAIN_MSG::TASK_CONTROL::CMD_STOP:
 		{
 			if (GetTaskState() != TASK_STOP)
 			{
@@ -308,9 +351,9 @@ void CLogicDialog::OnBrainTaskControl(ePipeline* ExePipe,CMsg& Msg){
 				Address.PushInt(m_DialogID);
 				Address.PushInt(m_TaskID);
 
-				CMsg EltMsg(Address,MSG_ELT_TASK_CTRL,0);
+				CMsg EltMsg(m_SourceID,Address,MSG_ELT_TASK_CTRL,DEFAULT_DIALOG,0);
 				ePipeline& Letter = EltMsg.GetLetter();
-				Letter.PushInt(CMD_STOP);
+				Letter.PushInt(TO_BRAIN_MSG::TASK_CONTROL::CMD_STOP);
 				
 				//给Element发信息
 				m_Brain->PushNerveMsg(EltMsg,false,false);
@@ -320,7 +363,7 @@ void CLogicDialog::OnBrainTaskControl(ePipeline* ExePipe,CMsg& Msg){
 			
 		}
 		break;
-	case CMD_PAUSE:
+	case TO_BRAIN_MSG::TASK_CONTROL::CMD_PAUSE:
 		{
 			//if (Dialog->GetTaskState() == TASK_RUN)
 			{
@@ -334,7 +377,7 @@ void CLogicDialog::OnBrainTaskControl(ePipeline* ExePipe,CMsg& Msg){
 			Receiver.PushInt(m_DialogID);
 			Receiver.PushInt(m_TaskID);
 			
-			CMsg TaskMsg(Receiver,MSG_ELT_TASK_CTRL,0);
+			CMsg TaskMsg(m_SourceID,Receiver,MSG_ELT_TASK_CTRL,DEFAULT_DIALOG,0);
 			TaskMsg.GetLetter().PushInt(Cmd);
 			TaskMsg.GetLetter()<<Letter;
 			m_Brain->PushNerveMsg(TaskMsg,false,false); //由于可能改变了任务内部，导致迭代器失效，所以必须经由系统分发信息
@@ -354,7 +397,9 @@ void CLogicDialog::OnBrainGetDebugItem(ePipeline* ExePipe,CMsg& Msg){
 	if (m_LogicItemTree.Size()==0)
 	{
 		CLogicTask* Task = m_Brain->GetBrainData()->GetLogicTask(m_TaskID);
-		Task->GetDebugItem(m_LogicItemTree);
+		if(Task){
+			Task->GetDebugItem(m_LogicItemTree);
+		}
 	}
 
 	m_LastDebugTimeStamp = TaskID;
@@ -440,14 +485,14 @@ void CLogicDialog::OnBrainLogicOperate(ePipeline* ExePipe,CMsg& Msg){
 	int64 Type = Letter.PopInt();
 	switch (Type)
 	{
-	case DEL_LOGIC:
+	case TO_BRAIN_MSG::GUI_LOGIC_OPERATE::DEL_LOGIC:
         {
 			tstring LogicName = Letter.PopString();
 			
             DeleteLogic(LogicName);
 		}
 		break;
-	case CLEAR_LOGIC:
+	case TO_BRAIN_MSG::GUI_LOGIC_OPERATE::CLEAR_LOGIC:
 		{
 			ClearLogicSence();
 		};
@@ -463,19 +508,19 @@ void CLogicDialog::OnBrainObjectOperate(ePipeline* ExePipe,CMsg& Msg)
 	int64 Type = Letter.PopInt();
 	switch (Type)
 	{
-	case SELECT_OBJECT:
+	case TO_BRAIN_MSG::GUI_OBJECT_OPERATE::SELECT_OBJECT:
         {
 			ePipeline* Item = (ePipeline*)Letter.GetData(0);			
 			RegisterObject(*Item);
 		}
 		break;
-	case DEL_OBJECT:
+	case TO_BRAIN_MSG::GUI_OBJECT_OPERATE::DELETE_OBJECT:
 		{
 			ePipeline* Item = (ePipeline*)Letter.GetData(0);			
 			DeleteObject(*Item);
 		}
 		break;
-	case CLR_OBJECT:
+	case TO_BRAIN_MSG::GUI_OBJECT_OPERATE::CLR_OBJECT:
 		{
 			ClearObject();
 		};
@@ -544,8 +589,8 @@ void CLogicDialog::OnBrainMemoryOperate(ePipeline* ExePipe,CMsg& Msg)
 			Receiver.PushInt(m_DialogID);
 			Receiver.PushInt(m_TaskID);
 
-			CMsg TaskMsg(Receiver,MSG_ELT_TASK_CTRL,0);
-			TaskMsg.GetLetter().PushInt(CMD_RUN);
+			CMsg TaskMsg(m_SourceID,Receiver,MSG_ELT_TASK_CTRL,DEFAULT_DIALOG,0);
+			TaskMsg.GetLetter().PushInt(TO_BRAIN_MSG::TASK_CONTROL::CMD_RUN);
 
 			m_Brain->PushNerveMsg(TaskMsg,false,false); //由于可能改变了任务内部，导致迭代器失效，所以必须经由系统分发信息
 		}
@@ -559,11 +604,11 @@ void CLogicDialog::OnBrainMemoryOperate(ePipeline* ExePipe,CMsg& Msg)
 				tstring InstanceName = Letter.PopString();
 
 				ePipeline Clause1;
-				Clause1.PushInt(INSTINCT_TABLE_FOCUS);
+				Clause1.PushInt(INSTINCT_FOCUS_MEMORY);
 				Clause1.PushString(InstanceName);
 
 				ePipeline Clause2;
-				Clause2.PushInt(INSTINCT_TABLE_CLOSE);
+				Clause2.PushInt(INSTINCT_CLOSE_MEMORY);
 
 				Sentence.PushPipe(Clause1);
 				Sentence.PushPipe(Clause2);
@@ -590,8 +635,8 @@ void CLogicDialog::OnBrainMemoryOperate(ePipeline* ExePipe,CMsg& Msg)
 			Receiver.PushInt(m_DialogID);
 			Receiver.PushInt(m_TaskID);
 
-			CMsg TaskMsg(Receiver,MSG_ELT_TASK_CTRL,0);
-			TaskMsg.GetLetter().PushInt(CMD_RUN);
+			CMsg TaskMsg(m_SourceID,Receiver,MSG_ELT_TASK_CTRL,DEFAULT_DIALOG,0);
+			TaskMsg.GetLetter().PushInt(TO_BRAIN_MSG::TASK_CONTROL::CMD_RUN);
 
 			m_Brain->PushNerveMsg(TaskMsg,false,false); //由于可能改变了任务内部，导致迭代器失效，所以必须经由系统分发信息
 		}
@@ -769,9 +814,9 @@ void CLogicDialog::OnBrainDisconnect(ePipeline* ExePipe,CMsg& Msg){
 	Receiver.PushInt(m_SourceID);
 	Receiver.PushInt(m_DialogID);
 	
-	CMsg GuiMsg2(Receiver,MSG_BRAIN_TO_GUI,0);		
-	ePipeline Cmd(GUI_CONNECT_STATE);
-	Cmd.PushInt(CON_END);
+	CMsg GuiMsg2(m_SourceID,Receiver,MSG_BRAIN_TO_GUI,DEFAULT_DIALOG,0);		
+	ePipeline Cmd(TO_SYSTEM_VIEW::ID);
+	Cmd.PushInt(TO_SYSTEM_VIEW::CONNECT_STATE);
 	Cmd.PushString(ip);
 	Cmd.PushInt(FALSE);	
 	GuiMsg2.GetLetter().PushPipe(Cmd);
@@ -789,6 +834,7 @@ void CLogicDialog::OnBrainSetLogFlag(ePipeline* ExePipe,CMsg& Msg)
 }
 
 void CLogicDialog::OnTaskResult(ePipeline* ExePipe,CMsg& Msg){	
+
 	ePipeline& Letter = Msg.GetLetter();
 	
 	ePipeline* OldExePipe = (ePipeline*)Letter.GetData(0);
@@ -798,45 +844,45 @@ void CLogicDialog::OnTaskResult(ePipeline* ExePipe,CMsg& Msg){
 	tstring s  = PipeView.GetString();
 
 	RuntimeOutput(0,s);
-	
+
+	int64 EventID = Msg.GetEventID();
+	if(EventID!=0){
+		return;
+	}
+	ResetTask();	
+
 	int64 ID = NewExePipe->GetID();
 
 	if (!NewExePipe->IsAlive())
 	{
 		tstring text = _T("Stop");
 		SaveSendItem(text,0); 
+
+		SetTaskState(TASK_STOP);
+		NotifyTaskState();
 	}
 	else{
 		tstring text = _T("ok");
 		SaveSendItem(text,0);    
-	}
-	
-	ResetTask();
 
-	//继续生成一个与任务对话对应的事件
-	ePipeline EmptyExePipe;
-	ePipeline Address(Msg.GetSourceID());
-	int64 EventID = m_DialogID;
-	Address.PushInt(EventID);
-	
-#ifdef _DEBUG
-	tstring memo = Format1024(_T("%s %d"),_T(__FILE__),__LINE__);
-	m_Brain->GetBrainData()->PushBrainEvent(EventID,EventID,EmptyExePipe,Address,TIME_SEC,false,memo);
-#else
-	m_Brain->GetBrainData()->PushBrainEvent(EventID,EventID,EmptyExePipe,Address,TIME_SEC,false);
-#endif
-	//如果有的话，准备执行下一个逻辑任务
-	CLogicThread* CurThink = GetThink();	
-	if(CurThink->m_Text.m_SentenceList.size()==0){
-		ResetThink();	
-	}else{
-		ePipeline ChildMsg(GUI_TASK_CONTROL);
-		ChildMsg.PushInt(CMD_EXE);
-		
-		CMsg BrainMsg;
-		CreateBrainMsg(BrainMsg,m_DialogID,ChildMsg,0);	
-		m_Brain->PushNerveMsg(BrainMsg,false,false);
-	}		
+		//如果有的话，准备执行下一个逻辑任务
+		if(HasTask()){
+			SetTaskState(TASK_STOP);
+			NotifyTaskState();
+
+			CMsg Msg(SYSTEM_SOURCE,m_DialogID,MSG_FROM_BRAIN,DEFAULT_DIALOG,0);
+			ePipeline& Letter = Msg.GetLetter();
+			Letter.PushInt(TO_BRAIN_MSG::TASK_CONTROL::ID);
+			Letter.PushInt(TO_BRAIN_MSG::TASK_CONTROL::CMD_EXE);
+
+			m_Brain->PushNerveMsg(Msg,false,false);
+
+			return;
+		}else{
+			SetTaskState(TASK_IDLE);
+			NotifyTaskState();
+		}		
+	}
 };
 
 void CLogicDialog::OnEventTick(ePipeline* ExePipe,CMsg& Msg){

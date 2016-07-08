@@ -1,8 +1,8 @@
 ﻿#pragma warning (disable:4786)
 
 #include "LogicElement.h"
-#include "LogicTask.h"
-#include "LogicDialog.h"
+#include "..\LogicTask.h"
+//#include "..\LogicDialog.h"
 
 
 tstring GetLogicElementName(tstring& srcName)

@@ -33,7 +33,7 @@
 		virtual ~CBitwise_NOT(){};		
 
 		virtual tstring      GetName(){ return _T("CBitwise_NOT");};
-		virtual TypeAB  GetTypeAB(){ return 0x20000000;} 
+		virtual TypeAB  GetTypeAB(){ return 0x00000000;} 
 		virtual bool Do(Energy* E);
 	};
 	

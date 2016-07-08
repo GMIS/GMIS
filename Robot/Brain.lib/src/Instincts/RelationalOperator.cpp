@@ -13,6 +13,7 @@
 		ePipeline* Pipe = (ePipeline*)E;
 		
 		if(Pipe->Size()<2){
+			Pipe->GetLabel() = Format1024(_T("%I64ld Error: no enough numbers to make '==' operator!"),m_ID);
 			return false;
 		}
 
@@ -86,6 +87,7 @@
 		ePipeline* Pipe = (ePipeline*)E;
 		
 		if(Pipe->Size()<2){
+			Pipe->GetLabel() = Format1024(_T("%I64ld Error: no enough numbers to make '>' operator!"),m_ID);
 			return false;
 		}
 		
@@ -147,6 +149,7 @@
 		ePipeline* Pipe = (ePipeline*)E;
 		
 		if(Pipe->Size()<2){
+			Pipe->GetLabel() = Format1024(_T("%I64ld Error: no enough numbers to make '>=' operator!"),m_ID);
 			return false;
 		}
 		
@@ -208,6 +211,7 @@
 		ePipeline* Pipe = (ePipeline*)E;
 		
 		if(Pipe->Size()<2){
+			Pipe->GetLabel() = Format1024(_T("%I64ld Error: no enough numbers to make '<' operator!"),m_ID);
 			return false;
 		}
 		
@@ -269,6 +273,7 @@
 		ePipeline* Pipe = (ePipeline*)E;
 		
 		if(Pipe->Size()<2){
+			Pipe->GetLabel() = Format1024(_T("%I64ld Error: no enough numbers to make '<=' operator!"),m_ID);
 			return false;
 		}
 		
@@ -330,6 +335,7 @@
 		ePipeline* Pipe = (ePipeline*)E;
 		
 		if(Pipe->Size()<2){
+			Pipe->GetLabel() = Format1024(_T("%I64ld Error: no enough numbers to make '!=' operator!"),m_ID);
 			return false;
 		}
 		
@@ -394,6 +400,6 @@
 			}	
 		}
 		
-		Pipe->GetLabel()=Format1024(_T("%I64ld Error: %s and %s can't make '==' operator!"),m_ID,TYPENAME(TypeA),TYPENAME(TypeB));
+		Pipe->GetLabel()=Format1024(_T("%I64ld Error: %s and %s can't make '!=' operator!"),m_ID,TYPENAME(TypeA),TYPENAME(TypeB));
 		return false;
 	}

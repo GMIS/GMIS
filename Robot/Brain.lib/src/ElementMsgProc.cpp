@@ -3,7 +3,7 @@
 #include "Brain.h"
 #include "Element.h"
 #include "GUIMsgDefine.h"
-#include "BrainObject.h"
+#include "InstinctDefine.h"
 #include "LogicDialog.h"
 
 MsgProcState CElement::EltMsgProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
@@ -51,7 +51,7 @@ MsgProcState CElement::OnEltTaskControl(CLogicDialog* Dialog,int32 ChildIndex,CM
 	
 	switch (Cmd)
 	{
-	case CMD_RUN:
+	case TO_BRAIN_MSG::TASK_CONTROL::CMD_RUN:
 		{
 			WORK_MODE WorkMode = Dialog->GetWorkMode();
 
@@ -64,9 +64,7 @@ MsgProcState CElement::OnEltTaskControl(CLogicDialog* Dialog,int32 ChildIndex,CM
 				if (!ret)
 				{
 					Dialog->RuntimeOutput(Dialog->m_CompileError);
-				}
-				
-				Dialog->m_TaskID = 0;
+				}				
 
 				ExePipe.SetID(RETURN_NORMAL);	
 				Dialog->SetTaskState(TASK_RUN);
@@ -78,7 +76,7 @@ MsgProcState CElement::OnEltTaskControl(CLogicDialog* Dialog,int32 ChildIndex,CM
 				Dialog->SetTaskState(TASK_RUN);
 				Dialog->NotifyTaskState();
 			}else{
-				assert(WorkMode == WORK_TASK);
+				assert(WorkMode == WORK_TASK || WorkMode ==WORK_TEST);
 
 				if(Dialog->GetTaskState() == TASK_PAUSE){
 
@@ -113,12 +111,12 @@ MsgProcState CElement::OnEltTaskControl(CLogicDialog* Dialog,int32 ChildIndex,CM
 			}
 		}
 		break;
-	case CMD_PAUSE:
+	case TO_BRAIN_MSG::TASK_CONTROL::CMD_PAUSE:
 		{
 			ExePipe.SetID(RETURN_BREAK);
 		}
 		break;
-	case CMD_DEBUG_STEP:
+	case TO_BRAIN_MSG::TASK_CONTROL::CMD_DEBUG_STEP:
 		{
 			Dialog->ClosePauseDialog(EventID);
 
@@ -136,7 +134,7 @@ MsgProcState CElement::OnEltTaskControl(CLogicDialog* Dialog,int32 ChildIndex,CM
 			return CONTINUE_TASK;
 		}
 		break;
-	case CMD_STOP:
+	case TO_BRAIN_MSG::TASK_CONTROL::CMD_STOP:
 		{
 			Dialog->SetTaskState(TASK_STOP);
 			
@@ -144,7 +142,7 @@ MsgProcState CElement::OnEltTaskControl(CLogicDialog* Dialog,int32 ChildIndex,CM
 		    return RETURN_DIRECTLY; 
 		}
 		break;
-	case  CMD_DEBUG_BREAK:
+	case  TO_BRAIN_MSG::TASK_CONTROL::CMD_DEBUG_BREAK:
 		{
 			int64 bBreak = Letter.PopInt();
 			ePipeline* Path = (ePipeline*)Letter.GetData(0);
@@ -174,7 +172,9 @@ MsgProcState CElement::OnEltInsertLogic(CLogicDialog* Dialog,int32 ChildIndex,CM
 		ExePipe.m_Label = Format1024(_T("Error: Not find Local logic[%s]"),InsertLogicName.c_str());
 		ExePipe.SetID(RETURN_ERROR);
 
-		CMsg rMsg(MSG_TASK_FEEDBACK,0,EventID);		
+
+		CMsg rMsg(Dialog->m_SourceID,DEFAULT_DIALOG,MSG_TASK_FEEDBACK,DEFAULT_DIALOG,EventID);		
+
 		ePipeline& rLetter = rMsg.GetLetter();
 		rLetter.PushPipe(ExePipe);	
 		
@@ -187,7 +187,7 @@ MsgProcState CElement::OnEltInsertLogic(CLogicDialog* Dialog,int32 ChildIndex,CM
 		ExePipe.m_Label = Format1024(_T("Error: Local logic[%s] not valid"),InsertLogicName.c_str());
 		ExePipe.SetID(RETURN_ERROR);
 		
-		CMsg rMsg(MSG_TASK_FEEDBACK,0,EventID);		
+		CMsg rMsg(Dialog->m_SourceID,DEFAULT_DIALOG,MSG_TASK_FEEDBACK,DEFAULT_DIALOG,EventID);		
 		ePipeline& rLetter = rMsg.GetLetter();
 		rLetter.PushPipe(ExePipe);	
 		
@@ -210,7 +210,7 @@ MsgProcState CElement::OnEltInsertLogic(CLogicDialog* Dialog,int32 ChildIndex,CM
 		ExePipe.m_Label = Format1024(_T("Insert logic [%s]:[%s]" ),InsertLogicName.c_str(),Task->m_CompileError.c_str());
 		ExePipe.SetID(RETURN_ERROR);
 		
-		CMsg rMsg(MSG_TASK_FEEDBACK,0,EventID);		
+		CMsg rMsg(Dialog->m_SourceID,DEFAULT_DIALOG,MSG_TASK_FEEDBACK,DEFAULT_DIALOG,EventID);		
 		ePipeline& rLetter = rMsg.GetLetter();
 		rLetter.PushPipe(ExePipe);	
 		
@@ -261,7 +261,7 @@ MsgProcState CElement::OnEltInsertLogic(CLogicDialog* Dialog,int32 ChildIndex,CM
 
 	ExePipe.SetID(RETURN_NORMAL);
 
-	CMsg rMsg(MSG_TASK_FEEDBACK,0,EventID);		
+	CMsg rMsg(Dialog->m_SourceID,DEFAULT_DIALOG,MSG_TASK_FEEDBACK,DEFAULT_DIALOG,EventID);		
 	ePipeline& rLetter = rMsg.GetLetter();
 	rLetter.PushPipe(ExePipe);	
 	Dialog->m_Brain->PushCentralNerveMsg(rMsg,false,false);		
@@ -272,7 +272,7 @@ MsgProcState CElement::OnEltInsertLogic(CLogicDialog* Dialog,int32 ChildIndex,CM
 
 MsgProcState CElement::OnEltRemoveLogic(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
 	int64 EventID = Msg.GetEventID();
-	
+
 	ePipeline& Letter = Msg.GetLetter();
 	
 	int64 ChildID = Letter.PopInt();
@@ -290,7 +290,7 @@ MsgProcState CElement::OnEltRemoveLogic(CLogicDialog* Dialog,int32 ChildIndex,CM
 	{
 		ExePipe.SetID(RETURN_ERROR);
 		ExePipe.GetLabel() = Format1024(_T("Remove logic fail EventID:%I64ld"),EventID);
-		CMsg rMsg(MSG_TASK_FEEDBACK,0,EventID);		
+		CMsg rMsg(Dialog->m_SourceID,DEFAULT_DIALOG,MSG_TASK_FEEDBACK,DEFAULT_DIALOG,EventID);		
 		ePipeline& rLetter = rMsg.GetLetter();
 		rLetter.PushPipe(ExePipe);	
 		Dialog->m_Brain->PushCentralNerveMsg(rMsg,false,false);		
@@ -327,7 +327,7 @@ MsgProcState CElement::OnEltRemoveLogic(CLogicDialog* Dialog,int32 ChildIndex,CM
 		nf.Notify(Dialog);
 	}
 	
-	CMsg rMsg(MSG_TASK_FEEDBACK,0,EventID);		
+	CMsg rMsg(Dialog->m_SourceID,DEFAULT_DIALOG,MSG_TASK_FEEDBACK,DEFAULT_DIALOG,EventID);		
 	ePipeline& rLetter = rMsg.GetLetter();
 	rLetter.PushPipe(ExePipe);	
 	Dialog->m_Brain->PushCentralNerveMsg(rMsg,false,false);		

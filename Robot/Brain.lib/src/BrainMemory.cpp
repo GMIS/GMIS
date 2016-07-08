@@ -5,6 +5,7 @@
 #include "PhysicSpace.h"
 #include "BrainMemory.h"
 #include "Ipclass.h"
+#include "InstinctDefine.h"
 
 tstring Instinct2Str(int32 InstinctID){
 	static map<int64,tstring>  InstinctTextList;
@@ -496,7 +497,7 @@ int64 CBrainMemory::HasMeaningRoom(int64 ParentTable,int64 Meaning,int64 Meaning
 			t.setRow(row);
 			int64 ID   = t.getInt64Field(0);
 			int64 Value = t.getInt64Field(1);
-            if(Value = Meaning){
+            if(Value == Meaning){
 				return ID; //已经记忆过了，直接返回
 			}
 		}	

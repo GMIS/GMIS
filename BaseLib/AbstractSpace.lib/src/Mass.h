@@ -39,15 +39,16 @@ public:
     virtual Energy*  ToEnergy(); 
 	virtual bool     FromEnergy(Energy* E); 
 
-	/*The interaction between mass and energy,but from a programmer's point of view,
-	 Do(Energy* E) like a unified form of arbitrary c functions whose parameters provided by E
+	/*Simulate the interaction between mass and energy,from a programmer's point of view,
+	 Do(Energy* E) is a unified form of arbitrary c functions whose parameters provided by E
 	*/
 	virtual bool Do(Energy* E)=0;  
 
-	/*returns the energies abbreviation(the parameters list) that the mass can accept,
-	 reference to the specific instance of this class and Pipeline.h
+	/*returns the input data type abbreviation(the parameters list) that the mass can accept,
+	 reference to the specific instance of this class or Pipeline.h
 	*/
 	virtual TypeAB   GetTypeAB()=0;  
+
 };
 
 }//end namespace 

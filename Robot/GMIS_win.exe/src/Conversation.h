@@ -21,12 +21,12 @@ using namespace VISUALSPACE;
 
 #define BNT_ENTER    101
 
-#define BNT_RUN   CMD_RUN
-#define BNT_PAUSE CMD_PAUSE
-#define BNT_STOP  CMD_STOP
+#define BNT_RUN   TO_BRAIN_MSG::TASK_CONTROL::CMD_RUN
+#define BNT_PAUSE TO_BRAIN_MSG::TASK_CONTROL::CMD_PAUSE
+#define BNT_STOP  TO_BRAIN_MSG::TASK_CONTROL::CMD_STOP
 
-#define BNT_STEP  CMD_DEBUG_STEP
-#define BNT_BREAK CMD_DEBUG_BREAK
+#define BNT_STEP  TO_BRAIN_MSG::TASK_CONTROL::CMD_DEBUG_STEP
+#define BNT_BREAK TO_BRAIN_MSG::TASK_CONTROL::CMD_DEBUG_BREAK
 
 //用于对话进程
 class ConvProgressStruct : public CVSpace2
@@ -170,7 +170,7 @@ public:
 	virtual ~CConversation();
 
 	STDToolbar* GetToolbar(int index);
-	void SetCurDialogState(TASK_STATE Type);
+	void SetCurTaskState(TASK_STATE Type);
 
 
 	void AddDialogItem(ePipeline& Pipe);

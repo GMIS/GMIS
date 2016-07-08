@@ -319,19 +319,19 @@ void CInputEdit::OnMenuSend(){
 	m_Parent->OnInputEnd();
 }
 void CInputEdit::OnMenuThink(){	
-	ePipeline Msg(GUI_GET_THINK_RESULT);  
+	ePipeline Msg(TO_BRAIN_MSG::GUI_GET_THINK_RESULT);  
 	
 	GetGUI()->SendMsgToBrainFocuse(Msg);
 }
 
 void CInputEdit::OnMenuAnalyse(){
-	ePipeline Msg(GUI_GET_ANALYSE_RESULT);
+	ePipeline Msg(TO_BRAIN_MSG::GUI_GET_ANALYSE_RESULT);
 		
 	GetGUI()->SendMsgToBrainFocuse(Msg);
 }
 void CInputEdit::OnMenuClear(){
 	
-	ePipeline Msg(GUI_CLEAR_THINK); 
+	ePipeline Msg(TO_BRAIN_MSG::GUI_CLEAR_THINK); 
 	GetGUI()->SendMsgToBrainFocuse(Msg);
 }
 void CInputEdit::OnDestroy()
@@ -728,7 +728,7 @@ CInputWin::~CInputWin(){
 
 void  CInputWin::OnInputText(WPARAM wParam,LPARAM lParam){
     ePipeline* Text = (ePipeline*)lParam;
-	Text->SetID(GUI_IO_INPUTING);
+	Text->SetID(TO_BRAIN_MSG::GUI_IO_INPUTING);
 	
 	tstring& s = *(tstring*)Text->GetData(1);
 
@@ -754,7 +754,7 @@ void CInputWin::OnInputEnd(){
 	
 	int Pos = GetWindowTextLength(m_Edit.GetHandle());
 
-	ePipeline Text(GUI_IO_INPUTED);
+	ePipeline Text(TO_BRAIN_MSG::GUI_IO_INPUTED);
 	Text.PushInt(Pos);
 	Text.PushString(m_Edit.GetEditText(false));
 	

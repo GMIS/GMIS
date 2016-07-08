@@ -8,14 +8,8 @@
 #include "LogicTask.h"
 #include "Element.h"
 #include "LogicDialog.h"
-#include "Element.h"
-#include "DefineDataOperator.h"
-#include "BitwiseOperator.h"
-#include "LogicElement.h"
-#include "LogicOperator.h"
-#include "MathematicalOperator.h"
-#include "RelationalOperator.h"
-#include "Brain_Init.h"
+#include "InstinctDefine.h"
+
 //#include "Arm.h"
 
 
@@ -100,6 +94,7 @@ void CLogicTask::Clear(){
 	m_ActomList.clear();
 }
 
+
 CLogicTask* CLogicTask::GetRootTask(){
 	if (m_Parent==NULL)
 	{
@@ -109,6 +104,7 @@ CLogicTask* CLogicTask::GetRootTask(){
 	CLogicTask* Task = (CLogicTask*)m_Parent;
 	return Task->GetRootTask();
 }
+
 
 Energy*  CLogicTask::ToEnergy(){
 	ePipeline* Pipe = new ePipeline;
@@ -162,8 +158,7 @@ bool     CLogicTask::FromEnergy(CLogicDialog* Dialog,Energy* E){
 	ePipeline* MassData = (ePipeline*)e.Get();
 
 	if(m_LogicData.Size()){
-		m_MassCount=0; //这里有一个潜在的问题:原任务编译时mass ID未必就是从0开始，尽管大多数是基于0
-		            
+			            
 		ePipeline LogicData = m_LogicData;
 		CElement* Elt = CompileSentence(Dialog,m_LogicText,&LogicData);
 		if(!Elt){
@@ -233,7 +228,7 @@ bool  CLogicTask::SetBreakPoint(ePipeline& Path,BOOL bEnable ){
 					{
 						if (Child->MassType() == MASS_USER)
 						{
-							CBreakMass* b = (CBreakMass*)Child;
+							CDebugBreak* b = (CDebugBreak*)Child;
 							*it = b->Release();
 							delete b;
 							return true;
@@ -246,7 +241,7 @@ bool  CLogicTask::SetBreakPoint(ePipeline& Path,BOOL bEnable ){
 						{
 							return true;
 						}
-						CBreakMass* b = new CBreakMass(Child);
+						CDebugBreak* b = new CDebugBreak(Child);
 						*it = b;
 						return true;
 					}
@@ -315,16 +310,18 @@ bool CLogicTask::Compile(CLogicDialog* Dialog,ePipeline* Sentence){
 	m_CompileError = _T("");
 	m_CurThinkLogicName = _T("");
 
-    m_ElementCount  = 0;
-    m_MassCount = 0;
-
 	m_LogicData = *Sentence;
 	
 	m_TempElementList.clear();
 	
+	CElement* E= NULL;
+	if (Dialog->GetWorkMode() == WORK_TEST)
+	{
+		E = CompileSentenceForTest(Dialog,m_LogicText,Sentence);
+	}else{
+		E = CompileSentence(Dialog,m_LogicText,Sentence);
+	}
 
-
-	CElement* E = CompileSentence(Dialog,m_LogicText,Sentence);
 	if (E == NULL)
 	{
 		if (m_CompileError.size()==0)
@@ -352,6 +349,176 @@ bool CLogicTask::Compile(CLogicDialog* Dialog,ePipeline* Sentence){
 	return true;
 };
 
+CElement* CLogicTask::CompileSentenceForTest(CLogicDialog* Dialog,tstring& LogicText,ePipeline* Sentence)
+{
+	CBrainTestElt* E = new CBrainTestElt(m_MassCount++);
+	std::auto_ptr<CElement> ptr(E); //如果编译错误则自动删除E
+
+	for (int i=0; i<Sentence->Size();i++)
+	{
+		ePipeline* Clause = (ePipeline*)Sentence->GetEnergy(i);	
+		int64 InstinctID  = *(int64*)Clause->GetData(0);
+
+		Energy* Param = NULL;
+		if(Clause->Size()>1)Param = Clause->GetEnergy(1);
+
+		if (InstinctID<0)
+		{
+			InstinctID = -InstinctID;
+		}
+
+		if (BelongCommanAction(InstinctID))
+		{
+			m_ActionType |= COMMON_ACTION;
+		}else if (BelongIndeInterAction(InstinctID)) //忽略内部命令
+		{
+			continue;
+		}
+		else if (BelongInterAction(InstinctID))
+		{
+			continue;
+		}else{
+			m_ActionType |= OUTER_ACTION;
+		}
+
+		Mass* m = NULL;
+
+		if(BelongInstinct(InstinctID)){
+			if(InstinctID == INSTINCT_SET_LABEL)
+			{
+				continue;
+			}
+			else if(InstinctID == INSTINCT_USE_LOGIC)
+			{
+				assert(Param != NULL); 
+				tstring Name = *(tstring*)Param->Value();  
+
+				tstring LogicName;
+				tstring LogicInstanceName;
+				tstring LogicComment;
+
+				GetLogicName(Name,LogicName,LogicInstanceName,LogicComment);
+
+				if (LogicName == m_CurThinkLogicName || LogicName == Dialog->m_CurLogicName)
+				{
+					m_CompileError = Format1024(_T("Error: Think [%s]递归调用逻辑[%s]"),m_CurThinkLogicName.c_str(),m_CurThinkLogicName.c_str());
+					return NULL;
+				}
+				if (LogicInstanceName.size())
+				{
+					CElement* e = E->FindFocusLogic(LogicInstanceName);
+					if (e)
+					{
+						m_CompileError = Format1024(_T("Error: 逻辑实例名[%s]已经被使用"),LogicInstanceName.c_str());
+						return NULL;
+					}
+				}
+
+
+				if (LogicName[0] == _T('<')) //全局
+				{
+					ePipeline* lg = CBrainMemory::FindGlobalLogic(LogicName);
+					if(lg == NULL) {
+						m_CompileError = Format1024(_T("Error: 没有找到全局逻辑[%s]"),LogicName.c_str());
+						return NULL;
+					}
+					if(lg->Size() != 7) {
+						m_CompileError = Format1024(_T("Error: 找到的全局逻辑[%s]无效"),LogicName.c_str());
+						return NULL;
+					}				
+
+					int32 ActionState = *(int32*)lg->GetData(0);
+
+					m_ActionType |= ActionState;
+
+					ePipeline* LogicData = (ePipeline*)lg->GetData(5);
+
+					CLogicTask* RootTask = GetRootTask();
+
+					CLogicTask NestTask(RootTask);
+
+					bool ret = NestTask.Compile(Dialog,LogicData);
+					if (!ret)
+					{
+						m_CompileError = Format1024(_T("Error: 编译全局逻辑[%s]失败"),LogicName.c_str());
+						return NULL;
+					}
+
+					assert(NestTask.m_ActomList.size()==1);
+					CBrainTestElt* s = new CBrainTestElt(m_MassCount++ ,LogicName.c_str());
+					s->m_ActomList.swap(NestTask.m_ActomList);
+					m = s;
+
+				}else{
+
+					CLogicTask* LogicTask;
+					CLocalLogicCell* lg = Dialog->FindLogic(LogicName);
+					if(lg == NULL) {
+						m_CompileError = Format1024(_T("Error: Not find Local logic[%s]"),LogicName.c_str());
+						return NULL;
+					}		
+					else if(!lg->IsValid()) {
+						m_CompileError = Format1024(_T("Error: Local logic[%s] not valid"),LogicName.c_str());
+						return NULL;
+					}else{
+						LogicTask = &lg->m_Task;		
+					}
+
+					ePipeline LogicPipe(LogicTask->m_LogicData);
+
+					m = CompileSentenceForTest(Dialog,Name,&LogicPipe);
+
+				}	
+			}
+			else{
+				m = GetInstinctInstance(Dialog,InstinctID, Param);
+			}
+		}else{ //客户自定义命令
+			ePipeline Pipe;
+			CLogicThread* Think = Dialog->GetThink();
+			if(!Think->RetrieveLogic(InstinctID,&Pipe,false))
+			{
+				deque<tstring> CommandList;
+				Think->GetCustomCommandText(InstinctID,CommandList);
+				deque<tstring>::iterator It = CommandList.begin();
+				m_CompileError = _T("can't compile custom commond : \n");
+				while (It != CommandList.end())
+				{
+					tstring& Command = *It;
+					Command+=_T('\n');
+					m_CompileError += Command;
+					It++;
+				}				
+				return NULL;
+			}
+
+			CLogicTask NestTask(this);
+			bool ret = NestTask.Compile(Dialog,&Pipe);
+			if (ret)
+			{
+				assert(NestTask.m_ActomList.size()==1);
+				m = NestTask.m_ActomList.back();
+				NestTask.m_ActomList.clear();
+			}
+		}
+
+		if(m==NULL){
+			return NULL;
+		}
+		E->Push(m);		
+
+		Dialog->SentenceCompileProgress(Sentence->Size(),i);
+	}
+
+
+	ptr.release(); //编译没发生错误，则释放控制权
+
+	CElement* ExecuteBody = E;
+	ExecuteBody->m_Name = LogicText;
+
+
+	return ExecuteBody;
+}
 
 CElement* CLogicTask::CompileSentence(CLogicDialog* Dialog,tstring& LogicText,ePipeline* Sentence)
 {	
@@ -704,7 +871,6 @@ Mass* CLogicTask::GetInstinctInstance(CLogicDialog* Dialog,int64 InstinctID, Ene
 						M = new CBitwise_XOR(ID);
 					}
 					break;
-					
 				default:
 					m_CompileError = Format1024(_T("operator '%s' error"),Operator.c_str());
 					return NULL;
@@ -883,76 +1049,91 @@ Mass* CLogicTask::GetInstinctInstance(CLogicDialog* Dialog,int64 InstinctID, Ene
 			}
 		}
         break;
-	case INSTINCT_TABLE_CREATE:
+	case INSTINCT_CREATE_MEMORY:
 		{
 			assert(Param);
 			assert(Param->EnergyType() == TYPE_STRING);
 			tstring& Name = *(tstring*)Param->Value();
 			
-			M = new CCreateTable(ID,Name);
+			M = new CCreateMemory(ID,Name);
 			
 		}
 		break;
-	case INSTINCT_TABLE_FOCUS:
+	case INSTINCT_FOCUS_MEMORY:
 		{
 			if (Param)
 			{
 				assert(Param->EnergyType() == TYPE_STRING);
 				tstring& Name = *(tstring*)Param->Value();
-				M = new CFocusMemory_Static(ID,Name);
+				M = new CFocusMemoryStatic(ID,Name);
 			} 
 			else
 			{
-				M = new CFocusTable(ID);
+				M = new CFocusMemory(ID);
 			}
 		}
 		break;
-	case INSTINCT_TABLE_IMPORT:
+	case INSTINCT_SET_MEMORY_ADDRESS:
+		{
+			M = new CSetMemoryAddress(ID);
+		}
+		break;
+	case INSTINCT_GET_MEMORY_ADDRESS:
+		{
+			M = new CGetMemoryAddress(ID);
+		}
+		break;
+	case INSTINCT_CREATE_MEMORY_NODE:
+		{
+			M = new CCreateMemoryNode(ID);
+		}
+		break;
+	case INSTINCT_IMPORT_MEMORY:
 		{			
-			M = new CTable_ImportData(ID);
+			M = new CImportMemory(ID);
 		}
 		break;
-	case INSTINCT_TABLE_EXPORT:
+	case INSTINCT_EXPORT_MEMORY:
 		{
-			M = new CTable_ExportData(ID);
+			M = new CExportMemory(ID);
 		}
 		break;
-
-	case INSTINCT_TABLE_INSERT_DATA:
+	case INSTINCT_GET_MEMORY:
 		{
-			M = new CTable_InsertData(ID);
+			M = new CGetMemory(ID);
+		}
+		break;
+	case INSTINCT_INSERT_MEMORY:
+		{
+			M = new CInsertMemory(ID);		
+		}
+		break;
+	case INSTINCT_MODIFY_MEMORY:
+		{
+			M = new CModifyMemory(ID);
+		}
+		break;
+	case INSTINCT_REMOVE_MEMORY:
+		{
+			M = new CRemoveMemory(ID);
 			
 		}
 		break;
-	case INSTINCT_TABLE_MODIFY_DATA:
+	case INSTINCT_GET_MEMORY_SIZE:
 		{
-			M = new CTable_ModifyData(ID);
+			M = new CGetMemorySize(ID);	
 		}
 		break;
-	case INSTINCT_TABLE_GET_DATA:
+	case INSTINCT_CLOSE_MEMORY:
 		{
-			M = new CTable_GetData(ID);
+			M = new CCloseMemory(ID);		
 		}
 		break;
-	case INSTINCT_TABLE_REMOVE_DATA:
+	case INSTINCT_GET_MEMORY_FOCUS:
 		{
-			M = new CTable_RemoveData(ID);
-			
+			M = new CGetMemoryFocus(ID);
 		}
 		break;
-	case INSTINCT_TABLE_GET_SIZE:
-		{
-			M = new CTable_GetSize(ID);
-			
-		}
-		break;
-	case INSTINCT_TABLE_CLOSE:
-		{
-			M = new CCloseTable(ID);
-			
-		}
-		break;
-
 	case INSTINCT_FOCUS_LOGIC:
 		{
 			if (Param)
@@ -985,15 +1166,23 @@ Mass* CLogicTask::GetInstinctInstance(CLogicDialog* Dialog,int64 InstinctID, Ene
 				return NULL;
 			}
 			
-			M = new CInserLogic(ID,InsertLogicName);
+			M = new CInsertLogicStatic(ID,InsertLogicName);
 			
 		}
 		break;
 	case INSTINCT_REMOVE_LOGIC:
 		{
-			M = new CRemoveLogic(ID);	
+			M = new CRemoveLogicStatic(ID);	
 		}
 		break;
+	case INSTINCT_SET_LOGIC_ADDRESS:
+		{
+			M = new CSetLogicAddress(ID);
+		}
+	case INSTINCT_SET_LOGIC_BREAKPOINT:
+		{
+			M = new CSetLogicBreakpoint(ID);
+		}
 	case INSTINCT_GET_DATE:
 		{
 			M = new CGetDate(ID);
@@ -1007,6 +1196,16 @@ Mass* CLogicTask::GetInstinctInstance(CLogicDialog* Dialog,int64 InstinctID, Ene
 	case INSTINCT_OUTPUT_INFO:
 		{
 			M = new COutputInfo(ID);
+		}
+		break;
+	case INSTINCT_TEST_EXPECTATION:
+		{
+			assert(Param);
+			assert(Param->EnergyType() == TYPE_INT);
+			int64& bExpectation = *(int64*)Param->Value();
+
+
+			M = new CTestExpectation(ID,bExpectation>0);
 		}
 		break;
 	case INSTINCT_START_OBJECT:
@@ -1106,9 +1305,14 @@ Mass* CLogicTask::GetInstinctInstance(CLogicDialog* Dialog,int64 InstinctID, Ene
 		break;
 	case INSTINCT_BRAIN_INIT:
 		{
-			M = new CBrainInit(ID);
+			M = new CBrainInitElt(ID);
 		}
 		break;
+	case INSTINCT_GET_SPACECATALOG:
+		{
+
+			M = new CGetSpaceCatalog(ID);
+		}
 /*
 	case INSTINCT_USE_ARM:
 		{

@@ -51,48 +51,92 @@ CMsg::CMsg()
 {
 
 }
-
-CMsg::CMsg(int64 MsgID,int64 SenderID,int64 EventID){
+CMsg::CMsg(int64 SourceID,ePipeline& Receiver,int64 MsgID,ePipeline& Sender,int64 EventID){
 	m_bReaded = false;
 	ePipeline* ReceiverInfo = NULL;
 	ePipeline* Letter = NULL;
 	ePipeline* SenderInfo = NULL;
 	m_MsgPtr = CreateMsg(MsgID,EventID,&ReceiverInfo,&Letter,&SenderInfo);
-    if (m_MsgPtr)
-    {
-		ReceiverInfo->PushInt(DEFAULT_DIALOG);
-		SenderInfo->PushInt(SenderID);
-    }
-}
-
-CMsg::CMsg(int64 ReceiverID, int64 MsgID,int64 SenderID,int64 EventID){
-	m_bReaded = false;
-	ePipeline* ReceiverInfo = NULL;
-	ePipeline* Letter = NULL;
-	ePipeline* SenderInfo = NULL;
-	m_MsgPtr = CreateMsg(MsgID,EventID,&ReceiverInfo,&Letter,&SenderInfo);
-    if (m_MsgPtr)
-    {
-		ReceiverInfo->PushInt(ReceiverID);
-		SenderInfo->PushInt(SenderID);
-    }
-}
-
-
-CMsg::CMsg(ePipeline& Receiver,int64 MsgID,int64 EventID){
-	m_bReaded = false;
-	ePipeline* ReceiverInfo = NULL;
-	ePipeline* Letter = NULL;
-	ePipeline* SenderInfo = NULL;
-	m_MsgPtr = CreateMsg(MsgID,0,&ReceiverInfo,&Letter,&SenderInfo);
-    if (m_MsgPtr)
-    {
+	if (m_MsgPtr)
+	{
 		*ReceiverInfo=Receiver;
 		ReceiverInfo->SetID(EventID);
-		SenderInfo->PushInt(0);
+		*SenderInfo = Sender;
+		m_MsgPtr->m_ID = SourceID;
 	}
-		
+
 }
+CMsg::CMsg(int64 SourceID,int64 ReceiverID,int64 MsgID,int64 SenderID,int64 EventID){
+	m_bReaded = false;
+	ePipeline* ReceiverInfo = NULL;
+	ePipeline* Letter = NULL;
+	ePipeline* SenderInfo = NULL;
+	m_MsgPtr = CreateMsg(MsgID,EventID,&ReceiverInfo,&Letter,&SenderInfo);
+	if (m_MsgPtr)
+	{
+		ReceiverInfo->PushInt(ReceiverID);
+		SenderInfo->PushInt(SenderID);
+		m_MsgPtr->m_ID = SourceID;
+	}
+}
+CMsg::CMsg(int64 SourceID,ePipeline& Receiver,int64 MsgID,int64 SenderID,int64 EventID){
+
+	m_bReaded = false;
+	ePipeline* ReceiverInfo = NULL;
+	ePipeline* Letter = NULL;
+	ePipeline* SenderInfo = NULL;
+	m_MsgPtr = CreateMsg(MsgID,EventID,&ReceiverInfo,&Letter,&SenderInfo);
+	if (m_MsgPtr)
+	{
+		*ReceiverInfo=Receiver;
+		ReceiverInfo->SetID(EventID);
+		SenderInfo->PushInt(SenderID);
+		m_MsgPtr->m_ID = SourceID;
+	}
+}
+
+//CMsg::CMsg(int64 MsgID,int64 SenderID,int64 EventID){
+//	m_bReaded = false;
+//	ePipeline* ReceiverInfo = NULL;
+//	ePipeline* Letter = NULL;
+//	ePipeline* SenderInfo = NULL;
+//	m_MsgPtr = CreateMsg(MsgID,EventID,&ReceiverInfo,&Letter,&SenderInfo);
+//    if (m_MsgPtr)
+//    {
+//		ReceiverInfo->PushInt(DEFAULT_DIALOG);
+//		SenderInfo->PushInt(SenderID);
+//		
+//    }
+//}
+//
+//CMsg::CMsg(int64 ReceiverID, int64 MsgID,int64 SenderID,int64 EventID){
+//	m_bReaded = false;
+//	ePipeline* ReceiverInfo = NULL;
+//	ePipeline* Letter = NULL;
+//	ePipeline* SenderInfo = NULL;
+//	m_MsgPtr = CreateMsg(MsgID,EventID,&ReceiverInfo,&Letter,&SenderInfo);
+//    if (m_MsgPtr)
+//    {
+//		ReceiverInfo->PushInt(ReceiverID);
+//		SenderInfo->PushInt(SenderID);
+//    }
+//}
+//
+//
+//CMsg::CMsg(ePipeline& Receiver,int64 MsgID,int64 EventID){
+//	m_bReaded = false;
+//	ePipeline* ReceiverInfo = NULL;
+//	ePipeline* Letter = NULL;
+//	ePipeline* SenderInfo = NULL;
+//	m_MsgPtr = CreateMsg(MsgID,0,&ReceiverInfo,&Letter,&SenderInfo);
+//    if (m_MsgPtr)
+//    {
+//		*ReceiverInfo=Receiver;
+//		ReceiverInfo->SetID(EventID);
+//		SenderInfo->PushInt(0);
+//	}
+//		
+//}
 
 CMsg::CMsg(ePipeline* Msg):m_MsgPtr(Msg),m_bReaded(false){
 	

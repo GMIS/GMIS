@@ -10,8 +10,7 @@
 
 #include "PhysicSpace.h"
 #include "Element.h"
-#include "BrainObject.h"
-#include "InstinctDefine.h"
+
 #include <map>
 #include <set>
 
@@ -23,7 +22,7 @@ using namespace std;
 class CLogicThread;
 class CLogicDialog;
 class CText;
-
+class CSentence;
 
 void GetLogicName(tstring& SrcLoigcName, tstring& LogicName,tstring& LogicInstanceName,tstring& LogicComment);
 
@@ -45,13 +44,14 @@ public:
     int32                  m_State;            //逻辑行为的类型
     int32                  m_bDepend;           
 		
-    uint32                 m_ElementCount;     //编译任务得到的串联或并联的数目
-	uint32                 m_MassCount;        //编译任务得到的所有可执行的Particle数目,同时也作为识别ID  
-	int32                  m_ExecuteCount;     //纪录本task已经被执行次数
+    int64                  m_ElementCount;     //编译任务得到的串联或并联的数目
+	int64                  m_MassCount;        //编译任务得到的所有可执行的Particle数目,同时也作为识别ID  
+	int64                  m_ExecuteCount;     //纪录本task已经被执行次数
 	
 	uint32                 m_ActionType;
 
 	map<tstring,Mass*>     m_TempElementList;  
+
 protected:
 	tstring                m_CurThinkLogicName;
 	Mass* GetInstinctInstance(CLogicDialog* Dialog,int64 InstinctID, Energy* Param);
@@ -74,11 +74,14 @@ public:
 		return m_LogicData.Size()>0;
 	}
 
+	
+
 	CLogicTask* GetRootTask();
 
+	
 	bool Compile(CLogicDialog* Dialog,ePipeline* Sentence);
 	CElement* CompileSentence(CLogicDialog* Dialog,tstring& LogicText,ePipeline* Sentence);
-
+	CElement* CompileSentenceForTest(CLogicDialog* Dialog,tstring& LogicText,ePipeline* Sentence);
 	bool CompileOK(){ return m_ActomList.size() !=0;};
 
 	CLogicTask& operator<<(CLogicTask& Task);

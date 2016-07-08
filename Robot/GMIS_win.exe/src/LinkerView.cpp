@@ -202,7 +202,7 @@ LRESULT CLinkerView::ChildReaction(SpaceRectionMsg* SRM){
 						{
 							m_SpaceSelected = Parent;
 
-							ePipeline Msg(GUI_SET_FOUCUS_DIALOG);  //本地焦点输入，写信和收信为同一个人		
+							ePipeline Msg(TO_BRAIN_MSG::GUI_SET_FOUCUS_DIALOG);  //本地焦点输入，写信和收信为同一个人		
 							GetGUI()->SendMsgToBrainFocuse(Msg);
 						}					
 						delete DialogItem;
@@ -382,7 +382,7 @@ LRESULT CLinkerView::OnLButtonDown(WPARAM wParam, LPARAM lParam){
 		SetSpaceWarning(m_SpaceSelected,FALSE);
 		m_OldSelected = m_SpaceSelected;
 
-		ePipeline Msg(GUI_SET_FOUCUS_DIALOG);  //本地焦点输入，写信和收信为同一个人
+		ePipeline Msg(TO_BRAIN_MSG::GUI_SET_FOUCUS_DIALOG);  //本地焦点输入，写信和收信为同一个人
 		GetGUI()->SendMsgToBrainFocuse(Msg);
 
 

@@ -342,7 +342,7 @@ LRESULT CMapView::OnLButtonDown(WPARAM wParam, LPARAM lParam){
 					ip.seg3 = THIRD_IPADDRESS(dwAddress);
 					ip.seg4 = FOURTH_IPADDRESS(dwAddress);
 
-					ePipeline  Msg(GUI_CONNECT_TO);
+					ePipeline  Msg(TO_BRAIN_MSG::GUI_CONNECT_TO);
                     Msg.PushString(ip.Get());
 					Msg.PushInt(SPACE_PORT);
 
@@ -372,7 +372,7 @@ LRESULT CMapView::OnLButtonDown(WPARAM wParam, LPARAM lParam){
 
 				ePipeline Path;
 				GetGUI()->GetSpacePath(Path);
-				CMsg Msg(MSG_ROBOT_GOTO_SPACE,NULL,NULL);
+				CMsg Msg(SYSTEM_SOURCE,DEFAULT_DIALOG,MSG_ROBOT_GOTO_SPACE,DEFAULT_DIALOG,0);
 				ePipeline& Letter = Msg.GetLetter();
                 Letter.PushPipe(Path);
 				World().PushMsgToSend(Msg);

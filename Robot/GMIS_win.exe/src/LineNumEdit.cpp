@@ -179,7 +179,7 @@ LRESULT  COutputEdit::OnCommand(WPARAM wParam, LPARAM lParam){
 			SetEditText(s);
 
 		
-			ePipeline Msg(GUI_CLEAR_DIALOG_OUTPUT); 
+			ePipeline Msg(TO_BRAIN_MSG::GUI_CLEAR_DIALOG_OUTPUT); 
 			GetGUI()->SendMsgToBrainFocuse(Msg);
 		}
 		break;

@@ -18,6 +18,7 @@
 #include "InstinctDefine.h"
 #include "TextAnalyse.h"
 
+
 /* 根据输入的文字信息线索，实时找到对应的记忆
 系统允许与每一个对话者分别对应一个线索分析。
 */
@@ -31,8 +32,6 @@ enum NumType{
 };
 
 NumType IsNum(tstring& Text);
-
-enum FindTypeExpected {FIND_ALL,FIND_OBJECT,FIND_PEOPLE,FIND_TEXT,FIND_LOGIC, FIND_COMMAND}; 
 
 //逻辑条目的非显示版
 class CLocalLogicCell{
@@ -281,7 +280,7 @@ public:
 	//向WORLD请求得到address的object data，然后以SaveName文件名存储到temp dir
 	bool         LoadObject(SpaceAddress& Address);
 	//向传递Executer进程FileName和Pipe，执行结果返回到Pipe
-	bool         ExecuteObject(CUseObject* Ob,tstring FileName,ePipeline* Pipe);
+//	bool         ExecuteObject(CUseObject* Ob,tstring FileName,ePipeline* Pipe);
 	//通知Executer删除所有含有此Task的所有外部Object
 	void         DeleteObject(int64 ExecuterID);
  
@@ -352,7 +351,7 @@ public:
 	
 	//根据词性检查语法，确定每一个单词的实际词性，检查是否符合一个抽象行为短语
 	//如果符合把Clause转换成WordList,并返回true
-	bool SyntaxCheck(CClause* Clause,list<CWord>& WordList);
+	bool SyntaxCheck(CClause* Clause,list<CWord>& WordList,tstring& Error);
 
 
 

@@ -334,7 +334,7 @@ bool System::CNetListenWorker::Do(Energy* E){
 
 			m_Parent->m_ClientLinkerList.AddLinker(LinkerPtr);
 
-			CMsg Msg(MSG_WHO_ARE_YOU,DEFAULT_DIALOG,0);
+			CMsg Msg(SourceID,DEFAULT_DIALOG,MSG_WHO_ARE_YOU,DEFAULT_DIALOG,0);
 			LinkerPtr->PushMsgToSend(Msg);
 
 			m_Parent->CreateClientLinkerWorkerStrategy(m_Port);

@@ -6,9 +6,9 @@
 #ifndef _LOGICELEMENT_H__
 #define _LOGICELEMENT_H__
 
-#include "AbstractSpace.h"
+
 #include "Pipeline.h"
-#include "Element.h"
+#include "Mass.h"
 
 class CLogicTask;
 

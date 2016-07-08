@@ -121,6 +121,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 		static CBrainMemory     BrainMemory;
 		BrainMemory.Open();
 
+	
 		static CMainBrain MainBrain(&Timer,&SpacePool,AppName);
 		AfxBrain = &MainBrain;
 
@@ -200,7 +201,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 			CrypStr = TempAccount.Name + TempAccount.Password;
 
 			TempAccount.Password = _T("");
-			MainBrain.GetBrainData()->RegisterUserAccount(TempAccount.Name,CrypStr,DIALOG_SYSTEM_MAIN);
+			MainBrain.GetBrainData()->RegisterUserAccount(TempAccount.Name,CrypStr,DIALOG_SYSTEM);
 
 			tstring  Name = TempAccount.Name ;
 			ret = MainBrain.Login(LOCAL_GUI_SOURCE,Name,CrypStr);

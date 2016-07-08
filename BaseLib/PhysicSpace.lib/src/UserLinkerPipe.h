@@ -62,7 +62,7 @@ public:
 
 	virtual bool   IsValid();
 	virtual void   Close();
-
+	tstring GetIP();
 
 private:
 	bool  PhysicalRev(char* Buf,uint32 BufSize, uint32& RevLen, uint32 flag=0);

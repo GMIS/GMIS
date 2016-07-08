@@ -6,10 +6,10 @@
 #ifndef _BRAIN_INIT_H
 #define _BRAIN_INIT_H
 
-#include "Brain.h"
-#include "Element.h"
+#include "..\Brain.h"
+#include "..\Element.h"
 
-class CBrainInit: public CElement
+class CBrainInitElt: public CElement
 {
 
 public:   
@@ -22,8 +22,8 @@ protected:
     bool CheckInstinct(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress);
 
 public:
-	CBrainInit(int64 ID);
-	virtual ~CBrainInit();
+	CBrainInitElt(int64 ID);
+	virtual ~CBrainInitElt();
 	
 	virtual TypeAB  GetTypeAB(){ return 0;};
 	virtual bool  Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg);

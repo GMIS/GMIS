@@ -39,14 +39,20 @@
   - 副词最多有一个，如果有只能位于谓语的后面
 
 */
-bool CLogicThread::SyntaxCheck(CClause* Clause,list<CWord>& WordList){
+bool CLogicThread::SyntaxCheck(CClause* Clause,list<CWord>& WordList,tstring& Error){
 	int32 WordNum = Clause->m_TokenNum;
-	if(WordNum==0)return 0;
+	if(WordNum==0){
+		Error = _T("no words");
+		return false;
+	}
 	
 	CToken* LastToken = m_Text.m_TokenList[Clause->m_BeginPos+WordNum-1]; 
 	if(LastToken->IsClauseFlag())WordNum--;
 	
-	if(WordNum == 0)return 0;
+	if(WordNum == 0){
+		Error = _T("no available words");
+		return false;
+	}
 	
     int32 i=Clause->m_BeginPos;
 	int32 EndPos = i+WordNum;
@@ -58,22 +64,34 @@ bool CLogicThread::SyntaxCheck(CClause* Clause,list<CWord>& WordList){
 		CWord Word(*Token);
 
 		//每一个单词都必须是正常可读的
-		if(Token->m_Type != COMMON ) return false;
+		if(Token->m_Type != COMMON ){
+			Error = Format1024(_T("the word '%s' is invalid"),Token->m_Str.c_str());
+			return false;
+		}
 		 			
 		if(IsNum(Token->m_Str)){
+			Error = Format1024(_T("the word '%s' is invalid"),Token->m_Str.c_str());
             return false;   //抽象行为不应该含有数字   
 			//Word.m_PartOfSpeech = NUM;
 		} 
 		else if(Token->isPunct() && Token->m_Str==_T("\'")){
-			if(i==0 || i==EndPos)return false;
+			if(i==0 || i==EndPos){
+				Error = Format1024(_T("the punct '%s' is invalid"),Token->m_Str.c_str());
+				return false;
+			}
 			CToken* NextToken = m_Text.m_TokenList[++i];
-			if(NextToken->m_Str != _T("s"))return false;
-			
+			if(NextToken->m_Str != _T("s")){
+				Error = Format1024(_T("the punct '%s%s' is invalid"),Token->m_Str.c_str(),NextToken->m_Str.c_str());
+				return false;
+			}	
 			CWord& PreWord = WordList.back();
 			PreWord.m_PartOfSpeech = MEMORY_NOUN;
 		} //除去前述两种情况，Token应该已经被正确记忆过
-		else if(!Token->IsOK()) return false;
-		
+		else if(!Token->IsOK()){
+			//可能此单词没有在记忆中
+			Error = Format1024(_T("the word '%s' maybe haven't be memory"),Token->m_Str.c_str());
+			return false;
+		}
 		Word.m_AllPart = GetAllPartOfSpeech(Token->m_MemoryID);	  			
 		WordList.push_back(Word);
 	}
@@ -338,8 +356,9 @@ int64 CLogicThread::LearnAction(CClause* Clause,int64 ActionID,tstring& Error,in
 		Error = _T("Not only one clause");
 		return 0;
 	}
-	if(!SyntaxCheck(Clause,WordList)){
-		Error = _T("Syntax check fail");
+	tstring CheckError;
+	if(!SyntaxCheck(Clause,WordList,CheckError)){
+		Error = _T("Syntax check fail: ")+CheckError;
 		return 0;
 	}
 	//记忆子句

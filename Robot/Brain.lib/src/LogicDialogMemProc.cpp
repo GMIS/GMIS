@@ -293,13 +293,13 @@ bool CLogicDialog::RegisterLogic(CLogicTask* Task)
 				}
 			}
 			break;
-		case INSTINCT_TABLE_CREATE:
+		case INSTINCT_CREATE_MEMORY:
 			{
 				assert(Clause->GetDataType(1) == TYPE_STRING);
 				tstring MemoryName = *(tstring*)Clause->GetData(1);
 				
 				tstring LogicName = lg->LogicName();
-				m_NamedTableList.RegisterNameByLogic(MemoryName,LogicName);
+				m_NamedMemoryList.RegisterNameByLogic(MemoryName,LogicName);
 			}
 			break;
 		default:
@@ -550,8 +550,8 @@ void CLogicDialog::ReferenceInductor(const tstring& scrName,const tstring& refNa
 }
 
 ePipeline*  CLogicDialog::FindTempMemory(int64 InstanceID){
-	map<int64,ePipeline>::iterator it = m_TableInstanceList.find(InstanceID);
-	if (it == m_TableInstanceList.end())
+	map<int64,ePipeline>::iterator it = m_MemoryInstanceList.find(InstanceID);
+	if (it == m_MemoryInstanceList.end())
 	{
 		return NULL;
 	}
@@ -585,7 +585,7 @@ void CLogicDialog::AddObjectInstance(int64 InstanceID,ePipeline& Pipe){
 
 }
 void CLogicDialog::AddMemoryInstance(int64 InstanceID, ePipeline& Pipe){
-	m_TableInstanceList[InstanceID] = Pipe;
+	m_MemoryInstanceList[InstanceID] = Pipe;
 }
 
 void CLogicDialog::CloseObjectInstance(int64 InstanceID){
@@ -598,10 +598,10 @@ void CLogicDialog::CloseObjectInstance(int64 InstanceID){
 
 
 void CLogicDialog::CloseMemoryInstance(int64 InstanceID){
-	map<int64,ePipeline>::iterator it = m_TableInstanceList.find(InstanceID);
-	if (it != m_TableInstanceList.end())
+	map<int64,ePipeline>::iterator it = m_MemoryInstanceList.find(InstanceID);
+	if (it != m_MemoryInstanceList.end())
 	{
-		m_TableInstanceList.erase(it);
+		m_MemoryInstanceList.erase(it);
 	}
 }
 
@@ -699,9 +699,8 @@ void CLogicDialog::GetLocalObjectData(ePipeline& List){
 }
 
 void CLogicDialog::GetTableInstanceData(ePipeline& List){
-	map<int64, ePipeline>::iterator Ita = m_TableInstanceList.begin();
-	while(Ita!=m_TableInstanceList.end()){
-		List.PushInt(Ita->first);
+	map<int64, ePipeline>::iterator Ita = m_MemoryInstanceList.begin();
+	while(Ita!=m_MemoryInstanceList.end()){
 		List.Push_Directly(Ita->second.Clone());
 		Ita++;
 	}

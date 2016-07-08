@@ -105,69 +105,11 @@ void CBrain::CentralNerveMsgProc(CMsg& Msg){
 }
 
 void CBrain::OnInitBrain(CLogicDialog* Dialog,CMsg& Msg){
-	//生成一个临时对话和事件
-	int64 DialogID = BRAIN_MEMORY_CHECH_DIALOG_ID;
-	CLogicDialog* ChildDialog = m_BrainData.CreateNewDialog(this,SYSTEM_SOURCE,DialogID,0,_T("System"),_T("Init Brain"),
-		DIALOG_SYSTEM_MAIN,TASK_OUT_DEFAULT);
-
-	if(!ChildDialog){
-		OutSysInfo(_T("Create init dialog failed"));
-		return;
-	};
-
-	ChildDialog->m_bEditValid = false;
-
 	ePipeline ClientExePipe;
-	ePipeline ClientAddress((int64)SYSTEM_SOURCE);
-	ClientAddress.PushInt(DialogID);
+	ePipeline ClientAddress(SYSTEM_SOURCE);
+	ClientAddress.PushInt(DEFAULT_DIALOG);
 
-#ifdef _DEBUG
-	tstring memo = Format1024(_T("%s %d"),_T(__FILE__),__LINE__);
-	m_BrainData.PushBrainEvent(DialogID,0,ClientExePipe,ClientAddress,TIME_SEC,true,memo);
-#else
-	m_BrainData.PushBrainEvent(DialogID,0,ClientExePipe,ClientAddress,TIME_SEC,true);
-#endif
-
-	CNotifyDialogState nf(NOTIFY_DIALOG_LIST);
-	nf.PushInt(DL_ADD_DIALOG);
-	nf.PushInt(FALSE);
-	nf.Notify(ChildDialog);
-
-
-	//给这个对话发任务信息
-	ePipeline Clause;
-    Clause.PushInt(INSTINCT_BRAIN_INIT);
-
-	ePipeline Sentence;
-	Sentence.PushPipe(Clause);
-
-	CLogicTask* Task = ChildDialog->GetTask();
-    Task->m_LogicText = _T("Check memory...");
-    bool ret = Task->Compile(ChildDialog,&Sentence);
-    if (!ret)
-    {
-		OutSysInfo(_T("Check memory....failed"));
-		return;
-	}
-
-	Task->ResetTime();
-    ChildDialog->m_LogicItemTree.Clear();
-	ChildDialog->m_LogicItemTree.SetID(Task->m_BeginTime);
-
-	OutSysInfo(_T("Checking memory...."));
-
-	
-	//如果成功理解则准备执行
-	
-	ePipeline Receiver;
-	Receiver.PushInt(ChildDialog->m_DialogID);
-	Receiver.PushInt(ChildDialog->m_TaskID);
-				
-	CMsg TaskMsg(Receiver,MSG_ELT_TASK_CTRL,0);
-	TaskMsg.GetLetter().PushInt(CMD_RUN);
-				
-	PushNerveMsg(TaskMsg,false,false); 
-				
+	CreateChildDialog(INSTINCT_BRAIN_INIT,_T("check memory"),0,ClientAddress,ClientExePipe,true);		
 }
 
 void CBrain::OnWhoAreYou(CLogicDialog* Dialog,CMsg& Msg){
@@ -187,7 +129,7 @@ void CBrain::OnWhoAreYou(CLogicDialog* Dialog,CMsg& Msg){
 	Linker().SetStateOutputLevel(LIGHT_LEVEL);
 #endif
 
-	CMsg rMsg(SenderID,MSG_I_AM,0,0);
+	CMsg rMsg(SYSTEM_SOURCE,SenderID,MSG_I_AM,DEFAULT_DIALOG,0);
 	
 	ePipeline& rLetter=rMsg.GetLetter();
 	
@@ -199,7 +141,7 @@ void CBrain::OnWhoAreYou(CLogicDialog* Dialog,CMsg& Msg){
 	//	rLetter->Push_Directly(ID);
 	rLetter.Push_Directly(Name);
 	rLetter.Push_Directly(Cryp);
-	rLetter.PushInt(DIALOG_OTHER_MAIN);
+	rLetter.PushInt(DIALOG_SYSTEM);
 	
 	
 	Linker().PushMsgToSend(rMsg);
@@ -267,7 +209,7 @@ void CBrain::OnI_AM(CLogicDialog* Dialog,CMsg& Msg){
 
 	DIALOG_TYPE DialogType  = (DIALOG_TYPE)(*(int64*)UserInfo.GetData(2));
 
-	if(DialogType == DIALOG_SYSTEM_MAIN){
+	if(DialogType == DIALOG_SYSTEM){
 		//主人远程连接,通知连接成功
 		
 		ret = Login(SourceID,Name,Cryptograhp);
@@ -276,7 +218,7 @@ void CBrain::OnI_AM(CLogicDialog* Dialog,CMsg& Msg){
 			tstring s = Format1024(_T("User(%s) Login."),Name.c_str());
 			OutSysInfo(s.c_str());
 
-			CMsg rMsg(SenderID,MSG_CONNECT_OK,NULL,EventID);
+			CMsg rMsg(SYSTEM_SOURCE,SenderID,MSG_CONNECT_OK,DEFAULT_DIALOG,EventID);
 			rMsg.GetLetter().PushString(Name);
 
 			Linker().PushMsgToSend(rMsg);	
@@ -291,7 +233,7 @@ void CBrain::OnI_AM(CLogicDialog* Dialog,CMsg& Msg){
 			GetClientLinkerList()->DeleteLinker(Linker().GetSourceID());
 		}
 
-	}else if (DialogType == DIALOG_SYSTEM_MODEL)
+	}else if (DialogType == DIALOG_MODEL)
 	{
 		//器官，只允许一次性连接
 	}
@@ -305,6 +247,7 @@ void CBrain::OnI_AM(CLogicDialog* Dialog,CMsg& Msg){
 
 
 void CBrain::OnAppRun(CLogicDialog* Dialog,CMsg& Msg){
+	/*
 	int64 EnventID = Msg.GetEventID();
 	assert(EnventID);
 	
@@ -394,19 +337,17 @@ void CBrain::OnAppRun(CLogicDialog* Dialog,CMsg& Msg){
 	//如果成功理解则生成事件，准备执行
 	ePipeline ClientAddress(Msg.GetSourceID());
 	ClientAddress.PushInt(NewDialogID);
-#ifdef _DEBUG
-	tstring memo = Format1024(_T("%s %d"),_T(__FILE__),__LINE__);
-	m_BrainData.PushBrainEvent(DialogID,EnventID,*ExePipe,ClientAddress,TIME_SEC,true,memo);
-#else
-	m_BrainData.PushBrainEvent(DialogID,EnventID,*ExePipe,ClientAddress,TIME_SEC,true);
-#endif
 
-	ePipeline ChildMsg(GUI_TASK_CONTROL);
-	ChildMsg.PushInt(CMD_EXE);			
+	m_BrainData.CreateEvent(DialogID,EnventID,*ExePipe,ClientAddress,TIME_SEC,true);
+
+
+	ePipeline ChildMsg(TO_BRAIN_MSG::TASK_CONTROL::ID);
+	ChildMsg.PushInt(TO_BRAIN_MSG::TASK_CONTROL::CMD_EXE);			
 	CMsg Msg1;
 	CreateBrainMsg(Msg1,ChildDialog->m_DialogID,ChildMsg,Msg.GetEventID());		
 
 	PushNerveMsg(Msg1,false,false);	
+	*/
 };
 
 void CBrain::OnAppPause(CLogicDialog* Dialog,CMsg& Msg){
@@ -447,17 +388,17 @@ void CBrain::OnConnectOK(CLogicDialog* Dialog,CMsg& Msg){
 	
 	if (SourceID == SPACE_SOURCE)
 	{
-		CMsg rMsg(MSG_ROBOT_GOTO_SPACE,NULL,NULL);
-		ePipeline& rLetter = rMsg.GetLetter();
-		
-		ePipeline Addr(LOCAL_SPACEID);
-		rLetter.PushPipe(Addr);  //意味着要求获得根空间目录
-        Linker().PushMsgToSend(rMsg);
+		//发起一个内部任务，从空间获得目录，然后转发给所有登录用户
+
+		ePipeline ClientExePipe;
+		ePipeline ClientAddress((int64)SYSTEM_SOURCE);
+		CreateChildDialog(INSTINCT_GET_SPACECATALOG,_T("Get space catalog"),0,ClientAddress,ClientExePipe,true);				
+
 		return;
 	}
 	
 	CLockedBrainData* LockedData = GetBrainData();
-	CLogicDialog* NewDialog = LockedData->CreateNewDialog(this,SourceID,DEFAULT_DIALOG,NO_PARENT,Name,_T("You"),DIALOG_OTHER_MAIN,TASK_OUT_DEFAULT);	
+	CLogicDialog* NewDialog = LockedData->CreateNewDialog(this,SPACE_SOURCE,DEFAULT_DIALOG,NO_PARENT,Name,_T("You"),DIALOG_SYSTEM,TASK_OUT_DEFAULT);	
 	NewDialog->m_bEditValid = false;
 
 	CNotifyDialogState nf(NOTIFY_DIALOG_LIST);
@@ -471,7 +412,7 @@ void CBrain::OnConnectOK(CLogicDialog* Dialog,CMsg& Msg){
 void CBrain::OnGUI2Brain(CLogicDialog* Dialog,CMsg& Msg){
     int64 GuiSourceID = Msg.GetSourceID();
 	
-	if (GetBrainData()->GetOrgan(GuiSourceID).m_DialogType != DIALOG_SYSTEM_MAIN)
+	if (GetBrainData()->GetOrgan(GuiSourceID).m_DialogType != DIALOG_SYSTEM)
 	{
 		NotifySysState(NOTIFY_ILLEGAL_MSG,NULL,&Msg.GetMsg());
 		return; 
@@ -506,43 +447,47 @@ void CBrain::OnGUI2Brain(CLogicDialog* Dialog,CMsg& Msg){
 	ePipeline ReceiverInfo;
 	ReceiverInfo.PushInt(DialogID);
 
-	if (TheDialog) //这部分或许应该转到TaskDialogMsgProc去完成，暂时放在这里
-	{	
+	//if (TheDialog) //这部分或许应该转到TaskDialogMsgProc去完成，暂时放在这里
+	//{	
 
 
-		//以下两个信息将激活事件处理子对话
-		if (ChildMsgID==GUI_IO_INPUTING || ChildMsgID==GUI_IO_INPUTED)
-		{
-			TASK_STATE  State = TheDialog->GetTaskState();
-			if (State == TASK_RUN || State == TASK_PAUSE)
-			{			
-				assert(TheDialog->m_ControlDialogID);
-				CLogicDialog* ChildDialog  = GetBrainData()->GetDialog(TheDialog->m_SourceID,TheDialog->m_ControlDialogID);
-				if (ChildDialog == NULL)
-				{
-					ChildDialog = GetBrainData()->CreateNewDialog(
-						this,SourceID,TheDialog->m_ControlDialogID,
-						DialogID,TheDialog->m_SourceName,
-						_T("Event"),DIALOG_SYSTEM_CHILD,TASK_OUT_DEFAULT);
-					
-					if (!ChildDialog)
-					{
-						tstring text = _T("Create Control dialog fail");
-						TheDialog->RuntimeOutput(0,text);
-						assert(0); //这里或许应该添加更多错误处理
-						return ;
-					}						
-				}	
-				TheDialog = ChildDialog;
-				ReceiverInfo.Clear();
-				ReceiverInfo.PushInt(ChildDialog->m_DialogID);
-			}
-		}
-	};
+	//	//以下两个信息将激活事件处理子对话
+	//	if (ChildMsgID==TO_BRAIN_MSG::GUI_IO_INPUTING || ChildMsgID==TO_BRAIN_MSG::GUI_IO_INPUTED)
+	//	{
+	//		TASK_STATE  State = TheDialog->GetTaskState();
+	//		if (State == TASK_RUN || State == TASK_PAUSE)
+	//		{			
+	//			assert(TheDialog->m_ControlDialogID);
+	//			CLogicDialog* ChildDialog  = GetBrainData()->GetDialog(TheDialog->m_SourceID,TheDialog->m_ControlDialogID);
+	//			if (ChildDialog == NULL)
+	//			{
+	//				ChildDialog = GetBrainData()->CreateNewDialog(
+	//					this,SourceID,TheDialog->m_ControlDialogID,
+	//					DialogID,TheDialog->m_SourceName,
+	//					_T("Event"),DIALOG_TASK,TASK_OUT_DEFAULT);
+	//				
+	//				if (!ChildDialog)
+	//				{
+	//					tstring text = _T("Create Control dialog fail");
+	//					TheDialog->RuntimeOutput(0,text);
+	//					assert(0); //这里或许应该添加更多错误处理
+	//					return ;
+	//				}						
+	//			}	
+	//			TheDialog = ChildDialog;
+	//			ReceiverInfo.Clear();
+	//			ReceiverInfo.PushInt(ChildDialog->m_DialogID);
+	//		}
+	//	}
+	//};
 
 	if(TheDialog){
-		CMsg NewMsg;
-		CreateBrainMsg(NewMsg,ReceiverInfo,ChildMsg,Msg.GetEventID());
+	
+		CMsg NewMsg(SYSTEM_SOURCE,ReceiverInfo,MSG_FROM_BRAIN,DEFAULT_DIALOG,Msg.GetEventID());
+		ePipeline& Letter = NewMsg.GetLetter();
+		Letter.PushInt(ChildMsgID);
+		Letter<<ChildMsg;
+
 		TheDialog->Do(NewMsg);		
 	}else{
 		NotifySysState(NOTIFY_ILLEGAL_MSG,NULL, &Msg.GetMsg());
@@ -558,7 +503,7 @@ void CBrain::OnGetDialogList(CLogicDialog* Dialog,CMsg& Msg){
 	GetBrainData()->GetAllDialogListInfo(DialogListInfo);
 	
 	int64 SenderID = Msg.GetSenderID();
-	CMsg rMsg(Msg.GetSourceID(),SenderID,MSG_SEND_LINKERLIST,DEFAULT_DIALOG);
+	CMsg rMsg(Msg.GetSourceID(),SenderID,MSG_SEND_LINKERLIST,DEFAULT_DIALOG,0);
 	rMsg.GetLetter().PushPipe(DialogListInfo);	
 	
 	int64 SourceID = Msg.GetSourceID();
@@ -575,6 +520,9 @@ void CBrain::OnGetDialogList(CLogicDialog* Dialog,CMsg& Msg){
 
 
 void CBrain::OnTaskFeedback(CLogicDialog* Dialog,CMsg& Msg){
+	//只有系统对话能得到此反馈
+	assert(Dialog->m_DialogID ==0);
+
 	int64 EventID = Msg.GetEventID();
 	
 	ePipeline& Letter = Msg.GetLetter();	
@@ -583,79 +531,94 @@ void CBrain::OnTaskFeedback(CLogicDialog* Dialog,CMsg& Msg){
 	CLockedBrainData* BrainData = GetBrainData();
 	
 	CBrainEvent EventInfo;
-	if(!BrainData->PopBrainEvent(EventID,EventInfo)){ 
-		//事件消失那么对应的对话也应该删除
-		int64 SourceID = EventInfo.m_ClientAddress.m_ID;
-		CLogicDialog* EventDlg = GetBrainData()->GetDialog(SourceID,EventID);
-		if (EventDlg)
-		{
-			CNotifyDialogState nf(NOTIFY_DIALOG_LIST);
-			nf.PushInt(DL_DEL_DIALOG);
-			nf.Notify(EventDlg);
-			
-			GetBrainData()->DeleteDialog(SourceID,EventID);
-		}
+	if(!BrainData->GetEvent(EventID,EventInfo,false)){ 
+		//assert(0);
 		return;
 	};
 	
 
-
-	ePipeline& EventAddress = EventInfo.m_ClientAddress;
+	ePipeline& ClientAddress = EventInfo.m_ClientAddress;
 	ePipeline& OldExePipe   = EventInfo.m_ClientExePipe;
 
-	int64 SourceID = EventInfo.m_ClientAddress.m_ID;
-	if (SourceID < MAX_LOCAL_SOURCE_ID) //本地事件
-	{
+	int64 ClientSourceID = EventInfo.m_ClientAddress.m_ID;
+	int64 ClientDialogID = *(int64*)ClientAddress.GetData(0);
+
+	//如果客户是系统对话，就直接处理结果，否则转发给客户地址对应的对话处理
+	if(ClientSourceID == Dialog->m_SourceID && ClientDialogID == Dialog->m_DialogID ){
+		
+		CLogicDialog* TaskDlg = GetBrainData()->GetDialog(ClientSourceID,EventID);
+
 		if(EventInfo.m_bOnce){
+			BrainData->GetEvent(EventID,EventInfo,true);
 
-			int64 DialogID = EventAddress.PopInt();
+			assert(!EventInfo.m_bPrivate);
 
-			CLogicDialog* EventDlg = GetBrainData()->GetDialog(SourceID,EventID);
+			//然后删除任务对话
+			TaskDlg->SetTaskState(TASK_STOP);
+			TaskDlg->NotifyTaskState();
+
 			CNotifyDialogState nf(NOTIFY_DIALOG_LIST);
 			nf.PushInt(DL_DEL_DIALOG);
-			nf.Notify(EventDlg);
-			m_BrainData.DeleteDialog(SourceID,DialogID);
+			nf.Notify(TaskDlg);
 
-			CPipeView PipeView(ExePipe);
-			tstring s  = PipeView.GetString();
-			CLogicDialog* ParentDialog = m_BrainData.GetDialog(SourceID,EventDlg->m_ParentDialogID);
-			ParentDialog->RuntimeOutput(0,s);
-		}else{
-			CMsg m(EventAddress,MSG_TASK_RESULT,EventID);
+			m_BrainData.DeleteDialog(ClientSourceID,EventID);
+		}else{ //长期对话交给任务对话自己处理
+
+			CMsg m(ClientSourceID,TaskDlg->m_DialogID,MSG_TASK_RESULT,DEFAULT_DIALOG,EventInfo.m_ClientEventID);
 			ePipeline& Letter = m.GetLetter();
-
 			Letter.PushPipe(OldExePipe);
 			Letter.PushPipe(*ExePipe);		
+
 			PushNerveMsg(m,false,false);
 		}
-	} 
-	else  //远方事件则转发给对方
+		
+	}else if (ClientSourceID == SPACE_SOURCE)  //如果是客户地址是空间，那把结果发给它
 	{
-
-		if(EventInfo.m_bOnce){
-
-			int64 DialogID = EventAddress.PopInt();
-
-			CLogicDialog* EventDlg = GetBrainData()->GetDialog(SourceID,EventID);
-			CNotifyDialogState nf(NOTIFY_DIALOG_LIST);
-			nf.PushInt(DL_DEL_DIALOG);
-			nf.Notify(EventDlg);
-			m_BrainData.DeleteDialog(SourceID,DialogID);
-
-			CPipeView PipeView(ExePipe);
-			tstring s  = PipeView.GetString();
-			m_BrainData.GetDialog(SYSTEM_SOURCE,DEFAULT_DIALOG)->RuntimeOutput(0,s);
-		}
-
-		int64 RemoteEventID = EventAddress.PopInt();
-		int64 LinkerID = EventAddress.m_ID;
 		CLinker Linker;
-		GetLinker(LinkerID,Linker);
+		GetLinker(ClientSourceID,Linker);
 		if (Linker.IsValid())
 		{
-			CMsg m(MSG_TASK_FEEDBACK,DEFAULT_DIALOG,RemoteEventID);
-			m.GetLetter().PushPipe(*ExePipe);
+			CMsg m(ClientSourceID,ClientAddress,MSG_TASK_RESULT,DEFAULT_DIALOG,EventInfo.m_ClientEventID);
+			ePipeline& Letter = m.GetLetter();
+			Letter.PushPipe(OldExePipe);
+			Letter.PushPipe(*ExePipe);		
+			Linker().PushMsgToSend(m);
 		}
+		assert(EventInfo.m_bOnce==0); //空间发来的任务一定是一次性的
+	
+		CLogicDialog* TaskDlg = GetBrainData()->GetDialog(ClientSourceID,EventID);	
+		BrainData->GetEvent(EventID,EventInfo,true);
+		CNotifyDialogState nf(NOTIFY_DIALOG_LIST);
+		nf.PushInt(DL_DEL_DIALOG);
+		nf.Notify(TaskDlg);
+
+		m_BrainData.DeleteDialog(ClientSourceID,EventID);
+		
+	}else{  //其它对话则处理完事件，把结果发给客户
+
+		if (EventInfo.m_bOnce)
+		{
+			BrainData->GetEvent(EventID,EventInfo,true);
+
+			if(!EventInfo.m_bPrivate){
+				CLogicDialog* TaskDlg = GetBrainData()->GetDialog(ClientSourceID,EventID);
+				assert(TaskDlg);
+				if(TaskDlg){
+					CNotifyDialogState nf(NOTIFY_DIALOG_LIST);
+					nf.PushInt(DL_DEL_DIALOG);
+					nf.Notify(TaskDlg);
+
+					m_BrainData.DeleteDialog(TaskDlg->m_SourceID,TaskDlg->m_DialogID);
+				}	
+			}
+		}		
+
+		CMsg m(ClientSourceID,ClientAddress,MSG_TASK_RESULT,DEFAULT_DIALOG,EventID);
+		ePipeline& Letter = m.GetLetter();
+		Letter.PushPipe(OldExePipe);
+		Letter.PushPipe(*ExePipe);		
+
+		PushNerveMsg(m,false,false);
 	}
 }
 
@@ -668,10 +631,10 @@ void CBrain::OnSpaceCatalog(CLogicDialog* Dialog,CMsg& Msg){
 	Receiver.PushInt(Dialog->m_SourceID);
 	Receiver.PushInt(Dialog->m_DialogID);
 	
-	CMsg GuiMsg(Receiver,MSG_BRAIN_TO_GUI,0);
+	CMsg GuiMsg(SYSTEM_SOURCE,Receiver,MSG_BRAIN_TO_GUI,DEFAULT_DIALOG,0);
 	
-	ePipeline Cmd(GUI_SPACE_OUTPUT);
-	Cmd.PushInt(SPACE_CATALOG);
+	ePipeline Cmd(TO_SPACE_VIEW::ID);
+	Cmd.PushInt(TO_SPACE_VIEW::CATALOG);
 	Cmd<<Letter;
 	
     GuiMsg.GetLetter().PushPipe(Cmd);
@@ -686,10 +649,10 @@ void CBrain::OnSpaceAdded(CLogicDialog* Dialog,CMsg& Msg){
 	Receiver.PushInt(Dialog->m_SourceID);
 	Receiver.PushInt(Dialog->m_DialogID);
 
-	CMsg GuiMsg(Receiver,MSG_BRAIN_TO_GUI,0);
+	CMsg GuiMsg(SYSTEM_SOURCE,Receiver,MSG_BRAIN_TO_GUI,DEFAULT_DIALOG,0);
 	
-	ePipeline Cmd(GUI_SPACE_OUTPUT);
-	Cmd.PushInt(SPACE_ADDED);
+	ePipeline Cmd(TO_SPACE_VIEW::ID);
+	Cmd.PushInt(TO_SPACE_VIEW::ADD_ITEM);
 	Cmd<<Letter;
 	
     GuiMsg.GetLetter().PushPipe(Cmd);
@@ -705,10 +668,10 @@ void CBrain::OnSpaceDeleted(CLogicDialog* Dialog,CMsg& Msg){
 	Receiver.PushInt(Dialog->m_SourceID);
 	Receiver.PushInt(Dialog->m_DialogID);
 
-	CMsg GuiMsg(Receiver,MSG_BRAIN_TO_GUI,0);
+	CMsg GuiMsg(SYSTEM_SOURCE,Receiver,MSG_BRAIN_TO_GUI,DEFAULT_DIALOG,0);
 	
-	ePipeline Cmd(GUI_SPACE_OUTPUT);
-	Cmd.PushInt(SPACE_DELETED);
+	ePipeline Cmd(TO_SPACE_VIEW::ID);
+	Cmd.PushInt(TO_SPACE_VIEW::DEL_ITEM);
 	Cmd<<Letter;
 	
     GuiMsg.GetLetter().PushPipe(Cmd);
@@ -724,10 +687,10 @@ void CBrain::OnSpaceSendObject(CLogicDialog* Dialog,CMsg& Msg){
 	Receiver.PushInt(Dialog->m_SourceID);
 	Receiver.PushInt(Dialog->m_DialogID);
 
-	CMsg GuiMsg(Receiver,MSG_BRAIN_TO_GUI,0);
+	CMsg GuiMsg(SYSTEM_SOURCE,Receiver,MSG_BRAIN_TO_GUI,DEFAULT_DIALOG,0);
 	
-	ePipeline Cmd(GUI_SPACE_OUTPUT);
-	Cmd.PushInt(SPACE_SEND_OBJECT);
+	ePipeline Cmd(TO_SPACE_VIEW::ID);
+	Cmd.PushInt(TO_SPACE_VIEW::SEND_OBJECT);
 	Cmd<<Letter;
 	
     GuiMsg.GetLetter().PushPipe(Cmd);
@@ -741,9 +704,9 @@ void CBrain::OnSpaceAccessDenied(CLogicDialog* Dialog,CMsg& Msg){
 	Receiver.PushInt(Dialog->m_SourceID);
 	Receiver.PushInt(Dialog->m_DialogID);
 
-	CMsg GuiMsg(Receiver,MSG_BRAIN_TO_GUI,0);
-	ePipeline Cmd(GUI_SPACE_OUTPUT);
-	Cmd.PushInt(SPACE_ACESS_DENIED);
+	CMsg GuiMsg(SYSTEM_SOURCE,Receiver,MSG_BRAIN_TO_GUI,DEFAULT_DIALOG,0);
+	ePipeline Cmd(TO_SPACE_VIEW::ID);
+	Cmd.PushInt(TO_SPACE_VIEW::ACESS_DENIED);
 	Cmd<<Letter;
 	
     GuiMsg.GetLetter().PushPipe(Cmd);
@@ -759,22 +722,22 @@ void CBrain::OnOperatorFeedback(CLogicDialog* Dialog,CMsg& Msg){
 	
 	int64 EventID = Msg.GetEventID();
 	
-	
-	CLockedBrainData* BrainData = GetBrainData();
+
 	
 	CBrainEvent EventInfo;
-	if(!BrainData->PopBrainEvent(EventID,EventInfo)){
+	if(!m_BrainData.GetEvent(EventID,EventInfo,true)){
 		return;
 	};
 	ePipeline& ObjectAddress = EventInfo.m_ClientAddress;
 	
-	CMsg Msg1(ObjectAddress.GetID(),MSG_OPERATOR_FEEDBACK,0,EventID);
+	CMsg Msg1(SourceID,ObjectAddress.GetID(),MSG_OPERATOR_FEEDBACK,DEFAULT_DIALOG,EventID);
 	ePipeline& Receiver = Msg1.GetReceiver();
 	Receiver<< ObjectAddress;
 	
 	ePipeline& Letter1 = Msg1.GetLetter();
     Letter1<<Msg.GetLetter();
 	
+
 	PushNerveMsg(Msg1,false,false);	
 };
 
@@ -782,23 +745,22 @@ void CBrain::OnRobotExportObject(CLogicDialog* Dialog,CMsg& Msg){
 	
 	int64 SourceID = Msg.GetSourceID();
 	int64 EventID = Msg.GetEventID();
-
-	CLockedBrainData* BrainData = GetBrainData();
 	
 	CBrainEvent EventInfo;
-	if(!BrainData->PopBrainEvent(EventID,EventInfo)){
+	if(!m_BrainData.GetEvent(EventID,EventInfo,true)){
 		return;
 	};
 	
 	ePipeline& ObjectAddress = EventInfo.m_ClientAddress;
 	
-	CMsg Msg1(ObjectAddress.GetID(),MSG_ROBOT_EXPORT_OBJECT,0,EventID);
+	CMsg Msg1(SourceID,ObjectAddress.GetID(),MSG_ROBOT_EXPORT_OBJECT,DEFAULT_DIALOG,EventID);
 	ePipeline& Receiver = Msg1.GetReceiver();
 	Receiver<<ObjectAddress;
 	
 	ePipeline& Letter1 = Msg1.GetLetter();
     Letter1<<Msg.GetLetter();
 	
+
 	PushNerveMsg(Msg1,false,false);	
 }
 
@@ -811,8 +773,8 @@ void CBrain::OnTaskRequest(CLogicDialog* Dialog,CMsg& Msg)
 		ePipeline& Letter = Msg.GetLetter();
 		ePipeline& RequestInfo = *(ePipeline*)Letter.GetData(0);
 		
-		CRequestBrain Rq(RequestInfo);
-		Rq.Request(m_BrainData.GetDialog(SYSTEM_SOURCE,DEFAULT_DIALOG));
+		//CRequestBrain Rq(RequestInfo);
+		//Rq.Request(m_BrainData.GetDialog(SYSTEM_SOURCE,DEFAULT_DIALOG));
 	}else{
 		assert(0); //暂时不接受外部请求
 	}

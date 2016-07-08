@@ -18,6 +18,13 @@ CMainBrain::CMainBrain(CUserTimer* Timer,CUserSpacePool* Pool,tstring Name)
 	m_Name = Name;
 //	m_LogFlag =0;
 //	m_bCheckInstinct = FALSE;
+
+	m_LogFlag = LOG_MSG_RUNTIME_TIP|LOG_TIP;
+
+	tstring Dir = GetCurrentDir();
+	tstring LogDir =  Dir+_T("\\Log.DB");
+	m_LogDB.Open(LogDir);
+
 }
 
 CMainBrain::~CMainBrain()

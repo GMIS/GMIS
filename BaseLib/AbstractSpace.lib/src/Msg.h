@@ -68,11 +68,15 @@ protected:
 public:
 	CMsg();
 	//For sending Letter to external (default address  is the system dialog of remote end)
-	CMsg(int64 MsgID,int64 SenderID,int64 EventID); 
+	//CMsg(int64 MsgID,int64 SenderID,int64 EventID); 
 	//For a dialog send message to other dialog in local system 
-	CMsg(int64 ReceiverID,int64 MsgID,int64 SenderID,int64 EventID); 
+	//CMsg(int64 ReceiverID,int64 MsgID,int64 SenderID,int64 EventID); 
 
-	CMsg(ePipeline& Receiver,int64 MsgID,int64 EventID); //System send message to child dialog
+	//CMsg(ePipeline& Receiver,int64 MsgID,int64 EventID); //System send message to child dialog
+
+	CMsg(int64 SourceID,ePipeline& Receiver,int64 MsgID,ePipeline& Sender,int64 EventID);
+	CMsg(int64 SourceID,int64 ReceiverID,int64 MsgID,int64 SenderID,int64 EventID);
+	CMsg(int64 SourceID,ePipeline& Receiver,int64 MsgID,int64 SenderID,int64 EventID);
 
 	CMsg(ePipeline* Msg);	
 	virtual ~CMsg();	

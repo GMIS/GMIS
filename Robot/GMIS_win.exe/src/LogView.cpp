@@ -313,7 +313,7 @@ void CLogView::ResetFlag(){
 		}
 		it++;
 	}
-	ePipeline Cmd(GUI_SET_LOG_FLAG);
+	ePipeline Cmd(TO_BRAIN_MSG::GUI_SET_LOG_FLAG);
 	Cmd.PushInt(m_LogFlag);
 	int64 EventID = AbstractSpace::CreateTimeStamp();
 	GetGUI()->SendMsgToBrain(SYSTEM_SOURCE,DEFAULT_DIALOG,Cmd,EventID);
@@ -340,7 +340,7 @@ void CLogView::UpdateFlag(){
 
 	if (m_LogFlag)
 	{
-		ePipeline Cmd(GUI_SET_LOG_FLAG);
+		ePipeline Cmd(TO_BRAIN_MSG::GUI_SET_LOG_FLAG);
 		Cmd.PushInt(m_LogFlag);
 		int64 EventID = AbstractSpace::CreateTimeStamp();
 		GetGUI()->SendMsgToBrain(SYSTEM_SOURCE,DEFAULT_DIALOG,Cmd,EventID);

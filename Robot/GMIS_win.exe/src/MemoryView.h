@@ -45,7 +45,6 @@ public:
 		virtual void Draw(HDC hDC, ePipeline* Pipe=NULL);
 	};
 
-
 protected:
 
 	CTextItem* Data2Item(int Index,Energy* Data);
@@ -56,19 +55,16 @@ protected:
 
 
 	void CreateDataInstance(tstring InstanceName);
-	void InsertData(tstring InstanceName,int32 Index,Energy* Data);
-	void ModifyData(tstring InstanceName,int32 Index,Energy* Data);
-	void RemoveData(tstring InstanceName,int32 Index);
-    void CloseDataInstance(tstring InstanceName);
-	void ImportData(tstring InstanceName,ePipeline* DataList);
-	void ExportData(tstring InstanceName);
+	void InsertData(tstring InstanceName,ePipeline& Address,Energy* Data);
+	void ModifyData(tstring InstanceName,ePipeline& Address,Energy* Data);
+	void RemoveData(tstring InstanceName,ePipeline& Address);
+	void ImportData(tstring InstanceName,ePipeline& Address,ePipeline* DataList);
+	void CloseDataInstance(tstring InstanceName);
 public:
 	CMemoryView();
 	virtual ~CMemoryView();
 
-
-	void InfoProc(ePipeline& Info);
-	
+	void InfoProc(ePipeline& Info);	
 	void ResetData(ePipeline& DataList);
 
 protected:

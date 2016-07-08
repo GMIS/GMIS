@@ -6,7 +6,7 @@
 #include "LogicDialog.h"
 #include "UserTimer.h"
 #include "LinkerPipe.h"
-#include "LogicElement.h"
+#include "InstinctDefine.h"
 
 
 CLocalInfoAuto::CLocalInfoAuto(CLogicDialog* Dialog,CElement* Elt,ePipeline& Pipe)
@@ -247,11 +247,40 @@ Mass* CElement::FindMass(ePipeline& Address){
 				return m;
 			}
 		}
+		it++;
 	}
 	return NULL;
 }
 
+bool CElement::FindLogicAddress(int64 ItemID, ePipeline& Address)
+{
+	Address.PushInt(m_ID);
 
+	if(ItemID==m_ID){
+		return true;
+	}
+
+	ActomPtr it = m_ActomList.begin();
+	while(it != m_ActomList.end()){
+		Mass* e = *it;	
+
+		if (e->MassType() == MASS_ELEMENT)
+		{
+			CElement* m = (CElement*)e;
+			bool ret =  m->FindLogicAddress(ItemID,Address);
+			if(ret){
+				return true;
+			}
+		}else if(e->m_ID == ItemID){
+			Address.PushInt(ItemID);
+			return true;
+		}
+
+		it ++;
+	}
+	Address.EraseBackEnergy();
+	return false;
+}
 bool CElement::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress)
 {
 	return true;
@@ -325,7 +354,7 @@ bool CSeries::Do(CLogicDialog* Dialog,ePipeline& ExePipe, ePipeline& LocalAddres
 				
 				ExePipe.SetID(RETURN_ERROR);
 				ExePipe.GetLabel() = Format1024(_T("Error: Msg(%s) Address(%I64ld) Invalid"),MsgStr.c_str(),ID);
-				return true;
+				return true; //返回true是因为递归执行已经在此中断，我们已经设置了RETURN_ERROR，避免退出时重复设置
 			}else{
 				
 				Mass* Child = *It;
@@ -337,7 +366,7 @@ bool CSeries::Do(CLogicDialog* Dialog,ePipeline& ExePipe, ePipeline& LocalAddres
 
 						ExePipe.SetID(RETURN_ERROR);
 						ExePipe.GetLabel() = Format1024(_T("Error: Msg(%s) Address(%I64ld) Invalid"),MsgStr.c_str(),ID);
-						return true;
+						return true;//返回true是因为递归执行已经在此中断，我们已经设置了RETURN_ERROR，避免退出时重复设置
 					};
 					
 					ChildIndex = It-m_ActomList.begin();
@@ -364,7 +393,7 @@ bool CSeries::Do(CLogicDialog* Dialog,ePipeline& ExePipe, ePipeline& LocalAddres
 				{
 					ExePipe.GetLabel() = Format1024(_T("%I64ld: %s execute failure."),Child->m_ID,Child->GetName().c_str());
 				}
-				return true;
+				return true;//返回true是因为递归执行已经在此中断，我们已经设置了RETURN_ERROR，避免退出时重复设置
 			};
 		}
 		else {					
@@ -375,14 +404,14 @@ bool CSeries::Do(CLogicDialog* Dialog,ePipeline& ExePipe, ePipeline& LocalAddres
 			{
 				ExePipe.SetID(RETURN_ERROR);
 				ExePipe.GetLabel() = Format1024(_T("%I64ld: %s input data type checking failure:(%x,%x)"),Child->m_ID,Child->GetName().c_str(),Type,ExePipe.GetTypeAB());
-				return true;
+				return true;//返回true是因为递归执行已经在此中断，我们已经设置了RETURN_ERROR，避免退出时重复设置
 			}else{								
 				if(!Child->Do(&ExePipe)){
 					ExePipe.SetID(RETURN_ERROR);
 					if (ExePipe.GetLabel().size()==0){
 						ExePipe.GetLabel() = Format1024(_T("%I64ld: %s execute failure."),Child->m_ID,Child->GetName().c_str());
 					}
-					return true;
+					return true;//返回true是因为递归执行已经在此中断，我们已经设置了RETURN_ERROR，避免退出时重复设置
 				};     
 			}			
 		};

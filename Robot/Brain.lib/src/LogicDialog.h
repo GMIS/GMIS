@@ -12,8 +12,9 @@
 #include "SpaceMutex.h"
 #include "LogicThread.h"
 #include "LogicTask.h"
-#include "LogicThread.h"
-
+#include <vector>
+#include "BrainMemory.h"
+#include "Brain.h"
 
 enum TASK_STATE{
 		TASK_DELELTE = -1,  //表明所属Dialog将被删除
@@ -36,23 +37,11 @@ enum WORK_MODE{
 		WORK_THINK,
 		WORK_DEBUG,
 		WORK_CHAT,
-		WORK_LEARN
+		WORK_LEARN,
+		WORK_TEST
 };
 
-//helper class 简单调用Brain->NotifyDialogState(...)
-class CRequestBrain: public ePipeline{
-public:
-	CRequestBrain(REQUEST_ITEM RequestID):ePipeline(RequestID){
-	};
 
-	CRequestBrain(ePipeline& RequestInfo){
-		m_ID = RequestInfo.m_ID;
-		ePipeline* temp = this;
-		*temp << RequestInfo;
-	}
-	~CRequestBrain(){};
-	bool Request(CLogicDialog* Dialog);
-};
 
 struct CNameUser{
 	tstring  m_LogicName;
@@ -61,16 +50,21 @@ struct CNameUser{
 };
 
 
+enum FindTypeExpected {FIND_ALL,FIND_OBJECT,FIND_PEOPLE,FIND_TEXT,FIND_LOGIC, FIND_COMMAND}; 
+
 class CNameList{
 public:
 	map<tstring, CNameUser>   m_NameList;
 public:
 	bool  HasName(CLogicDialog* Dialog,tstring& Name);
+	bool  HasMemoryInstance(CLogicDialog* Dialog,tstring& Name);
 	void  RegisterNameByLogic(tstring& Name,tstring& LogicName);
+	
 	void  RegisterNameByTask(tstring& Name,int64 TaskID,int64 InstanceID);
+	void  UnregisterNameByTask(tstring& Name);
 
-	void UnregisterNameByTask(tstring& Name);
 	int64 GetInstanceID(tstring& Name);
+	tstring GetInstanceName(int64 InstanceID);
 
 	Energy*  ToEnergy(); 
 	bool     FromEnergy(Energy* E);
@@ -78,11 +72,11 @@ public:
 };
 
 class CBrain;
+class CElementCell;
+class CLocalLogicCell;
+class CLogicTask;
+class CObjectData;
 
-enum TASK_OUT_TYPE{
-	TASK_OUT_DEFAULT, //output actions
-	TASK_OUT_THINK,   //output think result
-};
 
 
 class CLogicDialog  
@@ -105,6 +99,8 @@ public:
  
 	tstring             m_CompileError;    //编译如果不能进行，存储错误提示
 
+	int64               m_TaskDialogCount; //用于系统对话记录生成子对话数目
+
 protected:
     
 	static CSpaceMutex  m_DialogMutex;
@@ -122,6 +118,7 @@ protected:
 
 	ePipeline           m_ExePipe;            //执行管道
 	CLockPipe           m_TaskMsgList;        //待处理信息列表
+
 
 public:	
 	int64         		m_ThinkID;	
@@ -155,7 +152,7 @@ public:
 
 public:
 	int64                         m_ObjectFocus;
-	int64                         m_DataTableFocus;
+	int64                         m_MemoryFocus;
 	tstring                       m_LogicFocus;
 	
 	vector<CLocalLogicCell*>      m_LogicList;
@@ -164,11 +161,17 @@ public:
     vector<CObjectData*>          m_ObjectList;
 
 	map<int64, ePipeline>         m_ObjectInstanceList;
-	map<int64, ePipeline>		  m_TableInstanceList;
+	map<int64, ePipeline>		  m_MemoryInstanceList;
     map<int64, CElement*>         m_LogicInstanceList;
 
 	CNameList                     m_NamedObjectList;   //被命名引用的物体
-    CNameList                     m_NamedTableList;
+    CNameList                     m_NamedMemoryList;
+
+	ePipeline                     m_MemoryAddress;     //当前焦点记忆的操作地址
+
+	deque<CSentence*>			  m_TaskList;
+
+	ePipeline                     m_LogicAddress;      //当前任务逻辑的操作地址
 
 public:
 	CLogicDialog(CBrain* Frame,int64 SourceID,int64 DialogID,int64 ParentDialogID,tstring SourceName,tstring DialogName,
@@ -199,8 +202,13 @@ public:
 	}
 	void ClosePauseDialog(int64 PauseEventID);
 
-	void  PushEltMsg(CMsg& Msg){
-		m_TaskMsgList.Push(Msg.Release());
+	void  PushEltMsg(CMsg& Msg,bool bUrgence){
+		if(bUrgence){
+			m_TaskMsgList.PushUrgence(Msg.Release());
+		}else{
+			m_TaskMsgList.Push(Msg.Release());
+		}
+		
 	};
 
 	int64 GetControlEventID(){
@@ -217,6 +225,14 @@ public:
 	void  ResetTask();
 
 	void ClearTaskMsgList();
+
+	void  Think2TaskList();
+
+	bool  HasTask(){
+		return m_TaskList.size()>0;
+	}
+
+	CSentence* PopTask();
 
 	void SetWorkMode(WORK_MODE Mode);
     WORK_MODE GetWorkMode();
@@ -246,8 +262,7 @@ public:
 	void RuntimeOutput(INT64 MassID,TCHAR* Format, ...);
 
 	
-	bool StartChildDialog(int64 EventID,tstring DialogName,tstring FirstDialog,TASK_OUT_TYPE OutType,ePipeline& ExePipe, 
-		                   ePipeline& Address,int64 EventInterval=TIME_SEC,bool bFocus=false,bool bEditValid=true);
+	bool StartChildDialog(int64 EventID,tstring DialogName,tstring DialogText,TASK_OUT_TYPE OutType,ePipeline& ClientExePipe,ePipeline& ClientAddress,int64 EventInterval,bool bFocus,bool bEditValid);
     void CloseChildDialog(int64 EventID,ePipeline& OldExePipe,ePipeline& ExePipe);
 
 public:

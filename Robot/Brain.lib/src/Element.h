@@ -13,7 +13,7 @@
 #include <map>
 #include <tchar.h>
 #include "MsgList.h"
-//#include "Brain.h"
+
 
 /*
   Element是质量体的集合。
@@ -27,8 +27,6 @@
 
 typedef vector<Mass*>            ActomList;
 typedef vector<Mass*>::iterator  ActomPtr;
-
-
 
 enum LogicRelation { 
 	UNKOWN_RELATION = 0, 
@@ -74,6 +72,9 @@ public:
 
 	void GetAddress(ePipeline& Address);
 
+
+	bool FindLogicAddress(int64 ItemID, ePipeline& Address);
+
 	CElement* FindFocusLogic(const tstring& FocusName);
 
 	virtual tstring GetName();
@@ -83,8 +84,6 @@ public:
     int32 MassNum(){return m_ActomList.size();};
 
 	//Mass* FindMass(int64 ID); //假设所有ID都是有序的，采用二元搜索法完成
- 
-  
 	Mass* FindMass(ePipeline& Address);
 
 	virtual LogicRelation RealtionType(){return UNKOWN_RELATION;};

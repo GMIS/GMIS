@@ -251,7 +251,7 @@ LRESULT CDialogView::OnLButtonDown(WPARAM wParam, LPARAM lParam){
 
 		CVSpace2* Item = m_ChildList[1];
 
-		ePipeline Msg(GUI_GET_DIALOG_MORE_ITME);
+		ePipeline Msg(TO_BRAIN_MSG::GUI_GET_DIALOG_MORE_ITME);
 		Msg.PushInt(Item->m_Alias);		
 	    GetGUI()->SendMsgToBrainFocuse(Msg);
 

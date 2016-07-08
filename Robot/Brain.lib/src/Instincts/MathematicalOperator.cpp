@@ -11,6 +11,7 @@
 		
 		if (Pipe->Size()<2)
 		{
+			Pipe->GetLabel() = Format1024(_T("%I64ld Error: no enough numbers to make addition(+) operator!"),m_ID);
 			return false;
 		}
 		eElectron    DataA;
@@ -69,6 +70,7 @@
 		ePipeline* Pipe = (ePipeline*)E;
 		if (Pipe->Size()<2)
 		{
+			Pipe->GetLabel() = Format1024(_T("%I64ld Error: no enough numbers to make subtraction(-) operator!"),m_ID);
 			return false;
 		}
 		eElectron    DataA;
@@ -128,6 +130,7 @@
 		ePipeline* Pipe = (ePipeline*)E;
 		if (Pipe->Size()<2)
 		{
+			Pipe->GetLabel() = Format1024(_T("%I64ld Error: no enough numbers to make Multiplication(*) operator!"),m_ID);
 			return false;
 		}
 		eElectron    DataA;
@@ -186,6 +189,7 @@
 		ePipeline* Pipe = (ePipeline*)E;
 		if (Pipe->Size()<2)
 		{
+			Pipe->GetLabel() = Format1024(_T("%I64ld Error: no enough numbers to make division(/) operator!"),m_ID);
 			return false;
 		}
 		eElectron    DataA;
@@ -245,6 +249,7 @@
 		ePipeline* Pipe = (ePipeline*)E;
 		if (Pipe->Size()<2)
 		{
+			Pipe->GetLabel() = Format1024(_T("%I64ld Error: no enough numbers to make modulus(%) operator!"),m_ID);
 			return false;
 		}
 		eElectron    DataA;

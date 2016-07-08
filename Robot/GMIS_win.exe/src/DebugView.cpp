@@ -423,22 +423,12 @@ LRESULT CDebugView::OnInfoProc(WPARAM wParam, LPARAM lParam)
 			
 			Reset(*DebugTree);
 			
-			if (TaskTimeStamp!=0)
+
+			while (PauseList->Size())
 			{
-				if(TaskTimeStamp != m_TaskTimeStamp){
-					m_TaskTimeStamp = TaskTimeStamp; //先改，否则会出现第一次发出GUI_GET_DEBUG_ITEM信息后，还没来得及处理完，第二次又重复发
-					ePipeline Msg(GUI_GET_DEBUG_ITEM);
-					Msg.PushInt(m_TaskTimeStamp);
-					GetGUI()->SendMsgToBrainFocuse(Msg);
-				}else{
-					while (PauseList->Size())
-					{
-						int64 PauseItemID = PauseList->PopInt();
-						MarkPauseItem(PauseItemID);
-					}
-				}
-			}
-			
+				int64 PauseItemID = PauseList->PopInt();
+				MarkPauseItem(PauseItemID);
+			}	
 		}
 		break;
 	case DEBUG_MARK_PAUSE:
@@ -450,7 +440,7 @@ LRESULT CDebugView::OnInfoProc(WPARAM wParam, LPARAM lParam)
 			
 			if(TaskTimeStamp != m_TaskTimeStamp){
 				m_TaskTimeStamp = TaskTimeStamp; //先改，否则会出现第一次发出GUI_GET_DEBUG_ITEM信息后，还没来得及处理完，第二次又重复发
-				ePipeline Msg(GUI_GET_DEBUG_ITEM);
+				ePipeline Msg(TO_BRAIN_MSG::GUI_GET_DEBUG_ITEM);
 				Msg.PushInt(m_TaskTimeStamp);
 				GetGUI()->SendMsgToBrainFocuse(Msg);
 			}else{
@@ -590,8 +580,8 @@ LRESULT CDebugView::ToolbarReaction(ButtonItem* Bnt){
 				SetRunBnt(false);
 				
 				
-				ePipeline Msg(GUI_TASK_CONTROL);
-				Msg.PushInt(CMD_DEBUG_STEP);
+				ePipeline Msg(TO_BRAIN_MSG::TASK_CONTROL::ID);
+				Msg.PushInt(TO_BRAIN_MSG::TASK_CONTROL::CMD_DEBUG_STEP);
 				Msg.PushInt(m_SpaceSelected->m_Alias);
 			
 				m_Toolbar.m_Owner = NULL;
@@ -612,8 +602,8 @@ LRESULT CDebugView::ToolbarReaction(ButtonItem* Bnt){
 				SetRunBnt(false);
 				
 				
-				ePipeline Msg(GUI_TASK_CONTROL);
-				Msg.PushInt(CMD_RUN);
+				ePipeline Msg(TO_BRAIN_MSG::TASK_CONTROL::ID);
+				Msg.PushInt(TO_BRAIN_MSG::TASK_CONTROL::CMD_RUN);
 				Msg.PushInt(m_SpaceSelected->m_Alias);
 				
 				m_Toolbar.m_Owner = NULL;
@@ -634,9 +624,9 @@ LRESULT CDebugView::ToolbarReaction(ButtonItem* Bnt){
 				ePipeline Path;
 				Item2Path(m_SpaceSelected,Path);
 
-				ePipeline Msg(GUI_TASK_CONTROL);
+				ePipeline Msg(TO_BRAIN_MSG::TASK_CONTROL::ID);
 				
-				Msg.PushInt(CMD_DEBUG_BREAK);
+				Msg.PushInt(TO_BRAIN_MSG::TASK_CONTROL::CMD_DEBUG_BREAK);
 
 				
 				if (m_SpaceSelected->m_State&SPACE_BREAK)

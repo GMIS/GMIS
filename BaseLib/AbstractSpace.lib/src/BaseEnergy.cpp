@@ -75,7 +75,7 @@ namespace ABSTRACT{
         if(slen==0 || floatpos>20 || slen-floatpos>19)return 0;     
 
 		m_Value = StringToFloat(&s[start],(uint32)t,floatpos);
-		pos = start+t;
+		pos = start+(uint32)t;
 		return true;
 	};	
 
@@ -129,7 +129,7 @@ namespace ABSTRACT{
 		tstring::size_type n = m_Value.find_first_of(L'\0');
 		m_Value = m_Value.substr(0,n);
 
-		pos = start+len;
+		pos = start+(uint32)len;
 		return true;
 	};
 
@@ -158,7 +158,7 @@ namespace ABSTRACT{
 		m_Value.resize((uint32)len);
 		memcpy(&m_Value[0],&s[start],(uint32)len);
 		
-		pos  = start+len;
+		pos  = start+(uint32)len;
 		return true;
 
 	};

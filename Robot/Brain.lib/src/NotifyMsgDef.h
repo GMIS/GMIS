@@ -78,7 +78,7 @@
 			#define REMOVE_DATA       202
 			#define MODIFY_DATA       203
             #define IMPORT_DATA       204  
-            #define EXPORT_DATA       205 
+
 
 /*
 #define NOTIFY_LOGIC_EXE     10000

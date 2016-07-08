@@ -19,6 +19,9 @@ public:
 	CLogDatabase();
 	virtual ~CLogDatabase();
 
+	bool IsOpen(){
+		return m_LogDatabase.IsOpen();
+	}
 	void Open(tstring DBFile);
 	void WriteItem(int64 TimeStamp, tstring Who, tstring Say);
 

@@ -1,10 +1,8 @@
 ﻿#pragma warning (disable: 4786)
 
-#include "Brain_Init.h"
-#include "LogicThread.h"
-#include "LogicDialog.h"
-
-
+#include "BrainInitElt.h"
+#include "..\InstinctDefine.h"
+#include "..\LogicDialog.h"
 struct NewWord{ 
 	int64         PartOfSpeech;
 	const TCHAR*  Word1;
@@ -89,7 +87,8 @@ NewWord _WordList[]={    //note: 增减项目必须修改初始化单词数目
 	{MEMORY_VERB,_T("stop"),_T("停止")},
 	{MEMORY_VERB,_T("pause"),_T("暂停")},
 	{MEMORY_VERB,_T("step"),_T("单步")},
-	
+	{MEMORY_VERB,_T("test"),_T("测试")},
+
 	{MEMORY_NOUN,_T("dialog"),_T("对话")},
 	
 	{MEMORY_VERB,_T("learn"),_T("学习")}, 
@@ -114,8 +113,15 @@ NewWord _WordList[]={    //note: 增减项目必须修改初始化单词数目
 	{MEMORY_VERB,_T("output"),_T("输出")}, 
 	{MEMORY_NOUN,_T("info"),_T("信息")}, 
 	{MEMORY_NOUN,_T("document"),_T("文档")}, 
+	{MEMORY_NOUN,_T("expectation"),_T("预期")},
 
 	{MEMORY_NOUN,_T("account"),_T("帐号")}, 
+	{MEMORY_NOUN,_T("memory"),_T("记忆")}, 
+	{MEMORY_VERB,_T("delete"),_T("删除")}, 
+	{MEMORY_NOUN,_T("address"),_T("地址")}, 
+	{MEMORY_NOUN,_T("node"),_T("节点")}, 
+	{MEMORY_NOUN,_T("focus"),_T("焦点")}, 
+	{MEMORY_NOUN,_T("breakpoint"),_T("断点")}, 	
 };
 
 
@@ -167,27 +173,34 @@ InitInstinct _InstinctList[]={
 	{INSTINCT_WAIT_SECOND,_T("wait second")},
 	
 	
-	{INSTINCT_TABLE_CREATE,_T("create  table ")},
-	{INSTINCT_TABLE_FOCUS,_T("focus table ")},
-	{INSTINCT_TABLE_IMPORT,_T("import data ")},
-	{INSTINCT_TABLE_EXPORT,_T("export data ")},
-	{INSTINCT_TABLE_INSERT_DATA,_T("insert data")},
-	{INSTINCT_TABLE_MODIFY_DATA,_T("modify data")},
-	{INSTINCT_TABLE_GET_DATA,_T("get data")},
-	{INSTINCT_TABLE_REMOVE_DATA,_T("remove data")},
-	{INSTINCT_TABLE_GET_SIZE,_T("get size")},
-	{INSTINCT_TABLE_CLOSE,_T("close table")},
+	{INSTINCT_CREATE_MEMORY,_T("create memory")},
+	{INSTINCT_FOCUS_MEMORY,_T("focus  memory")},
+	{INSTINCT_SET_MEMORY_ADDRESS,_T("set memory address")},
+	{INSTINCT_GET_MEMORY_ADDRESS,_T("get memory address")},
+	{INSTINCT_CREATE_MEMORY_NODE,_T("create memory node")},
+	{INSTINCT_IMPORT_MEMORY,_T("import memory")},
+	{INSTINCT_EXPORT_MEMORY,_T("export memory")},
+	{INSTINCT_GET_MEMORY,_T("get memory")},
+	{INSTINCT_INSERT_MEMORY,_T("insert memory")},
+	{INSTINCT_MODIFY_MEMORY,_T("modify memory")},
+	{INSTINCT_REMOVE_MEMORY,_T("remove memory")},
+	{INSTINCT_GET_MEMORY_SIZE,_T("get memory size")},
+	{INSTINCT_CLOSE_MEMORY,_T("close memory")},
+	{INSTINCT_GET_MEMORY_FOCUS,_T("get memory focus")},
 	
-	{INSTINCT_USE_LOGIC,_T("use     logic")},
-	{INSTINCT_FOCUS_LOGIC,_T("focus   logic")},
-	{INSTINCT_NAME_LOGIC,_T("name    logic")},
-	{INSTINCT_INSERT_LOGIC,_T("insert  logic")},
-	{INSTINCT_REMOVE_LOGIC,_T("remove  logic")},
-	
-	{INSTINCT_GET_DATE,_T("get  date")},
-	{INSTINCT_GET_TIME,_T("get  time")},
+	{INSTINCT_USE_LOGIC,_T("use logic")},
+	{INSTINCT_FOCUS_LOGIC,_T("focus logic")},
+	{INSTINCT_NAME_LOGIC,_T("name logic")},
+	{INSTINCT_INSERT_LOGIC,_T("insert logic")},
+	{INSTINCT_REMOVE_LOGIC,_T("remove logic")},
+	{INSTINCT_SET_LOGIC_ADDRESS,_T("set logic address")},
+	{INSTINCT_SET_LOGIC_BREAKPOINT,_T("set logic breakpoint")},
+
+	{INSTINCT_GET_DATE,_T("get date")},
+	{INSTINCT_GET_TIME,_T("get time")},
 
 	{INSTINCT_OUTPUT_INFO,_T("output  info")},
+	{INSTINCT_TEST_EXPECTATION,_T("test  expectation")},
 
 	{INSTINCT_START_OBJECT,_T("start object")},
 	{INSTINCT_FOCUS_OBJECT,_T("focus object")},
@@ -206,7 +219,8 @@ InitInstinct _InstinctList[]={
 	{INSTINCT_PAUSE_TASK,_T("pause")},
 	{INSTINCT_STEP_TASK,_T("step")},
 	{INSTINCT_GOTO_TASK,_T("goto")},	
-	
+	{INSTINCT_TEST_TASK,_T("test")},	
+
 	{INSTINCT_CLOSE_DIALOG,_T("close dialog")},
 
 	{INSTINCT_CREATE_ACCOUNT,_T("create account")},
@@ -237,12 +251,12 @@ InitInstinct _InstinctList[]={
 	{INSTINCT_FIND,_T("find") },
 	{INSTINCT_FIND_LOGIC,_T("find logic")},
 	{INSTINCT_FIND_OBJECT,_T("find object") },
-	{INSTINCT_USE_ARM,_T("use arm")}
+	//{INSTINCT_USE_ARM,_T("use arm")}
 	
 };
 		
 
-CBrainInit::CBrainInit(int64 ID)
+CBrainInitElt::CBrainInitElt(int64 ID)
 :CElement(ID,_T("Brain Init"))
 {
 	m_EventType = 0;
@@ -250,12 +264,12 @@ CBrainInit::CBrainInit(int64 ID)
 	        
 };
 
-CBrainInit::~CBrainInit(){
+CBrainInitElt::~CBrainInitElt(){
 	
 }
 
 
-bool  CBrainInit::Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg){ 
+bool  CBrainInitElt::Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg){ 
 	
 	CLocalInfoAuto LocalInfoAuto(Dialog,this,LocalAddress);
 	
@@ -306,8 +320,10 @@ bool  CBrainInit::Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAdd
 };
 
 
-bool CBrainInit::CheckWord(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress){
+bool CBrainInitElt::CheckWord(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress){
 
+	CLogicDialog* SysDialog = Dialog->m_Brain->GetBrainData()->GetDialog(SYSTEM_SOURCE,DEFAULT_DIALOG);
+	assert(SysDialog);
 
 	CLogicThread& Think = *Dialog->GetThink();	
 	
@@ -348,19 +364,19 @@ bool CBrainInit::CheckWord(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& Lo
 
 			int64 ID = Think.CheckWord(word,r.PartOfSpeech,MEANING_SENSE_OK);
 			if(ID==0){
-				Dialog->RuntimeOutput(0,_T("Learning word \"%s\" "),r.Word1);										
+				SysDialog->RuntimeOutput(0,_T("Learning word \"%s\" "),r.Word1);										
 
 				ID = Think.LearnWord(word,r.PartOfSpeech,MEANING_SENSE_OK);
 
 				if(ID==0){
-					Dialog->RuntimeOutput(0,_T("WARNING: Learn word [%s]  fail"),r.Word1);
+					SysDialog->RuntimeOutput(0,_T("WARNING: Learn word [%s]  fail"),r.Word1);
 				}else{
 					//学习中文
-					Dialog->RuntimeOutput(0,_T("Learning word \"%s\" "),r.Word2);	
+					SysDialog->RuntimeOutput(0,_T("Learning word \"%s\" "),r.Word2);	
 					word = r.Word2;
 					ID = Think.LearnWordFromWord(word,r.PartOfSpeech,tstring(r.Word1));
 					if(ID==0){
-						Dialog->RuntimeOutput(0,_T("Learn word [%s]  fail"),r.Word2); 
+						SysDialog->RuntimeOutput(0,_T("Learn word [%s]  fail"),r.Word2); 
 					}
 				} 
 			}
@@ -382,7 +398,10 @@ bool CBrainInit::CheckWord(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& Lo
 	return true;
 }
 
-bool CBrainInit::CheckInstinct(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress){
+bool CBrainInitElt::CheckInstinct(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress){
+	CLogicDialog* SysDialog = Dialog->m_Brain->GetBrainData()->GetDialog(SYSTEM_SOURCE,DEFAULT_DIALOG);
+	assert(SysDialog);
+
 	CLogicThread& Think = *Dialog->GetThink();	
 	Think.ClearAnalyse();
 
@@ -422,11 +441,11 @@ bool CBrainInit::CheckInstinct(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline
 
 			int64 ID = Think.CheckAction(Dialog,tstring(r.Cmd),r.InstinctID,MEANING_SENSE_OK);
 			if(ID==0){
-				Dialog->RuntimeOutput(0,_T("Learning instinct \"%s\" "),r.Cmd);
+				SysDialog->RuntimeOutput(0,_T("Learning instinct \"%s\" "),r.Cmd);
 
 				ID = Think.LearnAction(Dialog,tstring(r.Cmd),r.InstinctID,MEANING_SENSE_OK);
 				if(ID==0){
-					Dialog->RuntimeOutput(0,_T("WARNING: Learn instinct \"%s\" fail  <%s>"),r.Cmd,Think.m_LastError.c_str());
+					SysDialog->RuntimeOutput(0,_T("WARNING! Learn instinct \"%s\" fail: %s>"),r.Cmd,Think.m_LastError.c_str());
 				} 
 			} 
 		};

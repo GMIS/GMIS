@@ -10,7 +10,7 @@
 #include "NotifyMsgDef.h"
 #include "LogicDialog.h"
 #include "TextAnalyse.h"
-#include "LogicElement.h"
+
 
 
 int32 CLogicThread::GetActionRoom(int64 ParentID,ClauseLogicSense* cls){
@@ -76,7 +76,20 @@ void CLogicThread::ThinkProc(CLogicDialog* Dialog,CMsg& Msg){
 	};
 
 	int64 Pos  = Letter1.PopInt();
-	tstring text  = Letter1.PopString();
+	
+	eElectron e;
+	Letter1.Pop(&e);
+
+	tstring text;
+
+	if(e.EnergyType() == TYPE_INT){
+		int64 n = e.Int64();
+		text.assign(n,127); 
+	}else {
+		assert(e.EnergyType() == TYPE_STRING);
+		text = e.String();
+	}
+
 	EventID    = Letter1.PopInt();
 
 	m_TextMsgQueue.erase(it);
@@ -111,10 +124,12 @@ void CLogicThread::ThinkProc(CLogicDialog* Dialog,int32 Pos,tstring& Msg,bool Fo
 				ThinkAllAffectedClause(Dialog);
 				ThinkAllAffectedSentence(Dialog);
 				
-				CNotifyDialogState nf(NOTIFY_PROGRESS_OUTPUT);
-				nf.PushInt(THINK_PROGRESS);
-				nf.PushInt(per);
-				nf.Notify(Dialog);
+				if(Msg.size()>100){
+					CNotifyDialogState nf(NOTIFY_PROGRESS_OUTPUT);
+					nf.PushInt(THINK_PROGRESS);
+					nf.PushInt(per);
+					nf.Notify(Dialog);
+				}	
 			}
 			
 		}else{
@@ -1014,7 +1029,7 @@ bool  CLogicThread::CheckInstinctParam(CLogicDialog* Dialog,CClause* Clause, vec
 			}
 		}
 		break;
-	case INSTINCT_TABLE_CREATE:
+	case INSTINCT_CREATE_MEMORY:
 		{
 			if( ParamList.size() !=1 ){
 				//Error = "the param  more than one or lose param when reference element";
@@ -1024,7 +1039,7 @@ bool  CLogicThread::CheckInstinctParam(CLogicDialog* Dialog,CClause* Clause, vec
 			
 			tstring Name = ParamList[0];
 			Name = GetLogicElementName(Name);
-			if (Dialog->m_NamedTableList.HasName(Dialog,Name) || CheckNameInInputed(INSTINCT_TABLE_CREATE,Name,Clause,false)) 
+			if (Dialog->m_NamedMemoryList.HasMemoryInstance(Dialog,Name) || CheckNameInInputed(INSTINCT_CREATE_MEMORY,Name,Clause,false)) 
 			{
 				Clause->m_MemoryID = ERROR_22;
 				return false;
@@ -1033,7 +1048,7 @@ bool  CLogicThread::CheckInstinctParam(CLogicDialog* Dialog,CClause* Clause, vec
 			Clause->m_Param = new eSTRING(Name);     		
 		}
 		break;
-	case INSTINCT_TABLE_FOCUS:
+	case INSTINCT_FOCUS_MEMORY:
         {
 			if (ParamList.size() == 0) //动态版本
 			{
@@ -1049,14 +1064,19 @@ bool  CLogicThread::CheckInstinctParam(CLogicDialog* Dialog,CClause* Clause, vec
 			}
 		}
 		break;
-	case INSTINCT_TABLE_IMPORT:
-	case INSTINCT_TABLE_EXPORT:
-	case INSTINCT_TABLE_INSERT_DATA:
-	case INSTINCT_TABLE_GET_DATA:
-	case INSTINCT_TABLE_REMOVE_DATA:
-	case INSTINCT_TABLE_GET_SIZE:
-	case INSTINCT_TABLE_CLOSE:
-	case INSTINCT_TABLE_MODIFY_DATA:
+
+	case INSTINCT_SET_MEMORY_ADDRESS:
+	case INSTINCT_GET_MEMORY_ADDRESS:
+	case INSTINCT_CREATE_MEMORY_NODE:
+	case INSTINCT_IMPORT_MEMORY:
+	case INSTINCT_EXPORT_MEMORY:
+	case INSTINCT_INSERT_MEMORY:
+	case INSTINCT_GET_MEMORY:
+	case INSTINCT_REMOVE_MEMORY:
+	case INSTINCT_GET_MEMORY_SIZE:
+	case INSTINCT_CLOSE_MEMORY:
+	case INSTINCT_MODIFY_MEMORY:
+	case INSTINCT_GET_MEMORY_FOCUS:
 		{
 			if (ParamList.size()!=0)
 			{
@@ -1123,6 +1143,7 @@ bool  CLogicThread::CheckInstinctParam(CLogicDialog* Dialog,CClause* Clause, vec
 		}
 		break;
 	case INSTINCT_REMOVE_LOGIC:
+	case INSTINCT_SET_LOGIC_ADDRESS:
 	case INSTINCT_GET_DATE:
 	case INSTINCT_GET_TIME:
 	case INSTINCT_OUTPUT_INFO:
@@ -1131,6 +1152,24 @@ bool  CLogicThread::CheckInstinctParam(CLogicDialog* Dialog,CClause* Clause, vec
 				Clause->m_MemoryID = ERROR_3;
 				return false;
 			}		
+		}
+		break;
+	case INSTINCT_SET_LOGIC_BREAKPOINT:
+	case INSTINCT_TEST_EXPECTATION:
+		{
+			if( ParamList.size()!=1 ){
+				Clause->m_MemoryID = ERROR_3;
+				return false;
+			}
+			tstring s = ParamList[0];
+			NumType type = IsNum(s);
+			if(type == NOT_NUM){
+				//Error = "The param must be a int num.";
+				Clause->m_MemoryID = ERROR_6;
+				return false;
+			}
+			int64 t = _ttoi64(s.c_str());
+			Clause->m_Param = new eINT(t);     
 		}
 		break;
 	case INSTINCT_START_OBJECT:
@@ -1246,6 +1285,7 @@ bool  CLogicThread::CheckInstinctParam(CLogicDialog* Dialog,CClause* Clause, vec
 	case INSTINCT_STOP_TASK:
 	case INSTINCT_PAUSE_TASK:
 	case INSTINCT_STEP_TASK:
+	case INSTINCT_TEST_TASK:
 		{
 			if( ParamList.size()!=0 ){
 				//Error = "param error" 

@@ -18,7 +18,6 @@
 #include <map>
 #include <list>
 #include <algorithm>
-#include "InstinctDefine.h"
 #include "UserTimer.h"
 #include "Sqlite\CppSQLite3.h"
 #include "UserMutex.h"

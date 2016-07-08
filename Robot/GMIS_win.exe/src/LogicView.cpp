@@ -84,11 +84,11 @@ CLogicView::CLogicItem::CLogicItem(ePipeline* ItemData)
 
 	assert(ItemData);
     
-    m_LogicName  = ItemData->PopString();
+	m_LogicName  = ItemData->PopString();
 	m_Depend     = ItemData->PopInt();
-    m_ActionType = ItemData->PopInt();
+	m_ActionType = ItemData->PopInt();
 	m_LogicText  = ItemData->PopString();
-    m_LogicMemo  = ItemData->PopString();
+	m_LogicMemo  = ItemData->PopString();
 
 	m_MemoSize.cx = 0;
 	m_MemoSize.cy = 0;
@@ -557,8 +557,8 @@ LRESULT CLogicView::ToolbarReaction(ButtonItem* Bnt){
 		{
 			CLogicItem* Item = (CLogicItem*)m_Toolbar.m_Owner;
 			//发信息给大脑，然后大脑生成处理好以后再返回处理结果
-			ePipeline Msg(GUI_LOGIC_OPERATE);		
-			Msg.PushInt(DEL_LOGIC);
+			ePipeline Msg(TO_BRAIN_MSG::GUI_LOGIC_OPERATE::ID);		
+			Msg.PushInt(TO_BRAIN_MSG::GUI_LOGIC_OPERATE::DEL_LOGIC);
 			Msg.PushString(Item->m_LogicName);
 			
 			GetGUI()->SendMsgToBrainFocuse(Msg);
@@ -568,8 +568,8 @@ LRESULT CLogicView::ToolbarReaction(ButtonItem* Bnt){
     case CM_CLEAR_LOGIC:
 		{
 			//发信息给大脑，然后大脑生成处理好以后再返回处理结果
-			ePipeline Msg(GUI_LOGIC_OPERATE);		
-			Msg.PushInt(CLEAR_LOGIC);
+			ePipeline Msg(TO_BRAIN_MSG::GUI_LOGIC_OPERATE::ID);		
+			Msg.PushInt(TO_BRAIN_MSG::GUI_LOGIC_OPERATE::CLEAR_LOGIC);
 			
 			GetGUI()->SendMsgToBrainFocuse(Msg);
 		}

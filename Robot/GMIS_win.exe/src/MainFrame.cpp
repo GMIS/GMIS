@@ -104,18 +104,17 @@ bool  CMainFrame::IsFocusDialog(int64 SourceID,int64 DialogID){
 	return false;
 }
 void CMainFrame::SetCurDialogState(TASK_STATE  State){
-    m_ConvView.SetCurDialogState(State);
+    m_ConvView.SetCurTaskState(State);
 }
 
 
 void  CMainFrame::SendMsgToBrain(int64 SourceID,int64 DialogID, ePipeline& Msg,int64 EventID){
-	CMsg Msg1(MSG_GUI_TO_BRAIN,0,EventID);
+	CMsg Msg1(LOCAL_GUI_SOURCE,DEFAULT_DIALOG,MSG_GUI_TO_BRAIN,DEFAULT_DIALOG,EventID);
 	ePipeline& Letter = Msg1.GetLetter();
 	Letter.PushInt(SourceID);
 	Letter.PushInt(DialogID);
 	Letter.PushPipe(Msg);
 
-	Msg1.SetSourceID(LOCAL_GUI_SOURCE);
 	GetBrain()->PushCentralNerveMsg(Msg1,false,false); //本地界面直接压入中枢神经，如果是外地界面应该直接网络发送给Brain
 }
 
@@ -158,168 +157,243 @@ REPEAT:
         */ 
 
 		switch(CmdID){
-
-		case GUI_DIALOG_OUTPUT:
+		case TO_STATUS_VIEW::ID:
 			{
-
-				ePipeline* LastItem = (ePipeline*)Cmd.GetData(0);
 				
-				if (GetGUI()->IsFocusDialog(SourceID,DialogID))
+				int64 op = Cmd.PopInt();
+				if (op == TO_STATUS_VIEW::SET_TEXT)
 				{
-					m_ConvView.AddDialogItem(*LastItem);
+					tstring s = Cmd.PopString();
+					m_Status.SetTip(s);
+				}else if(op == TO_STATUS_VIEW::SET_PROGRESS){
+					int64 Per =  Cmd.PopInt();
+					m_Status.SetProgressPer(Per);
+				}else if (op == TO_STATUS_VIEW::PFM_MSG_UPDATE)
+				{
+					int64 Type = Cmd.PopInt();
+					ePipeline* Data = (ePipeline*)Cmd.GetData(0);
+					m_PerformanceView.m_NerveMsgNumView.AppendLineData(Type,*Data);
+
+				}else if (op == TO_STATUS_VIEW::PFM_THREAD_UPDATE)
+				{
+					int64 Type = Cmd.PopInt();
+					int64 ThreadNum = Cmd.PopInt();
+					m_PerformanceView.m_ThreadNumView.AppendLineData(Type,ThreadNum);
 				} 
-				else
-				{
-					m_LinkerView.NotifyDialogHasNew(SourceID,DialogID);
-				}
-			}
-			break;
-		case GUI_RUNTIME_OUTPUT:
-			{
-				ePipeline* Item = (ePipeline*)Cmd.GetData(0);
-				
-				if (GetGUI()->IsFocusDialog(SourceID,DialogID))
-				{
-					m_ConvView.AddRuntimeInfo(*Item);
-				} 
-				else
-				{
-					m_LinkerView.NotifyDialogHasNew(SourceID,DialogID);
-				}
-			}
-			break;
-		case GUI_FORECAST_OUTPUT:
-			{
 
 			}
 			break;
-		case GUI_TASK_STATE_UPDATE:
+		case TO_RUNTIME_VIEW::ID:
 			{
-				
-			}
-			break;
-		case GUI_CLEAR_OUTPUT:
-			{
+				uint32 op = Cmd.PopInt();
+				switch(op){
+				case TO_RUNTIME_VIEW::OUT_PIPE_INFO:
+					{
+						ePipeline* Item = (ePipeline*)Cmd.GetData(0);
 
-				if (!GetGUI()->IsFocusDialog(SourceID,DialogID))
-				{
+						if (GetGUI()->IsFocusDialog(SourceID,DialogID))
+						{
+							m_ConvView.AddRuntimeInfo(*Item);
+						} 
+						else
+						{
+							m_LinkerView.NotifyDialogHasNew(SourceID,DialogID);
+						}
+					}
+					break;
+				case TO_RUNTIME_VIEW::CLEAR_PIPE_INFO:
+					{
+						if (!GetGUI()->IsFocusDialog(SourceID,DialogID)){
+							return;
+						}
+						m_ConvView.ClearRuntimeInfo();
+					}
+					break;
+				case TO_RUNTIME_VIEW::OUT_FORECAST_INFO:
+					{
+						//assert(0);//(_T("GUI_RUNTIME_VIEW::OUT_FORECAST_INFO function hasn't implemented"));
+					}
+					break;
+				case TO_RUNTIME_VIEW::CLEAR_FORECAST:
+					{
+						if (!GetGUI()->IsFocusDialog(SourceID,DialogID)){
+							return;
+						}
+						m_ConvView.ClearForecastInfo();
+					}
+					break;
+				case TO_RUNTIME_VIEW::TASK_TOOLBAR:
+					{
+						if (!GetGUI()->IsFocusDialog(SourceID,DialogID))
+						{
+							break;
+						}
+
+						int64 bRun   = Cmd.PopInt();
+						int64 bPause = Cmd.PopInt();
+						int64 bStop  = Cmd.PopInt();
+
+						m_ConvView.SetTaskToolbarState(bRun,bPause,bStop);
+
+						if(!bPause && !bRun && !bStop){
+							//m_ConvView.EnableDebugBnt(FALSE);
+							m_ConvView.m_OutputWin.ShowView(BNT_DEBUG,FALSE);
+						}
+					}
+					break;
+				case TO_RUNTIME_VIEW::TASK_STATE:
+					{
+						if (!GetGUI()->IsFocusDialog(SourceID,DialogID))
+						{
+							break;
+						}
+						int64 State = Cmd.PopInt();
+						m_ConvView.SetCurTaskState((TASK_STATE)State);
+					}
+					break;
+				case TO_RUNTIME_VIEW::SET_EDIT:
+					{
+						if (!GetGUI()->IsFocusDialog(SourceID,DialogID))
+						{
+							break;
+						}
+
+						tstring s = Cmd.PopString();
+						int64 Enable = Cmd.PopInt();
+						m_ConvView.m_InputWin.ClearEdit(s.c_str());
+						m_ConvView.m_InputWin.EnableInput(Enable);
+					}
+					break;
+				case TO_RUNTIME_VIEW::CONTINUE_EDIT:
+					{
+						if (!GetGUI()->IsFocusDialog(SourceID,DialogID))
+						{
+							break;
+						}
+
+						m_ConvView.m_InputWin.EnableInput(TRUE);
+					}
+					break;
+				case TO_RUNTIME_VIEW::SET_WORKMODE:
+					{
+						if (!GetGUI()->IsFocusDialog(SourceID,DialogID))
+						{
+							break;
+						}
+
+						int64 WordMode = Cmd.PopInt();
+						switch(WordMode){
+						case WORK_TASK:
+							m_ConvView.SetInputTip(_T("Cmd>"));
+							break;
+						case WORK_THINK:
+							m_ConvView.SetInputTip(_T("Think>"));
+							break;
+						case WORK_DEBUG:
+							m_ConvView.SetInputTip(_T("Debug>"));
+							break;
+						case WORK_CHAT:
+							m_ConvView.SetInputTip(_T("Chat>"));
+							break;
+						case WORK_LEARN:
+							m_ConvView.SetInputTip(_T("Learn>"));
+							break;
+						case WORK_TEST:
+							m_ConvView.SetInputTip(_T("Test>"));
+						default:
+							break;
+
+						}
+					}
+					break;
+				case TO_RUNTIME_VIEW::OUT_THINK_RESULT:
+					{
+
+					}
+					break;
+				case TO_RUNTIME_VIEW::OUT_ANALYSE_RESULT:
+					{
+
+
+					}
 					break;
 				}
 
-				int64 Type = Cmd.PopInt();
-				if (Type == CLEAR_DIALOG)
-				{
-					m_ConvView.ClearDialogInfo();
-				}else if (Type == CLEAR_RUNTIME)
-				{
-					m_ConvView.ClearRuntimeInfo();
-				}else if (Type == CLEAR_FORECAST)
-				{
-					m_ConvView.ClearForecastInfo();
-				}
 			}
 			break;
-		case GUI_ONE_LIGHT_FLASH:
+		case TO_SYSTEM_VIEW::ID:
 			{
-
-				if (!GetGUI()->IsFocusDialog(SourceID,DialogID))
+				uint32 op = Cmd.PopInt();
+				if(op == TO_SYSTEM_VIEW::SET_CUR_DIALOG) 
 				{
-					break;
-				}
+					int64 SourceID = Cmd.PopInt();
+					int64 DialogID = Cmd.PopInt();
 
-				int64 Enable = Cmd.PopInt();
-				if (Enable)
+					m_LinkerView.SetCurDialog(SourceID,DialogID);
+					m_ConvView.SetCurDialog(SourceID,DialogID,Cmd);
+				}else if (op == TO_SYSTEM_VIEW::CONNECT_START)
 				{
-					m_Status.LightLamp(IN_LAMP,TRUE);
-				}else{
-					m_Status.LightLamp(IN_LAMP,FALSE);
+					tstring ip = Cmd.PopString();
+					tstring tip = Format1024(_T("Connect...%s"),ip.c_str());
+
+					m_MapView.m_MapView.EnableNewConnect(FALSE);	
+					m_Status.SetTip(tip);
+					m_AddressBar.SetConnectState(TRUE);
+
+				}else if (op == TO_SYSTEM_VIEW::CONNECT_STATE)
+				{
+					tstring ip = Cmd.PopString();
+					//tstring tip = tformat(_T("Connect...%s"),ip.c_str());
+
+					int64 ret = Cmd.PopInt();
+
+					m_WorldShow.SetRoomTitle(_T(""));
+					m_Status.SetTip(_T(""));
+
+					m_MapView.m_MapView.EnableNewConnect(TRUE);
+
+					if (ret) //成功
+					{
+						m_AddressBar.SetConnectState(TRUE);
+						if(m_MapView.GetHwnd()){
+							::SendMessage(m_MapView.GetHwnd(),WM_CLOSE,0,0);
+						};
+					}else{
+						m_AddressBar.SetConnectState(FALSE);
+						m_MapView.Reset();
+						m_WorldShow.ConnectRoomFail(_T(""));
+					}
 				}
-				
 			}
 			break;
-		case GUI_FIND_OUTPUT:
-			{
-				m_ConvView.FindViewProc(Cmd);
-			}
-			break;
-		case GUI_MEMORY_OUTPUT:
+		case TO_DATA_VIEW::ID:
 			{
 				m_ConvView.MemoryViewProc(Cmd);
-
 			}
 			break;
-		case GUI_ADDRESSBAR_STATE:
+	
+		case TO_OBJECT_VIEW::ID:
 			{
 				if (!GetGUI()->IsFocusDialog(SourceID,DialogID))
 				{
 					break;
 				}
 
-				int64 Flag = Cmd.PopInt();
-				m_AddressBar.SetConnectState(Flag);
+				m_ConvView.SetObjectView(Cmd);
+
 			}
 			break;
-		case GUI_STATUS_SET_TEXT:
+		case TO_DEBUG_VIEW::ID:
 			{
 				if (!GetGUI()->IsFocusDialog(SourceID,DialogID))
 				{
 					break;
 				}
 
-				tstring s = Cmd.PopString();
-				m_Status.SetTip(s);
+				m_ConvView.DebugViewProc(Cmd);
 			}
 			break;
-
-		case GUI_SET_EIDT:
-			{
-
-				if (!GetGUI()->IsFocusDialog(SourceID,DialogID))
-				{
-					break;
-				}
-
-				tstring s = Cmd.PopString();
-				int64 Enable = Cmd.PopInt();
-				m_ConvView.m_InputWin.ClearEdit(s.c_str());
-				m_ConvView.m_InputWin.EnableInput(Enable);
-			}
-			break;
-		case GUI_CONTINUE_EDIT:
-			{
-
-				if (!GetGUI()->IsFocusDialog(SourceID,DialogID))
-				{
-					break;
-				}
-
-				int64 bSetEdit = Cmd.PopInt();
-				if(!bSetEdit)
-				{
-					m_ConvView.m_InputWin.ContinueEdit(NULL);
-				}else {
-					tstring s = Cmd.PopString();
-					m_ConvView.m_InputWin.ContinueEdit(s.c_str());
-				}
-				m_ConvView.m_InputWin.EnableInput(TRUE);
-			}
-			break;
-		case GUI_PFM_MSG_UPDATE:
-			{
-				int64 Type = Cmd.PopInt();
-				ePipeline* Data = (ePipeline*)Cmd.GetData(0);
-				m_PerformanceView.m_NerveMsgNumView.AppendLineData(Type,*Data);
-			}
-			break;
-		case GUI_PFM_THREAD_UPDATE:
-			{
-				int64 Type = Cmd.PopInt();
-				int64 ThreadNum = Cmd.PopInt();
-				m_PerformanceView.m_ThreadNumView.AppendLineData(Type,ThreadNum);
-
-			}
-			break;
-		case GUI_LOGIC_OUTPUT:
+		case TO_LOGIC_VIEW::ID:
 			{
 				if (!GetGUI()->IsFocusDialog(SourceID,DialogID))
 				{
@@ -329,22 +403,10 @@ REPEAT:
 				m_ConvView.SetLogicView(Cmd);
 			}
 			break;
-		case GUI_OBJECT_OUTPUT:
+		case TO_DIALOG_VIEW::ID:
 			{
-				if (!GetGUI()->IsFocusDialog(SourceID,DialogID))
-				{
-					break;
-				}
-				
-				m_ConvView.SetObjectView(Cmd);
-			
-			}
-			break;
-		case GUI_LINKVIEW_OUTPUT:
-			{
-
-				int64  Act = Cmd.PopInt();
-				if(Act == ADD_ITEM)
+				uint32 op = Cmd.PopInt();
+				if(op == TO_DIALOG_VIEW::ADD_ITEM)
 				{
 					int64 SourceID = Cmd.PopInt();
 					int64 DialogID = Cmd.PopInt();
@@ -352,12 +414,12 @@ REPEAT:
 					tstring Name   = Cmd.PopString();
 					m_LinkerView.AddDialog(SourceID,DialogID,ParentID,Name.c_str());
 
-				}else if (Act == DEL_ITEM)
+				}else if (op == TO_DIALOG_VIEW::DEL_ITEM)
 				{
 					int64 SourceID = Cmd.PopInt();
 					int64 DialogID = Cmd.PopInt();
 					m_LinkerView.DeleteDialog(SourceID,DialogID);
-				}else if (Act == INIT_LIST)
+				}else if (op == TO_DIALOG_VIEW::INIT)
 				{					
 					m_LinkerView.ClearAll();					
 					ePipeline* DialogList = (ePipeline*)Cmd.GetData(0);
@@ -368,146 +430,46 @@ REPEAT:
 						int64 ParentID = DialogList->PopInt();
 						tstring Name;    DialogList->PopString(Name);
 						int64 Type = DialogList->PopInt();
-						
+
 						m_LinkerView.AddDialog(SourceID,DialogID,ParentID,Name);
 					} 	
 				}
 			}
 			break;
-		case GUI_SET_CUR_DIALOG:
-			{
-				int64 SourceID = Cmd.PopInt();
-				int64 DialogID = Cmd.PopInt();
-
-				m_LinkerView.SetCurDialog(SourceID,DialogID);
-				m_ConvView.SetCurDialog(SourceID,DialogID,Cmd);
-			}
-			break;
-		case GUI_VIEW_LAYOUT:
-			{
-				if (!GetGUI()->IsFocusDialog(SourceID,DialogID))
-				{
-					break;
-				}
-				int64 State = Cmd.PopInt();
-				m_ConvView.SetCurDialogState((TASK_STATE)State);
-			}
-			break;
-		case GUI_STATUS_PROGRESS:
-			{
-				int64 Per =  Cmd.PopInt();
-                m_Status.SetProgressPer(Per);
-				
-			}
-			break;
-		case GUI_TASK_TOOL_BAR:
-			{		
-				if (!GetGUI()->IsFocusDialog(SourceID,DialogID))
-				{
-					break;
-				}
-
-				int64 bRun   = Cmd.PopInt();
-				int64 bPause = Cmd.PopInt();
-				int64 bStop  = Cmd.PopInt();
-				
-				m_ConvView.SetTaskToolbarState(bRun,bPause,bStop);
-
-				if(!bPause && !bRun && !bStop){
-//					m_ConvView.EnableDebugBnt(FALSE);
-					m_ConvView.m_OutputWin.ShowView(BNT_DEBUG,FALSE);
-				}
-			}
-			break;
-
-		case GUI_DEBUGVIEW_OUTPUT:
-			{
-				if (!GetGUI()->IsFocusDialog(SourceID,DialogID))
-				{
-					break;
-				}
-
-				m_ConvView.DebugViewProc(Cmd);
-			}
-			break;
-		case GUI_SET_WORKMODE:
-			{
-
-				if (!GetGUI()->IsFocusDialog(SourceID,DialogID))
-				{
-					break;
-				}
-
-				int64 WordMode = Cmd.PopInt();
-				switch(WordMode){
-				case WORK_TASK:
-					m_ConvView.SetInputTip(_T("Cmd>"));
-					break;
-				case WORK_THINK:
-					m_ConvView.SetInputTip(_T("Think>"));
-					break;
-				case WORK_DEBUG:
-					m_ConvView.SetInputTip(_T("Debug>"));
-					break;
-				case WORK_CHAT:
-					m_ConvView.SetInputTip(_T("Chat>"));
-					break;
-				case WORK_LEARN:
-					m_ConvView.SetInputTip(_T("Learn>"));
-					break;
-				default:
-					break;
-
-				}
-			}
-			break;
-		case GUI_SPACE_OUTPUT:
+		case TO_SPACE_VIEW::ID:
 			{
 				OnSpaceOutput(Cmd);
 			}
 			break;
-		case GUI_CONNECT_STATE:
+		case TO_HISTORY_VIEW::ID:
 			{
-				int64 State = Cmd.PopInt();
-				if (State == CON_START)
+				uint32 op = Cmd.PopInt();
+				if (op == TO_HISTORY_VIEW::ADD_ITEM)
 				{
-				    tstring ip = Cmd.PopString();
-					tstring tip = Format1024(_T("Connect...%s"),ip.c_str());
-					
-					m_MapView.m_MapView.EnableNewConnect(FALSE);	
-					m_Status.SetTip(tip);
-					m_AddressBar.SetConnectState(TRUE);
+					ePipeline* LastItem = (ePipeline*)Cmd.GetData(0);
 
-				}else if (State == CON_END)
-				{
-                    tstring ip = Cmd.PopString();
-					//tstring tip = tformat(_T("Connect...%s"),ip.c_str());
-					
-					int64 ret = Cmd.PopInt();
-					
-					m_WorldShow.SetRoomTitle(_T(""));
-					m_Status.SetTip(_T(""));
-
-					m_MapView.m_MapView.EnableNewConnect(TRUE);
-					
-					if (ret) //成功
+					if (GetGUI()->IsFocusDialog(SourceID,DialogID))
 					{
-						m_AddressBar.SetConnectState(TRUE);
-                        if(m_MapView.GetHwnd()){
-							::SendMessage(m_MapView.GetHwnd(),WM_CLOSE,0,0);
-						};
-					}else{
-						m_AddressBar.SetConnectState(FALSE);
-						m_MapView.Reset();
-						m_WorldShow.ConnectRoomFail(_T(""));
+						m_ConvView.AddDialogItem(*LastItem);
+					} 
+					else
+					{
+						m_LinkerView.NotifyDialogHasNew(SourceID,DialogID);
 					}
-				} 
+				}else if (op == TO_HISTORY_VIEW::CLEAR)
+				{
+					m_ConvView.ClearDialogInfo();
+				}else if(op == TO_HISTORY_VIEW::ADD_MORE_ITEM){
+
+					ePipeline* LastItem = (ePipeline*)Cmd.GetData(0);			
+					m_ConvView.AddMoreDialogItem(SourceID,DialogID,*LastItem);
+				}
 			}
 			break;
-		case GUI_SET_DIALOG_MORE_ITEE:
+
+		case TO_FIND_VIEW::ID:
 			{
-				ePipeline* LastItem = (ePipeline*)Cmd.GetData(0);			
-				m_ConvView.AddMoreDialogItem(SourceID,DialogID,*LastItem);
+				m_ConvView.FindViewProc(Cmd);
 			}
 			break;
 		default:
@@ -519,34 +481,38 @@ REPEAT:
 	if (m_MsgList.DataNum())
 	{
 		m_MsgList.Pop(Msg);
-        goto REPEAT;
+		goto REPEAT;
 	}
 }
 
 void CMainFrame::OnSpaceOutput(ePipeline& Letter){
-	
-    int64 Cmd = Letter.PopInt();
-	
-	if (Cmd == SPACE_CATALOG)
+
+	int64 Cmd = Letter.PopInt();
+
+	if (Cmd == TO_SPACE_VIEW::CATALOG)
 	{
 		OnSpaceOutput_Catalog(Letter);
-	}else if (Cmd == SPACE_ADDED)
+	}else if (Cmd == TO_SPACE_VIEW::ADD_ITEM)
 	{
 		OnSpaceOutput_Added(Letter);
-	}else if (Cmd == SPACE_DELETED)
+	}else if (Cmd == TO_SPACE_VIEW::DEL_ITEM)
 	{
 		OnSpaceOutput_Deleted(Letter);
+	}else if (Cmd == TO_SPACE_VIEW::ADDRESSBAR_STATE)
+	{	
+		int64 Flag = Letter.PopInt();
+		m_AddressBar.SetConnectState(Flag);		
 	}
-	
+
 }
 
 void CMainFrame::OnSpaceOutput_Catalog(ePipeline& Data){
 	
 
 	ePipeline* SpaceList = (ePipeline*)Data.GetData(0);	
-	
-    int64 RoomID = SpaceList->GetID();
-   	tstring RoomName = SpaceList->GetLabel();
+
+	int64 RoomID = SpaceList->GetID();
+	tstring RoomName = SpaceList->GetLabel();
 	
 	MapItem* RoomItem = m_MapView.FindChildItem(RoomID);
 	assert(RoomItem);
@@ -867,10 +833,10 @@ LRESULT CMainFrame::ParentReaction(SpaceRectionMsg* SRM){
 		int64  ID = SRM->lParam;
 		IP ip(ID);
         AnsiString Ipstr = ip.Get();
-		ePipeline  Msg(GUI_CONNECT_TO);
+		ePipeline  Msg(TO_BRAIN_MSG::GUI_CONNECT_TO);
 		Msg.PushString(Ipstr);
 		Msg.PushInt(SPACE_PORT);
-		
+
 		int64 EventID = AbstractSpace::CreateTimeStamp();
 		GetGUI()->SendMsgToBrain(SYSTEM_SOURCE,DEFAULT_DIALOG,Msg,EventID);
 	}
@@ -878,7 +844,7 @@ LRESULT CMainFrame::ParentReaction(SpaceRectionMsg* SRM){
 	{
 //        OUTPUT_LOG(this,_T("用户请求终止连接.."));
 
-		ePipeline  Msg(GUI_DISCONNECT);
+		ePipeline  Msg(TO_BRAIN_MSG::GUI_DISCONNECT);
 		
 		int64 EventID = AbstractSpace::CreateTimeStamp();
 		GetGUI()->SendMsgToBrain(SYSTEM_SOURCE,DEFAULT_DIALOG,Msg,EventID);

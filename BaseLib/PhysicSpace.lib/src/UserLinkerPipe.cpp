@@ -77,6 +77,15 @@ void   CUserLinkerPipe::Close(){
 	CLinkerPipe::Close();
 }
 
+tstring CUserLinkerPipe::GetIP(){
+#if defined(USING_POCO)
+	tstring ip = UTF8toWS(m_Socket.address().toString());
+
+#elif defined(USING_WIN32)
+	tstring ip = UTF8toWS(m_IP);
+#endif
+	return ip;
+}
 
 
 

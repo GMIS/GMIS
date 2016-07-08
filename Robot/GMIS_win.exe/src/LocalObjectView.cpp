@@ -191,7 +191,7 @@ LRESULT CLocalObjectView::OnObjectProc(WPARAM wParam, LPARAM lParam){
 
 			ePipeline*  ItemData = (ePipeline*)Pipe->GetData(0);
 			CObjectItem* Item = new CObjectItem(*ItemData);
-			
+
 			Item->m_Alias = m_ObjectIDCount++;
 
 			Item->SetAreaSize(300,24); //预设大小
@@ -282,8 +282,8 @@ LRESULT CLocalObjectView::ToolbarReaction(ButtonItem* Bnt)
 
 	case ID_DEL_OBJECT:
 		{					
-			ePipeline Msg(GUI_OBJECT_OPERATE);
-			Msg.PushInt(DEL_OBJECT);
+			ePipeline Msg(TO_BRAIN_MSG::GUI_OBJECT_OPERATE::ID);
+			Msg.PushInt(TO_BRAIN_MSG::GUI_OBJECT_OPERATE::DELETE_OBJECT);
 
 			CObjectItem* Item = (CObjectItem*)m_SpaceSelected;
 			
@@ -296,8 +296,8 @@ LRESULT CLocalObjectView::ToolbarReaction(ButtonItem* Bnt)
 		break;
 	case ID_CLR_OBJECT:
 		{		
-			ePipeline Msg(GUI_OBJECT_OPERATE);
-			Msg.PushInt(CLR_OBJECT);			
+			ePipeline Msg(TO_BRAIN_MSG::GUI_OBJECT_OPERATE::ID);
+			Msg.PushInt(TO_BRAIN_MSG::GUI_OBJECT_OPERATE::CLR_OBJECT);			
 			GetGUI()->SendMsgToBrainFocuse(Msg);
 		}
 		break;

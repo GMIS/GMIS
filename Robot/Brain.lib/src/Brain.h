@@ -8,31 +8,23 @@
 
 #include "AbstractSpace.h"
 #include "PhysicSpace.h"
-
-#include "LogicDialog.h"
 #include "BrainMemory.h"
 #include "MsgList.h"
 #include "LogDatabase.h"
 #include "NotifyMsgDef.h"
-#include "Element.h"
 #include "Poco/Net/HTTPServer.h"
 #include "BrainWebsocket.h"
 
 using namespace PHYSIC;
 
 #define LOGIC_TASK 1
-#define  BRAIN_MEMORY_CHECH_DIALOG_ID 1
 
-class CLogicDialog;
+
 class CObjectData;
 class CLogicThread;
 class CLogicTask;
 class CElement;
-
-//生成一个MSG_FROM_BRAIN信息，注意：Msg.m_ID = 子消息ID，Msg则包含可能有的数据
-void  CreateBrainMsg(CMsg& NewMsg,ePipeline& Receiver,ePipeline& Msg,int64 EventID=0);
-void  CreateBrainMsg(CMsg& NewMsg,int64 ReceiverID,ePipeline& MsgData,int64 EventID=0);
-
+class CLogicDialog;
 
 //helper class 简单调用Brain->NotifyDialogState(...)
 class CNotifyDialogState: public ePipeline{
@@ -59,12 +51,11 @@ public:
 	int64		m_Interval;      //事件间隔
 	int64		m_TickCount;     //间隔计数 
 	bool        m_bOnce;         //是否一次性事件(注意：不考虑用Interval=0表示一次性事件，因为存在特定事件间隔的一次性事件）  
-	int64       m_ClientEventID;
+	int64       m_InstinctID;    //想要系统完成的事项，==0表示无特定任务。
+	bool        m_bPrivate;      //是否有对话
+	int64       m_ClientEventID; 
 	ePipeline   m_ClientAddress; //事件客户的地址
 	ePipeline   m_ClientExePipe; //临时保存事件客户的执行管道数据
-#ifdef _DEBUG
-	tstring     m_Memo;
-#endif
 
 public:
 	CBrainEvent():m_Interval(TIME_SEC),m_TickCount(0),m_bOnce(false),m_ClientEventID(0){
@@ -118,6 +109,13 @@ enum {
 	BRAIN_EVENT_WORK_TYPE    
 };
 
+enum TASK_OUT_TYPE{
+	TASK_OUT_DEFAULT, //output actions
+	TASK_OUT_THINK,   //output think result
+	TASK_OUT_OTHER
+};
+
+
 class CBrainThreadWorker : public CThreadWorker{
 
 protected:
@@ -129,6 +127,8 @@ public:
 	virtual bool Do(Energy* E);
 
 };
+
+
 class CBrain : public System  
 {
 public:
@@ -200,12 +200,9 @@ public:
 		void    GetAllDialogListInfo(ePipeline& LinkerInfo);
 
 		//事件TICK的间隔单位为百纳秒,最小间隔=MIN_EVENT_INTERVAL,也就是20毫秒，缺省为一秒
-#ifdef _DEBUG	
-		void    PushBrainEvent(int64 EventID,int64 ClientEventID,ePipeline& ExePipe,ePipeline& LocalAddress,int64 EventInterval, bool bEventOnce,tstring& Memo);
-#else
-		void    PushBrainEvent(int64 EventID,int64 ClientEventID,ePipeline& ExePipe,ePipeline& LocalAddress,int64 EventInterval, bool bEventOnce);
-#endif
-		bool    PopBrainEvent(int64 EventID,CBrainEvent& EventInfo);
+		void    CreateEvent(int64 EventID,int64 ClientEventID,ePipeline& ExePipe,ePipeline& LocalAddress,int64 EventInterval, bool bEventOnce,int64 InstinctID,bool bPrivate);
+		bool    GetEvent(int64 EventID,CBrainEvent& EventInfo,bool bDelete);
+
         void    ResetEventTickCount(int64 EventID);
 	
 		//负责发出事件心跳反馈,并且去掉无效的事件
@@ -240,7 +237,7 @@ public:
 
 		int32   GetWebIOWorkerNum();
 		CThreadWorker* CreateThreadWorker(int64 ID,System* Parent,int32 Type);
-		void   DeleteThreadWorker(System* Parent,int64 ID,int32 Type);
+		void    DeleteThreadWorker(System* Parent,int64 ID,int32 Type);
 		void    WaitAllWorkThreadClosed();
 
 		Energy* ToEnergy(); 
@@ -254,9 +251,10 @@ private:
 	CLockedBrainData               m_BrainData;
 	CBrainThreadWorker             m_EventWorker;
 	HTTPServer*                    m_GUI_WebServer;  //to suppose websocket for web GUI	
- 	CLogDatabase                   m_LogDB;
+
 	CBrainMemory                   m_BrainMemory;
 public:
+	CLogDatabase                   m_LogDB;
 	CWebsocketLinkerList           m_WebsocketClientList;
 /////////////////////////////////////////////////////////
 public:
@@ -309,6 +307,15 @@ public:
 
 	virtual void UnitTest();
  
+	//请求系统执行一个本能，并把执行结果反馈给客户地址
+	//如果ClientEventID ==0则不通知GUI显示系统对话
+		
+	bool          CreateSysDialog(int64 SourceID,tstring SourceName);
+	CLogicDialog* CreateChildDialog(CLogicDialog* ParentDialog,int64 ChildDilaogID,tstring ChildDialogName,int64 ClientEventID,
+									ePipeline& ClientAddress,ePipeline& ClientEexePipe,int Interval,bool bOnce,bool bTransTask);
+	void          CreateChildDialog(int64 InstinctID,tstring TaskName,int64 ClientEventID,ePipeline& ClientAddress,ePipeline& ExePipe,
+									bool bShowDialog);
+	bool          CreateEventDialog(CLogicDialog* ParentDialog,int Interval);
 //////////////////////////////////////////////////////////////////////////
 	virtual void CentralNerveMsgProc(CMsg& Msg);
 

@@ -756,6 +756,9 @@ void CConversation::SetCurDialog(int64 SourceID,int64 DialogID,ePipeline& Pipe){
 	case WORK_LEARN:
 		SetInputTip(_T("Learn>"));
 		break;
+	case WORK_TEST:
+		SetInputTip(_T("Test"));
+		break;
 
 	}
 
@@ -782,7 +785,7 @@ void CConversation::SetCurDialog(int64 SourceID,int64 DialogID,ePipeline& Pipe){
 		}
 	};
 
-	SetCurDialogState((TASK_STATE)TaskState);
+	SetCurTaskState((TASK_STATE)TaskState);
 
 	//处理搜索数据
 	ePipeline* SearchResult = (ePipeline*)Pipe.GetLastData();
@@ -811,7 +814,7 @@ void CConversation::SetCurDialog(int64 SourceID,int64 DialogID,ePipeline& Pipe){
 	Pipe.Clear();
 }
 
-void  CConversation::SetCurDialogState(TASK_STATE State)
+void  CConversation::SetCurTaskState(TASK_STATE State)
 {
 
 	if (State == m_CurTaskState )
@@ -858,9 +861,12 @@ void  CConversation::SetCurDialogState(TASK_STATE State)
 		m_InputWin.ContinueEdit(NULL);
 		ShowView(DIALOG_VIEW,TRUE);
 		ShowView(OUTPUT_VIEW,TRUE);
-        SetTaskToolbarState(FALSE,FALSE,FALSE);
+		SetTaskToolbarState(FALSE,FALSE,FALSE);
+	
+		GetGUI()->m_Status.LightLamp(IN_LAMP,FALSE);
 		break;
 	case TASK_THINK:
+		GetGUI()->m_Status.LightLamp(IN_LAMP,TRUE);
 		break;
 	case TASK_COMPILE:
 		break;
@@ -878,14 +884,14 @@ void  CConversation::SetCurDialogState(TASK_STATE State)
 		ShowView(DIALOG_VIEW,FALSE);
 		ShowView(OUTPUT_VIEW,TRUE);
 		ShowView(DEBUG_VIEW,TRUE);
-		
+
 		SetTaskToolbarState(TRUE,FALSE,TRUE);
 		break;
 	case TASK_STOP:
 		m_InputWin.ContinueEdit(NULL);
 		ShowView(DIALOG_VIEW,TRUE);
 		ShowView(OUTPUT_VIEW,TRUE);
-        SetTaskToolbarState(FALSE,FALSE,FALSE);
+		SetTaskToolbarState(FALSE,FALSE,FALSE);
 		break;
 	}
 	
@@ -981,7 +987,7 @@ LRESULT CConversation::OnCreate( WPARAM wParam, LPARAM lParam)
 	//OpenView();
 	//Layout();
 	//SetTaskToolbarState(FALSE,FALSE,FALSE);
-	SetCurDialogState(TASK_IDLE);
+	SetCurTaskState(TASK_IDLE);
 	SetInputTip(_T("Cmd>"));
     return 0;
 }
@@ -1096,7 +1102,7 @@ LRESULT CConversation::OnLButtonDown(WPARAM wParam, LPARAM lParam)
 
 				//	m_SpaceSelected->m_State |= SPACE_SELECTED;
 					
-					ePipeline Msg(GUI_TASK_CONTROL);
+					ePipeline Msg(TO_BRAIN_MSG::TASK_CONTROL::ID);
 					Msg.PushInt(m_SpaceSelected->m_Alias);
 					Msg.PushInt(0);
 					GetGUI()->SendMsgToBrainFocuse(Msg);
@@ -1269,7 +1275,7 @@ LRESULT CConversation::OnCommand(WPARAM wParam, LPARAM lParam){
 			
 			m_SpaceSelected->m_State |= SPACE_SELECTED;
 			
-			ePipeline Msg(GUI_TASK_CONTROL);
+			ePipeline Msg(TO_BRAIN_MSG::TASK_CONTROL::ID);
 			Msg.PushInt(m_SpaceSelected->m_Alias);
 			Msg.PushInt(0);
 			GetGUI()->SendMsgToBrainFocuse(Msg);

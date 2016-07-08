@@ -70,7 +70,7 @@ void CLogDatabase::ReadItem(int64 TimeStamp,ePipeline& ResultPipe){
 				
 	Result = m_LogDatabase.execQuery(SQL);
     
-	uint32 pos=0;
+	
 	while(!Result.eof()){
 		int64 t = Result.getInt64Field(0);
 		AnsiString who = Result.getStringField(1);
@@ -78,6 +78,7 @@ void CLogDatabase::ReadItem(int64 TimeStamp,ePipeline& ResultPipe){
 
 		ResultPipe.PushInt(t);
 
+		uint32 pos=0;
 		eSTRING ss;
 		bool ret = ss.FromString(who,pos);
 		assert(ret);

@@ -411,7 +411,7 @@ LRESULT CFindView::OnLButtonDown(WPARAM wParam, LPARAM lParam)
 		DeleteAll();
 		Layout();
 			
-		ePipeline Msg(GUI_GET_FIND_REUSLT);
+		ePipeline Msg(TO_BRAIN_MSG::GUI_GET_FIND_REUSLT);
 		Msg.PushInt(n);
 
 		GetGUI()->SendMsgToBrainFocuse(Msg);

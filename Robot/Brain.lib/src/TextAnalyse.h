@@ -16,7 +16,7 @@
 #define  ERROR_0          0 //"input not completed"
 #define  ERROR_1          1 //ok
 #define  ERROR_2          2 //"Cannot understand this word or clause"
-#define  ERROR_3          3 //"The param incorrect";
+#define  ERROR_3          3 //"The param losed";
 #define  ERROR_4          4 //"The param is not properly formatted";
 #define  ERROR_5          5 //"The param must be a num.";
 #define  ERROR_6          6 //"The param must be an integer";
@@ -46,7 +46,7 @@ static const TCHAR* ANALYSE_ERROR[] ={
 	    _T("input not completed;"),  //input
 		_T(""),  //ok
 		_T("cannot understand the word or clause;"),
-		_T("the param  num  incorrect;"),
+		_T("the param  losed;"),
 		_T("the param  format incorrect;"),
 		_T("The param not is a num;"),
 		_T("The param must be a int num;"),

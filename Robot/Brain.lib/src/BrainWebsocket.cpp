@@ -31,7 +31,7 @@ void WebSocketRequestHandler::handleRequest(HTTPServerRequest& request, HTTPServ
 		LinkerPtr->SetStateOutputLevel(WEIGHT_LEVEL);
 		m_Brain->m_WebsocketClientList.AddLinker(LinkerPtr);
 
-		CMsg Msg(MSG_WHO_ARE_YOU,DEFAULT_DIALOG,0);
+		CMsg Msg(SYSTEM_SOURCE,DEFAULT_DIALOG,MSG_WHO_ARE_YOU,DEFAULT_DIALOG,0);
 		LinkerPtr->PushMsgToSend(Msg);
 
 		m_Brain->CreateWebsokectWorkerStrategy();
@@ -93,13 +93,13 @@ CWebsocketLinkerPipe::CWebsocketLinkerPipe(CSpaceMutex* Mutex,System* Parent,int
 {
 	assert(Mutex);
 	m_bDeleteMutex = FALSE;
-
 #ifdef _DEBUG
 	SetStateOutputLevel(LIGHT_LEVEL);
 #endif
 }
 
 CWebsocketLinkerPipe::~CWebsocketLinkerPipe(){
+
 	if (m_Mutex && m_bDeleteMutex)
 	{
 		delete m_Mutex;
@@ -123,8 +123,8 @@ bool   CWebsocketLinkerPipe::IsValid(){
 void   CWebsocketLinkerPipe::Close(){
 
 #if defined(USING_POCO)
+	m_Socket.shutdown();
 	m_Socket.close();
-
 #else
 	#error "Current impletement only support poco c++ lib"
 #endif
@@ -162,7 +162,7 @@ bool  CWebsocketLinkerPipe::PhysicalSend(char* Buf,uint32 BufSize, uint32& SendL
 
 	bool ret = m_Socket.poll(timeout,Socket::SELECT_WRITE);
 	if(ret){
-		SendLen = m_Socket.sendFrame(Buf,BufSize,WebSocket::FRAME_TEXT);
+		SendLen = m_Socket.sendFrame(Buf,BufSize,WebSocket::FRAME_BINARY);
 	}
 
 #else

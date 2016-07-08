@@ -221,7 +221,7 @@ void CAutoObjectView::OnImportObject(){
 	GetBrain()->OutSysInfo(Info.c_str());
 	
 
-	CMsg Msg(MSG_ROBOT_CREATE_SPACE,0,0);
+	CMsg Msg(SYSTEM_SOURCE,DEFAULT_DIALOG,MSG_ROBOT_CREATE_SPACE,DEFAULT_DIALOG,0);
 
 	int64 CurRoomID = m_Parent->GetRoomID();
 
@@ -264,7 +264,7 @@ void CAutoObjectView::OnCreateChildRoom(bool IsContainer/* =false */){
 		return;
 	}
 
-	CMsg Msg(MSG_ROBOT_CREATE_SPACE,0,0);
+	CMsg Msg(SYSTEM_SOURCE,DEFAULT_DIALOG,MSG_ROBOT_CREATE_SPACE,DEFAULT_DIALOG,0);
 	ePipeline& Letter = Msg.GetLetter();
 	if(IsContainer)Letter.PushInt(CONTAINER_SPACE);
 	else  Letter.PushInt(LOCAL_SPACE);
@@ -285,7 +285,7 @@ void CAutoObjectView::OnDeleteObjectFromRoom(tstring Fingerprint){
 	GetGUI()->GetSpacePath(Path);
     
 	
-	CMsg Msg(MSG_ROBOT_DEL_SPACE,0,0);
+	CMsg Msg(SYSTEM_SOURCE,DEFAULT_DIALOG,MSG_ROBOT_DEL_SPACE,DEFAULT_DIALOG,0);
 	ePipeline& rLetter = Msg.GetLetter();
 	rLetter.PushPipe(Path);
 	rLetter.PushString(Fingerprint);
@@ -341,7 +341,7 @@ void CAutoObjectView::OnExportObjectAsFile(tstring Name, int64 FatherID, int64 C
 	tstring Task = Format1024(_T("Export object = %s"),szFileTitle);
     GetBrain()->OutSysInfo(Task.c_str());
 		  
-	CMsg Msg(MSG_ROBOT_EXPORT_OBJECT,NULL,0);
+	CMsg Msg(SYSTEM_SOURCE,DEFAULT_DIALOG,MSG_ROBOT_EXPORT_OBJECT,DEFAULT_DIALOG,0);
 	ePipeline& Letter = Msg.GetLetter();
 	Letter.PushInt(FatherID);
 	Letter.PushInt(ChildID);
@@ -358,9 +358,9 @@ void CAutoObjectView::OnSelectObject(ObjectItem* Ob){
 	};
 	
 	
-	ePipeline Msg(GUI_OBJECT_OPERATE);
+	ePipeline Msg(TO_BRAIN_MSG::GUI_OBJECT_OPERATE::ID);
 		
-	Msg.PushInt(SELECT_OBJECT);
+	Msg.PushInt(TO_BRAIN_MSG::GUI_OBJECT_OPERATE::SELECT_OBJECT);
 
 	ePipeline Addr;
 	GetGUI()->GetSpacePath(Addr);
@@ -1093,7 +1093,7 @@ bool CWorldShow::OpenDoor(){
 	   ePipeline Path;
 	   GetGUI()->GetSpacePath(Path);
 
-	   CMsg Msg(MSG_ROBOT_GOTO_SPACE,NULL,0);
+	   CMsg Msg(SYSTEM_SOURCE,DEFAULT_DIALOG,MSG_ROBOT_GOTO_SPACE,DEFAULT_DIALOG,0);
 	   ePipeline& Letter = Msg.GetLetter();
 	   Letter.PushPipe(Path);
 	   GetBrain()->SendMsgToSpace(Msg);
