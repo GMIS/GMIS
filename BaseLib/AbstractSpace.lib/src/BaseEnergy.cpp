@@ -4,7 +4,37 @@
 #include "BaseEnergy.h"
 #include <stdlib.h>
 #include <stdio.h>
-#include "ConvertUTF.h"
+//#include "ConvertUTF.h"
+#include <locale>  
+#include <codecvt> 
+
+std::wstring UTF8_To_UTF16(const std::string &source)  
+{  
+
+	try  
+	{  
+		static std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> cvt;  
+		return cvt.from_bytes(source);  
+	}  
+	catch (std::range_error &e)  
+	{  
+		return std::wstring();  
+	}
+
+}  
+
+std::string UTF16_To_UTF8(const std::wstring &source)  
+{  
+	try  
+	{  
+		static std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> cvt;  
+		return cvt.to_bytes(source);  
+	}  
+	catch (std::range_error &)  
+	{  
+		return std::string();  
+	}  
+}  
 
 namespace ABSTRACT{
 	
@@ -101,6 +131,30 @@ namespace ABSTRACT{
 			pos+=4;
 			return true;
 		}
+
+		//get string
+		start += slen+1;
+        m_Value = UTF8_To_UTF16(s.substr(start,len));
+
+		pos = start+len;
+		return true;
+	};
+/*
+	bool  eSTRING::FromString(AnsiString& s,uint32& pos){   
+		int32 start = pos+2;
+
+		int32 slen = FindInt(s,start,'@');
+		if(slen==0 || slen>20)return false;     
+
+		//get the length of integer string
+		int64 len = StringToInt(&s[start],slen);
+
+		if (len==0)
+		{
+			m_Value== L"";
+			pos+=4;
+			return true;
+		}
   
 		//get integer
 		start += slen+1;
@@ -132,7 +186,7 @@ namespace ABSTRACT{
 		pos = start+(uint32)len;
 		return true;
 	};
-
+*/
 	void eBLOB::ToString(AnsiString& s){
 		PrintString(s,TYPE_BLOB,m_Value.size(),m_Value.c_str());
 	};

@@ -146,8 +146,8 @@ bool  CWebsocketLinkerPipe::PhysicalRev(char* Buf,uint32 BufSize, uint32& RevLen
 			Poco::Net::NetException e("websocket closed by remote");
 			throw e;
 		}
-
 		Buf[RevLen] = '\0';
+			
 	}
 #else
 #error "Current implemention only support poco c++ lib";

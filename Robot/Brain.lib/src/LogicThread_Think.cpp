@@ -76,7 +76,6 @@ void CLogicThread::ThinkProc(CLogicDialog* Dialog,CMsg& Msg){
 	};
 
 	int64 Pos  = Letter1.PopInt();
-	
 	eElectron e;
 	Letter1.Pop(&e);
 
@@ -94,6 +93,7 @@ void CLogicThread::ThinkProc(CLogicDialog* Dialog,CMsg& Msg){
 
 	m_TextMsgQueue.erase(it);
 
+	if(text.size()==0)return;
 	ThinkProc(Dialog,Pos,text,true,EventID);
 }
 void CLogicThread::ThinkProc(CLogicDialog* Dialog,int32 Pos,tstring& Msg,bool Forecast ,int64 EventID){
