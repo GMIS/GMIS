@@ -698,7 +698,7 @@ void CLogicDialog::GetLocalObjectData(ePipeline& List){
 	}
 }
 
-void CLogicDialog::GetTableInstanceData(ePipeline& List){
+void CLogicDialog::GetMemoryInstanceData(ePipeline& List){
 	map<int64, ePipeline>::iterator Ita = m_MemoryInstanceList.begin();
 	while(Ita!=m_MemoryInstanceList.end()){
 		List.Push_Directly(Ita->second.Clone());

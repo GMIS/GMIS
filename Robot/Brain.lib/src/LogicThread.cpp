@@ -288,12 +288,7 @@ bool CLogicThread::CanBeExecute(CLogicDialog* Dialog){
 	tstring error;
 
 	if(m_Text.m_SentenceList.size()==0 || m_TextMsgQueue.size() || !m_Text.IsComplete() ){
-		error = m_Text.PrintThinkResult();
-
-		CNotifyDialogState nf(NOTIFY_DIALOG_ERROR);
-		nf.PushInt(THINK_ERROR);
-		nf.PushString(error);
-		nf.Notify(Dialog);
+		Dialog->m_ThinkError = m_Text.PrintThinkResult();
 		return false;
 	}
 	/*检查以下几个方面
@@ -312,23 +307,14 @@ bool CLogicThread::CanBeExecute(CLogicDialog* Dialog){
 	{
 		CSentence* Sentence = m_Text.m_SentenceList.at(i);
 		if(!Sentence->IsOK()){
-			error = m_Text.PrintThinkResult();
-			CNotifyDialogState nf(NOTIFY_DIALOG_ERROR);
-			nf.PushInt(THINK_ERROR);
-			nf.PushString(error);
-			nf.Notify(Dialog);
+			Dialog->m_ThinkError = m_Text.PrintThinkResult();
 			return false;
 		}
 		
 		if(Sentence->m_State & INDE_INTER_ACTION){
 			
 			if(n != 1 && Sentence->m_AnalyseResult.Size() != 1){
-				error = Format1024(_T("ERROR: Inner command must be used alone."));
-				//error = m_Text.PrintThinkResult();
-				CNotifyDialogState nf(NOTIFY_DIALOG_ERROR);
-				nf.PushInt(THINK_ERROR);
-				nf.PushString(error);
-				nf.Notify(Dialog);
+				Dialog->m_ThinkError = Format1024(_T("ERROR: Inner command must be used alone."));
 				return false;
 			}
 		}
@@ -346,12 +332,9 @@ bool CLogicThread::CanBeExecute(CLogicDialog* Dialog){
 				}
 				else{
 					//不能连续两句都是think
-					error = _T("Error: Action type Conflict !");
+					Dialog->m_ThinkError = _T("Error: Action type Conflict !");
 					//error = m_Text.PrintThinkResult();
-					CNotifyDialogState nf(NOTIFY_DIALOG_ERROR);
-					nf.PushInt(THINK_ERROR);
-					nf.PushString(error);
-					nf.Notify(Dialog);
+					Dialog->SetThinkState(THINK_ERROR);
 					return false;
 				} 
 			}
@@ -360,12 +343,7 @@ bool CLogicThread::CanBeExecute(CLogicDialog* Dialog){
 
 		if(ThinkID==0){//如果当前句子不在思考状态，则必须是最后一句
 			if(i != m_Text.m_SentenceList.size()-1){
-				error = _T("Error: Task sentence more than one or not be in last !");
-				//error = m_Text.PrintThinkResult();
-				CNotifyDialogState nf(NOTIFY_DIALOG_ERROR);
-				nf.PushInt(THINK_ERROR);
-				nf.PushString(error);
-				nf.Notify(Dialog);
+				Dialog->m_ThinkError = _T("Error: Task sentence more than one or not be in last !");
 				return  false;
 			}
 		}else{
@@ -388,13 +366,7 @@ bool CLogicThread::CanBeExecute(CLogicDialog* Dialog){
 					tstring Name = *(tstring*)Clause->m_Param->Value();	
 					if (CheckNameInInputed(INSTINCT_USE_CAPACITOR,Name,Clause,false))
 					{
-						error = Format1024(_T("Error: capacitor name [%s] be existed!\n"),Name.c_str());
-
-						CNotifyDialogState nf(NOTIFY_DIALOG_ERROR);
-						nf.PushInt(THINK_ERROR);
-						nf.PushString(error);
-						nf.Notify(Dialog);
-
+						Dialog->m_ThinkError = Format1024(_T("Error: capacitor name [%s] be existed!\n"),Name.c_str());
 						return false;
 					}
 				
@@ -405,13 +377,7 @@ bool CLogicThread::CanBeExecute(CLogicDialog* Dialog){
 					tstring Name = *(tstring*)Clause->m_Param->Value();	
 					if (CheckNameInInputed(INSTINCT_USE_INDUCTOR,Name,Clause,false))
 					{
-						error = Format1024(_T("Error: Inductor name [%s] be existed!\n"),Name.c_str());
-						
-						CNotifyDialogState nf(NOTIFY_DIALOG_ERROR);
-						nf.PushInt(THINK_ERROR);
-						nf.PushString(error);
-						nf.Notify(Dialog);
-
+						Dialog->m_ThinkError = Format1024(_T("Error: Inductor name [%s] be existed!\n"),Name.c_str());
 						return false;
 					}
 				}
@@ -422,12 +388,7 @@ bool CLogicThread::CanBeExecute(CLogicDialog* Dialog){
 					
 					if(!Dialog->FindCapacitor(Name) && !CheckNameInInputed(INSTINCT_USE_CAPACITOR,Name,Clause,true)){
 						//没有找到引用对象
-						error = Format1024(_T("Error: lose reference capacitor [%s] !\n"),Name.c_str());
-
-						CNotifyDialogState nf(NOTIFY_DIALOG_ERROR);
-						nf.PushInt(THINK_ERROR);
-						nf.PushString(error);
-						nf.Notify(Dialog);
+						Dialog->m_ThinkError = Format1024(_T("Error: lose reference capacitor [%s] !\n"),Name.c_str());
 						return false;		    
 					}
 				} 
@@ -438,12 +399,7 @@ bool CLogicThread::CanBeExecute(CLogicDialog* Dialog){
 					
 					if(!Dialog->FindInductor(Name) && !CheckNameInInputed(INSTINCT_USE_INDUCTOR,Name,Clause,true)){
 						//没有找到引用对象
-						error = Format1024(_T("Error: lose reference inductor [%s] !\n"),Name.c_str());
-
-						CNotifyDialogState nf(NOTIFY_DIALOG_ERROR);
-						nf.PushInt(THINK_ERROR);
-						nf.PushString(error);
-						nf.Notify(Dialog);
+						Dialog->m_ThinkError = Format1024(_T("Error: lose reference inductor [%s] !\n"),Name.c_str());
 						return false;		    
 					}	
 				}

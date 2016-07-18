@@ -38,7 +38,6 @@ MsgProcState CGotoLabel::EltMsgProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& 
 		{
 			ExePipe.SetID(RETURN_GOTO_LABEL);
 			Dialog->SetTaskState(TASK_RUN);
-			Dialog->NotifyTaskState();
 		}
 
 		ExePipe.SetLabel(m_GotoLabel.c_str());

@@ -145,9 +145,12 @@ REPEAT:
 	int64 SourceID = Receiver.PopInt();
 	int64 DialogID = Receiver.PopInt();
 
+	m_Status.LightLamp(IN_LAMP,TRUE);
+
 	ePipeline& Letter = Msg.GetLetter();
 	for (int i=0; i<Letter.Size(); i++)
 	{
+
 		ePipeline& Cmd = *(ePipeline*)Letter.GetData(i);
 		int64 CmdID = Cmd.GetID();
 	
@@ -161,25 +164,40 @@ REPEAT:
 			{
 				
 				int64 op = Cmd.PopInt();
-				if (op == TO_STATUS_VIEW::SET_TEXT)
-				{
-					tstring s = Cmd.PopString();
-					m_Status.SetTip(s);
-				}else if(op == TO_STATUS_VIEW::SET_PROGRESS){
-					int64 Per =  Cmd.PopInt();
-					m_Status.SetProgressPer(Per);
-				}else if (op == TO_STATUS_VIEW::PFM_MSG_UPDATE)
-				{
-					int64 Type = Cmd.PopInt();
-					ePipeline* Data = (ePipeline*)Cmd.GetData(0);
-					m_PerformanceView.m_NerveMsgNumView.AppendLineData(Type,*Data);
+				switch(op){
+				case TO_STATUS_VIEW::SET_TEXT:
+					{
+						tstring s = Cmd.PopString();
+						m_Status.SetTip(s);
+					}
+					break;
+				case TO_STATUS_VIEW::IO_LIGHT_FLASH:
+					{
+						int64 bFlash =  Cmd.PopInt();
+						m_Status.LightLamp(OUT_LAMP,bFlash!=0);
+					}
+					break;
+				case TO_STATUS_VIEW::SET_PROGRESS:
+					{
+						int64 Per =  Cmd.PopInt();
+						m_Status.SetProgressPer(Per);
+					}
+					break;
+				case TO_STATUS_VIEW::PFM_MSG_UPDATE:
+					{
+						int64 Type = Cmd.PopInt();
+						ePipeline* Data = (ePipeline*)Cmd.GetData(0);
+						m_PerformanceView.m_NerveMsgNumView.AppendLineData(Type,*Data);
 
-				}else if (op == TO_STATUS_VIEW::PFM_THREAD_UPDATE)
-				{
-					int64 Type = Cmd.PopInt();
-					int64 ThreadNum = Cmd.PopInt();
-					m_PerformanceView.m_ThreadNumView.AppendLineData(Type,ThreadNum);
-				} 
+					}
+					break;
+				case TO_STATUS_VIEW::PFM_THREAD_UPDATE:
+					{
+						int64 Type = Cmd.PopInt();
+						int64 ThreadNum = Cmd.PopInt();
+						m_PerformanceView.m_ThreadNumView.AppendLineData(Type,ThreadNum);
+					} 
+				}
 
 			}
 			break;
@@ -483,6 +501,8 @@ REPEAT:
 		m_MsgList.Pop(Msg);
 		goto REPEAT;
 	}
+
+	m_Status.LightLamp(IN_LAMP,FALSE);
 }
 
 void CMainFrame::OnSpaceOutput(ePipeline& Letter){

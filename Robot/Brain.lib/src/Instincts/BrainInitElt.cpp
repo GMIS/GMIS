@@ -122,6 +122,8 @@ NewWord _WordList[]={    //note: 增减项目必须修改初始化单词数目
 	{MEMORY_NOUN,_T("node"),_T("节点")}, 
 	{MEMORY_NOUN,_T("focus"),_T("焦点")}, 
 	{MEMORY_NOUN,_T("breakpoint"),_T("断点")}, 	
+	{MEMORY_NOUN,_T("temp"),_T("临时")}, 
+	{MEMORY_VERB,_T("clear"),_T("清除")}, 
 };
 
 
@@ -134,14 +136,7 @@ struct InitInstinct{
 InitInstinct _InstinctList[]={
 	
 	//通用命令
-	//{"d i",   INSTINCT_DEFINE_INT32},
-	//{"de in",   INSTINCT_DEFINE_INT32},
-	//{INSTINCT_DEFINE_BYTE,_T("define byte")},
-	//{INSTINCT_DEFINE_INT32,_T("define int32") },
-	//{INSTINCT_DEFINE_UINT32,_T("define uint32") },
 	{INSTINCT_DEFINE_INT64,_T("define int")},
-	//{INSTINCT_DEFINE_UINT64,_T("define uint64")},
-	//{INSTINCT_DEFINE_FLOAT32,_T("define float32")},
 	{INSTINCT_DEFINE_FLOAT64,_T("define float")},
 	{INSTINCT_DEFINE_STRING,_T("define string") },
 	
@@ -194,7 +189,11 @@ InitInstinct _InstinctList[]={
 	{INSTINCT_INSERT_LOGIC,_T("insert logic")},
 	{INSTINCT_REMOVE_LOGIC,_T("remove logic")},
 	{INSTINCT_SET_LOGIC_ADDRESS,_T("set logic address")},
+	{INSTINCT_GET_LOGIC_ADDRESS,_T("get logic address")},
 	{INSTINCT_SET_LOGIC_BREAKPOINT,_T("set logic breakpoint")},
+	{INSTINCT_REMOVE_TEMP_LOGIC,_T("remove temp logic")},
+	{INSTINCT_CLEAR_TEMP_LOGIC,_T("clear temp logic")},
+
 
 	{INSTINCT_GET_DATE,_T("get date")},
 	{INSTINCT_GET_TIME,_T("get time")},

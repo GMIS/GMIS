@@ -68,13 +68,11 @@ MsgProcState CElement::OnEltTaskControl(CLogicDialog* Dialog,int32 ChildIndex,CM
 
 				ExePipe.SetID(RETURN_NORMAL);	
 				Dialog->SetTaskState(TASK_RUN);
-				Dialog->NotifyTaskState();
 
 			}else if (WorkMode == WORK_DEBUG)
 			{
 				ExePipe.SetID(RETURN_BREAK);	
 				Dialog->SetTaskState(TASK_RUN);
-				Dialog->NotifyTaskState();
 			}else{
 				assert(WorkMode == WORK_TASK || WorkMode ==WORK_TEST);
 
@@ -107,7 +105,7 @@ MsgProcState CElement::OnEltTaskControl(CLogicDialog* Dialog,int32 ChildIndex,CM
 				ExePipe.Reuse();
 				ExePipe.SetID(RETURN_NORMAL);	
 				Dialog->SetTaskState(TASK_RUN);
-				Dialog->NotifyTaskState();
+
 			}
 		}
 		break;
@@ -136,9 +134,8 @@ MsgProcState CElement::OnEltTaskControl(CLogicDialog* Dialog,int32 ChildIndex,CM
 		break;
 	case TO_BRAIN_MSG::TASK_CONTROL::CMD_STOP:
 		{
-			Dialog->SetTaskState(TASK_STOP);
-			
-			ExePipe.Break(); //不在继续处理,并返回系统
+		    Dialog->SetTaskState(TASK_STOP); //表明任务是被主动停止	
+			ExePipe.Break(); //不继续处理,并返回系统
 		    return RETURN_DIRECTLY; 
 		}
 		break;
@@ -348,7 +345,7 @@ MsgProcState CElement::OnEltTaskResult(CLogicDialog* Dialog,int32 ChildIndex,CMs
 	
 	if (!NewExePipe->IsAlive())
 	{
-		Dialog->CloseChildDialog(EventID,*OldExePipe,ExePipe);
+		Dialog->CloseEventDialog(EventID,*OldExePipe,ExePipe);
 		
 		tstring Answer = _T("收到的数据管道已经无效");
 		ExePipe.SetLabel(Answer.c_str());
@@ -359,7 +356,7 @@ MsgProcState CElement::OnEltTaskResult(CLogicDialog* Dialog,int32 ChildIndex,CMs
 	int64 retTask = NewExePipe->GetID();
 	if (retTask == RETURN_ERROR)
 	{
-		Dialog->CloseChildDialog(EventID,*OldExePipe,ExePipe);
+		Dialog->CloseEventDialog(EventID,*OldExePipe,ExePipe);
 		ExePipe.SetLabel(NewExePipe->GetLabel().c_str());
 		ExePipe.SetID(RETURN_ERROR);
 		return RETURN_DIRECTLY;
@@ -368,7 +365,7 @@ MsgProcState CElement::OnEltTaskResult(CLogicDialog* Dialog,int32 ChildIndex,CMs
 	ExePipe.Clear();
 	ExePipe << *OldExePipe;
 	
-	Dialog->CloseChildDialog(EventID,*OldExePipe,ExePipe);
+	Dialog->CloseEventDialog(EventID,*OldExePipe,ExePipe);
 
 	return CONTINUE_TASK;
 

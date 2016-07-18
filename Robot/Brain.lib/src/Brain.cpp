@@ -325,7 +325,10 @@ CLogicTask* CBrain::CLockedBrainData::GetLogicTask(int64 TaskID,bool bRequirLock
     _CLOCK(&m_BrainMutex);
 	map<int64,CLogicTask*>::iterator it = m_LogicTaskList.find(TaskID);
 	assert(it != m_LogicTaskList.end());
-    CLogicTask* Task =  it->second;
+    if(it == m_LogicTaskList.end()){
+		return NULL;
+	}
+	CLogicTask* Task =  it->second;
 	return Task;
 };
 
@@ -334,6 +337,9 @@ void  CBrain::CLockedBrainData::DeleteLogicTask(int64 TaskID){
 	_CLOCK(&m_BrainMutex);
 	map<int64,CLogicTask*>::iterator it = m_LogicTaskList.find(TaskID);
 	assert(it != m_LogicTaskList.end());
+	if(it == m_LogicTaskList.end()){
+		return;
+	}
     CLogicTask* LogicTask =  it->second;
     LogicTask->Reset(0,-1);
     m_LogicTaskList.erase(it);
@@ -348,7 +354,9 @@ void  CBrain::CLockedBrainData::SetLogicTaskUser(int64 TaskID,int64 UserID){
 	_CLOCK(&m_BrainMutex);
 	map<int64,CLogicTask*>::iterator it = m_LogicTaskList.find(TaskID);
 	assert(it != m_LogicTaskList.end());
-    if(it == m_LogicTaskList.end())return;
+    if(it == m_LogicTaskList.end()){
+		return;
+	}
 	CLogicTask* Task =  it->second;
 	Task->m_UserDialogID = UserID;
 }
@@ -444,7 +452,6 @@ void   CBrain::CLockedBrainData::DeleteDialog(int64 SourceID,int64 DialogID){
 
 	//以下会调用m_DialogMutex，所以必须小心排除在m_BrianMutex锁定范围之外
 	Dialog->SetTaskState(TASK_DELELTE);
-	Dialog->NotifyTaskState();
 }
 
 void   CBrain::CLockedBrainData::Interal_DeleteDialog(int64 SourceID,int64 DialogID){
@@ -461,7 +468,6 @@ void   CBrain::CLockedBrainData::Interal_DeleteDialog(int64 SourceID,int64 Dialo
 
 	//以下会调用m_DialogMutex，所以必须小心排除在m_BrianMutex锁定范围之外
 	Dialog->SetTaskState(TASK_DELELTE);
-	Dialog->NotifyTaskState();
 }
 
 void CBrain::CLockedBrainData::DeleteAllDialog(){
@@ -585,13 +591,15 @@ void  CBrain::CLockedBrainData::GetFocusDialogData(int64 SourceID,int64 DialogID
 	Pipe.PushPipe(ObjectList);
 
 	ePipeline TableInstanceList;
-	Dialog->GetTableInstanceData(TableInstanceList);
+	Dialog->GetMemoryInstanceData(TableInstanceList);
 	Pipe.PushPipe(TableInstanceList);
 
 
 	//输入窗口状态
     Pipe.PushInt(Dialog->m_bEditValid);
-	Pipe.PushString(Dialog->m_EditText);
+	CLogicThread* Think = Dialog->GetThink();
+	tstring EditText = Think->GetUserInput();
+	Pipe.PushString(EditText);
 
 	//状态条文字
 	Pipe.PushString(Dialog->m_StatusText);
@@ -683,7 +691,7 @@ void  CBrain::CLockedBrainData::GetInvalidDialogData(ePipeline& Pipe){
 	Pipe.PushInt(WORK_TASK);
 
 	//任务状态
-	Pipe.PushInt(TASK_IDLE);
+	Pipe.PushInt(THINK_IDLE);
 
 	//搜索数据
 	ePipeline SearchResult;
@@ -965,7 +973,7 @@ void CBrain::CLockedBrainData::EventProc(CBrain* Brain){
 							it = m_EventList.erase(it);
 							continue;
 						}
-
+						
 						if (Address.Size()>1)
 						{
 							int64 TaskID   = *(int64*)Address.GetData(1);
@@ -1123,7 +1131,8 @@ bool  CBrain::CLockedBrainData::FromEnergy(CBrain* Brain,Energy* E){
 			return false;
 		};
 		//SetWorkMode(WORK_DEBUG);
-		Dialog->NotifyTaskState();
+		Dialog->SetThinkState(Dialog->GetThinkState()); //just notify state
+		Dialog->SetTaskState(Dialog->GetTaskState());
 		//Dialog->ResumeTask();
 	}
 
@@ -1893,113 +1902,13 @@ bool CBrain::CreateSysDialog(int64 SourceID,tstring SourceName){
 	return true;
 }
 
-CLogicDialog* CBrain::CreateChildDialog(CLogicDialog* ParentDialog,int64 ChildDilaogID,tstring ChildDialogName,int64 ClientEventID,ePipeline& ClientAddress, ePipeline& ClientEexePipe,int Interval,bool bOnce,bool bTransTask){
-
-	CLogicDialog* TaskDialog = GetBrainData()->CreateNewDialog(this,ParentDialog->m_SourceID,ChildDilaogID,ParentDialog->m_DialogID,ParentDialog->m_DialogName,ChildDialogName,DIALOG_TASK,TASK_OUT_DEFAULT);
-	if (!TaskDialog)
-	{
-		return NULL;
-	}
-
-	ClientAddress.SetID(ParentDialog->m_SourceID);
-
-	//生成一个与任务对话对应的事件
-	GetBrainData()->CreateEvent(ChildDilaogID,ClientEventID,ClientEexePipe,ClientAddress,Interval,bOnce,0,false);
 
 
-	//tstring s = Format1024(_T("Create New Dialog[%s]: Type=%d  DialogID=%I64d\n"),TaskName.c_str(),TaskDialog->m_DialogType,TaskDialog->m_DialogID);	
-	//ParentDialog->RuntimeOutput(0,s);
-
-
-	CNotifyDialogState nf(NOTIFY_DIALOG_LIST);
-	nf.PushInt(DL_ADD_DIALOG);
-	nf.PushInt(bTransTask?TRUE:FALSE); //是否设置为当前对话
-	nf.Notify(TaskDialog);
-	
-	if(bTransTask){
-	
-		//把当前逻辑环境转交给新的子对话
-		*TaskDialog<<*ParentDialog;
-
-		CMsg Msg(SYSTEM_SOURCE,TaskDialog->m_DialogID,MSG_FROM_BRAIN,DEFAULT_DIALOG,0);
-		ePipeline& Letter = Msg.GetLetter();
-		Letter.PushInt(TO_BRAIN_MSG::TASK_CONTROL::ID);
-		Letter.PushInt(TO_BRAIN_MSG::TASK_CONTROL::CMD_EXE);
-
-		PushNerveMsg(Msg,false,false);
-
-		ParentDialog->SetTaskState(TASK_IDLE);
-		ParentDialog->NotifyTaskState();
-		ParentDialog->ResetThink();
-	}
-	return TaskDialog;
-}
-
-bool CBrain::CreateEventDialog(CLogicDialog* ParentDialog,int Interval){
-	
-	tstring EventName = ParentDialog->m_EditText;
-	assert(EventName.size()!=0);
-
-	EventName.erase(EventName.size()-1); //delete ";"
-
-	if(EventName.size()>10){
-		EventName = EventName.substr(0,7)+_T("...");
-	}
-
-	//生成一个临时对话和事件
-	int64 EventID = AbstractSpace::CreateTimeStamp();
-	int64 DialogID = EventID;
-	int64 ClientEventID = EventID;
-
-	ePipeline ClientExePipe;
-	CLogicDialog* ChildDialog = m_BrainData.CreateNewDialog(this,ParentDialog->m_SourceID,DialogID,ParentDialog->m_DialogID,ParentDialog->m_SourceName,EventName,
-		DIALOG_TASK,TASK_OUT_DEFAULT);
-
-	if(!ChildDialog){
-		ParentDialog->RuntimeOutput(0,_T("Start event  '%s' failed: can't create dialog"),EventName.c_str());
-		return false;
-	}else{
-		ParentDialog->RuntimeOutput(0,_T("Start event  '%s' "),EventName.c_str());
-	}
-
-	ChildDialog->m_bEditValid = false;
-
-	
-	ePipeline ClientAddress(ParentDialog->m_SourceID);
-	ClientAddress.PushInt(ParentDialog->m_DialogID);
-
-	m_BrainData.CreateEvent(EventID,ClientEventID,ClientExePipe,ClientAddress,Interval,true,0,false);
-
-
-	CNotifyDialogState nf(NOTIFY_DIALOG_LIST);
-	nf.PushInt(DL_ADD_DIALOG);
-	nf.PushInt(FALSE);
-	nf.Notify(ChildDialog);
-
-
-	ChildDialog->m_ThinkID = ParentDialog->m_ThinkID;
-	ChildDialog->m_EditText = ParentDialog->m_EditText;
-
-	ChildDialog->Think2TaskList();
-
-	ParentDialog->ResetThink();
-
-	ParentDialog->SaveSendItem(ChildDialog->m_EditText,0);
-
-	CMsg Msg (SYSTEM_SOURCE,ChildDialog->m_DialogID,MSG_FROM_BRAIN,DEFAULT_DIALOG,0);
-	ePipeline& Letter = Msg.GetLetter();
-	Letter.PushInt(TO_BRAIN_MSG::TASK_CONTROL::ID);
-	Letter.PushInt(TO_BRAIN_MSG::TASK_CONTROL::CMD_EXE);
-
-	PushNerveMsg(Msg,false,false);
-
-	return true;
-}
-void CBrain::CreateChildDialog(int64 InstinctID,tstring TaskName,int64 ClientEventID,ePipeline& ClientAddress,ePipeline& ExePipe,bool bShowDialog){
+void CBrain::StartSysTask(int64 InstinctID,tstring TaskName,int64 ClientEventID,ePipeline& ClientAddress,ePipeline& ExePipe,bool bShowDialog){
 	//生成一个临时对话和事件
 	int64 DialogID = AbstractSpace::CreateTimeStamp();
 	CLogicDialog* ChildDialog = m_BrainData.CreateNewDialog(this,SYSTEM_SOURCE,DialogID,DEFAULT_DIALOG,_T("System"),TaskName,
-		DIALOG_TASK,TASK_OUT_DEFAULT);
+		DIALOG_EVENT,TASK_OUT_DEFAULT);
 
 	if(!ChildDialog){
 		tstring s = Format1024(_T("Start System task '%s' failed: can't create dialog"),TaskName.c_str());
@@ -2043,6 +1952,8 @@ void CBrain::CreateChildDialog(int64 InstinctID,tstring TaskName,int64 ClientEve
 	Task->ResetTime();
 	ChildDialog->m_LogicItemTree.Clear();
 	ChildDialog->m_LogicItemTree.SetID(Task->m_BeginTime);
+
+	ChildDialog->SetTaskState(TASK_RUN);
 
 	//如果成功理解则准备执行
 	ePipeline Receiver;

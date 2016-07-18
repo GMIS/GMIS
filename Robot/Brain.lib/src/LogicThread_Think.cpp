@@ -49,7 +49,7 @@ int32 CLogicThread::GetActionRoom(int64 ParentID,ClauseLogicSense* cls){
 }
 
 void CLogicThread::ThinkProc(CLogicDialog* Dialog,CMsg& Msg){
-	TASK_STATE State = Dialog->GetTaskState();
+	THINK_STATE State = Dialog->GetThinkState();
 	int64 EventID = Msg.GetEventID();
 	assert(EventID);
 	
@@ -59,7 +59,7 @@ void CLogicThread::ThinkProc(CLogicDialog* Dialog,CMsg& Msg){
 	
 	Letter << Msg.GetLetter();    
 	
-	if (State == TASK_THINK)
+	if (State == THINK_ON)
     {
 		return;
     }
@@ -98,9 +98,8 @@ void CLogicThread::ThinkProc(CLogicDialog* Dialog,CMsg& Msg){
 }
 void CLogicThread::ThinkProc(CLogicDialog* Dialog,int32 Pos,tstring& Msg,bool Forecast ,int64 EventID){
  
-	//_CLOCK(&m_Mutex);
-	Dialog->SetTaskState(TASK_THINK);
-	Dialog->NotifyTaskState();
+
+	Dialog->SetThinkState(THINK_ON);
 
 	do{	
 		m_LastMsgTimeStamp = EventID;
@@ -168,8 +167,7 @@ void CLogicThread::ThinkProc(CLogicDialog* Dialog,int32 Pos,tstring& Msg,bool Fo
 
 	if(!Forecast)SetForecast(Dialog,NULL_TEXT,NULL);
 	
-	Dialog->SetTaskState(TASK_IDLE);
-	Dialog->NotifyTaskState();
+	Dialog->SetThinkState(THINK_WAIT);
 }
 
 void CLogicThread::ThinkAllAffectedToken(CLogicDialog* Dialog){
@@ -1077,6 +1075,8 @@ bool  CLogicThread::CheckInstinctParam(CLogicDialog* Dialog,CClause* Clause, vec
 	case INSTINCT_CLOSE_MEMORY:
 	case INSTINCT_MODIFY_MEMORY:
 	case INSTINCT_GET_MEMORY_FOCUS:
+	case INSTINCT_SET_LOGIC_ADDRESS:
+	case INSTINCT_GET_LOGIC_ADDRESS:
 		{
 			if (ParamList.size()!=0)
 			{
@@ -1132,21 +1132,22 @@ bool  CLogicThread::CheckInstinctParam(CLogicDialog* Dialog,CClause* Clause, vec
 		}
 		break;
 	case INSTINCT_INSERT_LOGIC:
+	case INSTINCT_REMOVE_TEMP_LOGIC:
 		{
 			if( ParamList.size() !=1 ){
 				Clause->m_MemoryID = ERROR_3;
 				return false;
 			}
-			tstring InsertLogicName = ParamList[0];
+			tstring LogicName = ParamList[0];
 			
-			Clause->m_Param = new eSTRING(InsertLogicName); 
+			Clause->m_Param = new eSTRING(LogicName); 
 		}
 		break;
 	case INSTINCT_REMOVE_LOGIC:
-	case INSTINCT_SET_LOGIC_ADDRESS:
 	case INSTINCT_GET_DATE:
 	case INSTINCT_GET_TIME:
 	case INSTINCT_OUTPUT_INFO:
+	case INSTINCT_CLEAR_TEMP_LOGIC:
 		{   if (ParamList.size() !=0)
 			{
 				Clause->m_MemoryID = ERROR_3;
@@ -1172,6 +1173,7 @@ bool  CLogicThread::CheckInstinctParam(CLogicDialog* Dialog,CClause* Clause, vec
 			Clause->m_Param = new eINT(t);     
 		}
 		break;
+
 	case INSTINCT_START_OBJECT:
 		{
 			tstring Name = GetParam(ParamList);	
@@ -1412,15 +1414,7 @@ bool  CLogicThread::CheckInstinctParam(CLogicDialog* Dialog,CClause* Clause, vec
 			Clause->m_Param = new eSTRING(s); 
 		}
 		break;
-	case INSTINCT_USE_ARM:
-		{
-			if( ParamList.size()!=0 ){
-				//Error = "param error" 
-				Clause->m_MemoryID = ERROR_20;
-				return false;
-			}
-		}
-		break;
+
 	case INSTINCT_CREATE_ACCOUNT:
 	case INSTINCT_DELETE_ACCOUNT:
 		{
@@ -1444,14 +1438,9 @@ void CLogicThread::NotifyTokenError(CLogicDialog* Dialog,CToken* Token,uint32 Er
 {
 	 assert(ErrorID<LAST_ERROR);
 	 tstring error = ANALYSE_ERROR[ErrorID];
-	 tstring s = Format1024(_T("Error token = %s : %s\n"),Token->m_Str.c_str(),error.c_str());
-	 
-	 CNotifyDialogState nf(NOTIFY_DIALOG_ERROR);
-	 nf.PushInt(THINK_ERROR);
-	 nf.PushString(s);
-	 nf.Notify(Dialog);
-
+	 Dialog->m_ThinkError = Format1024(_T("Error token = %s : %s\n"),Token->m_Str.c_str(),error.c_str()); 
 	 m_InErrorState = true;
+	 Dialog->SetThinkState(THINK_ERROR);
 };
 
 
@@ -1461,15 +1450,9 @@ void CLogicThread::NotifyClauseError(CLogicDialog* Dialog,CClause* Clause,uint32
 	 assert(ErrorID<LAST_ERROR);
 	 if(ErrorID>LAST_ERROR)ErrorID= ERROR_0;
 	 tstring error = ANALYSE_ERROR[ErrorID];
-	 tstring s = Format1024(_T("Clause error: %s\n"),error.c_str());
-
-	 
-	 CNotifyDialogState nf(NOTIFY_DIALOG_ERROR);
-	 nf.PushInt(THINK_ERROR);
-	 nf.PushString(s);
-	 nf.Notify(Dialog);
-
+	 Dialog->m_ThinkError = Format1024(_T("Clause error: %s\n"),error.c_str());
 	 m_InErrorState = true;
+	 Dialog->SetThinkState(THINK_ERROR); 
 };
 
 

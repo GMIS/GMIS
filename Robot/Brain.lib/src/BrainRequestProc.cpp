@@ -43,24 +43,19 @@ bool CBrain::OnRequestDialog(CLogicDialog* Dialog,ePipeline* RequestInfo){
 	NewDialog = GetBrainData()->GetDialog(Dialog->m_SourceID,EventID);
 	if (!NewDialog)
 	{
-		NewDialog = CreateChildDialog(Dialog,EventID,DialogName,EventID,*ClientAddress,*ClientExePipe,EventInterval,true,false);
+		NewDialog = Dialog->StartEventDialog(EventID,DialogName,DialogText,OutType,*ClientExePipe,*ClientAddress,EventInterval,bFocusDialog,bEditValid,true);
 		if(!NewDialog)return false;
 	
     }else{
 		//先做个清理
 		NewDialog->ResetThink();
 		NewDialog->SetTaskState(TASK_STOP);
-		NewDialog->NotifyTaskState();
 		
 		//然后设置为等待
 		NewDialog->SetTaskState(TASK_WAIT);
-		NewDialog->NotifyTaskState();
+
 	}
 
-	if (DialogText.size())
-	{
-		NewDialog->SaveSendItem(DialogText,0);
-	}
 	return true;
 }
 
@@ -176,6 +171,7 @@ bool CBrain::OnRequestTransTask(CLogicDialog* Dialog,ePipeline* RequestInfo){
 	int64 bJustOnce = RequestInfo->PopInt();
 
 	tstring TaskName = _T("LogicTask");
+	tstring DialogText = _T("");
 
 	int64 ClientEventID = 0;
 	ePipeline ClientAddress(Dialog->m_SourceID);
@@ -183,17 +179,25 @@ bool CBrain::OnRequestTransTask(CLogicDialog* Dialog,ePipeline* RequestInfo){
 
 	ePipeline  ClientExePipe;
 
-	CLogicDialog* TaskDialog = CreateChildDialog(Dialog,EventID,TaskName,ClientEventID,ClientAddress,ClientExePipe,TIME_SEC,!!bJustOnce,true);
+	CLogicDialog* TaskDialog = Dialog->StartEventDialog(EventID,TaskName,DialogText,TASK_OUT_DEFAULT,ClientExePipe,ClientAddress,TIME_SEC,true,true,true);
 	if (!TaskDialog)
 	{
 		tstring text = _T("The task transferred fail");
 		Dialog->SaveSendItem(text,0);
-
-		Dialog->SetTaskState(TASK_IDLE);
-		Dialog->NotifyTaskState();
 		Dialog->ResetThink();
 		return false;
 	}
+	//把当前逻辑环境转交给新的子对话
+	*TaskDialog<<*Dialog;
+
+	CMsg Msg(SYSTEM_SOURCE,TaskDialog->m_DialogID,MSG_FROM_BRAIN,DEFAULT_DIALOG,0);
+	ePipeline& Letter = Msg.GetLetter();
+	Letter.PushInt(TO_BRAIN_MSG::TASK_CONTROL::ID);
+	Letter.PushInt(TO_BRAIN_MSG::TASK_CONTROL::CMD_EXE);
+
+	PushNerveMsg(Msg,false,false);
+
+	Dialog->ResetThink();
 	return true;
 }
 
@@ -209,7 +213,7 @@ bool CBrain::OnRequestInsertLogic(CLogicDialog* Dialog,ePipeline* RequestInfo)
 	Letter.PushString(InsertLogicName);
 	
 	//直接把信息压入任务队列，并且优先处理
-	Dialog->m_TaskMsgList.PushUrgence(EltMsg.Release());
+	Dialog->m_ElementMsgList.PushUrgence(EltMsg.Release());
 
 	return true;
 }
@@ -226,7 +230,7 @@ bool CBrain::OnRequestRemoveLogic(CLogicDialog* Dialog,ePipeline* RequestInfo)
 	Letter.PushInt(ChildID);
 	
 	//直接把信息压入任务队列，并且优先处理
-	Dialog->m_TaskMsgList.PushUrgence(EltMsg.Release());
+	Dialog->m_ElementMsgList.PushUrgence(EltMsg.Release());
 
 	return true;
 }

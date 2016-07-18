@@ -30,7 +30,7 @@ MsgProcState CUseObject::EltMsgProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& 
 
 		if (!NewExePipe->IsAlive())
 		{
-			Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
+			Dialog->CloseEventDialog(GetEventID(),*OldExePipe,ExePipe);
 			ExePipe.Break();
 			return RETURN_DIRECTLY;
 		}
@@ -38,7 +38,7 @@ MsgProcState CUseObject::EltMsgProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& 
 		int64 retTask = NewExePipe->GetID();
 		if (retTask == RETURN_ERROR)
 		{
-			Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
+			Dialog->CloseEventDialog(GetEventID(),*OldExePipe,ExePipe);
 			ExePipe.SetID(retTask);
 			ExePipe.SetLabel(NewExePipe->GetLabel().c_str());
 			return RETURN_DIRECTLY;
@@ -49,7 +49,7 @@ MsgProcState CUseObject::EltMsgProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& 
 		ExePipe.Clear();
 		ExePipe << *NewExePipe;
 
-		Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
+		Dialog->CloseEventDialog(GetEventID(),*OldExePipe,ExePipe);
 
 		return RETURN_DIRECTLY; // 不在继续执行TaskProc
 	}else{
@@ -97,7 +97,7 @@ bool  CUseObject::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipe
 	//这个子对话主要起提示作用，实际任务会交给远方执行
 	tstring DialogText = Format1024(_T("Waiting for run external object:%I64ld  EventID:%I64ld"),m_InstanceID,GetEventID());
 	tstring Title = Format1024(_T("UseObject(%I64ld)"),m_ID);
-	Dialog->StartChildDialog(GetEventID(),Title,DialogText,TASK_OUT_DEFAULT,ExePipe,LocalAddress,TIME_SEC,true,false);
+	Dialog->StartEventDialog(GetEventID(),Title,DialogText,TASK_OUT_DEFAULT,ExePipe,LocalAddress,TIME_SEC,true,false,true);
 
 
 	//把请求发给对方

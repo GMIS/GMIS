@@ -46,7 +46,7 @@ MsgProcState CGetSpaceCatalog::EltMsgProc(CLogicDialog* Dialog,int32 ChildIndex,
 
 		ePipeline& OldExePipe = EventInfo.m_ClientExePipe;
 
-		Dialog->CloseChildDialog(GetEventID(),OldExePipe,ExePipe);
+		Dialog->CloseEventDialog(GetEventID(),OldExePipe,ExePipe);
 
 
 		return RETURN_DIRECTLY; // 不在继续执行TaskProc

@@ -40,7 +40,7 @@ MsgProcState CUseRobot::EltMsgProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& M
 
 		if (!NewExePipe->IsAlive())
 		{
-			Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
+			Dialog->CloseEventDialog(GetEventID(),*OldExePipe,ExePipe);
 			ExePipe.Break();
 			return CONTINUE_TASK;
 		}
@@ -48,7 +48,7 @@ MsgProcState CUseRobot::EltMsgProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& M
 		int64 retTask = NewExePipe->GetID();
 		if (retTask == RETURN_ERROR)
 		{
-			Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
+			Dialog->CloseEventDialog(GetEventID(),*OldExePipe,ExePipe);
 			ExePipe.Break();
 			ExePipe.SetID(retTask);
 			return CONTINUE_TASK;
@@ -57,7 +57,7 @@ MsgProcState CUseRobot::EltMsgProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& M
 
 		ExePipe.Clear();
 		ExePipe << *NewExePipe;
-		Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
+		Dialog->CloseEventDialog(GetEventID(),*OldExePipe,ExePipe);
 
 	}else{
 		MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
@@ -90,7 +90,7 @@ bool CUseRobot::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeli
 	//这个子对话主要起提示作用，实际任务会交给远方执行
 	tstring DialogText = _T("Waiting for run external robot");
 	UpdateEventID();
-	Dialog->StartChildDialog(GetEventID(),_T("UseObject"),DialogText,TASK_OUT_DEFAULT,ExePipe,LocalAddress,TIME_SEC,true,false);
+	Dialog->StartEventDialog(GetEventID(),_T("UseObject"),DialogText,TASK_OUT_DEFAULT,ExePipe,LocalAddress,TIME_SEC,true,false,true);
 
 	CMsg NewMsg(Dialog->m_SourceID,DEFAULT_DIALOG,MSG_TASK_REQUEST,DEFAULT_DIALOG,0);
 	ePipeline& Letter = NewMsg.GetLetter();

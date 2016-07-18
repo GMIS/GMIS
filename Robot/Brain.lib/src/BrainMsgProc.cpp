@@ -109,7 +109,7 @@ void CBrain::OnInitBrain(CLogicDialog* Dialog,CMsg& Msg){
 	ePipeline ClientAddress(SYSTEM_SOURCE);
 	ClientAddress.PushInt(DEFAULT_DIALOG);
 
-	CreateChildDialog(INSTINCT_BRAIN_INIT,_T("check memory"),0,ClientAddress,ClientExePipe,true);		
+	StartSysTask(INSTINCT_BRAIN_INIT,_T("check memory"),0,ClientAddress,ClientExePipe,true);		
 }
 
 void CBrain::OnWhoAreYou(CLogicDialog* Dialog,CMsg& Msg){
@@ -392,7 +392,7 @@ void CBrain::OnConnectOK(CLogicDialog* Dialog,CMsg& Msg){
 
 		ePipeline ClientExePipe;
 		ePipeline ClientAddress((int64)SYSTEM_SOURCE);
-		CreateChildDialog(INSTINCT_GET_SPACECATALOG,_T("Get space catalog"),0,ClientAddress,ClientExePipe,true);				
+		StartSysTask(INSTINCT_GET_SPACECATALOG,_T("Get space catalog"),0,ClientAddress,ClientExePipe,true);				
 
 		return;
 	}
@@ -444,45 +444,11 @@ void CBrain::OnGUI2Brain(CLogicDialog* Dialog,CMsg& Msg){
 
 	CLogicDialog* TheDialog = m_BrainData.GetDialog(SourceID,DialogID);
 
-	ePipeline ReceiverInfo;
-	ReceiverInfo.PushInt(DialogID);
-
-	//if (TheDialog) //这部分或许应该转到TaskDialogMsgProc去完成，暂时放在这里
-	//{	
-
-
-	//	//以下两个信息将激活事件处理子对话
-	//	if (ChildMsgID==TO_BRAIN_MSG::GUI_IO_INPUTING || ChildMsgID==TO_BRAIN_MSG::GUI_IO_INPUTED)
-	//	{
-	//		TASK_STATE  State = TheDialog->GetTaskState();
-	//		if (State == TASK_RUN || State == TASK_PAUSE)
-	//		{			
-	//			assert(TheDialog->m_ControlDialogID);
-	//			CLogicDialog* ChildDialog  = GetBrainData()->GetDialog(TheDialog->m_SourceID,TheDialog->m_ControlDialogID);
-	//			if (ChildDialog == NULL)
-	//			{
-	//				ChildDialog = GetBrainData()->CreateNewDialog(
-	//					this,SourceID,TheDialog->m_ControlDialogID,
-	//					DialogID,TheDialog->m_SourceName,
-	//					_T("Event"),DIALOG_TASK,TASK_OUT_DEFAULT);
-	//				
-	//				if (!ChildDialog)
-	//				{
-	//					tstring text = _T("Create Control dialog fail");
-	//					TheDialog->RuntimeOutput(0,text);
-	//					assert(0); //这里或许应该添加更多错误处理
-	//					return ;
-	//				}						
-	//			}	
-	//			TheDialog = ChildDialog;
-	//			ReceiverInfo.Clear();
-	//			ReceiverInfo.PushInt(ChildDialog->m_DialogID);
-	//		}
-	//	}
-	//};
-
 	if(TheDialog){
 	
+		ePipeline ReceiverInfo;
+		ReceiverInfo.PushInt(DialogID);
+
 		CMsg NewMsg(SYSTEM_SOURCE,ReceiverInfo,MSG_FROM_BRAIN,DEFAULT_DIALOG,Msg.GetEventID());
 		ePipeline& Letter = NewMsg.GetLetter();
 		Letter.PushInt(ChildMsgID);
@@ -536,7 +502,6 @@ void CBrain::OnTaskFeedback(CLogicDialog* Dialog,CMsg& Msg){
 		return;
 	};
 	
-
 	ePipeline& ClientAddress = EventInfo.m_ClientAddress;
 	ePipeline& OldExePipe   = EventInfo.m_ClientExePipe;
 
@@ -553,9 +518,7 @@ void CBrain::OnTaskFeedback(CLogicDialog* Dialog,CMsg& Msg){
 
 			assert(!EventInfo.m_bPrivate);
 
-			//然后删除任务对话
-			TaskDlg->SetTaskState(TASK_STOP);
-			TaskDlg->NotifyTaskState();
+			TaskDlg->SetThinkState(THINK_IDLE);
 
 			CNotifyDialogState nf(NOTIFY_DIALOG_LIST);
 			nf.PushInt(DL_DEL_DIALOG);
@@ -603,14 +566,24 @@ void CBrain::OnTaskFeedback(CLogicDialog* Dialog,CMsg& Msg){
 			if(!EventInfo.m_bPrivate){
 				CLogicDialog* TaskDlg = GetBrainData()->GetDialog(ClientSourceID,EventID);
 				assert(TaskDlg);
-				if(TaskDlg){
+				if(TaskDlg){			
+
+					CLogicDialog* ParentDlg = m_BrainData.GetDialog(ClientSourceID,TaskDlg->m_ParentDialogID);
+					if(ParentDlg){
+						//事件对话执行完不发MSG_TASK_RESULT给父对话，避免干扰它原来任务的执行
+						//直接把它的执行管道信息在客户的运行时view显示
+						CPipeView PipeView(ExePipe);
+						tstring s  = PipeView.GetString();
+						ParentDlg->RuntimeOutput(0,s);
+					}
 					CNotifyDialogState nf(NOTIFY_DIALOG_LIST);
 					nf.PushInt(DL_DEL_DIALOG);
 					nf.Notify(TaskDlg);
 
 					m_BrainData.DeleteDialog(TaskDlg->m_SourceID,TaskDlg->m_DialogID);
-				}	
+				}
 			}
+			return; 
 		}		
 
 		CMsg m(ClientSourceID,ClientAddress,MSG_TASK_RESULT,DEFAULT_DIALOG,EventID);

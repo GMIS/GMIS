@@ -16,21 +16,28 @@
 #include "BrainMemory.h"
 #include "Brain.h"
 
+class CElementCell;
+class CLocalLogicCell;
+class CLogicTask;
+class CObjectData;
+
+#define   FDeque deque<int64>
+
+enum THINK_STATE{
+		THINK_IDLE, 	//准备新的理解
+		THINK_ON,	    //对话理解阶段
+		THINK_WAIT,     //等待继续输入
+		THINK_ERROR     //思考错误
+};
 enum TASK_STATE{
 		TASK_DELELTE = -1,  //表明所属Dialog将被删除
-		TASK_IDLE,			//=TASK_STOP
-		TASK_THINK,			//对话理解阶段
-		TASK_COMPILE,		//逻辑编译阶段 
-		TASK_EXE,			//逻辑准备执行
+		TASK_STOP,			//任务未执行
+		TASK_COMPILE,		//逻辑编译阶段
+		TASK_COMPILE_ERROR, //编译错误
 		TASK_RUN,			//逻辑正在执行
-		TASK_STOP,			//等同于TASK_IDLE,只是会多一些清除动作
 		TASK_PAUSE,			//逻辑执行暂停 
 		TASK_WAIT       	//等待外部任务返回
 };
-
-
-#define LOCAL  0
-#define	REMOTE 1 
 
 enum WORK_MODE{
 		WORK_TASK,
@@ -41,7 +48,14 @@ enum WORK_MODE{
 		WORK_TEST
 };
 
-
+enum FindTypeExpected {
+	    FIND_ALL,
+		FIND_OBJECT,
+		FIND_PEOPLE,
+		FIND_TEXT,
+		FIND_LOGIC, 
+		FIND_COMMAND
+}; 
 
 struct CNameUser{
 	tstring  m_LogicName;
@@ -49,40 +63,29 @@ struct CNameUser{
 	int64 	 m_InstanceID;
 };
 
-
-enum FindTypeExpected {FIND_ALL,FIND_OBJECT,FIND_PEOPLE,FIND_TEXT,FIND_LOGIC, FIND_COMMAND}; 
-
 class CNameList{
 public:
 	map<tstring, CNameUser>   m_NameList;
 public:
-	bool  HasName(CLogicDialog* Dialog,tstring& Name);
-	bool  HasMemoryInstance(CLogicDialog* Dialog,tstring& Name);
-	void  RegisterNameByLogic(tstring& Name,tstring& LogicName);
-	
-	void  RegisterNameByTask(tstring& Name,int64 TaskID,int64 InstanceID);
-	void  UnregisterNameByTask(tstring& Name);
+	bool	HasName(CLogicDialog* Dialog,tstring& Name);
+	bool	HasMemoryInstance(CLogicDialog* Dialog,tstring& Name);
+	void	RegisterNameByLogic(tstring& Name,tstring& LogicName);
 
-	int64 GetInstanceID(tstring& Name);
+	void	RegisterNameByTask(tstring& Name,int64 TaskID,int64 InstanceID);
+	void	UnregisterNameByTask(tstring& Name);
+
+	int64   GetInstanceID(tstring& Name);
 	tstring GetInstanceName(int64 InstanceID);
 
-	Energy*  ToEnergy(); 
-	bool     FromEnergy(Energy* E);
+	Energy*	ToEnergy(); 
+	bool    FromEnergy(Energy* E);
 
 };
 
-class CBrain;
-class CElementCell;
-class CLocalLogicCell;
-class CLogicTask;
-class CObjectData;
-
-
-
 class CLogicDialog  
 {
-	friend CBrain;
-	friend CLocalInfoAuto;
+	friend				CBrain;
+	friend				CLocalInfoAuto;
 
 public:
 	int64				m_SourceID;       //对话源ID 
@@ -98,8 +101,9 @@ public:
 	TASK_OUT_TYPE       m_TaskOutType;    //任务类型
  
 	tstring             m_CompileError;    //编译如果不能进行，存储错误提示
+	tstring             m_ThinkError;
 
-	int64               m_TaskDialogCount; //用于系统对话记录生成子对话数目
+	int64               m_TaskDialogCount; //记录生成子对话数目,用来做识别ID
 
 protected:
     
@@ -107,18 +111,19 @@ protected:
 
 	WORK_MODE           m_WorkMode;
 
-	volatile TASK_STATE m_TaskState;
-	//int64               m_TaskStateLastTimeStamp;    //状态更新的时间戳
+    THINK_STATE			m_ThinkState;
+	TASK_STATE			m_TaskState;
 
-	map<int64,int64>    m_PauseEventList;    //map<PauseID,EventID> 
+
+	map<int64,int64>    m_PauseEventList;    //map<PauseID,EventID> ,如果PauseID == EventID 则是其它子事件
+
 	int64               m_FocusPauseItemID;  //=0表示无效
 	int64               m_ControlDialogID;
 
-	int32				m_SysProcCounter;     //统计有多少个控制线程，避免控制执行时删除任务
-
 	ePipeline           m_ExePipe;            //执行管道
-	CLockPipe           m_TaskMsgList;        //待处理信息列表
 
+	CLockPipe           m_ElementMsgList;     //待处理信息列表
+	int32				m_SysProcCounter;     //统计有多少个控制线程，避免控制执行时删除任务
 
 public:	
 	int64         		m_ThinkID;	
@@ -168,10 +173,9 @@ public:
     CNameList                     m_NamedMemoryList;
 
 	ePipeline                     m_MemoryAddress;     //当前焦点记忆的操作地址
+	ePipeline                     m_LogicAddress;      //当前任务逻辑的操作地址
 
 	deque<CSentence*>			  m_TaskList;
-
-	ePipeline                     m_LogicAddress;      //当前任务逻辑的操作地址
 
 public:
 	CLogicDialog(CBrain* Frame,int64 SourceID,int64 DialogID,int64 ParentDialogID,tstring SourceName,tstring DialogName,
@@ -197,16 +201,15 @@ public:
  
 	void GetPauseIDList(ePipeline& List);
 
-	bool IsPaused(){
-		return m_PauseEventList.size()>0;
-	}
+	bool IsPaused();
+
 	void ClosePauseDialog(int64 PauseEventID);
 
 	void  PushEltMsg(CMsg& Msg,bool bUrgence){
 		if(bUrgence){
-			m_TaskMsgList.PushUrgence(Msg.Release());
+			m_ElementMsgList.PushUrgence(Msg.Release());
 		}else{
-			m_TaskMsgList.Push(Msg.Release());
+			m_ElementMsgList.Push(Msg.Release());
 		}
 		
 	};
@@ -224,7 +227,7 @@ public:
 	void  ResetThink();
 	void  ResetTask();
 
-	void ClearTaskMsgList();
+	void  ClearEltMsgList();
 
 	void  Think2TaskList();
 
@@ -243,18 +246,19 @@ public:
 	//一个任务在执行逻辑任务过程中，另一个或多个线程可能也在执行系统任务，这里给出计数从而保证删除任务不会出错
 	int32 GetSysProcNum();
 
+	THINK_STATE SetThinkState(THINK_STATE State);
+	THINK_STATE GetThinkState();
+
 	TASK_STATE  SetTaskState(TASK_STATE State); //返回旧状态
 	TASK_STATE  GetTaskState();
 
+
+
 	//等候10秒让任务暂停
-	void NotifySuspendTask();
-  //  bool ResumeTask();
-	//void NotifyStopTask();
+	void			NotifySuspendTask();
+	TASK_OUT_TYPE	GetTaskType();
 
-	TASK_OUT_TYPE GetTaskType();
-
-	void NotifyTaskState();
-
+	
 	void FeedbackToBrain();
 
 	void RuntimeOutput(tstring s);
@@ -262,8 +266,8 @@ public:
 	void RuntimeOutput(INT64 MassID,TCHAR* Format, ...);
 
 	
-	bool StartChildDialog(int64 EventID,tstring DialogName,tstring DialogText,TASK_OUT_TYPE OutType,ePipeline& ClientExePipe,ePipeline& ClientAddress,int64 EventInterval,bool bFocus,bool bEditValid);
-    void CloseChildDialog(int64 EventID,ePipeline& OldExePipe,ePipeline& ExePipe);
+	CLogicDialog* StartEventDialog(int64 EventID,tstring DialogName,tstring DialogText,TASK_OUT_TYPE OutType,ePipeline& ClientExePipe,ePipeline& ClientAddress,int64 EventInterval,bool bFocus,bool bEditValid,bool bOnce);
+    void		  CloseEventDialog(int64 EventID,ePipeline& OldExePipe,ePipeline& ExePipe);
 
 public:
 
@@ -331,7 +335,7 @@ public:
 	void GetLocalInduData(ePipeline& List);
 	void GetLocalObjectData(ePipeline& List);
 
-	void GetTableInstanceData(ePipeline& List);
+	void GetMemoryInstanceData(ePipeline& List);
 
 	void SetBreakPoint(ePipeline& Path,BOOL bEnable);
 
@@ -357,37 +361,13 @@ public:
 	deque<int64>          m_FindSeedList;
 	vector<_FindResult>   m_FindResultList;
 	
-#if (_MSC_VER >= 1310) 
-#define   MyDeque deque<int64>
-#else
-	class MyDeque : public deque<int64>{//VC 6.0编译器好像不允许template嵌套
-	public:
-		MyDeque(){};
-		MyDeque(const MyDeque& _X)
-		{ 
-			copy(_X.begin(), _X.end(), back_inserter(*this));
-		}
-		MyDeque& operator=(const MyDeque& _X)
-		{if (this != &_X)
-		{iterator _S;
-		if (_X.size() <= size())
-		{_S = copy(_X.begin(), _X.end(), begin());
-		erase(_S, end()); }
-		else
-		{const_iterator _Sx = _X.begin() + size();
-		_S = copy(_X.begin(), _Sx, begin());
-		copy(_Sx, _X.end(), inserter(*this, _S)); }}
-		return (*this); }
-	}; 
-#endif
-	
 	//MeaingList保存意义空间的存储ID，同时在deque里保存此空间下所有结尾空间的空间ID（记忆时间戳）
-	void _FindTokenAnd(deque<int64>& DestMeaningList, map<int64,MyDeque>& SrcMeaningList,map<int64,MyDeque>& ResultMeaningList,bool first);
-	void _FindTokenOr(deque<int64>& DestMeaningList, map<int64,MyDeque>& SrcMeaningList,map<int64,MyDeque>& ResultMeaningList);
-	void _FindTokenNot(deque<int64>& DestMeaningList, map<int64,MyDeque>& SrcMeaningList,map<int64,MyDeque>& ResultMeaningList);
+	void _FindTokenAnd(deque<int64>& DestMeaningList, map<int64,FDeque>& SrcMeaningList,map<int64,FDeque>& ResultMeaningList,bool first);
+	void _FindTokenOr(deque<int64>& DestMeaningList, map<int64,FDeque>& SrcMeaningList,map<int64,FDeque>& ResultMeaningList);
+	void _FindTokenNot(deque<int64>& DestMeaningList, map<int64,FDeque>& SrcMeaningList,map<int64,FDeque>& ResultMeaningList);
     
 	//处理搜索运算
-	void _FindMemoryRoom(CLogicThread* Think,map<int64,MyDeque>* DestTokenList, deque<int64>* ResultRoomList);
+	void _FindMemoryRoom(CLogicThread* Think,map<int64,FDeque>* DestTokenList, deque<int64>* ResultRoomList);
 	
 	
 	//MeaningList[空间存储ID]=意义值, 把结果发送给FindView
@@ -460,7 +440,7 @@ public:
 			return m_Counter;
 		}
 	};
-	
+
 	friend class AutoSysProcCounter;
 
 };

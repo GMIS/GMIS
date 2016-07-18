@@ -189,7 +189,6 @@
     <ClInclude Include="src\LogicThread.h" />
     <ClInclude Include="src\MsgList.h" />
     <ClInclude Include="src\NotifyMsgDef.h" />
-    <ClInclude Include="src\RobotMsgDefine.h" />
     <ClInclude Include="src\LogicDialog.h" />
     <ClInclude Include="src\TextAnalyse.h" />
   </ItemGroup>

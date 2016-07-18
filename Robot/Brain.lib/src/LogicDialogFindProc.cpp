@@ -4,7 +4,7 @@
 #include "LogicDialog.h"
 #include "LogicThread.h"
 
-void CLogicDialog::_FindTokenAnd(deque<int64>& DestMeaningList, map<int64,MyDeque>& SrcMeaningList,map<int64,MyDeque>& ResultMeaningList,bool first){
+void CLogicDialog::_FindTokenAnd(deque<int64>& DestMeaningList, map<int64,FDeque>& SrcMeaningList,map<int64,FDeque>& ResultMeaningList,bool first){
  
 	if (!first && SrcMeaningList.size()==0)
     {
@@ -21,7 +21,7 @@ void CLogicDialog::_FindTokenAnd(deque<int64>& DestMeaningList, map<int64,MyDequ
 		int64  DestMeaning = *DestIt;
 
 		//取得每一个目标意义的所有结尾空间的ID
-		MyDeque EndRoomIDList;
+		FDeque EndRoomIDList;
 		char buf[30];
 		int64toa(DestMeaning,buf);
 
@@ -45,17 +45,17 @@ void CLogicDialog::_FindTokenAnd(deque<int64>& DestMeaningList, map<int64,MyDequ
 			continue;
 		}
 		
-		map<int64,MyDeque>::iterator SrcIt = SrcMeaningList.begin();
+		map<int64,FDeque>::iterator SrcIt = SrcMeaningList.begin();
 		while(SrcIt != SrcMeaningList.end()){
 			
 			//找出两个不同意义之间存储时间接近者
-			MyDeque& SrcEndRoomIDList = SrcIt->second;
+			FDeque& SrcEndRoomIDList = SrcIt->second;
 		
-			MyDeque::iterator DequeIt1 = SrcEndRoomIDList.begin();
+			FDeque::iterator DequeIt1 = SrcEndRoomIDList.begin();
 			while (DequeIt1 != SrcEndRoomIDList.end())
 			{
 				int64 Time1 = *DequeIt1;
-				MyDeque::iterator DequeIt2 = EndRoomIDList.begin();
+				FDeque::iterator DequeIt2 = EndRoomIDList.begin();
                 
 				bool Find = false;
 				int64 Interval=0; 
@@ -68,10 +68,10 @@ void CLogicDialog::_FindTokenAnd(deque<int64>& DestMeaningList, map<int64,MyDequ
 					{  					
 						//保留后记忆token的意义ID及时间戳作为结果
 						if(Time1>Time2){								
-							MyDeque& ResultEndRoomIDList = ResultMeaningList[SrcIt->first];
+							FDeque& ResultEndRoomIDList = ResultMeaningList[SrcIt->first];
 							ResultEndRoomIDList.push_back(Time1);
 						}else{
-							MyDeque& ResultEndRoomIDList = ResultMeaningList[DestMeaning];
+							FDeque& ResultEndRoomIDList = ResultMeaningList[DestMeaning];
 							ResultEndRoomIDList.push_back(Time2);
 						}
 						Find = true;
@@ -101,7 +101,7 @@ void CLogicDialog::_FindTokenAnd(deque<int64>& DestMeaningList, map<int64,MyDequ
 
 };
 
-void CLogicDialog::_FindTokenOr(deque<int64>& DestMeaningList, map<int64,MyDeque>& SrcMeaningList,map<int64,MyDeque>& ResultMeaningList){
+void CLogicDialog::_FindTokenOr(deque<int64>& DestMeaningList, map<int64,FDeque>& SrcMeaningList,map<int64,FDeque>& ResultMeaningList){
  
 	deque<int64>::iterator DestIt = DestMeaningList.begin();
 
@@ -110,7 +110,7 @@ void CLogicDialog::_FindTokenOr(deque<int64>& DestMeaningList, map<int64,MyDeque
 		int64  DestMeaning = *DestIt;
 
 		//取得每一个目标意义的所有结尾空间的ID
-		MyDeque EndRoomIDList;
+		FDeque EndRoomIDList;
 		char buf[30];
 		int64toa(DestMeaning,buf);
 		
@@ -132,7 +132,7 @@ void CLogicDialog::_FindTokenOr(deque<int64>& DestMeaningList, map<int64,MyDeque
 			continue;
 		}
 		
-		map<int64,MyDeque>::iterator SrcIt = SrcMeaningList.begin();
+		map<int64,FDeque>::iterator SrcIt = SrcMeaningList.begin();
 		while(SrcIt != SrcMeaningList.end()){
 			
 			if(SrcIt->first == DestMeaning){ //只保留DestMeaning	
@@ -146,13 +146,13 @@ void CLogicDialog::_FindTokenOr(deque<int64>& DestMeaningList, map<int64,MyDeque
 			}
 			
 			//找出两个不同意义之间存储时间接近者
-			MyDeque& SrcEndRoomIDList = SrcIt->second;
+			FDeque& SrcEndRoomIDList = SrcIt->second;
 		    
-			MyDeque::iterator DequeIt1 = SrcEndRoomIDList.begin();
+			FDeque::iterator DequeIt1 = SrcEndRoomIDList.begin();
 			while (DequeIt1 != SrcEndRoomIDList.end())
 			{
 				int64 Time1 = *DequeIt1;
-				MyDeque::iterator DequeIt2 = EndRoomIDList.begin();
+				FDeque::iterator DequeIt2 = EndRoomIDList.begin();
                 
 				bool Find = false;
 				int64 Interval=0; 
@@ -199,16 +199,16 @@ void CLogicDialog::_FindTokenOr(deque<int64>& DestMeaningList, map<int64,MyDeque
 
 	//最后合并SrcMeaningList
 	//	ResultMeaningList.insert(SrcMeaningList.begin(),SrcMeaningList.end());
-  	map<int64,MyDeque>::iterator SrcIt = SrcMeaningList.begin();
+  	map<int64,FDeque>::iterator SrcIt = SrcMeaningList.begin();
 	while(SrcIt != SrcMeaningList.end()){
-	     MyDeque& EndRoomList = SrcIt->second;
+	     FDeque& EndRoomList = SrcIt->second;
 		 ResultMeaningList[SrcIt->first] = EndRoomList;
 		 SrcIt++;
 	}
 };
 
 
-void CLogicDialog::_FindTokenNot(deque<int64>& DestMeaningList, map<int64,MyDeque>& SrcMeaningList,map<int64,MyDeque>& ResultMeaningList){
+void CLogicDialog::_FindTokenNot(deque<int64>& DestMeaningList, map<int64,FDeque>& SrcMeaningList,map<int64,FDeque>& ResultMeaningList){
  
 	if(SrcMeaningList.size()==0 || DestMeaningList.size()==0)return;
 
@@ -219,7 +219,7 @@ void CLogicDialog::_FindTokenNot(deque<int64>& DestMeaningList, map<int64,MyDequ
 		int64  DestMeaning = *DestIt;
 
 		//取得每一个目标意义的所有结尾空间的ID
-		MyDeque EndRoomIDList;
+		FDeque EndRoomIDList;
 		char buf[30];
 		int64toa(DestMeaning,buf);
 		
@@ -233,7 +233,7 @@ void CLogicDialog::_FindTokenNot(deque<int64>& DestMeaningList, map<int64,MyDequ
 			EndRoomIDList.push_back(RoomID);
 		}	
 		
-		map<int64,MyDeque>::iterator SrcIt = SrcMeaningList.begin();
+		map<int64,FDeque>::iterator SrcIt = SrcMeaningList.begin();
 		while(SrcIt != SrcMeaningList.end()){
 			
 			if(SrcIt->first == DestMeaning){ //只保留DestMeaning	
@@ -246,13 +246,13 @@ void CLogicDialog::_FindTokenNot(deque<int64>& DestMeaningList, map<int64,MyDequ
 				continue;
 			}			
 			//找出两个不同意义之间存储时间接近者
-			MyDeque& SrcEndRoomIDList = SrcIt->second;
+			FDeque& SrcEndRoomIDList = SrcIt->second;
 		    
-			MyDeque::iterator DequeIt1 = SrcEndRoomIDList.begin();
+			FDeque::iterator DequeIt1 = SrcEndRoomIDList.begin();
 			while (DequeIt1 != SrcEndRoomIDList.end())
 			{
 				int64 Time1 = *DequeIt1;
-				MyDeque::iterator DequeIt2 = EndRoomIDList.begin();
+				FDeque::iterator DequeIt2 = EndRoomIDList.begin();
                 
 				bool Find = false;
 				int64 Interval=0; 
@@ -293,9 +293,9 @@ void CLogicDialog::_FindTokenNot(deque<int64>& DestMeaningList, map<int64,MyDequ
 
 	// 重新得到经过修剪的SrcMeaningList
 	//	ResultMeaningList.insert(SrcMeaningList.begin(),SrcMeaningList.end());
-  	map<int64,MyDeque>::iterator SrcIt = SrcMeaningList.begin();
+  	map<int64,FDeque>::iterator SrcIt = SrcMeaningList.begin();
 	while(SrcIt != SrcMeaningList.end()){
-	     MyDeque& EndRoomList = SrcIt->second;
+	     FDeque& EndRoomList = SrcIt->second;
 		 ResultMeaningList[SrcIt->first] = EndRoomList;
 		 SrcIt++;
 	}
@@ -303,17 +303,17 @@ void CLogicDialog::_FindTokenNot(deque<int64>& DestMeaningList, map<int64,MyDequ
 };
 
 
-void CLogicDialog::_FindMemoryRoom(CLogicThread* Think,map<int64,MyDeque>* DestTokenList, deque<int64>* ResultRoomList){
+void CLogicDialog::_FindMemoryRoom(CLogicThread* Think,map<int64,FDeque>* DestTokenList, deque<int64>* ResultRoomList){
 	
 	deque<int64> RoomSet;
 	char buf[30];
 	CppSQLite3Buffer SQL;	
 	
-	map<int64,MyDeque>::iterator TokenIt = DestTokenList->begin();
+	map<int64,FDeque>::iterator TokenIt = DestTokenList->begin();
 	while (TokenIt != DestTokenList->end())
 	{
 		int64 TokenMeaingID = TokenIt->first;
-		MyDeque& TokenEndRoomList = TokenIt->second;
+		FDeque& TokenEndRoomList = TokenIt->second;
 		
 		//取得使用这个token意义的所有索引信息
 	    ToLBrain(TokenMeaingID);
@@ -337,7 +337,7 @@ void CLogicDialog::_FindMemoryRoom(CLogicThread* Think,map<int64,MyDeque>* DestT
 			{
 				//依次取出父空间意义的所有结尾空间
 		
-				MyDeque EndRoomList;			
+				FDeque EndRoomList;			
 				int64toa(FatherMeaningID,buf);
 				SQL.format("select %s from  \"%s\"  ;",RB_SPACE_ID,buf);
 				CppSQLite3Table t1 = CBrainMemory::BrainDB.getTable(SQL);
@@ -352,14 +352,14 @@ void CLogicDialog::_FindMemoryRoom(CLogicThread* Think,map<int64,MyDeque>* DestT
 				
 				//比较两个结尾空间列表，如果有对应的时间关联则前面所的
 				//的ChildID为最终的记忆路径
-				MyDeque::iterator DequeIt1 = TokenEndRoomList.begin();
+				FDeque::iterator DequeIt1 = TokenEndRoomList.begin();
 				while (DequeIt1 != TokenEndRoomList.end())
 				{
 					int64 Time1 = *DequeIt1;
 					
 					Find = false;
 					int64 Interval=0; 
-					MyDeque::iterator DequeIt2 = EndRoomList.begin();
+					FDeque::iterator DequeIt2 = EndRoomList.begin();
 					while (DequeIt2 != EndRoomList.end())
 					{
 						int64 Time2 = *DequeIt2;
@@ -415,7 +415,7 @@ void CLogicDialog::_FindMemoryRoom(CLogicThread* Think,map<int64,MyDeque>* DestT
 					}
 					assert(RoomType != MEMORY_LOGIC_END || RoomType != MEMORY_NULL_END);
 
-					MyDeque EndRoomList;		
+					FDeque EndRoomList;		
 					SQL.format("select %s from  \"%s\"  ;",RB_SPACE_ID,buf);
 					CppSQLite3Table t2 = CBrainMemory::BrainDB.getTable(SQL);
 					for (int row2 = 0; row2 < t2.numRows(); row2++)
@@ -430,14 +430,14 @@ void CLogicDialog::_FindMemoryRoom(CLogicThread* Think,map<int64,MyDeque>* DestT
 					
 					//比较两个结尾空间列表，如果有对应的时间关联则前面所的
 					//的ChildID为最终的记忆路径
-					MyDeque::iterator DequeIt1 = TokenEndRoomList.begin();
+					FDeque::iterator DequeIt1 = TokenEndRoomList.begin();
 					while (DequeIt1 != TokenEndRoomList.end())
 					{
 						int64 Time1 = *DequeIt1;
 						
 						Find = false;
 						int64 Interval=0; 
-						MyDeque::iterator DequeIt2 = EndRoomList.begin();
+						FDeque::iterator DequeIt2 = EndRoomList.begin();
 						while (DequeIt2 != EndRoomList.end())
 						{
 							int64 Time2 = *DequeIt2;
@@ -541,11 +541,11 @@ void CLogicDialog::FindFirst(tstring& text,FindTypeExpected FindType/*= FIND_ALL
 	if(TempThink.m_Text.m_TokenList.size()==0)return;
   
     
-    map<int64,MyDeque> MeaningList1;
-  	map<int64,MyDeque> MeaningList2;
-    map<int64,MyDeque>* CurTokenList = &MeaningList1; 
-    map<int64,MyDeque>* ResultTokenList = &MeaningList2;
-	map<int64,MyDeque>* temp=NULL; 
+    map<int64,FDeque> MeaningList1;
+  	map<int64,FDeque> MeaningList2;
+    map<int64,FDeque>* CurTokenList = &MeaningList1; 
+    map<int64,FDeque>* ResultTokenList = &MeaningList2;
+	map<int64,FDeque>* temp=NULL; 
     
 	
 /*	CClause* Clause = JustOneClause();

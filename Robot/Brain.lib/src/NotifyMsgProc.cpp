@@ -529,11 +529,12 @@ void CBrain::NoitfyDialogState(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 	
 	switch(NotifyID)
 	{
-	case NOTIFY_DIALOG_ERROR:
-		OnNotifyDialogError(Dialog,NotifyInfo);
+
+	case NOTIFY_THINK_STATE:
+		OnNotifyThinkState(Dialog,NotifyInfo);
 		break;
-	case NOTIFY_DIALOG_STATE:
-		OnNotifyDialogState(Dialog,NotifyInfo);
+	case NOTIFY_TASK_STATE:
+		OnNotifyTaskState(Dialog,NotifyInfo);
 		break;
 	case NOTIFY_DIALOG_OUTPUT: 
 		OnNotifyDialogOutput(Dialog,NotifyInfo);
@@ -569,11 +570,9 @@ void CBrain::NoitfyDialogState(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 	};
 }
 
-void CBrain::OnNotifyDialogError(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 
-
-	int64 NotifyID = NotifyInfo->GetID();
-	int64 ErrorType = NotifyInfo->PopInt();
+void CBrain::OnNotifyThinkState(CLogicDialog* Dialog, ePipeline* NotifyInfo){
+	int64 State = NotifyInfo->PopInt();
 
 	ePipeline Receiver;
 	Receiver.PushInt(Dialog->m_SourceID);
@@ -581,49 +580,87 @@ void CBrain::OnNotifyDialogError(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 
 	CMsg GuiMsg(SYSTEM_SOURCE,Receiver,MSG_BRAIN_TO_GUI,DEFAULT_DIALOG,0);
 
-	switch(ErrorType){
+	switch(State){
+	case THINK_IDLE:
+		{
+
+			Dialog->m_bEditValid = true;
+            Dialog->m_StatusText = _T("");
+			Dialog->m_EditText   = _T("");
+
+			ePipeline Cmd0(TO_RUNTIME_VIEW::ID);
+			Cmd0.PushInt(TO_RUNTIME_VIEW::SET_EDIT);
+	        Cmd0.PushString(Dialog->m_EditText);
+			Cmd0.PushInt(TRUE);
+			GuiMsg.GetLetter().PushPipe(Cmd0);
+			         			
+			ePipeline Cmd1(TO_STATUS_VIEW::ID);
+			Cmd1.PushInt(TO_STATUS_VIEW::SET_PROGRESS);
+			Cmd1.PushInt(0);
+			GuiMsg.GetLetter().PushPipe(Cmd1);
+
+			ePipeline Cmd2(TO_STATUS_VIEW::ID);
+			Cmd2.PushInt(TO_STATUS_VIEW::SET_TEXT);
+			Cmd2.PushString(_T(""));
+			GuiMsg.GetLetter().PushPipe(Cmd2);
+		}
+		break;
+	case THINK_ON:
+		{
+				
+			ePipeline Cmd(TO_STATUS_VIEW::ID);
+			Cmd.PushInt(TO_STATUS_VIEW::IO_LIGHT_FLASH);
+			Cmd.PushInt(TRUE);
+			GuiMsg.GetLetter().PushPipe(Cmd);
+			
+		}
+		break;
+	case THINK_WAIT:
+		{
+			ePipeline Cmd(TO_STATUS_VIEW::ID);
+			Cmd.PushInt(TO_STATUS_VIEW::IO_LIGHT_FLASH);
+			Cmd.PushInt(FALSE);
+			GuiMsg.GetLetter().PushPipe(Cmd);
+
+			ePipeline Cmd0(TO_RUNTIME_VIEW::ID);
+			Cmd0.PushInt(TO_RUNTIME_VIEW::CONTINUE_EDIT);
+			GuiMsg.GetLetter().PushPipe(Cmd0);
+
+			ePipeline Cmd1(TO_STATUS_VIEW::ID);
+			Cmd1.PushInt(TO_STATUS_VIEW::SET_PROGRESS);
+			Cmd1.PushInt(0);
+			GuiMsg.GetLetter().PushPipe(Cmd1);	
+		}
+		break;
+	
 	case THINK_ERROR:
 		{
-			tstring error = NotifyInfo->PopString();
+			Dialog->m_bEditValid = true;
 
-			Dialog->RuntimeOutput(0,error);
-
-			
+			Dialog->RuntimeOutput(0,Dialog->m_ThinkError);
 			ePipeline Cmd1(TO_RUNTIME_VIEW::ID);
 			Cmd1.PushInt(TO_RUNTIME_VIEW::CONTINUE_EDIT);
 			GuiMsg.GetLetter().PushPipe(Cmd1);
 
-			Dialog->m_bEditValid = true;
+			ePipeline Cmd(TO_STATUS_VIEW::ID);
+			Cmd.PushInt(TO_STATUS_VIEW::IO_LIGHT_FLASH);
+			Cmd.PushInt(FALSE);
+			GuiMsg.GetLetter().PushPipe(Cmd);
 		}
-		break;
-	case COMPILE_ERROR:
-		{
-			tstring error = NotifyInfo->PopString();
-			tstring EditText = NotifyInfo->PopString();
-
-			Dialog->RuntimeOutput(0,error);
-			
-			ePipeline Cmd1(TO_RUNTIME_VIEW::ID);
-			Cmd1.PushInt(TO_RUNTIME_VIEW::SET_EDIT);
-			Cmd1.PushString(EditText);
-			Cmd1.PushInt(TRUE);
-			GuiMsg.GetLetter().PushPipe(Cmd1);
-			
-			Dialog->m_bEditValid = true;
-		}
-		break;
 	default:
-		return;
+		break;
 	}
 
 	GetBrainData()->SendMsgToGUI(this,Dialog->m_SourceID,GuiMsg);
 }
-
-void CBrain::OnNotifyDialogState(CLogicDialog* Dialog, ePipeline* NotifyInfo){
-
-    int64 WorkMode = NotifyInfo->PopInt();
+void CBrain::OnNotifyTaskState(CLogicDialog* Dialog, ePipeline* NotifyInfo){
+	int64 WorkMode = NotifyInfo->PopInt();
 	int64 State = NotifyInfo->PopInt();
 
+	if(Dialog->m_DialogType == DIALOG_EVENT){
+		return;
+	}
+	
 	ePipeline Receiver;
 	Receiver.PushInt(Dialog->m_SourceID);
 	Receiver.PushInt(Dialog->m_DialogID);
@@ -631,156 +668,20 @@ void CBrain::OnNotifyDialogState(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 	CMsg GuiMsg(SYSTEM_SOURCE,Receiver,MSG_BRAIN_TO_GUI,DEFAULT_DIALOG,0);
 
 	switch(State){
-	case TASK_IDLE:
-		{
-
-			Dialog->m_bEditValid = true;
-            Dialog->m_StatusText = _T("");
-
-			ePipeline Cmd(TO_RUNTIME_VIEW::ID);
-			Cmd.PushInt(TO_RUNTIME_VIEW::SET_WORKMODE);
-			Cmd.PushInt(WorkMode);
-			GuiMsg.GetLetter().PushPipe(Cmd);
-
-			
-            
-			if (NotifyInfo->Size()==0)
-			{
-				ePipeline Cmd0(TO_RUNTIME_VIEW::ID);
-				Cmd0.PushInt(TO_RUNTIME_VIEW::CONTINUE_EDIT);
-				GuiMsg.GetLetter().PushPipe(Cmd0);
-			}else{
-				ePipeline Cmd0(TO_RUNTIME_VIEW::ID);
-				Cmd0.PushInt(TO_RUNTIME_VIEW::SET_EDIT);
-				tstring EditText = NotifyInfo->PopString();
-                Cmd0.PushString(EditText);
-				Cmd0.PushInt(TRUE);
-				GuiMsg.GetLetter().PushPipe(Cmd0);
-			}            
-			
-			
-			ePipeline Cmd1(TO_STATUS_VIEW::ID);
-			Cmd1.PushInt(TO_STATUS_VIEW::SET_TEXT);
-			Cmd1.PushString(_T(""));
-			GuiMsg.GetLetter().PushPipe(Cmd1);
-
-			/*ePipeline Cmd2(TO_STATUS_VIEW::ID);
-			Cmd2.PushInt(TO_STATUS_VIEW::IO_LIGHT_FLASH);
-			Cmd2.PushInt(FALSE);
-			GuiMsg.GetLetter().PushPipe(Cmd2);		
-			*/
-			ePipeline Cmd3(TO_STATUS_VIEW::ID);
-			Cmd3.PushInt(TO_STATUS_VIEW::SET_PROGRESS);
-			Cmd3.PushInt(0);
-			GuiMsg.GetLetter().PushPipe(Cmd3);
-
-			ePipeline Cmd4(TO_RUNTIME_VIEW::ID);
-			Cmd4.PushInt(TO_RUNTIME_VIEW::TASK_STATE);
-			Cmd4.PushInt(TASK_IDLE);			
-			GuiMsg.GetLetter().PushPipe(Cmd4);	
-		}
-		break;
-	case TASK_THINK:
-		{
-			ePipeline Cmd4(TO_RUNTIME_VIEW::ID);
-			Cmd4.PushInt(TO_RUNTIME_VIEW::TASK_STATE);
-			Cmd4.PushInt(TASK_THINK);			
-			GuiMsg.GetLetter().PushPipe(Cmd4);	
-		}
-		break;
-	case TASK_COMPILE:
-		{
-			Dialog->m_bEditValid = false;
-			Dialog->m_EditText = _T("");
-		
-			ePipeline Cmd1(TO_RUNTIME_VIEW::ID);
-		    Cmd1.PushInt(TO_RUNTIME_VIEW::SET_EDIT);
-			Cmd1.PushString(Dialog->m_EditText.c_str());
-			Cmd1.PushInt(FALSE);  //EDIT readonly
-			GuiMsg.GetLetter().PushPipe(Cmd1);
-
-			ePipeline Cmd2(TO_STATUS_VIEW::ID);
-			Cmd2.PushInt(TO_STATUS_VIEW::SET_TEXT);
-			Cmd2.PushString(_T("Compile..."));
-			GuiMsg.GetLetter().PushPipe(Cmd2);
-
-		}
-		break;
-	case TASK_EXE:
-		{
-			Dialog->m_EditText = _T("");
-			Dialog->m_bEditValid = true;
-
-
-			ePipeline Cmd(TO_RUNTIME_VIEW::ID);
-			Cmd.PushInt(TO_RUNTIME_VIEW::SET_WORKMODE);
-			Cmd.PushInt(WorkMode);
-			GuiMsg.GetLetter().PushPipe(Cmd);
-
-			ePipeline Cmd1(TO_RUNTIME_VIEW::ID);
-			Cmd1.PushInt(TO_RUNTIME_VIEW::SET_EDIT);
-			Cmd1.PushString(Dialog->m_EditText.c_str());
-			Cmd1.PushInt(Dialog->m_bEditValid);  //EDIT readonly
-			GuiMsg.GetLetter().PushPipe(Cmd1);
-
-			ePipeline Cmd2(TO_RUNTIME_VIEW::ID);
-			Cmd2.PushInt(TO_RUNTIME_VIEW::CLEAR_PIPE_INFO);
-            GuiMsg.GetLetter().PushPipe(Cmd2);
-
-			ePipeline Cmd3(TO_RUNTIME_VIEW::ID);
-			Cmd3.PushInt(TO_RUNTIME_VIEW::TASK_STATE);
-			Cmd3.PushInt(TASK_RUN);			
-			GuiMsg.GetLetter().PushPipe(Cmd3);	
-		}
-	case TASK_RUN:  
-		{
-			/*if (WorkMode == WORK_LEARN)
-			{
-				Dialog->m_bEditValid = true;
-
-			}else{
-				Dialog->m_bEditValid = false;
-			}*/
-		
-
-			ePipeline Cmd1(TO_RUNTIME_VIEW::ID);
-			Cmd1.PushInt(TO_RUNTIME_VIEW::SET_EDIT);
-			Cmd1.PushString(Dialog->m_EditText.c_str());
-			Cmd1.PushInt(Dialog->m_bEditValid);  //EDIT readonly
-			//GuiMsg.GetLetter().PushPipe(Cmd1);
-
-			ePipeline Cmd2(TO_RUNTIME_VIEW::ID);
-			Cmd2.PushInt(TO_RUNTIME_VIEW::TASK_STATE);
-			Cmd2.PushInt(TASK_RUN);			
-			GuiMsg.GetLetter().PushPipe(Cmd2);	
-
-		}
-		break;
 	case TASK_STOP:
 		{
-
-			Dialog->m_bEditValid = true;
-			Dialog->m_EditText = _T("");
-            Dialog->m_StatusText = _T("");
-			
-			
 			ePipeline Cmd(TO_RUNTIME_VIEW::ID);
 			Cmd.PushInt(TO_RUNTIME_VIEW::SET_WORKMODE);
 			Cmd.PushInt(WorkMode);
 			GuiMsg.GetLetter().PushPipe(Cmd);
 
-			ePipeline Cmd0(TO_RUNTIME_VIEW::ID);
-			Cmd0.PushInt(TO_RUNTIME_VIEW::SET_EDIT);
-			Cmd0.PushString(_T(""));
-			Cmd0.PushInt(TRUE);  //EDIT ENABLE
-			//GuiMsg.GetLetter().PushPipe(Cmd0);
-   		
 			ePipeline Cmd1(TO_STATUS_VIEW::ID);
 			Cmd1.PushInt(TO_STATUS_VIEW::SET_TEXT);
+
 			
 			ePipeline Info;
 			Dialog->m_Brain->GetBrainData()->GetBrainStateInfo(Info);
-			
+
 			int64 EventNum = Info.PopInt();
 			int64 DialogNum = Info.PopInt();
 			int64 DialogPoolSize = Info.PopInt();
@@ -795,7 +696,6 @@ void CBrain::OnNotifyDialogState(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 			Cmd1.PushString(Tip);
 			GuiMsg.GetLetter().PushPipe(Cmd1);
 
-					
 			ePipeline Cmd3(TO_RUNTIME_VIEW::ID);
 			Cmd3.PushInt(TO_RUNTIME_VIEW::TASK_STATE);
 			Cmd3.PushInt(TASK_STOP);			
@@ -808,39 +708,61 @@ void CBrain::OnNotifyDialogState(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 
 		}
 		break;
-	case TASK_PAUSE:
-		{
-			
-			int64 TaskTimeStamp   = Dialog->m_LogicItemTree.GetID();
-			int64 PauseID  = Dialog->GetFocusPauseItemID();
-			
-			//Dialog->m_bEditValid = true;
-			//Dialog->m_EditText  = _T("");
-			
+	case TASK_COMPILE:
+		{	
 			ePipeline Cmd(TO_RUNTIME_VIEW::ID);
 			Cmd.PushInt(TO_RUNTIME_VIEW::SET_WORKMODE);
 			Cmd.PushInt(WorkMode);
 			GuiMsg.GetLetter().PushPipe(Cmd);
-			
-			ePipeline Cmd0(TO_RUNTIME_VIEW::ID);
-			Cmd0.PushInt(TO_RUNTIME_VIEW::SET_EDIT);
-			Cmd0.PushString(_T(""));
-			Cmd0.PushInt(TRUE);  //EDIT ENABLE
-		//	GuiMsg.GetLetter().PushPipe(Cmd0);
+
+			ePipeline Cmd2(TO_STATUS_VIEW::ID);
+			Cmd2.PushInt(TO_STATUS_VIEW::SET_TEXT);
+			Cmd2.PushString(_T("Compile..."));
+			GuiMsg.GetLetter().PushPipe(Cmd2);
+
+
+			ePipeline Cmd3(TO_RUNTIME_VIEW::ID);
+			Cmd3.PushInt(TO_RUNTIME_VIEW::TASK_STATE);
+			Cmd3.PushInt(TASK_COMPILE);			
+			GuiMsg.GetLetter().PushPipe(Cmd3);	
+
+		}
+		break;
+	case TASK_COMPILE_ERROR:
+		{
+			Dialog->RuntimeOutput(0,Dialog->m_CompileError);
+
+			ePipeline Cmd3(TO_RUNTIME_VIEW::ID);
+			Cmd3.PushInt(TO_RUNTIME_VIEW::TASK_STATE);
+			Cmd3.PushInt(TASK_COMPILE);			
+			GuiMsg.GetLetter().PushPipe(Cmd3);	
+		}
+		break;
+	case TASK_RUN:  
+		{
+
+			ePipeline Cmd2(TO_RUNTIME_VIEW::ID);
+			Cmd2.PushInt(TO_RUNTIME_VIEW::TASK_STATE);
+			Cmd2.PushInt(TASK_RUN);			
+			GuiMsg.GetLetter().PushPipe(Cmd2);	
+
+		}
+		break;
+	case TASK_PAUSE:
+		{
+			int64 TaskTimeStamp   = Dialog->m_LogicItemTree.GetID();
+			int64 PauseID  = Dialog->GetFocusPauseItemID();		
+				
+			ePipeline Cmd(TO_RUNTIME_VIEW::ID);
+			Cmd.PushInt(TO_RUNTIME_VIEW::SET_WORKMODE);
+			Cmd.PushInt(WorkMode);
+			GuiMsg.GetLetter().PushPipe(Cmd);
 			
 			Dialog->m_StatusText = _T("Pause...");
 			ePipeline Cmd1(TO_STATUS_VIEW::ID);
 			Cmd1.PushInt(TO_STATUS_VIEW::SET_TEXT);
 			Cmd1.PushString(Dialog->m_StatusText);
 			GuiMsg.GetLetter().PushPipe(Cmd1);
-			
-			
-			ePipeline Cmd2(TO_RUNTIME_VIEW::ID);
-			Cmd2.PushInt(TO_RUNTIME_VIEW::TASK_TOOLBAR);
-			Cmd2.PushInt(TRUE); //RUN BNT disable
-			Cmd2.PushInt(FALSE);  //PAUSE BNT Enable
-			Cmd2.PushInt(TRUE);  //STOP BNT Enable
-			GuiMsg.GetLetter().PushPipe(Cmd2);
 			
 			if (PauseID)
 			{
@@ -860,7 +782,6 @@ void CBrain::OnNotifyDialogState(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 		break;
 	case TASK_WAIT:
 		{
-
 			Dialog->m_StatusText = _T("Waiting for feedback or input..");
 			ePipeline Cmd0(TO_STATUS_VIEW::ID);
 			Cmd0.PushInt(TO_STATUS_VIEW::SET_TEXT);
@@ -872,41 +793,15 @@ void CBrain::OnNotifyDialogState(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 			Cmd1.PushInt(WorkMode);
 			GuiMsg.GetLetter().PushPipe(Cmd1);
 			
-			/*
-			ePipeline Cmd2(GUI_SET_EIDT);
-			Cmd2.PushString(Dialog->m_EditText);
-			Cmd2.PushInt(Dialog->m_bEditValid);  //EDIT ENABLE
-			GuiMsg.GetLetter().PushPipe(Cmd2);
-			
-
-			ePipeline Cmd3(GUI_TASK_TOOL_BAR);
-			Cmd3.PushInt(FALSE); //RUN BNT disable
-			Cmd3.PushInt(FALSE);  //PAUSE BNT Enable
-			Cmd3.PushInt(TRUE);  //STOP BNT Enable
-			GuiMsg.GetLetter().PushPipe(Cmd3);
-			
-			*/
 		}
 		break;
 	case TASK_DELELTE:
 		{
-			ePipeline Cmd1(TO_RUNTIME_VIEW::ID);
-			Cmd1.PushInt(TO_RUNTIME_VIEW::SET_WORKMODE);
-			Cmd1.PushInt(WorkMode);
-			GuiMsg.GetLetter().PushPipe(Cmd1);
 			
-			ePipeline Cmd2(TO_RUNTIME_VIEW::ID);
-			Cmd2.PushInt(TO_RUNTIME_VIEW::SET_EDIT);
-			Cmd2.PushString(_T(""));
-			Cmd2.PushInt(TRUE);  //EDIT ENABLE
-			//GuiMsg.GetLetter().PushPipe(Cmd2);
-			
-			ePipeline Cmd3(TO_RUNTIME_VIEW::ID);
-			Cmd3.PushInt(TO_RUNTIME_VIEW::TASK_TOOLBAR);
-			Cmd3.PushInt(FALSE); //RUN BNT disable
-			Cmd3.PushInt(FALSE);  //PAUSE BNT Enable
-			Cmd3.PushInt(FALSE);  //STOP BNT Enable
-			GuiMsg.GetLetter().PushPipe(Cmd3);
+			ePipeline Cmd4(TO_RUNTIME_VIEW::ID);
+			Cmd4.PushInt(TO_RUNTIME_VIEW::TASK_STATE);
+			Cmd4.PushInt(TASK_PAUSE);			
+			GuiMsg.GetLetter().PushPipe(Cmd4);	
 		}
 		break;
 	default:
@@ -1003,9 +898,7 @@ void CBrain::OnNotifyDialogOutput(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 		}
 		break;
 	}
-
 	GetBrainData()->SendMsgToGUI(this,Dialog->m_SourceID,GuiMsg);
-
 }
 
 void CBrain::OnNotifyLogicView(CLogicDialog* Dialog, ePipeline* NotifyInfo){

@@ -1134,55 +1134,55 @@ Mass* CLogicTask::GetInstinctInstance(CLogicDialog* Dialog,int64 InstinctID, Ene
 			M = new CGetMemoryFocus(ID);
 		}
 		break;
-	case INSTINCT_FOCUS_LOGIC:
-		{
-			if (Param)
-			{
-				assert(Param->EnergyType() == TYPE_STRING);
-				tstring& Name = *(tstring*)Param->Value();
-				M = new CFocusLogic_Static(ID,Name);
-			} 
-			else
-			{
-				M = new CFocusLogic(ID);
-			}
-		}
-		break;
+	//case INSTINCT_FOCUS_LOGIC:
+	//	{
+	//		if (Param)
+	//		{
+	//			assert(Param->EnergyType() == TYPE_STRING);
+	//			tstring& Name = *(tstring*)Param->Value();
+	//			M = new CFocusLogic_Static(ID,Name);
+	//		} 
+	//		else
+	//		{
+	//			M = new CFocusLogic(ID);
+	//		}
+	//	}
+	//	break;
 
-	case INSTINCT_INSERT_LOGIC:
-		{
-			assert(Param);
-			assert(Param->EnergyType() == TYPE_STRING);
-			tstring& InsertLogicName = *(tstring*)Param->Value();
-			
-			
-			CLocalLogicCell* lg = Dialog->FindLogic(InsertLogicName);
-			if(lg == NULL) {					
-				m_CompileError = Format1024(_T("Error: Not find Local logic[%s]"),InsertLogicName.c_str());
-				return NULL;
-			}		
-			else if(!lg->IsValid()) {
-				m_CompileError = Format1024(_T("Error: Local logic[%s] not valid"),InsertLogicName.c_str());
-				return NULL;
-			}
-			
-			M = new CInsertLogicStatic(ID,InsertLogicName);
-			
-		}
-		break;
-	case INSTINCT_REMOVE_LOGIC:
-		{
-			M = new CRemoveLogicStatic(ID);	
-		}
-		break;
-	case INSTINCT_SET_LOGIC_ADDRESS:
-		{
-			M = new CSetLogicAddress(ID);
-		}
-	case INSTINCT_SET_LOGIC_BREAKPOINT:
-		{
-			M = new CSetLogicBreakpoint(ID);
-		}
+	//case INSTINCT_INSERT_LOGIC:
+	//	{
+	//		assert(Param);
+	//		assert(Param->EnergyType() == TYPE_STRING);
+	//		tstring& InsertLogicName = *(tstring*)Param->Value();
+	//		
+	//		
+	//		CLocalLogicCell* lg = Dialog->FindLogic(InsertLogicName);
+	//		if(lg == NULL) {					
+	//			m_CompileError = Format1024(_T("Error: Not find Local logic[%s]"),InsertLogicName.c_str());
+	//			return NULL;
+	//		}		
+	//		else if(!lg->IsValid()) {
+	//			m_CompileError = Format1024(_T("Error: Local logic[%s] not valid"),InsertLogicName.c_str());
+	//			return NULL;
+	//		}
+	//		
+	//		M = new CInsertLogicStatic(ID,InsertLogicName);
+	//		
+	//	}
+	//	break;
+	//case INSTINCT_REMOVE_LOGIC:
+	//	{
+	//		M = new CRemoveLogicStatic(ID);	
+	//	}
+	//	break;
+	//case INSTINCT_SET_LOGIC_ADDRESS:
+	//	{
+	//		M = new CSetLogicAddress(ID);
+	//	}
+	//case INSTINCT_SET_LOGIC_BREAKPOINT:
+	//	{
+	//		M = new CSetLogicBreakpoint(ID);
+	//	}
 	case INSTINCT_GET_DATE:
 		{
 			M = new CGetDate(ID);
@@ -1308,18 +1308,6 @@ Mass* CLogicTask::GetInstinctInstance(CLogicDialog* Dialog,int64 InstinctID, Ene
 			M = new CBrainInitElt(ID);
 		}
 		break;
-	case INSTINCT_GET_SPACECATALOG:
-		{
-
-			M = new CGetSpaceCatalog(ID);
-		}
-/*
-	case INSTINCT_USE_ARM:
-		{
-			M = new CUseArm(ID,CBrain::m_LeftArm);
-		}
-		break;
-*/
 	default:
 		if (BelongInterAction(InstinctID))
 		{

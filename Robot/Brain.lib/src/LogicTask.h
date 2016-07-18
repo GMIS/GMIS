@@ -74,7 +74,6 @@ public:
 		return m_LogicData.Size()>0;
 	}
 
-	
 
 	CLogicTask* GetRootTask();
 

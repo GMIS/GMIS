@@ -29,7 +29,7 @@ MsgProcState CGetObjectDoc::EltMsgProc(CLogicDialog* Dialog,int32 ChildIndex,CMs
 
 		if (!NewExePipe->IsAlive())
 		{
-			Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
+			Dialog->CloseEventDialog(GetEventID(),*OldExePipe,ExePipe);
 			ExePipe.Break();
 			return RETURN_DIRECTLY;
 		}
@@ -37,7 +37,7 @@ MsgProcState CGetObjectDoc::EltMsgProc(CLogicDialog* Dialog,int32 ChildIndex,CMs
 		int64 retTask = NewExePipe->GetID();
 		if (retTask == RETURN_ERROR)
 		{
-			Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
+			Dialog->CloseEventDialog(GetEventID(),*OldExePipe,ExePipe);
 			ExePipe.SetID(retTask);
 			ExePipe.SetLabel(NewExePipe->GetLabel().c_str());
 			return RETURN_DIRECTLY;
@@ -49,7 +49,7 @@ MsgProcState CGetObjectDoc::EltMsgProc(CLogicDialog* Dialog,int32 ChildIndex,CMs
 			Dialog->RuntimeOutput(0,Doc);
 		}
 
-		Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
+		Dialog->CloseEventDialog(GetEventID(),*OldExePipe,ExePipe);
 
 		return RETURN_DIRECTLY; // 不在继续执行TaskProc
 	}else{
@@ -95,7 +95,7 @@ bool  CGetObjectDoc::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,eP
 	UpdateEventID();
 	tstring DialogText = Format1024(_T("Waiting for run external object:%I64ld  EventID:%I64ld"),Dialog->m_ObjectFocus,GetEventID());
 	tstring Title = Format1024(_T("UseObject(%I64ld)"),m_ID);
-	Dialog->StartChildDialog(GetEventID(),Title,DialogText,TASK_OUT_DEFAULT,ExePipe,LocalAddress,TIME_SEC,false,false);
+	Dialog->StartEventDialog(GetEventID(),Title,DialogText,TASK_OUT_DEFAULT,ExePipe,LocalAddress,TIME_SEC,false,false,true);
 
 
 	//把请求发给对方

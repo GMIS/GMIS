@@ -455,7 +455,7 @@ SplitterItem* IOViewSplitterStruct::CreateSplitterItem(){
 CConversation::CConversation()
 :m_Splitter(this,24,20,false),
  m_Created(FALSE),
- m_CurTaskState(TASK_STOP),
+ m_CurTaskState(TASK_DELELTE),
  m_SpaceSelected(NULL),
  m_PopMenu(NULL)
 {
@@ -857,22 +857,17 @@ void  CConversation::SetCurTaskState(TASK_STATE State)
 	
 	//缺省打开必要的窗口
 	switch(State){
-	case TASK_IDLE:
+	case TASK_STOP:
 		m_InputWin.ContinueEdit(NULL);
 		ShowView(DIALOG_VIEW,TRUE);
 		ShowView(OUTPUT_VIEW,TRUE);
 		SetTaskToolbarState(FALSE,FALSE,FALSE);
-	
 		GetGUI()->m_Status.LightLamp(IN_LAMP,FALSE);
 		break;
-	case TASK_THINK:
-		GetGUI()->m_Status.LightLamp(IN_LAMP,TRUE);
-		break;
 	case TASK_COMPILE:
-		break;
-	case TASK_EXE:
 		ClearRuntimeInfo();
-		SetTaskToolbarState(FALSE,TRUE,TRUE);	
+		break;
+	case TASK_COMPILE_ERROR:
 		break;
 	case TASK_RUN:
 	case TASK_WAIT:
@@ -887,12 +882,8 @@ void  CConversation::SetCurTaskState(TASK_STATE State)
 
 		SetTaskToolbarState(TRUE,FALSE,TRUE);
 		break;
-	case TASK_STOP:
-		m_InputWin.ContinueEdit(NULL);
-		ShowView(DIALOG_VIEW,TRUE);
-		ShowView(OUTPUT_VIEW,TRUE);
+	case TASK_DELELTE:
 		SetTaskToolbarState(FALSE,FALSE,FALSE);
-		break;
 	}
 	
 };
@@ -987,7 +978,7 @@ LRESULT CConversation::OnCreate( WPARAM wParam, LPARAM lParam)
 	//OpenView();
 	//Layout();
 	//SetTaskToolbarState(FALSE,FALSE,FALSE);
-	SetCurTaskState(TASK_IDLE);
+	SetCurTaskState(TASK_STOP);
 	SetInputTip(_T("Cmd>"));
     return 0;
 }

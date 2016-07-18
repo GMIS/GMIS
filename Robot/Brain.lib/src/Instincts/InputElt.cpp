@@ -16,19 +16,19 @@ MsgProcState CInputElement::EltMsgProc(CLogicDialog* Dialog,int32 ChildIndex,CMs
 	if( MsgID == MSG_TASK_RESULT){
 
 		ePipeline& Letter = Msg.GetLetter();
-		ePipeline* OldExePipe= (ePipeline*)Letter.GetData(0);
-		ePipeline* NewExePipe= (ePipeline*)Letter.GetData(1);
+		ePipeline* OldExePipe = (ePipeline*)Letter.GetData(0);
+		ePipeline* NewExePipe = (ePipeline*)Letter.GetData(1);
 
 		if (!NewExePipe->IsAlive())
 		{	
-			Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
+			Dialog->CloseEventDialog(GetEventID(),*OldExePipe,ExePipe);
 			return RETURN_DIRECTLY; //不在继续执行TaskProc()
 		}
 
 		int64 retTask = NewExePipe->GetID();
 		if (retTask == RETURN_ERROR)
 		{
-			Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
+			Dialog->CloseEventDialog(GetEventID(),*OldExePipe,ExePipe);
 			ExePipe.Break();
 			ExePipe.SetID(retTask);
 			ExePipe.SetLabel(NewExePipe->GetLabel().c_str());
@@ -41,7 +41,7 @@ MsgProcState CInputElement::EltMsgProc(CLogicDialog* Dialog,int32 ChildIndex,CMs
 		tstring Text = Think->GetUserInput();
 		Text = TriToken(Text);
 
-		Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);	
+		Dialog->CloseEventDialog(GetEventID(),*OldExePipe,ExePipe);	
 
 		if (m_bInputNum)
 		{
@@ -51,8 +51,8 @@ MsgProcState CInputElement::EltMsgProc(CLogicDialog* Dialog,int32 ChildIndex,CMs
 				//再次压入事件，要求用户重新输入
 				UpdateEventID();
 				tstring DialogText = _T("Input error: not a num,Please input again.");
-				bool ret = Dialog->StartChildDialog(GetEventID(),_T("Input Num"),DialogText,TASK_OUT_THINK,*OldExePipe,LocalAddress,TIME_SEC,true,true);				
-				if (!ret)
+				CLogicDialog*  Dlg = Dialog->StartEventDialog(GetEventID(),_T("Input Num"),DialogText,TASK_OUT_THINK,*OldExePipe,LocalAddress,TIME_SEC,true,true,true);				
+				if (!Dlg)
 				{
 					tstring Answer = _T("Start child dialog fail.");
 					ExePipe.SetLabel(Answer.c_str());
@@ -88,6 +88,6 @@ MsgProcState CInputElement::EltMsgProc(CLogicDialog* Dialog,int32 ChildIndex,CMs
 bool CInputElement::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
 
 	UpdateEventID();
-	bool ret = Dialog->StartChildDialog(GetEventID(),_T("Input Dialog"),m_Name,TASK_OUT_THINK,ExePipe,LocalAddress,TIME_SEC,true,true);
-	return ret;
+	CLogicDialog* Dlg = Dialog->StartEventDialog(GetEventID(),_T("Input Dialog"),m_Name,TASK_OUT_THINK,ExePipe,LocalAddress,TIME_SEC,true,true,true);
+	return Dlg!=NULL;
 }

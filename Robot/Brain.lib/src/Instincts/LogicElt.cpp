@@ -62,7 +62,7 @@ MsgProcState CInsertLogicStatic::EltMsgProc(CLogicDialog* Dialog,int32 ChildInde
 
 		if (!NewExePipe->IsAlive())
 		{
-			Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
+			Dialog->CloseEventDialog(GetEventID(),*OldExePipe,ExePipe);
 
 			tstring Answer = _T("收到的数据管道已经无效");
 			ExePipe.SetLabel(Answer.c_str());
@@ -73,7 +73,7 @@ MsgProcState CInsertLogicStatic::EltMsgProc(CLogicDialog* Dialog,int32 ChildInde
 		int64 retTask = NewExePipe->GetID();
 		if (retTask == RETURN_ERROR)
 		{
-			Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);	
+			Dialog->CloseEventDialog(GetEventID(),*OldExePipe,ExePipe);	
 
 			ExePipe.SetLabel(NewExePipe->GetLabel().c_str());
 			ExePipe.SetID(RETURN_ERROR);
@@ -84,7 +84,7 @@ MsgProcState CInsertLogicStatic::EltMsgProc(CLogicDialog* Dialog,int32 ChildInde
 		ExePipe.Clear();
 		ExePipe << *OldExePipe;
 
-		Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
+		Dialog->CloseEventDialog(GetEventID(),*OldExePipe,ExePipe);
 		return RETURN_DIRECTLY;
 	}else{
 		ChildIndex = IT_SELF;
@@ -108,7 +108,7 @@ bool CInsertLogicStatic::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Ms
 	//这个子对话主要起提示作用，实际任务会交给远方执行
 	tstring DialogText = Format1024(_T("Waiting for insert logic %s"),m_InsertLogicName.c_str());
 	UpdateEventID();
-	Dialog->StartChildDialog(GetEventID(),_T("Insert Logic"),DialogText,TASK_OUT_DEFAULT,ExePipe,LocalAddress,TIME_SEC,false,false);
+	Dialog->StartEventDialog(GetEventID(),_T("Insert Logic"),DialogText,TASK_OUT_DEFAULT,ExePipe,LocalAddress,TIME_SEC,false,false,true);
 
 	int64 EventID = GetEventID();
 
@@ -155,7 +155,7 @@ bool CRemoveLogicStatic::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Ms
 	//这个子对话主要起提示作用，实际任务会交给远方执行
 	tstring DialogText = Format1024(_T("Waiting for remove logic"));
 	UpdateEventID();
-	Dialog->StartChildDialog(GetEventID(),_T("Remove Logic"),DialogText,TASK_OUT_DEFAULT,ExePipe,RemoveAddress,TIME_SEC,false,false);
+	Dialog->StartEventDialog(GetEventID(),_T("Remove Logic"),DialogText,TASK_OUT_DEFAULT,ExePipe,RemoveAddress,TIME_SEC,false,false,true);
 
 	RemoveAddress.PopInt();  //去掉dilaog ID
 	int64 EventID = GetEventID();

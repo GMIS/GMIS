@@ -19,7 +19,7 @@ MsgProcState CWaitSecond_Static::EltMsgProc(CLogicDialog* Dialog,int32 ChildInde
 
 			ePipeline& OldExePipe = EventInfo.m_ClientExePipe;
 
-			Dialog->CloseChildDialog(GetEventID(),OldExePipe,ExePipe);
+			Dialog->CloseEventDialog(GetEventID(),OldExePipe,ExePipe);
 
 			return CONTINUE_TASK;
 		}
@@ -69,7 +69,7 @@ MsgProcState CWaitSecond_Static::EltMsgProc(CLogicDialog* Dialog,int32 ChildInde
 				m_bPause = false;
 			}
 
-			Dialog->CloseChildDialog(EventID,OldExePipe,ExePipe);
+			Dialog->CloseEventDialog(EventID,OldExePipe,ExePipe);
 		}
 	}else{
 
@@ -85,7 +85,7 @@ bool CWaitSecond_Static::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Ms
 	m_StartTimeStamp = AbstractSpace::CreateTimeStamp();
 	UpdateEventID();
 	tstring DialogTitle = Format1024(_T("Wait %.1f second"),m_Second);
-	Dialog->StartChildDialog(GetEventID(),DialogTitle,_T("Please wait timer to end"),TASK_OUT_DEFAULT,ExePipe,LocalAddress,MIN_EVENT_INTERVAL,false,false);
+	Dialog->StartEventDialog(GetEventID(),DialogTitle,_T("Please wait timer to end"),TASK_OUT_DEFAULT,ExePipe,LocalAddress,MIN_EVENT_INTERVAL,false,false,true);
 
 	return true;
 }
@@ -114,7 +114,7 @@ bool CWaitSecond::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipe
 
 	UpdateEventID();
 	tstring DialogTitle = Format1024(_T("Wait %.1f second"),m_Second);
-	Dialog->StartChildDialog(GetEventID(),DialogTitle,_T("Please wait timer ends"),TASK_OUT_DEFAULT,ExePipe,LocalAddress,MIN_EVENT_INTERVAL,false,false);
+	Dialog->StartEventDialog(GetEventID(),DialogTitle,_T("Please wait timer ends"),TASK_OUT_DEFAULT,ExePipe,LocalAddress,MIN_EVENT_INTERVAL,false,false,true);
 
 	return true;
 }

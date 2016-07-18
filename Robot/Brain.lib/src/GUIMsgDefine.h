@@ -25,6 +25,7 @@ namespace TO_BRAIN_MSG{
 	const uint32 GUI_IO_INPUTING		= 1001;
 	const uint32 GUI_IO_INPUTED			= 1002;
 	const uint32 GUI_SET_FOUCUS_DIALOG	= 1003;
+
 	namespace TASK_CONTROL{
 		const uint32 ID                 = 1004;
 		const uint32 CMD_EXE            = 100;
@@ -69,7 +70,7 @@ namespace TO_BRAIN_MSG{
 namespace TO_STATUS_VIEW{
 	const uint32 ID					= 100;
 	const uint32 SET_TEXT			= 101;
-	//const uint32 IO_LIGHT_FLASH		= 102;
+	const uint32 IO_LIGHT_FLASH		= 102;
 	const uint32 SET_PROGRESS		= 103;
 	const uint32 PFM_MSG_UPDATE		= 104;
 	const uint32 PFM_THREAD_UPDATE	= 105;

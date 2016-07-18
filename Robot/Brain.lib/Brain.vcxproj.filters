@@ -178,9 +178,6 @@
     <ClInclude Include="src\NotifyMsgDef.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\RobotMsgDefine.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\TextAnalyse.h">
       <Filter>Header Files</Filter>
     </ClInclude>

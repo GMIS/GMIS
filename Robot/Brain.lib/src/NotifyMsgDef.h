@@ -9,13 +9,11 @@
 //MSG_DIALOG_NOTIFY包含的子消息
 //逻辑执行相关
 
-#define NOTIFY_DIALOG_ERROR  10000
-	#define THINK_ERROR    100
-	#define COMPILE_ERROR  101 
 
-#define NOTIFY_DIALOG_STATE  20000
+#define NOTIFY_THINK_STATE  20000
+#define NOTIFY_TASK_STATE   20010
 
-#define NOTIFY_BRAIN_INIT    21000
+#define NOTIFY_BRAIN_INIT   21000
 	#define BEGIN_INIT      100
 	#define INIT_PROGRESS   101
 	#define END_INIT        102

@@ -33,40 +33,56 @@ bool  CInterBrainObject::Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& L
 {
 	CLocalInfoAuto LocalInfoAuto(Dialog,this,LocalAddress);
 
+	bool ret = false;
 	switch(m_InstinctID){
 	case INSTINCT_THINK_LOGIC:
-		DoThinkLogic(Dialog,ExePipe,LocalAddress,Msg);
+		ret = DoThinkLogic(Dialog,ExePipe,LocalAddress,Msg);
 		break;
 	case INSTINCT_RUN_TASK:
-		DoRunTask(Dialog,ExePipe,LocalAddress,Msg);
+		ret = DoRunTask(Dialog,ExePipe,LocalAddress,Msg);
 		break;
 	case INSTINCT_DEBUG_TASK: 
-		DoDebugTask(Dialog,ExePipe,LocalAddress,Msg);
+		ret = DoDebugTask(Dialog,ExePipe,LocalAddress,Msg);
 		break;
 	case INSTINCT_TEST_TASK:
-		DoTestTask(Dialog,ExePipe,LocalAddress,Msg);
+		ret = DoTestTask(Dialog,ExePipe,LocalAddress,Msg);
 		break;
 	case INSTINCT_STOP_TASK:
-		DoStopTask(Dialog,ExePipe,LocalAddress,Msg);
+		ret = DoStopTask(Dialog,ExePipe,LocalAddress,Msg);
 		break;
 	case INSTINCT_PAUSE_TASK:
-		DoPauseTask(Dialog,ExePipe,LocalAddress,Msg);
+		ret = DoPauseTask(Dialog,ExePipe,LocalAddress,Msg);
 		break;
 	case INSTINCT_STEP_TASK:
-		DoStepTask(Dialog,ExePipe,LocalAddress,Msg);
+		ret = DoStepTask(Dialog,ExePipe,LocalAddress,Msg);
 		break;
 	case INSTINCT_GOTO_TASK:
 		break;
 	case INSTINCT_SET_GLOBLELOGIC:
 		break;
 	case INSTINCT_CLOSE_DIALOG:
-		DoCloseDialog(Dialog,ExePipe,LocalAddress,Msg);
+		ret = DoCloseDialog(Dialog,ExePipe,LocalAddress,Msg);
 		break;
 	case INSTINCT_CREATE_ACCOUNT:
-		DoCreateAccount(Dialog,ExePipe,LocalAddress,Msg);
+		ret = DoCreateAccount(Dialog,ExePipe,LocalAddress,Msg);
 		break;
 	case INSTINCT_DELETE_ACCOUNT:
-		DoDeleteAccount(Dialog,ExePipe,LocalAddress,Msg);
+		ret = DoDeleteAccount(Dialog,ExePipe,LocalAddress,Msg);
+		break;
+	case INSTINCT_SET_LOGIC_ADDRESS:
+		ret = DoSetLogicAddress(Dialog,ExePipe,LocalAddress,Msg);
+		break;
+	case INSTINCT_GET_LOGIC_ADDRESS:
+		ret = DoGetLogicAddress(Dialog,ExePipe,LocalAddress,Msg);
+		break;
+	case INSTINCT_SET_LOGIC_BREAKPOINT:
+		ret = DoSetLogicBreakpoint(Dialog,ExePipe,LocalAddress,Msg);
+		break;
+	case INSTINCT_REMOVE_TEMP_LOGIC:
+		ret = DoRemoveTempLogic(Dialog,ExePipe,LocalAddress,Msg);
+		break;
+	case INSTINCT_CLEAR_TEMP_LOGIC:
+		ret = DoClearTempLogic(Dialog,ExePipe,LocalAddress,Msg);
 		break;
 	case INSTINCT_LEARN_TOKEN:
 	case INSTINCT_LEARN_PRONOUN:
@@ -79,41 +95,40 @@ bool  CInterBrainObject::Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& L
 	case INSTINCT_LEARN_CONJUNCTION:
 	case INSTINCT_LEARN_INTERJECTION:
 	case INSTINCT_LEARN_NOUN:
-		DoLearnWord(Dialog,ExePipe,LocalAddress,Msg);
+		ret = DoLearnWord(Dialog,ExePipe,LocalAddress,Msg);
 		break;
 	case INSTINCT_LEARN_TEXT:
-		DoLearnText(Dialog,ExePipe,LocalAddress,Msg);
+		ret = DoLearnText(Dialog,ExePipe,LocalAddress,Msg);
 		break;
 	case INSTINCT_LEARN_LOGIC:
-		DoLearnLogic(Dialog,ExePipe,LocalAddress,Msg);
+		ret = DoLearnLogic(Dialog,ExePipe,LocalAddress,Msg);
 		break;
 	case INSTINCT_LEARN_OBJECT:
-		DoLearnObject(Dialog,ExePipe,LocalAddress,Msg);
+		ret = DoLearnObject(Dialog,ExePipe,LocalAddress,Msg);
 		break;
 	case INSTINCT_LEARN_ACTION:
-		DoLearnAction(Dialog,ExePipe,LocalAddress,Msg);
+		ret = DoLearnAction(Dialog,ExePipe,LocalAddress,Msg);
 		break;
 	case INSTINCT_FIND_SET_STARTTIME:
 		break;
 	case INSTINCT_FIND_SET_ENDTIME:
 		break;
 	case INSTINCT_FIND_SET_PRICISION:
-		DoSetFindPricision(Dialog,ExePipe,LocalAddress,Msg);
+		ret = DoSetFindPricision(Dialog,ExePipe,LocalAddress,Msg);
 		break;
 	case INSTINCT_FIND:
-		DoFind(Dialog,ExePipe,LocalAddress,Msg);
+		ret = DoFind(Dialog,ExePipe,LocalAddress,Msg);
 		break;
 	case INSTINCT_FIND_LOGIC:
-		DoFindLogic(Dialog,ExePipe,LocalAddress,Msg);
+		ret = DoFindLogic(Dialog,ExePipe,LocalAddress,Msg);
 		break;
 	case INSTINCT_FIND_OBJECT:
-		DoFindObject(Dialog,ExePipe,LocalAddress,Msg);
+		ret = DoFindObject(Dialog,ExePipe,LocalAddress,Msg);
 		break;
 	default:
 		assert(0);
-		return false;	
 	}	
-	return true;
+	return ret;
 }
 
 bool  CInterBrainObject::DoCloseDialog(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg){
@@ -143,10 +158,7 @@ bool  CInterBrainObject::DoCloseDialog(CLogicDialog* Dialog,ePipeline& ExePipe,e
 
 		return true;
 	}
-	
-
 	return true;
-	
 }
 
 bool  CInterBrainObject::DoCreateAccount(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg){
@@ -214,22 +226,267 @@ bool  CInterBrainObject::DoDeleteAccount(CLogicDialog* Dialog,ePipeline& ExePipe
 		return false;
 	}
 
-	if (!ExePipe.HasTypeAB(0x33100000))
+	if (!ExePipe.HasTypeAB(0x33000000))
 	{
 		ExePipe.GetLabel() =_T("parameter is not valid");
 		ExePipe.SetID(RETURN_ERROR);
 		return false;
 	}
-	tstring Name = ExePipe.PopString();
+	tstring Name     = ExePipe.PopString();
 	tstring Password = ExePipe.PopString();
 	tstring CrypStr = Name + Password;
-	int64 SourceID = Dialog->m_Brain->GetBrainData()->DeleteUserAccount(Name,CrypStr);
+	int64 SourceID  = Dialog->m_Brain->GetBrainData()->DeleteUserAccount(Name,CrypStr);
 	if (SourceID>0)
 	{
 		int32 n = Dialog->m_Brain->GetBrainData()->DeleteDialogOfSource(SourceID);
 	}
 	return true;
 };
+bool  CInterBrainObject::DoSetLogicAddress(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg){
+	if (!Msg.IsReaded())
+	{
+		int32 ChildIndex = IT_SELF;
+		MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
+		if(ret == RETURN_DIRECTLY){
+			return true;
+		}
+	}
+
+
+	if(Dialog->m_DialogType != DIALOG_EVENT){
+		ExePipe.GetLabel() =_T("'set logic address' command is available in execution mode");
+		ExePipe.SetID(RETURN_ERROR);
+		return true;
+	}
+
+	CLogicDialog* ParentDlg = Dialog->m_Brain->GetBrainData()->GetDialog(Dialog->m_SourceID,Dialog->m_ParentDialogID);
+	if (ParentDlg==NULL)
+	{
+		ExePipe.GetLabel() =_T("not find parent dialog");
+		ExePipe.SetID(RETURN_ERROR);
+		return true;
+	}
+	assert(ParentDlg->m_TaskID);
+
+	if(ExePipe.Size()==0){ //设置空地址
+		ParentDlg->m_LogicAddress.Clear();
+		ParentDlg->m_LogicAddress.SetID(0);
+		return true;
+	}
+
+	if (!ExePipe.HasTypeAB(0x10000000))
+	{
+		ExePipe.GetLabel() =_T("parameter is not valid");
+		ExePipe.SetID(RETURN_ERROR);
+		return true;
+	}
+	int64 ItemID = ExePipe.PopInt();
+
+	CLogicTask* Task = ParentDlg->GetTask();
+
+	ePipeline LogicAddress(ItemID);
+	bool ret = Task->FindLogicAddress(ItemID,LogicAddress);
+	if(!ret){
+		ExePipe.GetLabel() = Format1024(_T("not find the item id=%I64ld"),ItemID);
+		ExePipe.SetID(RETURN_ERROR);
+		return true;
+	}
+	ParentDlg->m_LogicAddress = LogicAddress;
+
+
+	return true;
+}	
+bool  CInterBrainObject::DoGetLogicAddress(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg){
+	if (!Msg.IsReaded())
+	{
+		int32 ChildIndex = IT_SELF;
+		MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
+		if(ret == RETURN_DIRECTLY){
+			return true;
+		}
+	}
+
+	if(Dialog->m_DialogType == DIALOG_EVENT){
+		CLogicDialog* ParentDlg = Dialog->m_Brain->GetBrainData()->GetDialog(Dialog->m_SourceID,Dialog->m_ParentDialogID);
+		if (ParentDlg==NULL)
+		{
+			ExePipe.GetLabel() =_T("not find parent dialog");
+			ExePipe.SetID(RETURN_ERROR);
+			return true;
+		}
+
+		ePipeline& LogicAddress = ParentDlg->m_LogicAddress;
+		if(LogicAddress.Size()){
+			Energy* e = LogicAddress.GetLastEnergy();
+			ExePipe.Push_Directly(e->Clone());
+		}
+	}else {
+		ePipeline& LogicAddress = Dialog->m_LogicAddress;
+		if(LogicAddress.Size()){
+			Energy* e = LogicAddress.GetLastEnergy();
+			ExePipe.Push_Directly(e->Clone());
+		}
+	}	
+	return true;
+}
+
+bool  CInterBrainObject::DoSetLogicBreakpoint(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg){
+	if (!Msg.IsReaded())
+	{
+		int32 ChildIndex = IT_SELF;
+		MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
+		if(ret == RETURN_DIRECTLY){
+			return true;
+		}
+	}
+	if (!ExePipe.HasTypeAB(0x10000000))
+	{
+		ExePipe.GetLabel() =_T("parameter is not valid");
+		ExePipe.SetID(RETURN_ERROR);
+		return true;
+	}
+
+	int64 bBreak = ExePipe.PopInt();
+
+	assert(Dialog->m_DialogType == DIALOG_EVENT);
+	CLogicDialog* ParentDlg = Dialog->m_Brain->GetBrainData()->GetDialog(Dialog->m_SourceID,Dialog->m_ParentDialogID);
+	if (ParentDlg==NULL)
+	{
+		ExePipe.GetLabel() =_T("not find parent dialog");
+		ExePipe.SetID(RETURN_ERROR);
+		return true;
+	}
+
+	ePipeline LogicAddress = ParentDlg->m_LogicAddress;
+
+	CMsg Msg1(Dialog->m_SourceID,LogicAddress,MSG_ELT_REMOVE_LOGIC,DEFAULT_DIALOG,0);
+	ePipeline& Letter = Msg1.GetLetter();
+	Letter.PushInt(TO_BRAIN_MSG::TASK_CONTROL::CMD_DEBUG_BREAK);
+	Letter.PushInt(bBreak);
+	Letter.PushPipe(LogicAddress);
+
+	Dialog->m_Brain->PushNerveMsg(Msg1,false,false);
+
+	return true;
+}
+bool  CInterBrainObject::DoRemoveLogic(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg){
+	if (!Msg.IsReaded())
+	{
+		int32 ChildIndex = IT_SELF;
+		MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
+		if(ret == RETURN_DIRECTLY){
+			return true;
+		}
+	}
+
+	assert(Dialog->m_DialogType == DIALOG_EVENT);
+	CLogicDialog* ParentDlg = Dialog->m_Brain->GetBrainData()->GetDialog(Dialog->m_SourceID,Dialog->m_ParentDialogID);
+	if (ParentDlg==NULL)
+	{
+		ExePipe.GetLabel() =_T("not find parent dialog");
+		ExePipe.SetID(RETURN_ERROR);
+		return true;
+	}
+
+	ePipeline LogicAddress = ParentDlg->m_LogicAddress;
+
+	CMsg EltMsg(Dialog->m_SourceID,LogicAddress,MSG_ELT_REMOVE_LOGIC,DEFAULT_DIALOG,0);
+	ePipeline& Letter = EltMsg.GetLetter();
+	Letter.PushInt(LogicAddress.GetID());
+
+	Dialog->m_Brain->PushNerveMsg(EltMsg,false,false);
+	return true;
+
+};
+
+bool  CInterBrainObject::DoInsertLogic(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg){
+
+	if (!Msg.IsReaded())
+	{
+		int32 ChildIndex = IT_SELF;
+		MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
+		if(ret == RETURN_DIRECTLY){
+			return true;
+		}
+	}
+	if (!ExePipe.HasTypeAB(0x30000000))
+	{
+		ExePipe.GetLabel() =_T("parameter is not valid");
+		ExePipe.SetID(RETURN_ERROR);
+		return true;
+	}
+	tstring LogicName = ExePipe.PopString();
+
+	assert(Dialog->m_DialogType == DIALOG_EVENT);
+	CLogicDialog* ParentDlg = Dialog->m_Brain->GetBrainData()->GetDialog(Dialog->m_SourceID,Dialog->m_ParentDialogID);
+	if (ParentDlg==NULL)
+	{
+		ExePipe.GetLabel() =_T("not find parent dialog");
+		ExePipe.SetID(RETURN_ERROR);
+		return true;
+	}
+
+	ePipeline LogicAddress = ParentDlg->m_LogicAddress;
+
+	CMsg EltMsg(Dialog->m_SourceID,LogicAddress,MSG_ELT_INSERT_LOGIC,DEFAULT_DIALOG,0);
+	ePipeline& Letter = EltMsg.GetLetter();
+	Letter.PushString(LogicName);
+
+	Dialog->m_Brain->PushNerveMsg(EltMsg,false,false);
+	return true;
+};
+
+bool  CInterBrainObject::DoRemoveTempLogic(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg){
+	if (!Msg.IsReaded())
+	{
+		int32 ChildIndex = IT_SELF;
+		MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
+		if(ret == RETURN_DIRECTLY){
+			return true;
+		}
+	}
+	if (!ExePipe.HasTypeAB(0x30000000))
+	{
+		ExePipe.GetLabel() =_T("parameter is not valid");
+		ExePipe.SetID(RETURN_ERROR);
+		return true;
+	}
+	tstring LogicName = ExePipe.PopString();
+
+	assert(Dialog->m_DialogType == DIALOG_EVENT);
+	CLogicDialog* ParentDlg = Dialog->m_Brain->GetBrainData()->GetDialog(Dialog->m_SourceID,Dialog->m_ParentDialogID);
+	if (ParentDlg==NULL)
+	{
+		ExePipe.GetLabel() =_T("not find parent dialog");
+		ExePipe.SetID(RETURN_ERROR);
+		return true;
+	}
+
+	ParentDlg->DeleteLogic(LogicName);
+	return true;
+}
+bool  CInterBrainObject::DoClearTempLogic(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg){
+	if (!Msg.IsReaded())
+	{
+		int32 ChildIndex = IT_SELF;
+		MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
+		if(ret == RETURN_DIRECTLY){
+			return true;
+		}
+	}
+
+	assert(Dialog->m_DialogType == DIALOG_EVENT);
+	CLogicDialog* ParentDlg = Dialog->m_Brain->GetBrainData()->GetDialog(Dialog->m_SourceID,Dialog->m_ParentDialogID);
+	if (ParentDlg==NULL)
+	{
+		ExePipe.GetLabel() =_T("not find parent dialog");
+		ExePipe.SetID(RETURN_ERROR);
+		return true;
+	}
+	
+	ParentDlg->ClearLogicSence();
+	return true;
+}	
 
 bool  CInterBrainObject::DoThinkLogic(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg){	
 	if (!Msg.IsReaded())
@@ -286,20 +543,28 @@ bool  CInterBrainObject::DoStopTask(CLogicDialog* Dialog,ePipeline& ExePipe,ePip
 	}
 
 	int64 EventID = Dialog->m_DialogID;
-	CBrainEvent ObjectInfo;
-	bool ret = Dialog->m_Brain->GetBrainData()->GetEvent(EventID,ObjectInfo,true);
+	CBrainEvent EnventInfo;
+	bool ret = Dialog->m_Brain->GetBrainData()->GetEvent(EventID,EnventInfo,false);
 	if (!ret) 
 	{
 		return true;
 	}
-				
-	CMsg EltMsg(Dialog->m_SourceID,ObjectInfo.m_ClientAddress,MSG_ELT_TASK_CTRL,DEFAULT_DIALOG,0);
-	ePipeline& Letter = EltMsg.GetLetter();
+	
+	CMsg Msg1(SYSTEM_SOURCE,EnventInfo.m_ClientAddress,MSG_FROM_BRAIN,DEFAULT_DIALOG,EventID);
+	ePipeline& Letter = Msg1.GetLetter();
+	Letter.PushInt(TO_BRAIN_MSG::TASK_CONTROL::ID);
 	Letter.PushInt(TO_BRAIN_MSG::TASK_CONTROL::CMD_STOP);
-	Letter.PushPipe(ObjectInfo.m_ClientExePipe);
-				
-	//给Element发信息
-	Dialog->m_Brain->PushNerveMsg(EltMsg,false,false);
+
+	Dialog->m_Brain->PushNerveMsg(Msg1,false,false);
+
+
+	//CMsg EltMsg(Dialog->m_SourceID,ObjectInfo.m_ClientAddress,MSG_ELT_TASK_CTRL,DEFAULT_DIALOG,0);
+	//ePipeline& Letter = EltMsg.GetLetter();
+	//Letter.PushInt(TO_BRAIN_MSG::TASK_CONTROL::CMD_STOP);
+	//Letter.PushPipe(ObjectInfo.m_ClientExePipe);
+	//			
+	////给Element发信息
+	//Dialog->m_Brain->PushNerveMsg(EltMsg,false,false);
 
 	return true;	
 };
@@ -322,14 +587,6 @@ bool  CInterBrainObject::DoPauseTask(CLogicDialog* Dialog,ePipeline& ExePipe,ePi
 	{
 		return true;
 	}
-	
-	//CMsg EltMsg(Dialog->m_SourceID,ObjectInfo.m_ClientAddress,MSG_ELT_TASK_CTRL,DEFAULT_DIALOG,0);
-	//ePipeline& Letter = EltMsg.GetLetter();
-	//Letter.PushInt(TO_BRAIN_MSG::TASK_CONTROL::CMD_PAUSE);
-	//Letter.PushPipe(ObjectInfo.m_ClientExePipe);
-	//			
-	//给Element发信息
-	//Dialog->m_Brain->PushNerveMsg(EltMsg,false,false);
 
 
 	CMsg Msg1(SYSTEM_SOURCE,EnventInfo.m_ClientAddress,MSG_FROM_BRAIN,DEFAULT_DIALOG,EventID);
@@ -338,6 +595,7 @@ bool  CInterBrainObject::DoPauseTask(CLogicDialog* Dialog,ePipeline& ExePipe,ePi
 	Letter.PushInt(TO_BRAIN_MSG::TASK_CONTROL::CMD_PAUSE);
 
 	Dialog->m_Brain->PushNerveMsg(Msg1,false,false);
+
     return true;
 };
 
@@ -404,20 +662,21 @@ bool  CInterBrainObject::DoStepTask(CLogicDialog* Dialog,ePipeline& ExePipe,ePip
 	}
 
 	int64 EventID = Dialog->m_DialogID;
-	CBrainEvent ObjectInfo;
-	bool ret = Dialog->m_Brain->GetBrainData()->GetEvent(EventID,ObjectInfo,true);
-	if (!ret)
+	CBrainEvent EnventInfo;
+	bool ret = Dialog->m_Brain->GetBrainData()->GetEvent(EventID,EnventInfo,false);
+	if (!ret) 
 	{
 		return true;
 	}
-								
-	CMsg EltMsg(Dialog->m_SourceID,ObjectInfo.m_ClientAddress,MSG_ELT_TASK_CTRL,DEFAULT_DIALOG,EventID);
-	ePipeline& Letter = EltMsg.GetLetter();
+
+
+	CMsg Msg1(SYSTEM_SOURCE,EnventInfo.m_ClientAddress,MSG_FROM_BRAIN,DEFAULT_DIALOG,EventID);
+	ePipeline& Letter = Msg1.GetLetter();
+	Letter.PushInt(TO_BRAIN_MSG::TASK_CONTROL::ID);
 	Letter.PushInt(TO_BRAIN_MSG::TASK_CONTROL::CMD_DEBUG_STEP);
-	Letter.PushPipe(ObjectInfo.m_ClientExePipe);
-				
-	//给Element发信息
-	Dialog->m_Brain->PushNerveMsg(EltMsg,false,false);
+	Letter.PushInt(0);
+
+	Dialog->m_Brain->PushNerveMsg(Msg1,false,false);
    
 	return true;		
 };
@@ -448,7 +707,7 @@ bool  CInterBrainObject::DoLearnText(CLogicDialog* Dialog,ePipeline& ExePipe,ePi
 			
 			if (!NewExePipe->IsAlive())
 			{
-				Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
+				Dialog->CloseEventDialog(GetEventID(),*OldExePipe,ExePipe);
 				ExePipe.Break();
 				return true;
 			}
@@ -456,7 +715,7 @@ bool  CInterBrainObject::DoLearnText(CLogicDialog* Dialog,ePipeline& ExePipe,ePi
 			int64 retTask = NewExePipe->GetID();
 			if (retTask == RETURN_ERROR)
 			{
-				Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
+				Dialog->CloseEventDialog(GetEventID(),*OldExePipe,ExePipe);
 				ExePipe.Break();
 				ExePipe.SetID(retTask);
 				ExePipe.SetLabel(NewExePipe->GetLabel().c_str());
@@ -474,8 +733,8 @@ bool  CInterBrainObject::DoLearnText(CLogicDialog* Dialog,ePipeline& ExePipe,ePi
 				tstring DialogText = _T("Please input text.");
 	
 				UpdateEventID();
-				bool ret = Dialog->StartChildDialog(GetEventID(),_T("Ask"),DialogText,TASK_OUT_THINK,*OldExePipe,LocalAddress,TIME_SEC,true,true);				
-				if (!ret)
+				CLogicDialog*  Dlg = Dialog->StartEventDialog(GetEventID(),_T("Ask"),DialogText,TASK_OUT_THINK,*OldExePipe,LocalAddress,TIME_SEC,true,true,true);				
+				if (Dlg==NULL)
 				{
 					tstring Answer = _T("Start child dialog fail.");
 					ExePipe.SetLabel(Answer.c_str());
@@ -495,7 +754,7 @@ bool  CInterBrainObject::DoLearnText(CLogicDialog* Dialog,ePipeline& ExePipe,ePi
 				ExePipe.SetID(RETURN_ERROR);
 				return true;
 			}
-			Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
+			Dialog->CloseEventDialog(GetEventID(),*OldExePipe,ExePipe);
 			ExePipe.Clear();
 			ExePipe<<*OldExePipe;
 			
@@ -517,8 +776,8 @@ bool  CInterBrainObject::DoLearnText(CLogicDialog* Dialog,ePipeline& ExePipe,ePi
 		
 		tstring DialogText= _T("Please input  text.");
 		UpdateEventID();
-		bool ret = Dialog->StartChildDialog(GetEventID(),_T("Input Dialog"),DialogText,TASK_OUT_THINK,ExePipe,LocalAddress,TIME_SEC,true,true);
-		if (!ret)
+		CLogicDialog*  Dlg = Dialog->StartEventDialog(GetEventID(),_T("Input Dialog"),DialogText,TASK_OUT_THINK,ExePipe,LocalAddress,TIME_SEC,true,true,true);
+		if (Dlg == NULL)
 		{
 			tstring Answer = _T("Start child dialog fail.");
 			ExePipe.SetLabel(Answer.c_str());
@@ -549,7 +808,7 @@ bool  CInterBrainObject::DoLearnLogic(CLogicDialog* Dialog,ePipeline& ExePipe,eP
 			
 			if (!NewExePipe->IsAlive())
 			{
-				Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
+				Dialog->CloseEventDialog(GetEventID(),*OldExePipe,ExePipe);
 				ExePipe.Break();
 				return true;
 			}
@@ -557,7 +816,7 @@ bool  CInterBrainObject::DoLearnLogic(CLogicDialog* Dialog,ePipeline& ExePipe,eP
 			int64 retTask = NewExePipe->GetID();
 			if (retTask == RETURN_ERROR)
 			{
-				Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
+				Dialog->CloseEventDialog(GetEventID(),*OldExePipe,ExePipe);
 				ExePipe.Break();
 				ExePipe.SetID(retTask);
 				ExePipe.SetLabel(NewExePipe->GetLabel().c_str());
@@ -573,7 +832,7 @@ bool  CInterBrainObject::DoLearnLogic(CLogicDialog* Dialog,ePipeline& ExePipe,eP
 			TriToken(Text);
 
 			if(Text.size() == 0 || Text == _T(";") || Text==_T("；")){ //忽略
-				Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
+				Dialog->CloseEventDialog(GetEventID(),*OldExePipe,ExePipe);
 				return true;
 			}
 			
@@ -583,7 +842,7 @@ bool  CInterBrainObject::DoLearnLogic(CLogicDialog* Dialog,ePipeline& ExePipe,eP
 				tstring Answer = Format1024(_T("learn logic memo fail"));
 				Dialog->RuntimeOutput(Answer);
 			}
-			Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
+			Dialog->CloseEventDialog(GetEventID(),*OldExePipe,ExePipe);
 			
 			ExePipe.Clear();
 			ExePipe<<*OldExePipe;
@@ -627,8 +886,8 @@ bool  CInterBrainObject::DoLearnLogic(CLogicDialog* Dialog,ePipeline& ExePipe,eP
 	
 	tstring DialogText = _T("Please input or edit logic memo: (or empty)");
 	UpdateEventID();
-	bool ret = Dialog->StartChildDialog(GetEventID(),_T("Input Dialog"),DialogText,TASK_OUT_THINK,ExePipe,LocalAddress,TIME_SEC,true,true);
-	if (!ret)
+	CLogicDialog*  Dlg = Dialog->StartEventDialog(GetEventID(),_T("Input Dialog"),DialogText,TASK_OUT_THINK,ExePipe,LocalAddress,TIME_SEC,true,true,true);
+	if (Dlg==NULL)
 	{
 		tstring Answer = _T("Start child dialog fail.");
 		ExePipe.SetLabel(Answer.c_str());
@@ -650,7 +909,7 @@ bool  CInterBrainObject::DoLearnObject(CLogicDialog* Dialog,ePipeline& ExePipe,e
 			
 			if (!NewExePipe->IsAlive())
 			{
-				Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
+				Dialog->CloseEventDialog(GetEventID(),*OldExePipe,ExePipe);
 				ExePipe.Break();
 				return true;
 			}
@@ -658,7 +917,7 @@ bool  CInterBrainObject::DoLearnObject(CLogicDialog* Dialog,ePipeline& ExePipe,e
 			int64 retTask = NewExePipe->GetID();
 			if (retTask == RETURN_ERROR)
 			{
-				Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
+				Dialog->CloseEventDialog(GetEventID(),*OldExePipe,ExePipe);
 				ExePipe.Break();
 				ExePipe.SetID(retTask);
 				ExePipe.SetLabel(NewExePipe->GetLabel().c_str());
@@ -675,7 +934,7 @@ bool  CInterBrainObject::DoLearnObject(CLogicDialog* Dialog,ePipeline& ExePipe,e
 
 			if(Text.size() == 0 || Text == _T(";") || Text==_T("；")){ //忽略
 
-				Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
+				Dialog->CloseEventDialog(GetEventID(),*OldExePipe,ExePipe);
 				return true;
 			}
 			
@@ -685,7 +944,7 @@ bool  CInterBrainObject::DoLearnObject(CLogicDialog* Dialog,ePipeline& ExePipe,e
 				tstring Answer = Format1024(_T("learn object memo fail"));
 				Dialog->RuntimeOutput(Answer);
 			}
-			Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
+			Dialog->CloseEventDialog(GetEventID(),*OldExePipe,ExePipe);
 			
 			ExePipe.Clear();
 			ExePipe<<*OldExePipe;
@@ -802,7 +1061,7 @@ bool  CInterBrainObject::DoLearnAction(CLogicDialog* Dialog,ePipeline& ExePipe,e
 				
 				if (!NewExePipe->IsAlive())
 				{
-					Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
+					Dialog->CloseEventDialog(GetEventID(),*OldExePipe,ExePipe);
 					ExePipe.Break();
 					return true;
 				}
@@ -810,7 +1069,7 @@ bool  CInterBrainObject::DoLearnAction(CLogicDialog* Dialog,ePipeline& ExePipe,e
 				int64 retTask = NewExePipe->GetID();
 				if (retTask == RETURN_ERROR)
 				{
-					Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
+					Dialog->CloseEventDialog(GetEventID(),*OldExePipe,ExePipe);
 					ExePipe.Break();
 					ExePipe.SetID(retTask);
 					ExePipe.SetLabel(NewExePipe->GetLabel().c_str());
@@ -829,7 +1088,7 @@ bool  CInterBrainObject::DoLearnAction(CLogicDialog* Dialog,ePipeline& ExePipe,e
 					tstring Answer = Format1024(_T("Learn action fail: %s"),ClauseText.c_str());
 					ExePipe.SetLabel(Answer.c_str());
 					ExePipe.SetID(RETURN_ERROR);
-					Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
+					Dialog->CloseEventDialog(GetEventID(),*OldExePipe,ExePipe);
 					return true;	
 				}
 				
@@ -840,8 +1099,8 @@ bool  CInterBrainObject::DoLearnAction(CLogicDialog* Dialog,ePipeline& ExePipe,e
 				
 				tstring DialogText = _T("Please input action memo : (or empty)");
 				UpdateEventID();
-				bool ret = Dialog->StartChildDialog(GetEventID(),_T("Input Dialog"),DialogText,TASK_OUT_THINK,*OldExePipe,LocalAddress,TIME_SEC,true,true);
-				if (!ret)
+				CLogicDialog*  Dlg = Dialog->StartEventDialog(GetEventID(),_T("Input Dialog"),DialogText,TASK_OUT_THINK,*OldExePipe,LocalAddress,TIME_SEC,true,true,true);
+				if (Dlg==NULL)
 				{
 					tstring Answer = _T("Start child dialog fail.");
 					ExePipe.SetLabel(Answer.c_str());
@@ -858,7 +1117,7 @@ bool  CInterBrainObject::DoLearnAction(CLogicDialog* Dialog,ePipeline& ExePipe,e
 				
 				if (!NewExePipe->IsAlive())
 				{
-					Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
+					Dialog->CloseEventDialog(GetEventID(),*OldExePipe,ExePipe);
 					ExePipe.Break();
 					return true;
 				}
@@ -866,7 +1125,7 @@ bool  CInterBrainObject::DoLearnAction(CLogicDialog* Dialog,ePipeline& ExePipe,e
 				int64 retTask = NewExePipe->GetID();
 				if (retTask == RETURN_ERROR)
 				{
-					Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
+					Dialog->CloseEventDialog(GetEventID(),*OldExePipe,ExePipe);
 					ExePipe.Break();
 					ExePipe.SetID(retTask);
 					ExePipe.SetLabel(NewExePipe->GetLabel().c_str());
@@ -888,7 +1147,7 @@ bool  CInterBrainObject::DoLearnAction(CLogicDialog* Dialog,ePipeline& ExePipe,e
 						Dialog->RuntimeOutput(Answer);
 					}
 				}
-				Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
+				Dialog->CloseEventDialog(GetEventID(),*OldExePipe,ExePipe);
 				
 				ExePipe.Clear();
 				ExePipe<<*OldExePipe;
@@ -937,8 +1196,8 @@ bool  CInterBrainObject::DoLearnAction(CLogicDialog* Dialog,ePipeline& ExePipe,e
 
 	UpdateEventID();
 	tstring DialogText= _T("Please input command text:");
-	bool ret = Dialog->StartChildDialog(GetEventID(),_T("Input Dialog"),DialogText,TASK_OUT_THINK,ExePipe,LocalAddress,TIME_SEC,true,true);
-	if (!ret)
+	CLogicDialog*  Dlg = Dialog->StartEventDialog(GetEventID(),_T("Input Dialog"),DialogText,TASK_OUT_THINK,ExePipe,LocalAddress,TIME_SEC,true,true,true);
+	if (Dlg==NULL)
 	{
 		tstring Answer = _T("Start child dialog fail.");
 		ExePipe.SetLabel(Answer.c_str());
@@ -958,7 +1217,7 @@ bool  CInterBrainObject::DoLearnMemory(CLogicDialog* Dialog,ePipeline& ExePipe,e
 
 			if (!NewExePipe->IsAlive())
 			{
-				Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
+				Dialog->CloseEventDialog(GetEventID(),*OldExePipe,ExePipe);
 				ExePipe.Break();
 				return true;
 			}
@@ -966,7 +1225,7 @@ bool  CInterBrainObject::DoLearnMemory(CLogicDialog* Dialog,ePipeline& ExePipe,e
 			int64 retTask = NewExePipe->GetID();
 			if (retTask == RETURN_ERROR)
 			{
-				Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
+				Dialog->CloseEventDialog(GetEventID(),*OldExePipe,ExePipe);
 				ExePipe.Break();
 				ExePipe.SetID(retTask);
 				ExePipe.SetLabel(NewExePipe->GetLabel().c_str());
@@ -988,8 +1247,8 @@ bool  CInterBrainObject::DoLearnMemory(CLogicDialog* Dialog,ePipeline& ExePipe,e
 				//再次压入事件，要求用户重新输入
 				tstring DialogText = _T("Input error: not a token,Please input again.");
 				UpdateEventID();
-				bool ret = Dialog->StartChildDialog(GetEventID(),_T("Input word"),DialogText,TASK_OUT_THINK,*OldExePipe,LocalAddress,TIME_SEC,true,true);				
-				if (!ret)
+				CLogicDialog*  Dlg= Dialog->StartEventDialog(GetEventID(),_T("Input word"),DialogText,TASK_OUT_THINK,*OldExePipe,LocalAddress,TIME_SEC,true,true,true);				
+				if (Dlg==NULL)
 				{
 					tstring Answer = _T("Start child dialog fail.");
 					ExePipe.SetLabel(Answer.c_str());

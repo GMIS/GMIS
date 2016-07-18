@@ -311,11 +311,8 @@ public:
 	//如果ClientEventID ==0则不通知GUI显示系统对话
 		
 	bool          CreateSysDialog(int64 SourceID,tstring SourceName);
-	CLogicDialog* CreateChildDialog(CLogicDialog* ParentDialog,int64 ChildDilaogID,tstring ChildDialogName,int64 ClientEventID,
-									ePipeline& ClientAddress,ePipeline& ClientEexePipe,int Interval,bool bOnce,bool bTransTask);
-	void          CreateChildDialog(int64 InstinctID,tstring TaskName,int64 ClientEventID,ePipeline& ClientAddress,ePipeline& ExePipe,
+	void          StartSysTask(int64 InstinctID,tstring TaskName,int64 ClientEventID,ePipeline& ClientAddress,ePipeline& ExePipe,
 									bool bShowDialog);
-	bool          CreateEventDialog(CLogicDialog* ParentDialog,int Interval);
 //////////////////////////////////////////////////////////////////////////
 	virtual void CentralNerveMsgProc(CMsg& Msg);
 
@@ -348,8 +345,8 @@ public:
 	//NOTE:会调用Dialog.m_Mutex锁定，因此应该仅用于信息输出，避免递归嵌套导致死锁
 	//目前共用此锁的函数还有：Set\GetTaskState,Set\GetWorkMode,GetSysProcNum
 	virtual void NoitfyDialogState(CLogicDialog* Dialog, ePipeline* NotifyInfo);	
-		void OnNotifyDialogError(CLogicDialog* Dialog, ePipeline* NotifyInfo);
-		void OnNotifyDialogState(CLogicDialog* Dialog, ePipeline* NotifyInfo);
+		void OnNotifyThinkState(CLogicDialog* Dialog, ePipeline* NotifyInfo);
+		void OnNotifyTaskState(CLogicDialog* Dialog, ePipeline* NotifyInfo);
 		void OnNotifyDialogOutput(CLogicDialog* Dialog, ePipeline* NotifyInfo);
 		void OnNotifyLogicView(CLogicDialog* Dialog, ePipeline* NotifyInfo);
 		void OnNotifyObjectList(CLogicDialog* Dialog, ePipeline* NotifyInfo);

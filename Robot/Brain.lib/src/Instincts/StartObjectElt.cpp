@@ -33,7 +33,7 @@ bool  CStartObject::Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalA
 
 			if (!NewExePipe->IsAlive())
 			{
-				Dialog->CloseChildDialog(GetEventID(),*OldExePipe,ExePipe);
+				Dialog->CloseEventDialog(GetEventID(),*OldExePipe,ExePipe);
 				ExePipe.Break();
 				return true;
 			}
@@ -42,7 +42,7 @@ bool  CStartObject::Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalA
 			if (retTask == RETURN_ERROR)
 			{
 
-				Dialog->CloseChildDialog(EventID,*OldExePipe,ExePipe);
+				Dialog->CloseEventDialog(EventID,*OldExePipe,ExePipe);
 				ExePipe.SetID(retTask);
 				ExePipe.SetLabel(NewExePipe->GetLabel().c_str());
 				return true;
@@ -65,7 +65,7 @@ bool  CStartObject::Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalA
 			ExePipe << *NewExePipe;
 
 
-			Dialog->CloseChildDialog(EventID,*OldExePipe,ExePipe);
+			Dialog->CloseEventDialog(EventID,*OldExePipe,ExePipe);
 
 			Dialog->AddObjectInstance(InstanceID,*m_Obj);
 			Dialog->m_ObjectFocus = InstanceID;
@@ -96,7 +96,7 @@ bool  CStartObject::Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalA
 	//这个子对话主要起提示作用，实际任务会交给远方执行
 	tstring DialogText = _T("Waiting for starting external object");
 	tstring Title = Format1024(_T("StartObject(%I64ld)"),m_ID);
-	Dialog->StartChildDialog(GetEventID(),Title,DialogText,TASK_OUT_DEFAULT,ExePipe,LocalAddress,TIME_SEC,false,false);
+	Dialog->StartEventDialog(GetEventID(),Title,DialogText,TASK_OUT_DEFAULT,ExePipe,LocalAddress,TIME_SEC,false,false,true);
 
 
 	//把请求发给对方
