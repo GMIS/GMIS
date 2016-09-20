@@ -119,7 +119,7 @@ namespace ABSTRACT{
 	bool  ePipeline::FromString(AnsiString& s,uint32& pos){ 
 		 Clear();
 
-		 if(s.size()-pos<9 || s[pos]!='4' || s[pos+1]!='@'){
+		 if(s.size()-pos<9 || s[pos]!=TYPE_TO_CHAR(TYPE_PIPELINE) || s[pos+1]!='@'){
 			 	return false;
 		 }
 		 
@@ -170,9 +170,10 @@ namespace ABSTRACT{
 		 bool ret;
 		 while(pos<end)
 		 {	
-			 char Type = s[pos];
+			 int Type = CHAR_TO_TYPE(s[pos]);
+			 
 			 switch(Type){        //01234567891011
-			 case '0':
+			 case TYPE_NULL:
 				 {
 			         //0@0@
 					 eNULL* v = new eNULL();
@@ -183,7 +184,7 @@ namespace ABSTRACT{
 					 }
 				 }
 				 break;
-			 case '1':
+			 case TYPE_INT:
 				 {
 					 eINT* v = new eINT();
 					 Push_Directly(v);
@@ -193,7 +194,7 @@ namespace ABSTRACT{
 					 }
 				 }
 				 break;
-			 case '2':
+			 case TYPE_FLOAT:
 				 {
 					 eFLOAT* v = new eFLOAT();
 					 Push_Directly(v);
@@ -203,7 +204,7 @@ namespace ABSTRACT{
 					 }
 				 }
 				 break;
-			 case '3':
+			 case TYPE_STRING:
 				 {
 					 eSTRING* v = new eSTRING();
 					 Push_Directly(v);
@@ -214,7 +215,7 @@ namespace ABSTRACT{
 				 }
 				 break;
 
-			 case '4':
+			 case TYPE_PIPELINE:
 				 {
 					 ePipeline* v = new ePipeline();
 					 Push_Directly(v);
@@ -224,7 +225,7 @@ namespace ABSTRACT{
 					 }
 				 }
 				 break;
-			 case '5':
+			 case TYPE_BLOB:
 				 {
 					eBLOB* b = new eBLOB;
                     Push_Directly(b);

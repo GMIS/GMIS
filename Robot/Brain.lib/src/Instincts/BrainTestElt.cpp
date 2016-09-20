@@ -1,8 +1,8 @@
 ﻿#pragma warning (disable: 4786)
 
-#include "BrainInitElt.h"
-#include "..\InstinctDefine.h"
+#include "..\Brain.h"
 #include "..\LogicDialog.h"
+#include "..\InstinctDefine.h"
 
 
 CTestExpectation::CTestExpectation(int64 ID,bool bExpectation,tstring Name)
@@ -89,14 +89,12 @@ bool CBrainTestElt::Do(CLogicDialog* Dialog,ePipeline& ExePipe, ePipeline& Local
 			{
 				//先交给系统缺省处理(有时需要关闭无效事件)
 			    int64 MsgID = Msg.GetMsgID();
-				tstring MsgStr = Dialog->m_Brain->MsgID2Str(MsgID);
+				tstring MsgStr = GetBrain()->MsgID2Str(MsgID);
 
 				ChildIndex = IT_SELF;
 				CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 				
-				ExePipe.SetID(RETURN_ERROR);
-				ExePipe.GetLabel() = Format1024(_T("Error: Msg(%s) Address(%I64ld) Invalid"),MsgStr.c_str(),ID);
-				return false;
+				return ExeError(ExePipe,Format1024(_T("Error: Msg(%s) Address(%I64ld) Invalid"),MsgStr.c_str(),ID));
 			}else{
 				
 				Mass* Child = *It;
@@ -104,11 +102,9 @@ bool CBrainTestElt::Do(CLogicDialog* Dialog,ePipeline& ExePipe, ePipeline& Local
 					if (ObjectAddress.Size()!=0) //对于非MASS_ELEMENT,则肯定是最后一个目标地址
 					{
 						int64 MsgID = Msg.GetMsgID();
-						tstring MsgStr = Dialog->m_Brain->MsgID2Str(MsgID);
+						tstring MsgStr = GetBrain()->MsgID2Str(MsgID);
 
-						ExePipe.SetID(RETURN_ERROR);
-						ExePipe.GetLabel() = Format1024(_T("Error: Msg(%s) Address(%I64ld) Invalid"),MsgStr.c_str(),ID);
-						return false;
+						return ExeError(ExePipe,Format1024(_T("Error: Msg(%s) Address(%I64ld) Invalid"),MsgStr.c_str(),ID));
 					};
 					
 					ChildIndex = It-m_ActomList.begin();
@@ -130,11 +126,7 @@ bool CBrainTestElt::Do(CLogicDialog* Dialog,ePipeline& ExePipe, ePipeline& Local
 		if(Child->MassType() == MASS_ELEMENT){
 			CElement* Elt = (CElement*)Child;
 			if(!Elt->Do(Dialog,ExePipe,LocalAddress,Msg)){
-				ExePipe.SetID(RETURN_ERROR);
-				if (ExePipe.GetLabel().size()==0)
-				{
-					ExePipe.GetLabel() = Format1024(_T("%I64ld: %s execute failure."),Child->m_ID,Child->GetName().c_str());
-				}
+				ExeError(ExePipe,Format1024(_T("%I64ld: %s execute failure."),Child->m_ID,Child->GetName().c_str()));
 			};
 		}
 		else {					
@@ -143,14 +135,10 @@ bool CBrainTestElt::Do(CLogicDialog* Dialog,ePipeline& ExePipe, ePipeline& Local
 
 			if( !ExePipe.HasTypeAB(Type))  
 			{
-				ExePipe.SetID(RETURN_ERROR);
-				ExePipe.GetLabel() = Format1024(_T("%I64ld: %s input data type checking failure:(%x,%x)"),Child->m_ID,Child->GetName().c_str(),Type,ExePipe.GetTypeAB());
+				ExeError(ExePipe,Format1024(_T("%I64ld: %s input data type checking failure:(%x,%x)"),Child->m_ID,Child->GetName().c_str(),Type,ExePipe.GetTypeAB()));
 			}else{								
 				if(!Child->Do(&ExePipe)){
-					ExePipe.SetID(RETURN_ERROR);
-					if (ExePipe.GetLabel().size()==0){
-						ExePipe.GetLabel() = Format1024(_T("%I64ld: %s execute failure."),Child->m_ID,Child->GetName().c_str());
-					}
+					ExeError(ExePipe,Format1024(_T("%I64ld: %s execute failure."),Child->m_ID,Child->GetName().c_str()));
 				};     
 			}			
 		};

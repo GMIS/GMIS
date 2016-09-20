@@ -40,9 +40,9 @@ namespace ABSTRACT{
     Msg.GetReceiver()<<ReceiverAddress;  
 	Msg.GetSender()<<SenderAddress
 
-    Msg.GetLetter().PushInt32(12);
+    Msg.GetLetter(false).PushInt32(12);
     ...
-    Msg.GetLetter().PushString("Hello");
+    Msg.GetLetter(false).PushString("Hello");
     m_Ouput->PushToSend(Msg); 
 
 Note: That simply let Msg.Receiver () =Msg.Sender ()  will cause the EventID error
@@ -50,7 +50,6 @@ Note: That simply let Msg.Receiver () =Msg.Sender ()  will cause the EventID err
 
 class ePipeline;
 
-ePipeline* CreateMsg(int64 MsgID,int64 EventID,ePipeline** ReceiverInfo,ePipeline** Letter,ePipeline** SenderInfo);
 
 class CMsg{
 private:
@@ -61,6 +60,7 @@ private:
 		assert(0);
 		return *this;
 	}
+
 protected:
 	ePipeline*  m_MsgPtr;
 	bool        m_bReaded; //readed，just using the GetLetter () will  set it to true, default is false
@@ -77,6 +77,7 @@ public:
 	CMsg(int64 SourceID,ePipeline& Receiver,int64 MsgID,ePipeline& Sender,int64 EventID);
 	CMsg(int64 SourceID,int64 ReceiverID,int64 MsgID,int64 SenderID,int64 EventID);
 	CMsg(int64 SourceID,ePipeline& Receiver,int64 MsgID,int64 SenderID,int64 EventID);
+	CMsg(int64 SourceID,int64 ReceiverID,int64 MsgID,ePipeline& Sender,int64 EventID);
 
 	CMsg(ePipeline* Msg);	
 	virtual ~CMsg();	
@@ -90,7 +91,7 @@ public:
 	ePipeline& GetMsg();
 
 	ePipeline& GetReceiver();
-	ePipeline& GetLetter();
+	ePipeline& GetLetter(bool bRead);
 	ePipeline& GetSender();
 
 	void  SetSourceID(int64 ID);

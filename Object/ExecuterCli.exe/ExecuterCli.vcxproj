@@ -17,6 +17,7 @@
   <PropertyGroup Label="Globals">
     <SccProjectName />
     <SccLocalPath />
+    <ProjectName>ActiveObject</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Template|Win32'" Label="Configuration">
@@ -53,8 +54,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <TargetName>exe_vc10d</TargetName>
-    <IncludePath>D:\work\GMIS\World\VirtualSpace.lib\src;D:\poco-1.6.0\Net\include;D:\poco-1.6.0\Foundation\include;$(IncludePath)</IncludePath>
+    <TargetName>exe_wind</TargetName>
+    <IncludePath>D:\poco-1.6.0\Net\include;D:\poco-1.6.0\Foundation\include;D:\work\GMIS\World\VirtualSpace.lib\src;$(IncludePath)</IncludePath>
     <ReferencePath>$(ReferencePath)</ReferencePath>
     <LibraryPath>D:\poco-1.6.0\lib;$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)bin\$(Configuration)\</OutDir>
@@ -133,11 +134,22 @@
     <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\Executer.cpp" />
+    <ClCompile Include="src\curl\CurlObject.cpp" />
+    <ClCompile Include="src\ActiveObject.cpp" />
     <ClCompile Include="src\Main.cpp" />
+    <ClCompile Include="src\test\TestObject.cpp" />
+    <ClCompile Include="src\uArm\ThinDataTransProtocal.cpp" />
+    <ClCompile Include="src\uArm\uArmObject.cpp" />
+    <ClCompile Include="src\win_api\WinAPIObject.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Executer.h" />
+    <ClInclude Include="src\curl\CurlObject.h" />
+    <ClInclude Include="src\ActiveObject.h" />
+    <ClInclude Include="src\ObjectList.h" />
+    <ClInclude Include="src\test\TestObject.h" />
+    <ClInclude Include="src\uArm\ThinDataTransProtocal.h" />
+    <ClInclude Include="src\uArm\uArmObject.h" />
+    <ClInclude Include="src\win_api\WinAPIObject.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

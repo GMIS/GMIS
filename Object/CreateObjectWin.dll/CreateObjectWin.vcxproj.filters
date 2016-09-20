@@ -1,17 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="uArm">
-      <UniqueIdentifier>{dfea6ed1-25c0-41bc-b60a-74147f6dd740}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="curl">
-      <UniqueIdentifier>{91fbdd59-1b18-4586-965f-a3c7d684d14e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="win_api">
-      <UniqueIdentifier>{73329ef5-f52f-474b-b07a-7d9339fdd2ce}</UniqueIdentifier>
-    </Filter>
-  </ItemGroup>
-  <ItemGroup>
+    <ClCompile Include="CreateObject.cpp" />
     <ClCompile Include="curl\CurlObject.cpp">
       <Filter>curl</Filter>
     </ClCompile>
@@ -24,9 +14,9 @@
     <ClCompile Include="win_api\WinAPIObject.cpp">
       <Filter>win_api</Filter>
     </ClCompile>
-    <ClCompile Include="CreateObject.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CreateObject.h" />
     <ClInclude Include="curl\CurlObject.h">
       <Filter>curl</Filter>
     </ClInclude>
@@ -40,6 +30,16 @@
       <Filter>win_api</Filter>
     </ClInclude>
     <ClInclude Include="ObjectList.h" />
-    <ClInclude Include="CreateObject.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="curl">
+      <UniqueIdentifier>{b0e94053-bf8e-4bd4-a84c-da9256247773}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="uArm">
+      <UniqueIdentifier>{bf3d52f2-061c-44d5-95c3-a0af78261fff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="win_api">
+      <UniqueIdentifier>{782698bd-7667-4a08-aa10-217447bfba04}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>

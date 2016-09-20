@@ -74,16 +74,7 @@
     <ClCompile Include="src\Instincts\DebugBreak.cpp">
       <Filter>Instincts</Filter>
     </ClCompile>
-    <ClCompile Include="src\Instincts\WaitSecond.cpp">
-      <Filter>Instincts</Filter>
-    </ClCompile>
     <ClCompile Include="src\Instincts\GotoLabel.cpp">
-      <Filter>Instincts</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Instincts\GetDate.cpp">
-      <Filter>Instincts</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Instincts\GetTime.cpp">
       <Filter>Instincts</Filter>
     </ClCompile>
     <ClCompile Include="src\Instincts\OutputInfo.cpp">
@@ -92,22 +83,7 @@
     <ClCompile Include="src\Instincts\InputElt.cpp">
       <Filter>Instincts</Filter>
     </ClCompile>
-    <ClCompile Include="src\Instincts\StartObjectElt.cpp">
-      <Filter>Instincts</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Instincts\NameObjectElt.cpp">
-      <Filter>Instincts</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Instincts\FocusObjectElt.cpp">
-      <Filter>Instincts</Filter>
-    </ClCompile>
     <ClCompile Include="src\Instincts\UseObjectElt.cpp">
-      <Filter>Instincts</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Instincts\GetObjectDocElt.cpp">
-      <Filter>Instincts</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Instincts\CloseObjectElt.cpp">
       <Filter>Instincts</Filter>
     </ClCompile>
     <ClCompile Include="src\Instincts\UseRobotElt.cpp">
@@ -117,9 +93,6 @@
       <Filter>Instincts</Filter>
     </ClCompile>
     <ClCompile Include="src\Instincts\PipeViewElt.cpp">
-      <Filter>Instincts</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Instincts\GetSpaceCatalogElt.cpp">
       <Filter>Instincts</Filter>
     </ClCompile>
     <ClCompile Include="src\Instincts\BitwiseOperator.cpp">
@@ -134,13 +107,7 @@
     <ClCompile Include="src\Instincts\RelationalOperator.cpp">
       <Filter>Instincts</Filter>
     </ClCompile>
-    <ClCompile Include="src\Instincts\BrainInitElt.cpp">
-      <Filter>Instincts</Filter>
-    </ClCompile>
     <ClCompile Include="src\Instincts\LogicElement.cpp">
-      <Filter>Instincts</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Instincts\BrainObject.cpp">
       <Filter>Instincts</Filter>
     </ClCompile>
     <ClCompile Include="src\Instincts\BrainTestElt.cpp">
@@ -149,7 +116,13 @@
     <ClCompile Include="src\Instincts\MemoryDataElt.cpp">
       <Filter>Instincts</Filter>
     </ClCompile>
-    <ClCompile Include="src\Instincts\LogicElt.cpp">
+    <ClCompile Include="src\Instincts\TimeOperator.cpp">
+      <Filter>Instincts</Filter>
+    </ClCompile>
+    <ClCompile Include="src\BrainSysTask.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Instincts\InterInstinct.cpp">
       <Filter>Instincts</Filter>
     </ClCompile>
   </ItemGroup>
@@ -193,16 +166,7 @@
     <ClInclude Include="src\Instincts\DebugBreak.h">
       <Filter>Instincts</Filter>
     </ClInclude>
-    <ClInclude Include="src\Instincts\WaitSecond.h">
-      <Filter>Instincts</Filter>
-    </ClInclude>
     <ClInclude Include="src\Instincts\GotoLabel.h">
-      <Filter>Instincts</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Instincts\GetDate.h">
-      <Filter>Instincts</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Instincts\GetTime.h">
       <Filter>Instincts</Filter>
     </ClInclude>
     <ClInclude Include="src\Instincts\OutputInfo.h">
@@ -211,22 +175,7 @@
     <ClInclude Include="src\Instincts\InputElt.h">
       <Filter>Instincts</Filter>
     </ClInclude>
-    <ClInclude Include="src\Instincts\StartObjectElt.h">
-      <Filter>Instincts</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Instincts\NameObjectElt.h">
-      <Filter>Instincts</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Instincts\FocusObjectElt.h">
-      <Filter>Instincts</Filter>
-    </ClInclude>
     <ClInclude Include="src\Instincts\UseObjectElt.h">
-      <Filter>Instincts</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Instincts\GetObjectDocElt.h">
-      <Filter>Instincts</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Instincts\CloseObjectElt.h">
       <Filter>Instincts</Filter>
     </ClInclude>
     <ClInclude Include="src\Instincts\UseRobotElt.h">
@@ -236,9 +185,6 @@
       <Filter>Instincts</Filter>
     </ClInclude>
     <ClInclude Include="src\Instincts\PipeViewElt.h">
-      <Filter>Instincts</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Instincts\GetSpaceCatalogElt.h">
       <Filter>Instincts</Filter>
     </ClInclude>
     <ClInclude Include="src\Instincts\BitwiseOperator.h">
@@ -256,13 +202,7 @@
     <ClInclude Include="src\Instincts\RelationalOperator.h">
       <Filter>Instincts</Filter>
     </ClInclude>
-    <ClInclude Include="src\Instincts\BrainInitElt.h">
-      <Filter>Instincts</Filter>
-    </ClInclude>
     <ClInclude Include="src\Instincts\LogicElement.h">
-      <Filter>Instincts</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Instincts\BrainObject.h">
       <Filter>Instincts</Filter>
     </ClInclude>
     <ClInclude Include="src\Instincts\BrainTestElt.h">
@@ -271,7 +211,13 @@
     <ClInclude Include="src\Instincts\MemoryDataElt.h">
       <Filter>Instincts</Filter>
     </ClInclude>
-    <ClInclude Include="src\Instincts\LogicElt.h">
+    <ClInclude Include="src\Instincts\TimeOperator.h">
+      <Filter>Instincts</Filter>
+    </ClInclude>
+    <ClInclude Include="src\BrainSysTask.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Instincts\InterInstinct.h">
       <Filter>Instincts</Filter>
     </ClInclude>
   </ItemGroup>

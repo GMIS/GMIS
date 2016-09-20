@@ -14,8 +14,6 @@
 
 
 #include "PhysicSpace.h"
-#include <gl\gl.h>
-#include <gl\glu.h>
 #include "VisibleSpace.h"
 #include "WinSpace2.h"
 

@@ -25,7 +25,7 @@ using namespace std;
 namespace ABSTRACT { 
 
 
-AnsiString  WStoUTF8(const std::wstring& s);
+AnsiString   WStoUTF8(const std::wstring& s);
 std::wstring UTF8toWS(const AnsiString& s);
 
 enum  SPACE_TYPE{     
@@ -41,8 +41,8 @@ class  AbstractSpace
 {
 
 private:
-	static CABTime*          m_StaticTimer;
-    static CABSpacePool*  m_StaticSpacePool;
+	static CABTime*         m_StaticTimer;
+    static CABSpacePool*	m_StaticSpacePool;
 
 protected:
 	AbstractSpace(){

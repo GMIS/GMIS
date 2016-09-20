@@ -13,22 +13,13 @@ class  Energy : public AbstractSpace
     static const float64   FLOATTABLE[][10];
 
 	static const wchar_t*     BaseEnergyName[];
-	/*= {
-                     "TYPE_NULL",        // = 0,   	                 
-		    		 "TYPE_INT",         // = 1,
-		    		 "TYPE_FLOAT",       // = 2,
-					 "TYPE_STRING",      // = 3,
-					 "TYPE_PIPELINE",    // = 4,
-					 "TYPE_BLOB",        // = 5,
-					 "TYPE_USER"         // = 6,		
-	};*/
 
 public:
-    static const char*     BaseEnergyChar;  // = "0123456"; used for data-string conversion 
+    static const char*     BaseEnergyChar;  // = "0123456789abcdef"; 
 
     #define  TYPE_TO_CHAR(type) Energy::BaseEnergyChar[type]
-    #define  CHAR_TO_TYPE(ch)   ch-'0'   
-    #define  IsDataType(ch)    (ch>47 && ch<54)
+    #define  CHAR_TO_TYPE(ch)  (ch >47 && ch <58)?ch-'0': ch- 'a'+10 
+    #define  IsDataType(ch)    ((ch >47 && ch <58)|| (ch>96 && ch <103))
 
 private: 
 	//hardly use for the Energy class' instances,so weakened it as private 

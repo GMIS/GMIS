@@ -7,7 +7,7 @@
 #include "Ipclass.h"
 #include "InstinctDefine.h"
 
-tstring Instinct2Str(int32 InstinctID){
+tstring Instinct2Str(int64 InstinctID){
 	static map<int64,tstring>  InstinctTextList;
 	if (InstinctTextList.size()==0)
 	{
@@ -71,13 +71,13 @@ void CBrainMemory::Open(const char* DB /*= NULL*/){
 	}
 
 	//首先生成ROOT_SPACE，似乎没有必要，当生成第一个空间时，会自动生成。  
-	int64 RoomID = ROOT_SPACE;   
-	if(!RBrainHasTable(RoomID))CreateRBrainTable(RoomID);
-	RoomID = ROOM_SYSTEM;
-	if(!HasTable(RoomID)){
+	int64 SpaceID = ROOT_SPACE;   
+	if(!RBrainHasTable(SpaceID))CreateRBrainTable(SpaceID);
+	SpaceID = ROOM_SYSTEM;
+	if(!HasTable(SpaceID)){
 		CppSQLite3Buffer SQL;
 		char TableName[30];
-		int64toa(RoomID,TableName);
+		int64toa(SpaceID,TableName);
 		SQL.format("CREATE TABLE \"%s\" ( a INTEGER NOT NULL ,b TEXT NOT NULL);",TableName);
 		BrainDB.execDML(SQL);
 	}
@@ -399,71 +399,71 @@ void CBrainMemory::InsertRow(int64 TableName,int64 one, int64 two, int64 three)
 
 
 
-void CBrainMemory::InsertRoom(int64 ParentTable,int64 ParentRoomValue,int64 RoomID,int64 RoomValue,int64 RoomType)
+void CBrainMemory::InsertSpace(int64 ParentTable,int64 ParentSpaceValue,int64 SpaceID,int64 SpaceValue,int64 SpaceType)
 {
 	ToRBrain(ParentTable);
 	if(!RBrainHasTable(ParentTable)){
 		CreateRBrainTable(ParentTable);
 	}
      
-	assert(RoomValue != 0);
-	RBrainInsertRow(ParentTable,RoomID,RoomValue,RoomType);
+	assert(SpaceValue != 0);
+	RBrainInsertRow(ParentTable,SpaceID,SpaceValue,SpaceType);
 	
 	//制作索引
-	if(!LBrainHasTable(RoomValue)){
-		CreateLBrainTable(RoomValue);
+	if(!LBrainHasTable(SpaceValue)){
+		CreateLBrainTable(SpaceValue);
 	}
-	LBrainInsertRow(RoomValue,ParentTable,ParentRoomValue,RoomID);
+	LBrainInsertRow(SpaceValue,ParentTable,ParentSpaceValue,SpaceID);
 }
 
 
-int64 CBrainMemory::InsertMultiRoom(
-				                    vector<int64>& RoomValueList,
-								    int64 RoomType, 
+int64 CBrainMemory::InsertMultiSpace(
+				                    vector<int64>& SpaceValueList,
+								    int64 SpaceType, 
 									int64 StartParentID,// = ROOT_SPACE,
-									int64 StartParentRoomValueID,// = ROOT_LOGIC_TEXT
+									int64 StartParentSpaceValueID,// = ROOT_LOGIC_TEXT
 								    bool  IsToken// = false 
 									) 
 {
-	if(RoomValueList.size()==0)return 0;
+	if(SpaceValueList.size()==0)return 0;
 	
-	int64 ParentRoom = StartParentID;
-	int64 ParentRoomValue = StartParentRoomValueID;
-	int64 RoomID = 0,MeaningID =0;
+	int64 ParentSpace = StartParentID;
+	int64 ParentSpaceValue = StartParentSpaceValueID;
+	int64 SpaceID = 0,MeaningID =0;
 
 
-	int32 End = RoomValueList.size();
+	int32 End = SpaceValueList.size();
 	for(int i= 0; i<End; i++)
 	{	
-		MeaningID = RoomValueList[i];
+		MeaningID = SpaceValueList[i];
 		assert(MeaningID != 0);
-		RoomID = GetChildID(ParentRoom,MeaningID, RoomType);      
-		if(RoomID == 0){ //如果搜索途中提前发现空缺,则直接开始生成新空间.
+		SpaceID = GetChildID(ParentSpace,MeaningID, SpaceType);      
+		if(SpaceID == 0){ //如果搜索途中提前发现空缺,则直接开始生成新空间.
 			for(i; i<End; i++){
-				RoomID = AbstractSpace::CreateTimeStamp();
-				MeaningID = RoomValueList[i];
-				InsertRoom(ParentRoom,ParentRoomValue,RoomID,MeaningID,RoomType);					
+				SpaceID = AbstractSpace::CreateTimeStamp();
+				MeaningID = SpaceValueList[i];
+				InsertSpace(ParentSpace,ParentSpaceValue,SpaceID,MeaningID,SpaceType);					
 				if(!IsToken){ 
-					InsertEndRoom(MeaningID,MEANING_SENSE_OK,MEMORY_LOGIC_END);
+					InsertEndSpace(MeaningID,MEANING_SENSE_OK,MEMORY_LOGIC_END);
 				}
-				ParentRoom = RoomID;
-				ParentRoomValue = MeaningID;
+				ParentSpace = SpaceID;
+				ParentSpaceValue = MeaningID;
 			}
-			return RoomID;
+			return SpaceID;
 		}else{ //如果不是token则在路过的空间的意义ID下插入一个结尾空间，
 			//表示某个时间又记忆过此空间,这对搜索运算很有帮助
 			if(!IsToken){ 
-				InsertEndRoom(MeaningID,MEANING_SENSE_OK,MEMORY_LOGIC_END);
+				InsertEndSpace(MeaningID,MEANING_SENSE_OK,MEMORY_LOGIC_END);
 			}
 		}
-		ParentRoom = RoomID;
-		ParentRoomValue = MeaningID;
+		ParentSpace = SpaceID;
+		ParentSpaceValue = MeaningID;
 	}
 
-	return RoomID;
+	return SpaceID;
 }
 
-int64 CBrainMemory::HasMeaningRoom(int64 ParentTable,int64 Meaning,int64 MeaningType){
+int64 CBrainMemory::HasMeaningSpace(int64 ParentTable,int64 Meaning,int64 MeaningType){
 	CppSQLite3Buffer SQL;
 	char a[30],b[30];
 	   
@@ -505,10 +505,10 @@ int64 CBrainMemory::HasMeaningRoom(int64 ParentTable,int64 Meaning,int64 Meaning
 	return 0;
 }
 
-int64 CBrainMemory::InsertMeaningRoom(int64 ParentTable,int64 ParentRoomValue,int64 MeaningValue,int64 MeaningType,int64 ReturnID/* = 0*/){
+int64 CBrainMemory::InsertMeaningSpace(int64 ParentTable,int64 ParentSpaceValue,int64 MeaningValue,int64 MeaningType,int64 ReturnID/* = 0*/){
 
 	//首先检查，不能重复记忆相同的意义
-	int64 MeaningID = HasMeaningRoom(ParentTable,MeaningValue,MeaningType);
+	int64 MeaningID = HasMeaningSpace(ParentTable,MeaningValue,MeaningType);
     if(MeaningID)return MeaningID;
 
     //没有记忆过 
@@ -520,15 +520,15 @@ int64 CBrainMemory::InsertMeaningRoom(int64 ParentTable,int64 ParentRoomValue,in
 
 
 	//生成指定意义空间
-	InsertRoom(ParentTable,ParentRoomValue,ChildID,MeaningValue,MeaningType);
+	InsertSpace(ParentTable,ParentSpaceValue,ChildID,MeaningValue,MeaningType);
 	
 	//插入一个缺省的结尾空间，其逻辑内容等于父空间逻辑内容
-	InsertEndRoom(ChildID,MeaningValue,MEMORY_NULL_END);
+	InsertEndSpace(ChildID,MeaningValue,MEMORY_NULL_END);
 	
 	return ChildID;
 }      
 
-void CBrainMemory::InsertEndRoom(int64 ParentTable,int64 RoomValue,int64 RoomType)
+void CBrainMemory::InsertEndSpace(int64 ParentTable,int64 SpaceValue,int64 SpaceType)
 {
 	
 	if(!RBrainHasTable(ParentTable)){
@@ -536,22 +536,22 @@ void CBrainMemory::InsertEndRoom(int64 ParentTable,int64 RoomValue,int64 RoomTyp
 	}
 	
 	int64 ChildID = AbstractSpace::CreateTimeStamp(); 
-	RBrainInsertRow(ParentTable,ChildID,RoomValue,RoomType);
+	RBrainInsertRow(ParentTable,ChildID,SpaceValue,SpaceType);
 	
 };
 
-int64 CBrainMemory::GetRoomValue(int64 RoomID){
-	assert(RoomID != ROOT_SPACE);
+int64 CBrainMemory::GetSpaceValue(int64 SpaceID){
+	assert(SpaceID != ROOT_SPACE);
 
 	CppSQLite3Buffer SQL;
 	CppSQLite3Query  Result;
 	char a[30],b[30];
 
-	ToRBrain(RoomID);
+	ToRBrain(SpaceID);
 
-    if(!RBrainHasTable(RoomID))return 0;
+    if(!RBrainHasTable(SpaceID))return 0;
 
-	int64toa(RoomID,a);
+	int64toa(SpaceID,a);
 	int64toa(MEMORY_NULL_END,b);
 
 	//首先找无意义结尾子空间，其空间值就是父空间的空间值
@@ -562,17 +562,17 @@ int64 CBrainMemory::GetRoomValue(int64 RoomID){
 				b
 	);
 
-	int64 RoomValue;		
+	int64 SpaceValue;		
 	
 	Result = BrainDB.execQuery(SQL);
 	if(!Result.eof()){  
-		RoomValue = Result.getInt64Field(0);
-	    assert(RoomValue);
-		return RoomValue;
+		SpaceValue = Result.getInt64Field(0);
+	    assert(SpaceValue);
+		return SpaceValue;
 	}
 
 	//如果没有再找任意一个非结尾子空间的逻辑明文
-	int64toa(RoomID,a);
+	int64toa(SpaceID,a);
 	int64toa(MEMORY_LOGIC_END,b);
 
 	SQL.format("select %s from \"%s\" where  %s > \"%s\";",
@@ -584,13 +584,13 @@ int64 CBrainMemory::GetRoomValue(int64 RoomID){
 				
 	Result = BrainDB.execQuery(SQL);
     if(Result.eof())return 0;   
-	RoomValue = Result.getInt64Field(0);
+	SpaceValue = Result.getInt64Field(0);
 
-	ToLBrain(RoomValue);
+	ToLBrain(SpaceValue);
 
-	int64toa(RoomValue,a);
-	int64toa(RoomID,b);
-	//通过左脑，根据子空间值以及RoomID得到当前空间的逻辑明文
+	int64toa(SpaceValue,a);
+	int64toa(SpaceID,b);
+	//通过左脑，根据子空间值以及SpaceID得到当前空间的逻辑明文
 	//也就是当前空间的ID和逻辑明文,以便能向上漫游		
 	SQL.format("select %s from \"%s\" where  %s = \"%s\";",
 		        LB_FATHER_VALUE,
@@ -606,48 +606,48 @@ int64 CBrainMemory::GetRoomValue(int64 RoomID){
 }
 
 
-bool CBrainMemory::GetRoomInfo(int64 RoomID, int64& RoomValue, int64& RoomType){
+bool CBrainMemory::GetSpaceInfo(int64 SpaceID, int64& SpaceValue, int64& SpaceType){
     
-	assert(RoomID != ROOT_SPACE);
+	assert(SpaceID != ROOT_SPACE);
 
 	CppSQLite3Buffer SQL;
 	CppSQLite3Query  Result;
 
-	RoomValue = GetRoomValue(RoomID);
+	SpaceValue = GetSpaceValue(SpaceID);
 
-	if(RoomValue==0)return false;
+	if(SpaceValue==0)return false;
 
 	//但要得到逻辑暗文需要在向上走一次，得到父空间的ID
-    Result = LBrainQuery(LB_FATHER_ID,RoomValue,LB_CHILD_ID,RoomID);
+    Result = LBrainQuery(LB_FATHER_ID,SpaceValue,LB_CHILD_ID,SpaceID);
 	if(Result.eof())return false;
 		
 	int64 FatherID = Result.getInt64Field(0);
 
 	//回过头来,找当前空间的逻辑暗文
-    Result = RBrainQuery(RB_SPACE_TYPE,FatherID,RB_SPACE_ID,RoomID);
+    Result = RBrainQuery(RB_SPACE_TYPE,FatherID,RB_SPACE_ID,SpaceID);
 	if(Result.eof())return false;
     
-	RoomType =  Result.getInt64Field(0);
+	SpaceType =  Result.getInt64Field(0);
 	return true;
 }
 
-int64 CBrainMemory::GetChildID(int64 ParentRoom,int64 ChildRoomValue,int64 ChildRoomType)
+int64 CBrainMemory::GetChildID(int64 ParentSpace,int64 ChildSpaceValue,int64 ChildSpaceType)
 {
-	ToRBrain(ParentRoom);
+	ToRBrain(ParentSpace);
     int64 ChildID;
 	 
 	
-	if(!RBrainHasTable(ParentRoom))return 0;
+	if(!RBrainHasTable(ParentSpace))return 0;
 
 	CppSQLite3Buffer SQL;
 	CppSQLite3Query  Result;
 	char a[30],b[30],c[30];
    
-	assert(ChildRoomValue != 0 || ChildRoomType != 0);
+	assert(ChildSpaceValue != 0 || ChildSpaceType != 0);
 
-	int64toa(ParentRoom,a);
-	int64toa(ChildRoomValue,b);
-	int64toa(ChildRoomType,c);
+	int64toa(ParentSpace,a);
+	int64toa(ChildSpaceValue,b);
+	int64toa(ChildSpaceType,c);
 
 	SQL.format("select \"%s\" from \"%s\" where \"%s\" = \"%s\" and \"%s\" = %s;",
 				RB_SPACE_ID,
@@ -665,18 +665,18 @@ int64 CBrainMemory::GetChildID(int64 ParentRoom,int64 ChildRoomValue,int64 Child
 	return ChildID;
 }
 
-int64 CBrainMemory::GetChildType(int64 ParentRoomID,int64 ChildRoomID){
-	ToRBrain(ParentRoomID);
+int64 CBrainMemory::GetChildType(int64 ParentSpaceID,int64 ChildSpaceID){
+	ToRBrain(ParentSpaceID);
  	 	
-	if(!RBrainHasTable(ParentRoomID))return 0;
+	if(!RBrainHasTable(ParentSpaceID))return 0;
 
 	CppSQLite3Buffer SQL;
 	CppSQLite3Query  Result;
 	char a[30],b[30];
    
-	assert(ChildRoomID != 0 );
-	int64toa(ParentRoomID,a);
-	int64toa(ChildRoomID,b);
+	assert(ChildSpaceID != 0 );
+	int64toa(ParentSpaceID,a);
+	int64toa(ChildSpaceID,b);
 
 	SQL.format("select \"%s\" from \"%s\" where \"%s\" = \"%s\" ",
 				RB_SPACE_TYPE,
@@ -699,19 +699,19 @@ int64 CBrainMemory::GetFatherID(int64 Child)
 
 	//首先找到它的逻辑明文
 	
-	int64 ChildRoomValue = GetRoomValue(Child);
-	if(!ChildRoomValue)return 0;
+	int64 ChildSpaceValue = GetSpaceValue(Child);
+	if(!ChildSpaceValue)return 0;
 
 	//得到父空间的ID
-    CppSQLite3Query  Result = LBrainQuery(LB_FATHER_ID,ChildRoomValue,LB_CHILD_ID,Child);
+    CppSQLite3Query  Result = LBrainQuery(LB_FATHER_ID,ChildSpaceValue,LB_CHILD_ID,Child);
 	if(Result.eof())return false;
 		
 	return  Result.getInt64Field(0);
 }
 
 	
-void CBrainMemory::DeleteChild(int64 ParentTable,int64 ChildRoomValue,int64 ChildRoomType){
-	int64 ChildID = GetChildID(ParentTable,ChildRoomValue,ChildRoomType);
+void CBrainMemory::DeleteChild(int64 ParentTable,int64 ChildSpaceValue,int64 ChildSpaceType){
+	int64 ChildID = GetChildID(ParentTable,ChildSpaceValue,ChildSpaceType);
     if(ChildID==0)return ;
 
     CppSQLite3Buffer SQL;
@@ -731,45 +731,45 @@ void CBrainMemory::DeleteChild(int64 ParentTable,int64 ChildRoomValue,int64 Chil
     BrainDB.execDML(SQL);
 
 	//最后删除索引
-	ToLBrain(ChildRoomValue);
-	int64toa(ChildRoomValue,Father);
+	ToLBrain(ChildSpaceValue);
+	int64toa(ChildSpaceValue,Father);
     SQL.format("delete from \"%s\" where %s = \"%s\" ",Father,LB_CHILD_ID,buf);
 }
 
 int64 CBrainMemory::CheckMemory(
-		                   vector<int64>& RoomValueList,  //形空间的值
+		                   vector<int64>& SpaceValueList,  //形空间的值
 						   int64 Meaning,        //指定意义空间的值
 						   int64 MeaningType,    //意义空间类型
 						   int64 MeaningSense,   //如果=0则无效，否则给指定的意义一个评价
 						   int64 StartParentID /*= ROOT_SPACE*/,              //指定插入的起始空间   
-						   int64 StartParentRoomValueID /*= ROOT_LOGIC_TEXT*///生成索引需要
+						   int64 StartParentSpaceValueID /*= ROOT_LOGIC_TEXT*///生成索引需要
 						   ){
 
 
-	if(RoomValueList.size()==0)return 0;
+	if(SpaceValueList.size()==0)return 0;
 
-	int64 ParentRoom = StartParentID;
-	int64 ParentRoomValue = StartParentRoomValueID;
-	int64 RoomID = 0,RoomValue =0;
+	int64 ParentSpace = StartParentID;
+	int64 ParentSpaceValue = StartParentSpaceValueID;
+	int64 SpaceID = 0,SpaceValue =0;
 
 	try{
 			    
-		int32 End = RoomValueList.size();
+		int32 End = SpaceValueList.size();
 		for(int i= 0; i<End; i++)
 		{	
-			RoomValue = RoomValueList[i];
-			assert(RoomValue != 0);
-			RoomID = GetChildID(ParentRoom,RoomValue, MEMORY_BODY);      
-			if(RoomID == 0){ 
+			SpaceValue = SpaceValueList[i];
+			assert(SpaceValue != 0);
+			SpaceID = GetChildID(ParentSpace,SpaceValue, MEMORY_BODY);      
+			if(SpaceID == 0){ 
 				return 0;
 			}
-			ParentRoom = RoomID;
-			ParentRoomValue = RoomValue;
+			ParentSpace = SpaceID;
+			ParentSpaceValue = SpaceValue;
 		}
 
 	
 		//检查指定的意义
-		int64 MeaningID = HasMeaningRoom(ParentRoom,Meaning,MeaningType);
+		int64 MeaningID = HasMeaningSpace(ParentSpace,Meaning,MeaningType);
         if(MeaningID == 0)return 0;
 
 		//检查效评价
@@ -820,11 +820,11 @@ int32 CBrainMemory::GetAllMeaning(int64 ID, map<int64,int64>
 	   return MeaningList.size();
 }
 */	
-int32 CBrainMemory::GetAllMeaningRoomID(int64 ID, deque<int64>& MeaningRoomIDList){
+int32 CBrainMemory::GetAllMeaningSpaceID(int64 ID, deque<int64>& MeaningSpaceIDList){
 	   CppSQLite3Buffer SQL;
 	   CppSQLite3Query  Result;
        char a[30],b[30];      
-       MeaningRoomIDList.clear();
+       MeaningSpaceIDList.clear();
 	
 //	   if(!RBrainHasTable(ID))return 0;
 	   
@@ -842,10 +842,10 @@ int32 CBrainMemory::GetAllMeaningRoomID(int64 ID, deque<int64>& MeaningRoomIDLis
        
 	   while(!Result.eof())
 	   {
-          MeaningRoomIDList.push_back(Result.getInt64Field(0));
+          MeaningSpaceIDList.push_back(Result.getInt64Field(0));
 		  Result.nextRow();
 	   }
-	   return MeaningRoomIDList.size();
+	   return MeaningSpaceIDList.size();
 }
 
 uint32 CBrainMemory::GetAllPartOfSpeech(int64 ParentID){
@@ -879,7 +879,7 @@ uint32 CBrainMemory::GetAllPartOfSpeech(int64 ParentID){
 	   return PartOfSpeech;
 }
 
-int32 CBrainMemory::GetAllPartOfSpeechRoom(int64 ParentID,map<int64,int64>& RoomList)
+int32 CBrainMemory::GetAllPartOfSpeechSpace(int64 ParentID,map<int64,int64>& SpaceList)
 {
 	   CppSQLite3Buffer SQL;
        char a[30],b[30],c[30];
@@ -909,14 +909,14 @@ int32 CBrainMemory::GetAllPartOfSpeechRoom(int64 ParentID,map<int64,int64>& Room
 			t.setRow(row);
 			int64 ID = t.getInt64Field(0);
 			int64 Type = t.getInt64Field(1);
-            RoomList[ID] = Type;
+            SpaceList[ID] = Type;
 	   }
-	   return RoomList.size();
+	   return SpaceList.size();
 }
 	
 
 /* 
-int64 CBrainMemory::GetMemoryType(int64 MeaningRoomID,int64 MeaningValue){
+int64 CBrainMemory::GetMemoryType(int64 MeaningSpaceID,int64 MeaningValue){
 	   
 	CppSQLite3Buffer SQL;
 	CppSQLite3Query  Result;
@@ -928,7 +928,7 @@ int64 CBrainMemory::GetMemoryType(int64 MeaningRoomID,int64 MeaningValue){
 			LB_FATHER_VALUE,
 			_i64toa(MeaningValue,a,10),
 			LB_CHILD_ID,
-			_i64toa(MeaningRoomID,b,10)
+			_i64toa(MeaningSpaceID,b,10)
 			);
 		
 		Result = BrainDB.execQuery(SQL);	
@@ -939,8 +939,8 @@ int64 CBrainMemory::GetMemoryType(int64 MeaningRoomID,int64 MeaningValue){
 		return MeaningValue;
 	}
 	else if(MeaningValue){  //此时MeaningValue是其它意义空间的识别ID，取得这个空间的空间值，递归处理
-		int64 RoomValue = GetRoomValue(MeaningValue);
-		return GetMemoryType(MeaningValue, RoomValue);
+		int64 SpaceValue = GetSpaceValue(MeaningValue);
+		return GetMemoryType(MeaningValue, SpaceValue);
 	}
 
   return 0;
@@ -968,14 +968,14 @@ bool CBrainMemory::GetMemoryBody(int64 MeaningID,int64 MeaningValue,ePipeline& P
 			Pipe.Push_Directly(new eINT64(Meaning));
 		}
 		else{
-			ePipeline* Room = new ePipeline;
+			ePipeline* Space = new ePipeline;
 			MeaningID = MeaningValue;
-			MeaningValue = GetRoomValue(MeaningID);
-			if(!GetMemoryBody(MeaningID,MeaningValue,*Room)){
-				delete Room;
+			MeaningValue = GetSpaceValue(MeaningID);
+			if(!GetMemoryBody(MeaningID,MeaningValue,*Space)){
+				delete Space;
 				return false;
 			}
-			Pipe.Push_Directly((Room));
+			Pipe.Push_Directly((Space));
 		}
 	}
 
@@ -984,16 +984,16 @@ bool CBrainMemory::GetMemoryBody(int64 MeaningID,int64 MeaningValue,ePipeline& P
 */
 
 /*
-bool  CBrainMemory::IsChar(int64 MeaningRoomID){
-	map<int64,int64>::iterator It = MemoryIDToValue.find(MeaningRoomID);
+bool  CBrainMemory::IsChar(int64 MeaningSpaceID){
+	map<int64,int64>::iterator It = MemoryIDToValue.find(MeaningSpaceID);
 	if(It != MemoryIDToValue.end()){
 		return true;
 	}
 	return false;
 }
 
-bool  CBrainMemory::IsInstinct(int64 MeaningRoomID){
-	map<int64,int64>::iterator It = MemoryIDToValue.find(MeaningRoomID);
+bool  CBrainMemory::IsInstinct(int64 MeaningSpaceID){
+	map<int64,int64>::iterator It = MemoryIDToValue.find(MeaningSpaceID);
 	if(It != MemoryIDToValue.end()){
 		return BelongInstinct(It->second);
 	}
@@ -1002,18 +1002,18 @@ bool  CBrainMemory::IsInstinct(int64 MeaningRoomID){
 */
 
 /*
-bool  CBrainMemory::IsAction(int64 MeaningRoomID,int64 MeaningValue){
+bool  CBrainMemory::IsAction(int64 MeaningSpaceID,int64 MeaningValue){
 	
 	//检查MeaningValue是否为另一段逻辑的空间ID
     //太昂贵
-	//int64 Value = GetRoomValue(MeaningValue);
+	//int64 Value = GetSpaceValue(MeaningValue);
 	//if(Value == MEANING_TYPE_SERIES || Value == MEANING_TYPE_SHUNT)return true;
 	
-	if (MeaningRoomID == MeaningValue)//这时记忆自定义命令的一个小窍门     
+	if (MeaningSpaceID == MeaningValue)//这时记忆自定义命令的一个小窍门     
 	{  
 		return true;
 	}
-	if(IsInstinct(MeaningRoomID))return true;
+	if(IsInstinct(MeaningSpaceID))return true;
 
 	return false;
 };
@@ -1067,31 +1067,62 @@ void CBrainMemory::InitTempMemory()
 //Retrieve
 ////////////////////////////////////////////////////////////////////
 
+
+tstring CBrainMemory::RetrieveToken(int64 SpaceID){
+	int64 CurrentSpaceValue,SpaceType; 
+	int64  CurrentID = SpaceID;
+
+	//首先得到意义空间的信息
+	if(!GetSpaceInfo(SpaceID,CurrentSpaceValue,SpaceType)){
+		return NULL;
+	}
+
+	deque<int64> BodyList;
+	while(1)
+	{
+		//向上漫游,找到父空间空间的ID和逻辑明文，得记忆的形ID
+		CppSQLite3Query Result = LBrainQuery("*",CurrentSpaceValue,LB_CHILD_ID,CurrentID);
+		if(Result.eof())return 0;
+		CurrentID = Result.getInt64Field(0);  //fatherID
+		if(CurrentID == ROOT_SPACE)break;;
+		CurrentSpaceValue = Result.getInt64Field(1); //fatherValuse
+		BodyList.push_front(CurrentSpaceValue);
+	}	
+
+	tstring s;
+	for (int i=0; i<BodyList.size(); i++)
+	{
+		int64 ID = BodyList[i];
+		TCHAR ch = (TCHAR) IDToChar(ID);
+		s += ch;
+	}
+	return s;
+}
 int32 CBrainMemory::RetrieveText(int64 MeaningID,tstring& Text,bool Nest){
 
-	int64 CurrentRoomValue,RoomType; 
+	int64 CurrentSpaceValue,SpaceType; 
     int64  CurrentID = MeaningID;
 
 	//首先得到意义空间的信息
-	if(!GetRoomInfo(MeaningID,CurrentRoomValue,RoomType))return 0;
+	if(!GetSpaceInfo(MeaningID,CurrentSpaceValue,SpaceType))return 0;
 
 	if(!Nest){
 		//首次外部调用时检查MeaningID代表记忆是否为可读的文字信息，嵌套调用则忽略
-		if(UnReadable(CurrentRoomValue))return 0;
+		//if(UnReadable(SpaceType))return 0;
 	}
 
 	//向上漫游,找到父空间空间的ID和逻辑明文，得记忆的形ID
-    CppSQLite3Query Result = LBrainQuery("*",CurrentRoomValue,LB_CHILD_ID,CurrentID);
+    CppSQLite3Query Result = LBrainQuery("*",CurrentSpaceValue,LB_CHILD_ID,CurrentID);
 	if(Result.eof())return 0;
     
 	CurrentID = Result.getInt64Field(0);
   	if(CurrentID == ROOT_SPACE)return 0;
-	CurrentRoomValue = Result.getInt64Field(1);  //总是其他空间的空间识别ID
+	CurrentSpaceValue = Result.getInt64Field(1);  //总是其他空间的空间识别ID
 	
     
 	//如果是字符,则可以确定所取文本应该是token
-	int ch = IDToChar(CurrentRoomValue);
-    if(isascii(ch)){
+	int ch = IDToChar(CurrentSpaceValue);
+    if(ch>0 && ch<100000){ //简单判断是字符
 		TCHAR buf[100]; //暂存token，一个单词99字符应该足够了
 		int p = 0;
 		buf[p++] = ch;
@@ -1099,7 +1130,7 @@ int32 CBrainMemory::RetrieveText(int64 MeaningID,tstring& Text,bool Nest){
 		//继续向上漫游,应该全部都是字符
 		for(;;){
 			//根据本空间的ID和逻辑明文,找到父空间空间的ID和逻辑明文,
-			CppSQLite3Query Result = LBrainQuery("*",CurrentRoomValue,LB_CHILD_ID,CurrentID);
+			CppSQLite3Query Result = LBrainQuery("*",CurrentSpaceValue,LB_CHILD_ID,CurrentID);
 			if(Result.eof())return 0;
 			
 			CurrentID = Result.getInt64Field(0);
@@ -1110,15 +1141,15 @@ int32 CBrainMemory::RetrieveText(int64 MeaningID,tstring& Text,bool Nest){
 				
 				Text = buf;
 				//如果是形容词则加上引号
-				if(RoomType == MEMORY_REFERENCE){
+				if(SpaceType == MEMORY_REFERENCE){
 					Text.insert(Text.begin(),1,_T('\"'));
 					Text+=_T('\"');
 				}
 				return 1;  //表示得到一个token
 			}
-			CurrentRoomValue = Result.getInt64Field(1);   
+			CurrentSpaceValue = Result.getInt64Field(1);   
 			
-			if(p<100) buf[p++]  = IDToChar(CurrentRoomValue);
+			if(p<100) buf[p++]  = IDToChar(CurrentSpaceValue);
 		}
 	}
 		
@@ -1129,19 +1160,19 @@ int32 CBrainMemory::RetrieveText(int64 MeaningID,tstring& Text,bool Nest){
 	for(;;){
 		
 		tstring s;
-		n = RetrieveText(CurrentRoomValue,s,false);
+		n = RetrieveText(CurrentSpaceValue,s,true);
 		
 		StrList.push_back(s);
 		
 		//继续向上漫游,根据本空间的ID和逻辑明文,找到父空间空间的ID和逻辑明文,
-		CppSQLite3Query Result = LBrainQuery("*",CurrentRoomValue,LB_CHILD_ID,CurrentID);
+		CppSQLite3Query Result = LBrainQuery("*",CurrentSpaceValue,LB_CHILD_ID,CurrentID);
 		if(Result.eof())return 0;
 		
 		CurrentID = Result.getInt64Field(0);
 		//如果得到的空间ID为根空间，则表示找到顶了。
 		if(CurrentID == ROOT_SPACE)break;
 		
-		CurrentRoomValue = Result.getInt64Field(1);   		
+		CurrentSpaceValue = Result.getInt64Field(1);   		
 	}
 
 	TCHAR flag=_T(' ');
@@ -1164,12 +1195,12 @@ int32 CBrainMemory::RetrieveText(int64 MeaningID,tstring& Text,bool Nest){
 	while(It != StrList.rend()){
 		Text += *It;
 		if(Text.size()){ 
-			TCHAR& ch =  Text[Text.size()-1];
-            if(!ispunct(ch)){
+			TCHAR ch =  Text[Text.size()-1];
+            if(ch<256 && !ispunct(ch)){
 				Text += flag;
 			}else if(Text.size()>2) {
 				ch = Text[Text.size()-2];
-				if (isspace(ch))
+				if (ch<256 && isspace(ch))
 				{
 					Text.erase(Text.size()-2,1);
 				}
@@ -1178,7 +1209,7 @@ int32 CBrainMemory::RetrieveText(int64 MeaningID,tstring& Text,bool Nest){
 		It++;
 	}	     
 	
-	if(RoomType == MEMORY_REFERENCE)
+	if(SpaceType == MEMORY_REFERENCE)
 	{
 		Text.insert(Text.begin(),1,_T('\"'));
 		Text+='\"';
@@ -1189,30 +1220,30 @@ int32 CBrainMemory::RetrieveText(int64 MeaningID,tstring& Text,bool Nest){
 } 
 
 //返回一个Ojbect/people的存储路径,不包括CRC32
-uint32  CBrainMemory::RetrieveObject(int64 RoomID,tstring& Text){
-	int64 CurrentRoomValue,RoomType; 
-    int64  CurrentID = RoomID;
+uint32  CBrainMemory::RetrieveObject(int64 SpaceID,tstring& Text){
+	int64 CurrentSpaceValue,SpaceType; 
+    int64  CurrentID = SpaceID;
 
 	//首先得到意义空间的信息
-	GetRoomInfo(RoomID,CurrentRoomValue,RoomType);
-	if (RoomType == MEMORY_OBJECT){
+	GetSpaceInfo(SpaceID,CurrentSpaceValue,SpaceType);
+	if (SpaceType == MEMORY_OBJECT){
 		Text = _T("Object: ");
-	}else if(RoomType == MEMORY_PEOPLE)
+	}else if(SpaceType == MEMORY_PEOPLE)
 	{
         Text = _T("People: ");
 	}else return 0;
-	uint32 crc = CurrentRoomValue;
+	uint32 crc = CurrentSpaceValue;
 
 	deque<int64> MeaingList;
 	while(1)
 	{
 		//向上漫游,找到父空间空间的ID和逻辑明文，得记忆的形ID
-		CppSQLite3Query Result = LBrainQuery("*",CurrentRoomValue,LB_CHILD_ID,CurrentID);
+		CppSQLite3Query Result = LBrainQuery("*",CurrentSpaceValue,LB_CHILD_ID,CurrentID);
 		if(Result.eof())return 0;
  		CurrentID = Result.getInt64Field(0);  //fatherID
 		if(CurrentID == ROOT_SPACE)break;;
-	    CurrentRoomValue = Result.getInt64Field(1); //fatherValuse
-        MeaingList.push_front(CurrentRoomValue);
+	    CurrentSpaceValue = Result.getInt64Field(1); //fatherValuse
+        MeaingList.push_front(CurrentSpaceValue);
 	} 
 
 	deque<int64>::iterator It = MeaingList.begin();
@@ -1237,19 +1268,19 @@ uint32  CBrainMemory::RetrieveObject(int64 RoomID,tstring& Text){
 	return crc;
 }
 	
-bool CBrainMemory::RetrieveAction(int64 RoomID,int64 RoomValue, tstring& Text,bool IsShunt){
+bool CBrainMemory::RetrieveAction(int64 SpaceID,int64 SpaceValue, tstring& Text,bool IsShunt){
     
 	deque<int64> MeaingList;
 	
 	while(1){
 		//向上漫游,找到父空间空间的ID和逻辑明文，得记忆的形ID
-		CppSQLite3Query Result = LBrainQuery("*",RoomValue,LB_CHILD_ID,RoomID);
+		CppSQLite3Query Result = LBrainQuery("*",SpaceValue,LB_CHILD_ID,SpaceID);
 		if(Result.eof())return false;
     
-	    RoomValue = Result.getInt64Field(1); //fatherValuse
-		RoomID = Result.getInt64Field(0);  //fatherID
-        if(RoomID == ROOT_SPACE)break;
-		MeaingList.push_front(RoomValue);
+	    SpaceValue = Result.getInt64Field(1); //fatherValuse
+		SpaceID = Result.getInt64Field(0);  //fatherID
+        if(SpaceID == ROOT_SPACE)break;
+		MeaingList.push_front(SpaceValue);
 	}
 	
 	assert(MeaingList.size() <3);
@@ -1257,12 +1288,8 @@ bool CBrainMemory::RetrieveAction(int64 RoomID,int64 RoomValue, tstring& Text,bo
 	int64 Param   = 0;
 	if(MeaingList.size()==2)Param = MeaingList.back();
 
-	if(BelongInstinct(ActionID)){
-		Text = Instinct2Str(ActionID);
-	}
-	else {
-		RetrieveText(ActionID,Text);//返回命令的文本: todo something;
-	}
+	GetCommandText(ActionID,Text);
+
 	if(IsShunt)Text = _T("and ")+Text;
 	if(Param){ //如果是本能还要返回参数
 		assert(BelongInstinct(ActionID));
@@ -1274,87 +1301,96 @@ bool CBrainMemory::RetrieveAction(int64 RoomID,int64 RoomValue, tstring& Text,bo
 	return true;
 }
 	
-bool CBrainMemory::RetrieveAction(int64 RoomID,int64 RoomValue, ePipeline* Pipe,bool IsShunt){
+bool CBrainMemory::RetrieveInstinctInstance(int64 SpaceID,int64 SpaceValue, ePipeline* Pipe){
 	deque<int64> MeaingList;
  
 	while(1){
 		//向上漫游,找到父空间空间的ID和逻辑明文，得记忆的形ID
-		CppSQLite3Query Result = LBrainQuery("*",RoomValue,LB_CHILD_ID,RoomID);
+		CppSQLite3Query Result = LBrainQuery("*",SpaceValue,LB_CHILD_ID,SpaceID);
 		if(Result.eof())return false;
     
-	    RoomValue = Result.getInt64Field(1); //fatherValuse
-		RoomID = Result.getInt64Field(0);  //fatherID
-        if(RoomID == ROOT_SPACE)break;
-		MeaingList.push_front(RoomValue);
+	    SpaceValue = Result.getInt64Field(1); //fatherValuse
+		SpaceID = Result.getInt64Field(0);  //fatherID
+        if(SpaceID == ROOT_SPACE)break;
+		MeaingList.push_front(SpaceValue);
 	}
 	
 
 	assert(MeaingList.size() <3);
-	int64 ActionID = MeaingList.front();
+	int64 InstinctID = MeaingList.front();
+	
+	tstring Text;
+	GetCommandText(InstinctID,Text);
+
+	Pipe->m_Label=Text;
+
 	int64 Param   = 0;
 	if(MeaingList.size()==2)Param = MeaingList.back();
-    
 
-	if(Param){ 
-		assert(BelongInstinct(ActionID));
-		if(IsShunt)ActionID = -ActionID;
-		Pipe->PushInt(ActionID);
-		
-	    if(IsDefineNum(ActionID)){
+	assert(BelongInstinct(InstinctID));
+
+	Pipe->PushInt(InstinctID);
+	if (Param)
+	{
+
+		if(INSTINCT_DEFINE_FLOAT64 == InstinctID){
 			tstring ParamText = RetrieveToken(Param);
-
-			if(INSTINCT_DEFINE_FLOAT32 == ActionID || INSTINCT_DEFINE_FLOAT64 == ActionID){
-				TCHAR* endptr = NULL;
-				float64 f = _tcstod(ParamText.c_str(),&endptr);
-				assert(endptr == NULL);
-				Pipe->PushFloat(f);				
-			}
-			else {
-				int64 t = _ttoi64(ParamText.c_str());
-				Pipe->PushInt(t);
-			}
+			TCHAR* endptr = NULL;
+			float64 f = _tcstod(ParamText.c_str(),&endptr);
+			assert(endptr == NULL);
+			Pipe->PushFloat(f);				
 		}
-		else if( INSTINCT_USE_RESISTOR == ActionID){
+		else if(INSTINCT_DEFINE_INT64 == InstinctID){
+			tstring ParamText = RetrieveToken(Param);
+			int64 t = _ttoi64(ParamText.c_str());
+			Pipe->PushInt(t);
+		}
+		else if (INSTINCT_DEFINE_STRING == InstinctID)
+		{
+			tstring ParamText;
+			RetrieveText(Param,ParamText,false);
+			Pipe->PushString(ParamText);
+		}
+		else if( INSTINCT_USE_RESISTOR == InstinctID){
 			tstring ParamText = RetrieveToken(Param);
 
 			int64 t = _ttoi64(ParamText.c_str());
-            Pipe->PushInt(t);
+			Pipe->PushInt(t);
 		}
-		else if( INSTINCT_USE_DIODE == ActionID){
+		else if( INSTINCT_USE_DIODE == InstinctID){
 			tstring ParamText = RetrieveToken(Param);
 
 			int64 t = _ttoi64(ParamText.c_str());
 			Pipe->PushInt(t);     
 		}
-		else if (INSTINCT_USE_OBJECT == ActionID)
+		else if (INSTINCT_USE_OBJECT == InstinctID)
 		{
 			ePipeline* ObjectInfo = (ePipeline*)RetrieveEnergy(Param);
 			assert(ObjectInfo);
 			Pipe->Push_Directly(ObjectInfo);
 		}
+		else if (INSTINCT_WAIT_TIME == InstinctID)
+		{
+			tstring ParamText = RetrieveToken(Param);
+			TCHAR* endptr = NULL;
+			float64 f = _tcstod(ParamText.c_str(),&endptr);
+			Pipe->PushFloat(f);			
+		}
 		else{
 			tstring ParamText = RetrieveToken(Param);
-
 			Pipe->PushString(ParamText);
 		}
-	}else{
-		ActionID = INSTINCT_USE_LOGIC;
-		if(IsShunt)ActionID = -ActionID;
-		Pipe->PushInt(ActionID);
-        ePipeline* LogicPipe = new ePipeline;
-		Pipe->Push_Directly(LogicPipe);
-		if(!RetrieveLogic(RoomValue,LogicPipe))return false;
 	}
-	return true;	
+	return true;
 }
 
 
-Energy* CBrainMemory::RetrieveEnergy(int64 RoomID){
-	int64 CurrentRoomValue,RoomType; 
-    int64  CurrentID = RoomID;
+Energy* CBrainMemory::RetrieveEnergy(int64 SpaceID){
+	int64 CurrentSpaceValue,SpaceType; 
+    int64  CurrentID = SpaceID;
 	
 	//首先得到意义空间的信息
-	if(!GetRoomInfo(RoomID,CurrentRoomValue,RoomType)){
+	if(!GetSpaceInfo(SpaceID,CurrentSpaceValue,SpaceType)){
 		return NULL;
 	}
 	
@@ -1362,12 +1398,12 @@ Energy* CBrainMemory::RetrieveEnergy(int64 RoomID){
 	while(1)
 	{
 		//向上漫游,找到父空间空间的ID和逻辑明文，得记忆的形ID
-		CppSQLite3Query Result = LBrainQuery("*",CurrentRoomValue,LB_CHILD_ID,CurrentID);
+		CppSQLite3Query Result = LBrainQuery("*",CurrentSpaceValue,LB_CHILD_ID,CurrentID);
 		if(Result.eof())return 0;
 		CurrentID = Result.getInt64Field(0);  //fatherID
 		if(CurrentID == ROOT_SPACE)break;;
-		CurrentRoomValue = Result.getInt64Field(1); //fatherValuse
-        MeaingList.push_front(CurrentRoomValue);
+		CurrentSpaceValue = Result.getInt64Field(1); //fatherValuse
+        MeaingList.push_front(CurrentSpaceValue);
 	}
 	
 	if (MeaingList.size()!=2)
@@ -1420,12 +1456,12 @@ Energy* CBrainMemory::RetrieveEnergy(int64 RoomID){
 
 
 
-ePipeline* CBrainMemory::RetrievePipe(int64 RoomID){
-	int64 CurrentRoomValue,RoomType; 
-    int64  CurrentID = RoomID;
+ePipeline* CBrainMemory::RetrievePipe(int64 SpaceID){
+	int64 CurrentSpaceValue,SpaceType; 
+    int64  CurrentID = SpaceID;
 	
 	//首先得到意义空间的信息
-	if(!GetRoomInfo(RoomID,CurrentRoomValue,RoomType)){
+	if(!GetSpaceInfo(SpaceID,CurrentSpaceValue,SpaceType)){
 		return NULL;
 	}
 	
@@ -1433,12 +1469,12 @@ ePipeline* CBrainMemory::RetrievePipe(int64 RoomID){
 	while(1)
 	{
 		//向上漫游,找到父空间空间的ID和逻辑明文，得记忆的形ID
-		CppSQLite3Query Result = LBrainQuery("*",CurrentRoomValue,LB_CHILD_ID,CurrentID);
+		CppSQLite3Query Result = LBrainQuery("*",CurrentSpaceValue,LB_CHILD_ID,CurrentID);
 		if(Result.eof())return 0;
 		CurrentID = Result.getInt64Field(0);  //fatherID
 		if(CurrentID == ROOT_SPACE)break;;
-		CurrentRoomValue = Result.getInt64Field(1); //fatherValuse
-        BodyList.push_front(CurrentRoomValue);
+		CurrentSpaceValue = Result.getInt64Field(1); //fatherValuse
+        BodyList.push_front(CurrentSpaceValue);
 	}
 
 	ePipeline* Pipe = new ePipeline;
@@ -1458,115 +1494,89 @@ ePipeline* CBrainMemory::RetrievePipe(int64 RoomID){
 	return (ePipeline*)E.Release();
 }
 
-tstring CBrainMemory::RetrieveToken(int64 RoomID){
-	int64 CurrentRoomValue,RoomType; 
-    int64  CurrentID = RoomID;
-	
-	//首先得到意义空间的信息
-	if(!GetRoomInfo(RoomID,CurrentRoomValue,RoomType)){
-		return NULL;
-	}
-	
-	deque<int64> BodyList;
-	while(1)
-	{
-		//向上漫游,找到父空间空间的ID和逻辑明文，得记忆的形ID
-		CppSQLite3Query Result = LBrainQuery("*",CurrentRoomValue,LB_CHILD_ID,CurrentID);
-		if(Result.eof())return 0;
-		CurrentID = Result.getInt64Field(0);  //fatherID
-		if(CurrentID == ROOT_SPACE)break;;
-		CurrentRoomValue = Result.getInt64Field(1); //fatherValuse
-        BodyList.push_front(CurrentRoomValue);
-	}	
-
-	tstring s;
-	for (int i=0; i<BodyList.size(); i++)
-	{
-		int64 ID = BodyList[i];
-		TCHAR ch = (TCHAR)ID;
-		s += ch;
-	}
-	return s;
-}
     
 //返回一段逻辑,存储为可编译状态
-bool  CBrainMemory::RetrieveLogic(int64 RoomID,ePipeline* Pipe,bool IsShunt/* = false*/){
-	int64 CurrentRoomValue,RoomType; 
-    int64  CurrentID = RoomID;
+bool  CBrainMemory::RetrieveLogic(int64 SpaceID,ePipeline* Pipe){
+	int64 CurrentSpaceValue,SpaceType; 
+    int64  CurrentID = SpaceID;
 
 	//首先得到意义空间的信息
-	GetRoomInfo(RoomID,CurrentRoomValue,RoomType);
-	if(RoomType ==  MEMORY_ACT){  //递归终止
-		return RetrieveAction(RoomID,CurrentRoomValue,Pipe,IsShunt);
+	GetSpaceInfo(SpaceID,CurrentSpaceValue,SpaceType);
+	if(SpaceType ==  MEMORY_ACT){  //递归终止
+		return RetrieveInstinctInstance(SpaceID,CurrentSpaceValue,Pipe);
 	}
 
-	if(RoomType != MEMORY_SERIES && 
-		RoomType != MEMORY_SHUNT)return false;
+	if(SpaceType != MEMORY_SERIES &&  SpaceType != MEMORY_SHUNT )return false;
   
-    int64 LogicType = RoomType;
+    int64 LogicType = SpaceType;
 
 	deque<int64> MeaingList;
     while(1)
 	{
 		//向上漫游,找到父空间空间的ID和逻辑明文，得记忆的形ID
-		CppSQLite3Query Result = LBrainQuery("*",CurrentRoomValue,LB_CHILD_ID,CurrentID);
+		CppSQLite3Query Result = LBrainQuery("*",CurrentSpaceValue,LB_CHILD_ID,CurrentID);
 		if(Result.eof())return false;
 		CurrentID = Result.getInt64Field(0);  //fatherID
 		if(CurrentID == ROOT_SPACE)break;
-		CurrentRoomValue = Result.getInt64Field(1); //fatherValuse
-        MeaingList.push_back(CurrentRoomValue);
+		CurrentSpaceValue = Result.getInt64Field(1); //fatherValuse
+        MeaingList.push_back(CurrentSpaceValue);
 	} 
 	
-    IsShunt = RoomType == MEMORY_SHUNT;
 	deque<int64>::reverse_iterator It = MeaingList.rbegin();
 	while (It != MeaingList.rend())
 	{
-		CurrentRoomValue = *It;
-        ePipeline* ChildPipe = new ePipeline;
-		Pipe->Push_Directly(ChildPipe);
-		if (!RetrieveLogic(CurrentRoomValue,ChildPipe,IsShunt))return false;
+		CurrentSpaceValue = *It;
+
+        ePipeline ChildPipe(SpaceType==MEMORY_SHUNT?-1:0);
+		
+		if (!RetrieveLogic(CurrentSpaceValue,&ChildPipe)){
+			return false;
+		}
+
+		Pipe->PushPipe(ChildPipe);
+
 	    It++;	
 	}
 	return true;
 }
     
 //返回一段逻辑,表达为文字
-bool  CBrainMemory::RetrieveLogic(int64 RoomID,deque<tstring>& LogicList,tstring* Text/*=NULL*/,bool IsShunt /* = false*/){
-	int64 CurrentRoomValue,RoomType; 
-    int64  CurrentID = RoomID;
+bool  CBrainMemory::RetrieveLogic(int64 SpaceID,deque<tstring>& LogicList,tstring* Text/*=NULL*/,bool IsShunt /* = false*/){
+	int64 CurrentSpaceValue,SpaceType; 
+    int64  CurrentID = SpaceID;
 
 	//首先得到意义空间的信息
-	GetRoomInfo(RoomID,CurrentRoomValue,RoomType);
+	GetSpaceInfo(SpaceID,CurrentSpaceValue,SpaceType);
 
-	if(RoomType ==  MEMORY_ACT){//递归终止
+	if(SpaceType ==  MEMORY_ACT){//递归终止
 		assert(Text != NULL);
-		return RetrieveAction(RoomID,CurrentRoomValue,*Text,IsShunt);
+		return RetrieveAction(SpaceID,CurrentSpaceValue,*Text,IsShunt);
 	}
  
-	if(RoomType == MEMORY_INSTINCT){
+	if(SpaceType == MEMORY_INSTINCT){
 		tstring s;
-	    if(!RetrieveText(RoomID,s))return false;
+	    if(!RetrieveText(SpaceID,s))return false;
 		s = _T("Custom Command : ") + s;
         s+=_T(';');
 		LogicList.push_back(s);
 		return true;
 	}
 
-	if(RoomType != MEMORY_SERIES && 
-		RoomType != MEMORY_SHUNT)return false;
+	if(SpaceType != MEMORY_SERIES && 
+		SpaceType != MEMORY_SHUNT)return false;
   
-    int64 LogicType = RoomType;
+    int64 LogicType = SpaceType;
 
 	deque<int64> MeaingList;
     while(1)
 	{
 		//向上漫游,找到父空间空间的ID和逻辑明文，得记忆的形ID
-		CppSQLite3Query Result = LBrainQuery("*",CurrentRoomValue,LB_CHILD_ID,CurrentID);
+		CppSQLite3Query Result = LBrainQuery("*",CurrentSpaceValue,LB_CHILD_ID,CurrentID);
 		if(Result.eof())return false;
 		CurrentID = Result.getInt64Field(0);  //fatherID
 		if(CurrentID == ROOT_SPACE)break;
-		CurrentRoomValue = Result.getInt64Field(1); //fatherValuse
-        MeaingList.push_front(CurrentRoomValue);
+		CurrentSpaceValue = Result.getInt64Field(1); //fatherValuse
+        MeaingList.push_front(CurrentSpaceValue);
 	} 
 
     if(Text) *Text = Format1024(_T("use logic %d"),LogicList.size());
@@ -1576,14 +1586,14 @@ bool  CBrainMemory::RetrieveLogic(int64 RoomID,deque<tstring>& LogicList,tstring
 
 	tstring& NestLogicText = LogicList.back();
 
-    IsShunt = RoomType == MEMORY_SHUNT;
+    IsShunt = SpaceType == MEMORY_SHUNT;
 	deque<int64>::reverse_iterator It = MeaingList.rbegin();
 
 	while (It != MeaingList.rend())
 	{
-		CurrentRoomValue = *It;
+		CurrentSpaceValue = *It;
 		LogicText= _T("");
-		if (!RetrieveLogic(CurrentRoomValue,LogicList,&LogicText,IsShunt))return false;
+		if (!RetrieveLogic(CurrentSpaceValue,LogicList,&LogicText,IsShunt))return false;
 	    LogicText +=_T(',');
 		NestLogicText += LogicText;
 		It++;	
@@ -1594,16 +1604,16 @@ bool  CBrainMemory::RetrieveLogic(int64 RoomID,deque<tstring>& LogicList,tstring
 	return true;
 }
 
-void  CBrainMemory::GetMemo(int64 RoomID, deque<tstring>& MemoList){
-	int64 FatherID,ChildID,RoomType;
+void  CBrainMemory::GetMemo(int64 SpaceID, deque<tstring>& MemoList){
+	int64 FatherID,ChildID,SpaceType;
 	char buf[30];
 	CppSQLite3Buffer SQL;
 	
-	if(LBrainHasTable(RoomID)){
+	if(LBrainHasTable(SpaceID)){
 		//索引空间是否有表，有则表示其为其它空间的空间值
 		//根据索引表得到其作为空间值时的空间存储ID，存入种子表
-		ToLBrain(RoomID);
-		int64toa(RoomID,buf);
+		ToLBrain(SpaceID);
+		int64toa(SpaceID,buf);
 		SQL.format("select %s,%s from  \"%s\"  ;",LB_FATHER_ID,LB_CHILD_ID,buf);
 		CppSQLite3Table t0 = BrainDB.getTable(SQL);
 		for (int row = 0; row < t0.numRows(); row++)
@@ -1611,9 +1621,9 @@ void  CBrainMemory::GetMemo(int64 RoomID, deque<tstring>& MemoList){
 			t0.setRow(row);
 			FatherID = t0.getInt64Field(0);
 			ChildID = t0.getInt64Field(1);
-			if(ChildID == -RoomID)continue;
-			RoomType = GetChildType(FatherID,ChildID);
-			if(RoomType == MEMORY_LAN){ //看是否文本空间修饰RoomID
+			if(ChildID == -SpaceID)continue;
+			SpaceType = GetChildType(FatherID,ChildID);
+			if(SpaceType == MEMORY_LAN){ //看是否文本空间修饰SpaceID
                 tstring Text;
 				if(RetrieveText(ChildID,Text)){
 					MemoList.push_back(Text);
@@ -1623,8 +1633,8 @@ void  CBrainMemory::GetMemo(int64 RoomID, deque<tstring>& MemoList){
 	}
 }
 
-void  CBrainMemory::GetCustomCommandText(int64 LogicID, deque<tstring>& CommanTextList){
-	int64 FatherID,ChildID,RoomType;
+void  CBrainMemory::GetCommandText(int64 LogicID,tstring& CmdText){
+	int64 FatherID,ChildID,SpaceType;
 	char buf[30];
 	CppSQLite3Buffer SQL;
 	
@@ -1639,13 +1649,14 @@ void  CBrainMemory::GetCustomCommandText(int64 LogicID, deque<tstring>& CommanTe
 		{
 			t0.setRow(row);
 			FatherID = t0.getInt64Field(0);
-			ChildID = t0.getInt64Field(1);
+			ChildID  = t0.getInt64Field(1);
 			if(ChildID == -LogicID)continue;
-			RoomType = GetChildType(FatherID,ChildID);
-			if(RoomType == MEMORY_INSTINCT){ //看是否文本空间修饰RoomID
-                tstring Text;
-				if(RetrieveAction(ChildID,LogicID,Text,false)){
-					if(Text.size())CommanTextList.push_back(Text);
+			SpaceType = GetChildType(FatherID,ChildID);
+			if(SpaceType == MEMORY_INSTINCT){ //看是否文本空间修饰SpaceID
+			    tstring cmd;
+				if(RetrieveText(ChildID,cmd,false)){
+					CmdText = cmd;
+					return;
 				}
 			}
 		}
@@ -1656,25 +1667,25 @@ void  CBrainMemory::GetCustomCommandText(int64 LogicID, deque<tstring>& CommanTe
 ///////////////////////////////////////////////////////////////////
 /*
 
-void CBrainMemory::GetAllChildRoomValue(int64 ParentRoom,int64 RoomType,map<int64,int64>& RoomValueList)
+void CBrainMemory::GetAllChildSpaceValue(int64 ParentSpace,int64 SpaceType,map<int64,int64>& SpaceValueList)
 {
 	   CppSQLite3Buffer SQL;
 	   CppSQLite3Query  Result;
        char a[30],b[30];
 
-	   ToRBrain(ParentRoom);
+	   ToRBrain(ParentSpace);
 	   SQL.format("select %s,%s from \"%s\" where %s= \"%s\" ;",
 						RB_SPACE_ID,
 		                RB_SPACE_VALUE,
-			            _i64toa(ParentRoom,a,10),
+			            _i64toa(ParentSpace,a,10),
 						RB_SPACE_TYPE,
-						_i64toa(RoomType,b,10)
+						_i64toa(SpaceType,b,10)
 						);
 	   Result = BrainDB.execQuery(SQL);
 
 	   while(!Result.eof())
 	   {
-          RoomValueList[Result.getInt64Field(0)] = Result.getInt64Field(1);
+          SpaceValueList[Result.getInt64Field(0)] = Result.getInt64Field(1);
 		  Result.nextRow();
 	   }
 }

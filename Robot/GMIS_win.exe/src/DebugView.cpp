@@ -156,6 +156,7 @@ void CDebugView::MassItem::Draw(HDC hDC, ePipeline* Pipe){
 	RECT rc = GetArea();
 	COLORREF crFg = SS.crTaskMassText, crBk = SS.crTaskMassBk;
 	
+
 	
 	if(m_State & SPACE_SELECTED){
 		//	crFg = m_crBk; crBk = m_crText;
@@ -164,18 +165,22 @@ void CDebugView::MassItem::Draw(HDC hDC, ePipeline* Pipe){
 	
 
 	//画背景	
-    if(m_State & SPACE_PAUSE ){	
-        FillRect(hDC,rc,SS.crTaskMassPause);
-		crFg = SS.crTaskMassBk;
-	}else if (m_State & SPACE_BREAK)
+	if (m_State & SPACE_BREAK)
 	{
 		FillRect(hDC,rc,SS.crTaskMassBreak);
+		crFg = SS.crTaskMassBk;
+
+	}else if(m_State & SPACE_PAUSE ){	
+        FillRect(hDC,rc,SS.crTaskMassPause);
 		crFg = SS.crTaskMassBk;
 	}
 	else{
 		FillRect(hDC,rc,crBk);
 	}
 	
+	if(m_Alias<0){  //表示失效，已经被标记为删除
+		FillRect(hDC,rc,SS.crTaskMassDeleted);
+	}
 	//	rc.left += RectHeight(rc)+2;
 	
 	//Draw MassName
@@ -318,31 +323,44 @@ void CDebugView::SetBreakBnt(bool bBreak,int32 BreakFlag){
 	}	
 }
 
-void CDebugView::MarkPauseItem(int64 PauseItemID){
+void CDebugView::MarkPauseItem(int64 PauseItemID,bool bMark){
 
 	CVSpace2* Item = FindSpace(PauseItemID);
 	if (Item)
 	{
+		if(bMark){
+			if (m_Toolbar.m_Owner)
+			{
+				m_Toolbar.m_Owner->m_AreaBottom-=m_Toolbar.m_Height;
+				m_Toolbar.m_Owner->m_State &= ~SPACE_SELECTED;
+			}
 
-		if (m_Toolbar.m_Owner)
-		{
-			m_Toolbar.m_Owner->m_AreaBottom-=m_Toolbar.m_Height;
-			m_Toolbar.m_Owner->m_State &= ~SPACE_SELECTED;
+			m_Toolbar.m_Owner = Item;
+			m_Toolbar.m_Owner->m_AreaBottom+=m_Toolbar.m_Height;
+
+			Item->m_State |= SPACE_PAUSE|SPACE_SELECTED;
+
+			m_SpaceSelected = Item;
+
+			SetStepBnt(true);
+			SetRunBnt(true);
+			SetBreakBnt(false,0);
+
+			Layout();
+			EnsureVisible(Item,true);
+		}else{
+			SetStepBnt(false);
+			SetRunBnt(false);
+
+			Item->m_State &= ~SPACE_PAUSE;
+			Item->m_State &= ~SPACE_SELECTED; //不能直接=0,因为可能还有SPACE_BREAK标志有效
+			if(m_Toolbar.m_Owner == Item){
+				Item->m_AreaBottom-=m_Toolbar.m_Height;
+				m_Toolbar.m_Owner = NULL;
+				m_SpaceSelected = NULL;
+			}	
+			Layout();
 		}
-
-		m_Toolbar.m_Owner = Item;
-        m_Toolbar.m_Owner->m_AreaBottom+=m_Toolbar.m_Height;
-
-		Item->m_State |= SPACE_PAUSE|SPACE_SELECTED;
-
-		m_SpaceSelected = Item;
-
-		SetStepBnt(true);
-		SetRunBnt(true);
-		SetBreakBnt(false,0);
-
-		Layout();
-		EnsureVisible(Item,true);
 	}else
 	{
 		Invalidate();
@@ -427,7 +445,7 @@ LRESULT CDebugView::OnInfoProc(WPARAM wParam, LPARAM lParam)
 			while (PauseList->Size())
 			{
 				int64 PauseItemID = PauseList->PopInt();
-				MarkPauseItem(PauseItemID);
+				MarkPauseItem(PauseItemID,true);
 			}	
 		}
 		break;
@@ -444,8 +462,15 @@ LRESULT CDebugView::OnInfoProc(WPARAM wParam, LPARAM lParam)
 				Msg.PushInt(m_TaskTimeStamp);
 				GetGUI()->SendMsgToBrainFocuse(Msg);
 			}else{
-				MarkPauseItem(PauseItemID);
+				MarkPauseItem(PauseItemID,true);
 			}
+		}
+		break;
+	case DEBUG_DISABLE_PAUSE:
+		{
+			int64 PauseItemID = Info->PopInt();
+			MarkPauseItem(PauseItemID,false);
+
 		}
 		break;
 	case DEBUG_SET_BREAK:
@@ -458,12 +483,16 @@ LRESULT CDebugView::OnInfoProc(WPARAM wParam, LPARAM lParam)
             {
 				if(bBreak){
 					Item->m_State |= SPACE_BREAK;
-					SetBreakBnt(TRUE,2);
+					if(m_Toolbar.m_Owner == Item){
+						SetBreakBnt(TRUE,2);
+					}
 				}else{
 					Item->m_State &= ~SPACE_BREAK;
-					SetBreakBnt(TRUE,1);
+					if(m_Toolbar.m_Owner == Item){
+						SetBreakBnt(TRUE,1);
+					}
 				}
-				Invalidate();
+				Layout(true);
             }
 
 		}
@@ -568,6 +597,9 @@ void CDebugView::RemoveDebugItem(ePipeline& RemoveAddress,int64 ChildID)
 }
 
 LRESULT CDebugView::ToolbarReaction(ButtonItem* Bnt){
+	//忽略已经标记为删除的条目
+	if(m_SpaceSelected->m_Alias<0)return 0;
+
 	//向brain发相应的命令
 	switch(Bnt->m_Alias){
 		
@@ -626,7 +658,7 @@ LRESULT CDebugView::ToolbarReaction(ButtonItem* Bnt){
 
 				ePipeline Msg(TO_BRAIN_MSG::TASK_CONTROL::ID);
 				
-				Msg.PushInt(TO_BRAIN_MSG::TASK_CONTROL::CMD_DEBUG_BREAK);
+				Msg.PushInt(TO_BRAIN_MSG::TASK_CONTROL::CMD_SET_BREAKPOINT);
 
 				
 				if (m_SpaceSelected->m_State&SPACE_BREAK)

@@ -1,6 +1,7 @@
 ﻿
 #include "System.h"
 #include "LinkerPipe.h"
+#include "SpaceMsgList.h"
 
 namespace PHYSIC{
 	
@@ -72,6 +73,11 @@ void CSysThreadWorker::NerveWorkProc(){
 	System::CLockedSystemData* LockedData = Parent->GetSystemData();
 
 	try{
+
+		int64 OldeTimestamp;
+
+		bool bIdle = false;
+
 		while (IsAlive() && Parent->IsAlive())
 		{
 
@@ -80,22 +86,29 @@ void CSysThreadWorker::NerveWorkProc(){
 
 			if (Msg.IsValid())
 			{	
+				bIdle = false;
+
 				LockedData->IncreNerveWorkerCount();		
 				Parent->NerveMsgProc(Msg);
 				LockedData->DecreNerveWorkerCount();
 			}else{
-				m_IdleCount++;
-				if (m_IdleCount>LockedData->GetNerveMaxIdleCount()) //Around 600 milliseconds to exit if without information can be handled
-				{						
-					int IdleNum = LockedData->GetIdleWorkerNum();
-					if (IdleNum > 1 )
-					{
-						m_IdleCount = 0;
-						break;  //thread exit
-					}else{  //Keep at least one free
-						m_IdleCount = 0;
+				if(bIdle==false){
+					OldeTimestamp =  AbstractSpace::CreateTimeStamp();
+					bIdle = true;
+				}
+				else{
+					int64 MaxIdleInterval = LockedData->GetNerveMaxIdleInterval();
+
+					int64 NewTimestamp = AbstractSpace::CreateTimeStamp();
+					if (NewTimestamp-OldeTimestamp>MaxIdleInterval){
+						if(LockedData->GetIdleWorkerNum()>1)
+						{
+							break;
+						}
+						OldeTimestamp = NewTimestamp;
 					}
 				}
+
 				SLEEP_MILLI(1);
 			}
 
@@ -438,7 +451,7 @@ bool System::CNetListenWorker::Do(Energy* E){
 			m_MaxNerveWorkerNum = 100;
 			m_NerveMsgMaxNumInPipe = 10;
 			m_NerveMsgMaxInterval = 10*1000*1000; //1秒
-			m_NerveIdleMaxCount   = 30;
+			m_NerveIdleMaxInterval =50*1000*1000; //5秒
 
 			m_NerveWorkingNum = 0;
 
@@ -484,6 +497,14 @@ bool System::CNetListenWorker::Do(Energy* E){
 			itc++;
 		}
 		m_ThreadWorkerPool.clear();
+
+		deque<CNetListenWorker*>::iterator itd = m_AcceptorPool.begin();
+		while(itd != m_AcceptorPool.end()){
+			CNetListenWorker* Accepter = *itd;
+			delete Accepter;
+			itd++;
+		}
+		m_AcceptorPool.clear();
 	}
 
 
@@ -504,15 +525,19 @@ bool System::CNetListenWorker::Do(Energy* E){
 		_CLOCK(&m_Mutex);
 		m_NerveMsgMaxInterval = n;
 	}
-
-	int32   System::CLockedSystemData::GetNerveMaxIdleCount(){
+	void    System::CLockedSystemData::SetMaxNerveWorkerNum(int32 n){
 		_CLOCK(&m_Mutex);
-		return m_NerveIdleMaxCount;	
+		m_MaxNerveWorkerNum = n;
 	}
 
-	void   System::CLockedSystemData::SetNerveMaxIdleCount(int32 n){
+	int64   System::CLockedSystemData::GetNerveMaxIdleInterval(){
 		_CLOCK(&m_Mutex);
-		m_NerveIdleMaxCount = n;
+		return m_NerveIdleMaxInterval;	
+	}
+
+	void   System::CLockedSystemData::SetNerveMaxIdleInterval(int32 second){
+		_CLOCK(&m_Mutex);
+		m_NerveIdleMaxInterval = second*10*1000*1000;
 	}
 
 	int32   System::CLockedSystemData::GetBusyNerveWorkerNum(){
@@ -547,7 +572,6 @@ bool System::CNetListenWorker::Do(Energy* E){
 			Worker->Dead();
 
 			Worker->m_ID = ID;
-			Worker->m_IdleCount =0;
 			Worker->m_Parent = Parent;
 			m_ThreadWorkerPool.pop_front();
 		}else{
@@ -688,7 +712,7 @@ bool System::CNetListenWorker::Do(Energy* E){
 		{
 			Reason = REASON_MSG_TOO_MUCH;
 			return TRUE;
-		}else if(Interval> m_NerveMsgMaxInterval){ //when exceeded specified interval, there is no  message  be  popped to handled, create  new thread
+		}else if(MsgNum>1 && Interval> m_NerveMsgMaxInterval){ //when exceeded specified interval, there is no  message  be  popped to handled, create  new thread
 			Reason = REASON_TIME_OUT;
 			return TRUE;
 		}
@@ -897,13 +921,14 @@ bool System::CNetListenWorker::Do(Energy* E){
 		{
 			if (Reason == REASON_LIMIT)
 			{
-				
 				NotifySysState(NOTIFY_SYSTEM_SCENE,NTID_NERVE_THREAD_LIMIT,NULL);
+				return FALSE;
 			}
-			return FALSE;
+			else if(m_SystemData.GetIdleWorkerNum() > 0){
+				return FALSE;
+			}	
 		}
 
-		
 		CThreadWorker* NerveWork = m_SystemData.CreateThreadWorker(NewMsgPushTime,this,SYSTEM_NEVER_WORK_TYPE);
 		if (!NerveWork){
 			return FALSE;
@@ -930,7 +955,7 @@ bool System::CNetListenWorker::Do(Energy* E){
 		set<int64>::iterator it = SourceList.begin();
 		while(it != SourceList.end()){
 			CMsg Msg(MSG_BROADCAST_MSG,DEFAULT_DIALOG,0);
-			Msg.GetLetter().Push_Directly(MsgData.Clone());
+			Msg.GetLetter(false).Push_Directly(MsgData.Clone());
 
 			int64 SourceID = *it;
 			CLinker Linker;
@@ -1057,4 +1082,20 @@ bool System::CNetListenWorker::Do(Energy* E){
 		m_SystemData.DelAcceptor(Port,true);
 	}
 
+	void System::FeedbackError(CLinker& Linker,int64 EventID,tstring ErrorInfo,ePipeline* ExePipe){
+		CMsg FeedbackMsg(SPACE_SOURCE,DEFAULT_DIALOG,MSG_TASK_FEEDBACK,DEFAULT_DIALOG,EventID);
+		ePipeline& Letter = FeedbackMsg.GetLetter(false);
+
+		if(ExePipe==NULL){
+			ePipeline  Pipe(RETURN_ERROR);
+			Pipe.m_Label = ErrorInfo;
+			Letter.PushPipe(Pipe);
+		}else{
+			ExeError(*ExePipe,ErrorInfo);
+			Letter.PushPipe(*ExePipe);  
+		}
+		if(Linker.IsValid()){
+			Linker().PushMsgToSend(FeedbackMsg);
+		}
+	}
 }; //end namespace ABSTRACT

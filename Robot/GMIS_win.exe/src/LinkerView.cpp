@@ -3,10 +3,11 @@
 //////////////////////////////////////////////////////////////////////
 #pragma warning (disable:4786) 
 
+#include "GMIS.h"
 #include "LinkerView.h"
 #include "MainFrame.h"
 #include "LogicDialog.h"
-#include "GMIS.h"
+
 
 CLinkerView::CLinkerItem::CLinkerItem(int64 ID,const tstring& Name)
 :CTreeItem(ID,Name.c_str())
@@ -17,6 +18,7 @@ CLinkerView::CLinkerItem::CLinkerItem(int64 ID,const tstring& Name)
 void CLinkerView::CLinkerItem::Draw(HDC hDC,ePipeline* Pipe ){
 	//输出文字
     RECT rc = GetArea();
+	
 	if (m_State & SPACE_SELECTED)
 	{
 		FillRect(hDC,rc,RGB(0,0,255));
@@ -26,7 +28,17 @@ void CLinkerView::CLinkerItem::Draw(HDC hDC,ePipeline* Pipe ){
 			DT_NOPREFIX|DT_VCENTER);
 			
 		::SetTextColor(hDC,Oldcr);	
-	}else if (m_State & SPACE_WARNING)
+	}else if(m_State & SPACE_DISABLE)
+	{
+		FillRect(hDC,rc,RGB(128,128,128));
+
+		COLORREF Oldcr = ::SetTextColor(hDC,RGB(255,255,255));
+		::DrawText(hDC,m_Text.c_str(),m_Text.size(),&rc,DT_LEFT|DT_EXPANDTABS|
+			DT_NOPREFIX|DT_VCENTER);
+
+		::SetTextColor(hDC,Oldcr);	
+	}
+	else if (m_State & SPACE_WARNING)
 	{
 		FillRect(hDC,rc,RGB(255,0,0));
 		COLORREF Oldcr = ::SetTextColor(hDC,RGB(255,255,255));
@@ -110,6 +122,28 @@ void CLinkerView::NotifyDialogHasNew(int64 SourceID,int64 DialogID){
 	SendChildMessage(GetHwnd(),NOTIFY_DIALOG,SourceID,DialogID);	
 }
 
+void CLinkerView::EnableDialog(int64 SourceID,int64 DialogID,bool bEnable){
+	CLinkerItem* LinkerItem = FindLinker(SourceID);
+	if (DialogID == DEFAULT_DIALOG)
+	{
+		if(bEnable){
+			LinkerItem->m_State &= ~SPACE_DISABLE;
+		}else{
+			LinkerItem->m_State |= SPACE_DISABLE;
+		}
+	}else {
+		CLinkerItem* DialogItem = (CLinkerItem*)LinkerItem->FindSpace(DialogID);
+		if (DialogItem)
+		{
+			if(bEnable){
+				DialogItem->m_State &= ~SPACE_DISABLE;
+			}else{
+				DialogItem->m_State |= SPACE_DISABLE;
+			}
+		}
+	}
+	Invalidate();
+}
 void CLinkerView::ClearAll(){
 	SendChildMessage(GetHwnd(),CLR_LINKER,0,0);	
 };
@@ -178,11 +212,22 @@ LRESULT CLinkerView::ChildReaction(SpaceRectionMsg* SRM){
 			{
 				if (DialogID == DEFAULT_DIALOG)
 				{
-					RemoveChild(LinkerItem);
-					delete LinkerItem;
-                    CancelAllWarning();
-					m_SpaceFocused = NULL;
-            
+					CancelAllWarning();
+
+					RemoveChild(LinkerItem);				
+					
+					int64 rSourceID, rDialogID;
+					GetGUI()->GetFocusDialog(rSourceID,rDialogID);
+
+					if(rSourceID == SourceID){
+						m_SpaceFocused = NULL;
+						m_SpaceSelected = NULL;
+						//自动把焦点重置为缺省的主系统对话
+						ePipeline Msg(TO_BRAIN_MSG::GUI_SET_FOUCUS_DIALOG); 
+						GetGUI()->SendMsgToBrainFocuse(Msg);
+					}
+
+					delete LinkerItem;					
 					Layout(true);
 
 				}else{
@@ -193,10 +238,7 @@ LRESULT CLinkerView::ChildReaction(SpaceRectionMsg* SRM){
 						CVSpace2* Parent = DialogItem->m_Parent; 
 						Parent->RemoveChild(DialogItem);
 						
-						CancelAllWarning();
-
 						m_SpaceFocused = NULL;
-
 	
 						if (DialogItem  == m_SpaceSelected)
 						{
@@ -268,7 +310,7 @@ LRESULT CLinkerView::ChildReaction(SpaceRectionMsg* SRM){
 			CVSpace2* Linker = FindSpace(SourceID);
 			if(Linker==NULL)return 0;
 			CVSpace2* DialogItem = Linker;
-			if (DialogID != SourceID )
+			if (DialogID != DEFAULT_DIALOG )
 			{
 				DialogItem = (CLinkerItem*)Linker->FindSpace(DialogID);
 			}
@@ -277,6 +319,7 @@ LRESULT CLinkerView::ChildReaction(SpaceRectionMsg* SRM){
 			{
 				if(IsWarning(DialogItem))return 0;
 				SetSpaceWarning(DialogItem,TRUE);
+				SetTimer(GetHwnd(),(UINT_PTR)DialogItem,2500,NULL); //只闪烁3次
 			}
 		}
 		break;
@@ -285,6 +328,14 @@ LRESULT CLinkerView::ChildReaction(SpaceRectionMsg* SRM){
 	}
 	return 0;
 }
+LRESULT CLinkerView::OnTimer(WPARAM wParam, LPARAM lParam){
+	long nIDEvent = wParam;
+	CVSpace2* Item = (CVSpace2*)nIDEvent;
+	SetSpaceWarning(Item,FALSE);  //取消警告
+	::KillTimer(m_hWnd,nIDEvent);
+	return 0;
+}
+
 
 LRESULT CLinkerView::OnLButtonDown(WPARAM wParam, LPARAM lParam){
 	LRESULT ret = CWSScrollView::OnLButtonDown(wParam,lParam);
@@ -344,7 +395,6 @@ LRESULT CLinkerView::OnLButtonDown(WPARAM wParam, LPARAM lParam){
 			Invalidate();
 		}	        		
 	}else {// NewSelect != m_SpaceSelected	
-		
 		RECT TreeBox = GetHeaderBox(NewSelect);  
 		if(::PtInRect(&TreeBox,point)){
 			//取消旧的选择
@@ -395,6 +445,8 @@ LRESULT CLinkerView::OnLButtonDown(WPARAM wParam, LPARAM lParam){
 LRESULT CLinkerView::Reaction(UINT message, WPARAM wParam, LPARAM lParam){
 	if(message == WM_LBUTTONDOWN){
 		return OnLButtonDown(wParam,lParam);
+	}else if(message == WM_TIMER){
+		return OnTimer(wParam,lParam);
 	}
 	return CWSTreeView::Reaction(message,wParam,lParam);
 }

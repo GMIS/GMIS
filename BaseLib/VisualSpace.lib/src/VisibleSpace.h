@@ -34,6 +34,7 @@
 
 #pragma warning(disable : 4786)
 
+
 #include "Pipeline.h"
 #include <windows.h>
 #include <deque>

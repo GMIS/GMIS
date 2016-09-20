@@ -6,6 +6,7 @@
 #include "LogicThread.h"
 #include "InstinctDefine.h"
 #include "BrainMemory.h"
+#include "LogicDialog.h"
 
 //语法分析
 ///////////////////////////////////////////////////////////////////////
@@ -330,10 +331,18 @@ int64 CLogicThread::LearnText( int64 Meaning /*=NULL_MEANING*/,
 
 CToken* CLogicThread::JustOneToken(){
 	
-	if(m_Text.m_TokenList.size() == 1)return m_Text.m_TokenList.back();
+	if(m_Text.m_TokenList.size() == 1){
+		return m_Text.m_TokenList.back();
+	}
 	return NULL;
 }
-	
+bool  CLogicThread::IsFloatNum(){
+	if(m_Text.m_TokenList.size() == 3){
+		tstring s = m_Text.GetText();
+		if(IsNum(s)==FLOAT_NUM)return true;
+	}
+	return false;
+}	
 CClause* CLogicThread::JustOneClause(){
 	
 	if( m_Text.m_ClauseList.size()==1){
@@ -369,7 +378,7 @@ int64 CLogicThread::LearnAction(CClause* Clause,int64 ActionID,tstring& Error,in
 	while(It != WordList.end())
 	{
 		CWord& Word = *It;
-		ID = HasMeaningRoom(Word.m_ID,0,Word.m_PartOfSpeech);
+		ID = HasMeaningSpace(Word.m_ID,0,Word.m_PartOfSpeech);
 		assert(ID>0);
 		if(ID==0)return 0;
 		MemoryIDList.push_back(ID);
@@ -397,6 +406,8 @@ int64 CLogicThread::LearnAction(CLogicDialog* Dialog,tstring& Command,int64 Acti
  
 
 int64 CLogicThread::LearnInstinctInstance(int64 ActionID,Energy* Param){
+	assert(ActionID>11655820);
+
 	vector<int64> ValueList;
 	ValueList.push_back(ActionID);
 	int64 ParamID = 0;
@@ -426,7 +437,7 @@ int64 CLogicThread::LearnInstinctInstance(int64 ActionID,Energy* Param){
 		case TYPE_STRING:
 			{
 				s = *(tstring*)Param->Value();
-				ParamID = LearnToken(s);
+				ParamID = LearnText(s);
 			}
 			break;
 		case TYPE_PIPELINE:
@@ -459,12 +470,21 @@ int64 CLogicThread::LearnWord(tstring Text,int64 PartOfSpeech,int64 MeaningSense
 		Think.m_Text.Analyse(i,Text[i]);
 		//ThinkToken();
 	}
-    CToken* Token = Think.JustOneToken();
-	if(!Token || Token->Size()==0)return 0;
 
-	vector<int64> CharList(Token->Size());
-	for(int j=0; j<Token->Size();j++){
-		CharList[j] = CharToID(Token->m_Str[j]);
+	bool Onetoken = false;
+	if(PartOfSpeech==MEMORY_NUMERAL){
+		if(IsNum(Text) != NOT_NUM) Onetoken = true;
+	}
+
+	if(!Onetoken){
+		CToken* Token = Think.JustOneToken();
+		if(!Token || Token->Size()==0)return 0;
+	}
+
+	vector<int64> CharList(Text.size());
+
+	for(int j=0; j<Text.size();j++){
+		CharList[j] = CharToID(Text[j]);
 	}
 
 	
@@ -569,7 +589,7 @@ int64  CLogicThread::LearnToken(tstring& s){
 	for (int i =0; i<s.size(); i++)
 	{
 		TCHAR ch = s[i];
-		ValueList.push_back(ch);
+		ValueList.push_back( CharToID(ch));
 	}
 	int64 ID = LearnMemory(ValueList,NULL_MEANING,MEMORY_LAN,MEANING_SENSE_OK,0, ROOT_SPACE,ROOT_LOGIC_TEXT,true);
 	return ID;
@@ -597,7 +617,7 @@ int64 CLogicThread::LearnWordFromWord(tstring NewWord,int64 PartOfSpeech,tstring
 		CharList[j] = CharToID(OldWord[j]);
 	}
 
-	int64 MeaningID = GetMeaningRoomID(CharList,NULL_MEANING,PartOfSpeech);
+	int64 MeaningID = GetMeaningSpaceID(CharList,NULL_MEANING,PartOfSpeech);
 	if (!MeaningID)
 	{
 		return 0;
@@ -610,21 +630,21 @@ int64 CLogicThread::LearnWordFromWord(tstring NewWord,int64 PartOfSpeech,tstring
 		CharList[j] = CharToID(NewWord[j]);
 	}
 
-	int64 RoomID = InsertMultiRoom(CharList,MEMORY_BODY,ROOT_SPACE,ROOT_LOGIC_TEXT,true);
-	if(!RoomID)return 0;
+	int64 SpaceID = InsertMultiSpace(CharList,MEMORY_BODY,ROOT_SPACE,ROOT_LOGIC_TEXT,true);
+	if(!SpaceID)return 0;
 
 
 	//在新单词里先寻找是否有指定词性，并且与旧单词意义空间ID相同	
-	int64 MeaningRoomID = HasMeaningRoom(RoomID,NULL_MEANING,PartOfSpeech);
-	if(MeaningID == MeaningRoomID){
+	int64 MeaningSpaceID = HasMeaningSpace(SpaceID,NULL_MEANING,PartOfSpeech);
+	if(MeaningID == MeaningSpaceID){
 		return MeaningID;
 	}else{
 		//不相同则记忆一个相同的
-		MeaningRoomID = InsertMeaningRoom(RoomID,CharList.back(),NULL_MEANING,PartOfSpeech,MeaningID);
+		MeaningSpaceID = InsertMeaningSpace(SpaceID,CharList.back(),NULL_MEANING,PartOfSpeech,MeaningID);
 
 		//给一个有效评价的结尾
-		if(MeaningRoomID)InsertEndRoom(MeaningRoomID,MEANING_SENSE_OK,MEMORY_LOGIC_END);
-		return MeaningRoomID;
+		if(MeaningSpaceID)InsertEndSpace(MeaningSpaceID,MEANING_SENSE_OK,MEMORY_LOGIC_END);
+		return MeaningSpaceID;
 	}
 
 	return 0;
@@ -715,83 +735,116 @@ int64 CLogicThread::LearnObjectAuto(int64 IP,tstring AddressText,int64 crc32,boo
 
   **或许，编译任务也应该采用这种更简单的算法
 */
-int64 CLogicThread::LearnLogic(ePipeline* Sentence){
+int64 CLogicThread::LearnLogic(CLogicDialog* Dialog,ePipeline* Sentence){
 		
-	int32 ClauseCount = Sentence->Size();
-	if(ClauseCount==0){
+	if(Sentence->Size()==0){
 		return 0;
 	}
-    
-	int32 n = 0;
-	
+  
     vector<int64> SeriesList;
 	vector<int64> ShuntList;		
 
 	int64 ActionID = 0 ;
     Energy*  Param = NULL;
-	while(n<ClauseCount){
-		ePipeline* ClausePipe = (ePipeline*)Sentence->GetData(n);
-		int64 CmdID = *(int64*)ClausePipe->GetData(0);
+	for(int i=0; i<Sentence->Size(); i++){
 
-		if(CmdID<0){
+		ePipeline* ClausePipe = (ePipeline*)Sentence->GetData(i);
+
+		int64 Instinct = *(int64*)ClausePipe->GetData(0);
+
+		if(Instinct<0){  //与前一个行为并联
 			assert(SeriesList.size()>0);
-            ActionID = SeriesList.back();
+            
+			ActionID = SeriesList.back();
+
 			SeriesList.pop_back();
 			ShuntList.push_back(ActionID);
 
 			do{ //处理所有并联
-				if(ClausePipe->Size()>1)Param = ClausePipe->GetEnergy(1);				
-				else Param = NULL;				
-				CmdID = -CmdID;
+				Param = NULL;
+				if(ClausePipe->Size()>1){
+					Param = ClausePipe->GetEnergy(1);				
+				}
+				Instinct = -Instinct;
+
 				//如果是嵌套逻辑
-				if(INSTINCT_USE_LOGIC == CmdID )
+				if(INSTINCT_USE_LOGIC == Instinct )
 				{
 					assert(Param != NULL); 
-					ePipeline* LogicPipe = (ePipeline*)Param;
-					ActionID = LearnLogic(LogicPipe);
+					tstring* ChildLogicName = (tstring*)Param->Value();
+
+					CLocalLogicCell* ChildLogic = Dialog->FindLogic(*ChildLogicName);
+
+					if(ChildLogic == NULL){		
+						return 0;
+					}
+
+					ePipeline ChildLogicData = ChildLogic->m_Task.m_LogicData;
+					ActionID = LearnLogic(Dialog,&ChildLogicData);
+					assert(ActionID!=0);
 				}
-				else ActionID = LearnInstinctInstance(CmdID,Param);	
-				
+				else {
+					ActionID = LearnInstinctInstance(Instinct,Param);	
+					assert(ActionID!=0);
+				}	
 				if(ActionID == 0)return 0;
 				ShuntList.push_back(ActionID);
-								
-			    if(++n == ClauseCount)break;
+						
+				i++;
+			    if(i == Sentence->Size())break;
 
-				ClausePipe = (ePipeline*)Sentence->GetData(n);
-				CmdID = *(int64*)ClausePipe->GetData(0);				
-			}while(CmdID<0);
+				ClausePipe = (ePipeline*)Sentence->GetData(i);
+				Instinct = *(int64*)ClausePipe->GetData(0);	
+
+			}while(Instinct<0);
 
 			ActionID = LearnMemory(ShuntList,NULL_MEANING,MEMORY_SHUNT);
+			assert(ActionID!=0);
+
 			if(ActionID == 0)return 0;
 			ShuntList.clear();
 
 			//Sentence只是单一的并联体
-			if(n==ClauseCount && SeriesList.size()==0){
+			if(i == Sentence->Size() && SeriesList.size()==0){
 				return ActionID;
 			}
 			//否则并联将作为串联的一部分
 			SeriesList.push_back(ActionID);
-			--n;
+	
 		}
-		else{		
-			if(ClausePipe->Size()>1)Param = ClausePipe->GetEnergy(1);				
-			else Param = NULL;
+		 
+		Param = NULL;
+		if(ClausePipe->Size()>1){
+			Param = ClausePipe->GetEnergy(1);				
+		}
 
-			if(INSTINCT_USE_LOGIC == CmdID)
-			{
-				assert(Param != NULL); 
-				ePipeline* LogicPipe = (ePipeline*)Param;
-				ActionID = LearnLogic(LogicPipe);
+		if(INSTINCT_USE_LOGIC == Instinct)
+		{
+			assert(Param != NULL); 
+			tstring* ChildLogicName = (tstring*)Param->Value();
+
+			CLocalLogicCell* ChildLogic = Dialog->FindLogic(*ChildLogicName);
+
+			if(ChildLogic == NULL){		
+				return 0;
 			}
-			else ActionID = LearnInstinctInstance(CmdID,Param);				
-			
-			if(ActionID == 0)return 0;
-			SeriesList.push_back(ActionID);
-			++n;
+
+			//预先记忆逻辑体
+			ePipeline ChildLogicData = ChildLogic->m_Task.m_LogicData;
+			ActionID = LearnLogic(Dialog,&ChildLogicData);
+			assert(ActionID!=0);
 		}
+		else {
+			ActionID = LearnInstinctInstance(Instinct,Param);				
+			assert(ActionID!=0);
+		}
+		if(ActionID == 0)return 0;
+		SeriesList.push_back(ActionID);
+
 	}
     assert(SeriesList.size() >0);
 	ActionID = LearnMemory(SeriesList,NULL_MEANING,MEMORY_SERIES,0);
+	assert(ActionID!=0);
 	return ActionID;
 }
 /*

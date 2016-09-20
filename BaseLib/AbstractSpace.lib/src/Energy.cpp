@@ -2,21 +2,30 @@
 #include "BaseEnergy.h"
 
 namespace ABSTRACT{
-    const char*  Energy::BaseEnergyChar= "0123456";  //For number-string conversion
+    const char*  Energy::BaseEnergyChar= "0123456789abcdef";  //For number-string conversion
 
 	const wchar_t*  Energy::BaseEnergyName[] = {
-                     _T("TYPE_NULL"),        // = 0,   	                 
-		    		 _T("TYPE_INT"),         // = 1,
-					 _T("TYPE_FLOAT"),       // = 2,
-					 _T("TYPE_STRING"),      // = 3,
-					 _T("TYPE_PIPELINE"),    // = 4,
-					 _T("TYPE_BLOB"),        // = 5
-					 _T("TYPE_USER")         // = 6,		
+		             _T("TYPE_UNDEFINED"),  
+                     _T("TYPE_NULL"),        // = 1,   	                 
+		    		 _T("TYPE_INT"),         // = 2,
+					 _T("TYPE_FLOAT"),       // = 3,
+					 _T("TYPE_STRING"),      // = 4,
+					 _T("TYPE_PIPELINE"),    // = 5,
+					 _T("TYPE_BLOB"),        // = 6
+					 _T("TYPE_UNDEFINED"),   // = 7
+					 _T("TYPE_UNDEFINED"),   // = 8
+					 _T("TYPE_UNDEFINED"),   // = 9
+					 _T("TYPE_UNDEFINED"),   // = 10
+					 _T("TYPE_UNDEFINED"),   // = 11
+					 _T("TYPE_UNDEFINED"),   // = 12
+					 _T("TYPE_UNDEFINED"),   // = 13
+					 _T("TYPE_UNDEFINED"),   // = 14
+					 _T("TYPE_USER")         // = 15,		
 	};
 
 
     const wchar_t* Energy::GetTypeName(uint32 type){
-	    assert(type<TYPE_END);
+	    assert(type<16);
 		return BaseEnergyName[type];
 	};
 /*
@@ -76,7 +85,7 @@ inttable[a][b]  a is the decimal digits, b is the values on the position
 
 	void  Energy::PrintString(AnsiString& s,int32 type,uint32 datalen, const char* data)
 	{
-		assert(type<TYPE_END);
+		assert(type<16);
 
 		char buf[20];  
 

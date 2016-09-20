@@ -21,7 +21,7 @@ void CLogicDialog::_FindTokenAnd(deque<int64>& DestMeaningList, map<int64,FDeque
 		int64  DestMeaning = *DestIt;
 
 		//取得每一个目标意义的所有结尾空间的ID
-		FDeque EndRoomIDList;
+		FDeque EndSpaceIDList;
 		char buf[30];
 		int64toa(DestMeaning,buf);
 
@@ -32,15 +32,15 @@ void CLogicDialog::_FindTokenAnd(deque<int64>& DestMeaningList, map<int64,FDeque
 		for (int row = 0; row < t0.numRows(); row++)
 		{	
 			t0.setRow(row);
-			int64 RoomID = t0.getInt64Field(0);
-			EndRoomIDList.push_back(RoomID);
+			int64 SpaceID = t0.getInt64Field(0);
+			EndSpaceIDList.push_back(SpaceID);
 		}	
 		
 		//如果缺少参与运算的意义,（第一次）则直接转入到结果列表中
 		if (SrcMeaningList.size() == 0) 
 		{
 			assert(first);
-			ResultMeaningList[DestMeaning] = EndRoomIDList;
+			ResultMeaningList[DestMeaning] = EndSpaceIDList;
 			DestIt++;
 			continue;
 		}
@@ -49,30 +49,30 @@ void CLogicDialog::_FindTokenAnd(deque<int64>& DestMeaningList, map<int64,FDeque
 		while(SrcIt != SrcMeaningList.end()){
 			
 			//找出两个不同意义之间存储时间接近者
-			FDeque& SrcEndRoomIDList = SrcIt->second;
+			FDeque& SrcEndSpaceIDList = SrcIt->second;
 		
-			FDeque::iterator DequeIt1 = SrcEndRoomIDList.begin();
-			while (DequeIt1 != SrcEndRoomIDList.end())
+			FDeque::iterator DequeIt1 = SrcEndSpaceIDList.begin();
+			while (DequeIt1 != SrcEndSpaceIDList.end())
 			{
 				int64 Time1 = *DequeIt1;
-				FDeque::iterator DequeIt2 = EndRoomIDList.begin();
+				FDeque::iterator DequeIt2 = EndSpaceIDList.begin();
                 
 				bool Find = false;
 				int64 Interval=0; 
-				while (DequeIt2 != EndRoomIDList.end())
+				while (DequeIt2 != EndSpaceIDList.end())
 				{
 					int64 Time2 = *DequeIt2;
-					Interval = Time1/10000000L-Time2/10000000L;
+					Interval = Time1-Time2;
 					
-					if ((Interval>=0&&Interval<m_Interval) || (Interval<0&&-Interval<m_Interval))
+					if ((Interval>=0&&Interval<m_FindInterval) || (Interval<0&&-Interval<m_FindInterval))
 					{  					
 						//保留后记忆token的意义ID及时间戳作为结果
 						if(Time1>Time2){								
-							FDeque& ResultEndRoomIDList = ResultMeaningList[SrcIt->first];
-							ResultEndRoomIDList.push_back(Time1);
+							FDeque& ResultEndSpaceIDList = ResultMeaningList[SrcIt->first];
+							ResultEndSpaceIDList.push_back(Time1);
 						}else{
-							FDeque& ResultEndRoomIDList = ResultMeaningList[DestMeaning];
-							ResultEndRoomIDList.push_back(Time2);
+							FDeque& ResultEndSpaceIDList = ResultMeaningList[DestMeaning];
+							ResultEndSpaceIDList.push_back(Time2);
 						}
 						Find = true;
 					}else{
@@ -110,7 +110,7 @@ void CLogicDialog::_FindTokenOr(deque<int64>& DestMeaningList, map<int64,FDeque>
 		int64  DestMeaning = *DestIt;
 
 		//取得每一个目标意义的所有结尾空间的ID
-		FDeque EndRoomIDList;
+		FDeque EndSpaceIDList;
 		char buf[30];
 		int64toa(DestMeaning,buf);
 		
@@ -120,14 +120,14 @@ void CLogicDialog::_FindTokenOr(deque<int64>& DestMeaningList, map<int64,FDeque>
 		for (int row = 0; row < t0.numRows(); row++)
 		{	
 			t0.setRow(row);
-			int64 RoomID = t0.getInt64Field(0);
-			EndRoomIDList.push_back(RoomID);
+			int64 SpaceID = t0.getInt64Field(0);
+			EndSpaceIDList.push_back(SpaceID);
 		}	
 		
 		//如果缺少参与运算的意义,则直接转入到结果列表中
 		if (SrcMeaningList.size() == 0) 
 		{
-			ResultMeaningList[DestMeaning] = EndRoomIDList;
+			ResultMeaningList[DestMeaning] = EndSpaceIDList;
 			DestIt++;
 			continue;
 		}
@@ -146,29 +146,29 @@ void CLogicDialog::_FindTokenOr(deque<int64>& DestMeaningList, map<int64,FDeque>
 			}
 			
 			//找出两个不同意义之间存储时间接近者
-			FDeque& SrcEndRoomIDList = SrcIt->second;
+			FDeque& SrcEndSpaceIDList = SrcIt->second;
 		    
-			FDeque::iterator DequeIt1 = SrcEndRoomIDList.begin();
-			while (DequeIt1 != SrcEndRoomIDList.end())
+			FDeque::iterator DequeIt1 = SrcEndSpaceIDList.begin();
+			while (DequeIt1 != SrcEndSpaceIDList.end())
 			{
 				int64 Time1 = *DequeIt1;
-				FDeque::iterator DequeIt2 = EndRoomIDList.begin();
+				FDeque::iterator DequeIt2 = EndSpaceIDList.begin();
                 
 				bool Find = false;
 				int64 Interval=0; 
-				while (DequeIt2 != EndRoomIDList.end())
+				while (DequeIt2 != EndSpaceIDList.end())
 				{
 					int64 Time2 = *DequeIt2;
-					Interval = Time1/10000000L-Time2/10000000L;
+					Interval = Time1-Time2;
 					
-					if ((Interval>=0&&Interval<m_Interval) || (Interval<0&&-Interval<m_Interval))
+					if ((Interval>=0&&Interval<m_FindInterval) || (Interval<0&&-Interval<m_FindInterval))
 					{  					
 						//如果重复，去掉先记忆token的时间戳
 						if(Time1>Time2){								
-							DequeIt2 = EndRoomIDList.erase(DequeIt2);
+							DequeIt2 = EndSpaceIDList.erase(DequeIt2);
 							DequeIt2--;
 						}else{
-							DequeIt1 = SrcEndRoomIDList.erase(DequeIt1);
+							DequeIt1 = SrcEndSpaceIDList.erase(DequeIt1);
 							DequeIt1--;
 						}
 						Find = true;
@@ -193,7 +193,7 @@ void CLogicDialog::_FindTokenOr(deque<int64>& DestMeaningList, map<int64,FDeque>
 
 			SrcIt++;
 		}
-		ResultMeaningList[DestMeaning] = EndRoomIDList;
+		ResultMeaningList[DestMeaning] = EndSpaceIDList;
 		DestIt ++;
 	}
 
@@ -201,8 +201,8 @@ void CLogicDialog::_FindTokenOr(deque<int64>& DestMeaningList, map<int64,FDeque>
 	//	ResultMeaningList.insert(SrcMeaningList.begin(),SrcMeaningList.end());
   	map<int64,FDeque>::iterator SrcIt = SrcMeaningList.begin();
 	while(SrcIt != SrcMeaningList.end()){
-	     FDeque& EndRoomList = SrcIt->second;
-		 ResultMeaningList[SrcIt->first] = EndRoomList;
+	     FDeque& EndSpaceList = SrcIt->second;
+		 ResultMeaningList[SrcIt->first] = EndSpaceList;
 		 SrcIt++;
 	}
 };
@@ -219,7 +219,7 @@ void CLogicDialog::_FindTokenNot(deque<int64>& DestMeaningList, map<int64,FDeque
 		int64  DestMeaning = *DestIt;
 
 		//取得每一个目标意义的所有结尾空间的ID
-		FDeque EndRoomIDList;
+		FDeque EndSpaceIDList;
 		char buf[30];
 		int64toa(DestMeaning,buf);
 		
@@ -229,8 +229,8 @@ void CLogicDialog::_FindTokenNot(deque<int64>& DestMeaningList, map<int64,FDeque
 		for (int row = 0; row < t0.numRows(); row++)
 		{	
 			t0.setRow(row);
-			int64 RoomID = t0.getInt64Field(0);
-			EndRoomIDList.push_back(RoomID);
+			int64 SpaceID = t0.getInt64Field(0);
+			EndSpaceIDList.push_back(SpaceID);
 		}	
 		
 		map<int64,FDeque>::iterator SrcIt = SrcMeaningList.begin();
@@ -246,25 +246,25 @@ void CLogicDialog::_FindTokenNot(deque<int64>& DestMeaningList, map<int64,FDeque
 				continue;
 			}			
 			//找出两个不同意义之间存储时间接近者
-			FDeque& SrcEndRoomIDList = SrcIt->second;
+			FDeque& SrcEndSpaceIDList = SrcIt->second;
 		    
-			FDeque::iterator DequeIt1 = SrcEndRoomIDList.begin();
-			while (DequeIt1 != SrcEndRoomIDList.end())
+			FDeque::iterator DequeIt1 = SrcEndSpaceIDList.begin();
+			while (DequeIt1 != SrcEndSpaceIDList.end())
 			{
 				int64 Time1 = *DequeIt1;
-				FDeque::iterator DequeIt2 = EndRoomIDList.begin();
+				FDeque::iterator DequeIt2 = EndSpaceIDList.begin();
                 
 				bool Find = false;
 				int64 Interval=0; 
-				while (DequeIt2 != EndRoomIDList.end())
+				while (DequeIt2 != EndSpaceIDList.end())
 				{
 					int64 Time2 = *DequeIt2;
-					Interval = Time1/10000000L-Time2/10000000L;
+					Interval = Time1-Time2;
 					
-					if ((Interval>=0&&Interval<m_Interval) || (Interval<0&&-Interval<m_Interval))
+					if ((Interval>=0&&Interval<m_FindInterval) || (Interval<0&&-Interval<m_FindInterval))
 					{  	
 						//只要与目标意义的时间戳相近则删除
-						DequeIt1 = SrcEndRoomIDList.erase(DequeIt1);
+						DequeIt1 = SrcEndSpaceIDList.erase(DequeIt1);
 						DequeIt1--;						
 						Find = true;
 					}else{
@@ -295,17 +295,17 @@ void CLogicDialog::_FindTokenNot(deque<int64>& DestMeaningList, map<int64,FDeque
 	//	ResultMeaningList.insert(SrcMeaningList.begin(),SrcMeaningList.end());
   	map<int64,FDeque>::iterator SrcIt = SrcMeaningList.begin();
 	while(SrcIt != SrcMeaningList.end()){
-	     FDeque& EndRoomList = SrcIt->second;
-		 ResultMeaningList[SrcIt->first] = EndRoomList;
+	     FDeque& EndSpaceList = SrcIt->second;
+		 ResultMeaningList[SrcIt->first] = EndSpaceList;
 		 SrcIt++;
 	}
 		
 };
 
 
-void CLogicDialog::_FindMemoryRoom(CLogicThread* Think,map<int64,FDeque>* DestTokenList, deque<int64>* ResultRoomList){
+void CLogicDialog::_FindMemorySpace(CLogicThread* Think,map<int64,FDeque>* DestTokenList, deque<int64>* ResultSpaceList){
 	
-	deque<int64> RoomSet;
+	deque<int64> SpaceSet;
 	char buf[30];
 	CppSQLite3Buffer SQL;	
 	
@@ -313,7 +313,7 @@ void CLogicDialog::_FindMemoryRoom(CLogicThread* Think,map<int64,FDeque>* DestTo
 	while (TokenIt != DestTokenList->end())
 	{
 		int64 TokenMeaingID = TokenIt->first;
-		FDeque& TokenEndRoomList = TokenIt->second;
+		FDeque& TokenEndSpaceList = TokenIt->second;
 		
 		//取得使用这个token意义的所有索引信息
 	    ToLBrain(TokenMeaingID);
@@ -324,7 +324,7 @@ void CLogicDialog::_FindMemoryRoom(CLogicThread* Think,map<int64,FDeque>* DestTo
 		for (int row = 0; row < t0.numRows(); row++)
 		{	
 			t0.setRow(row);
-			int64 FatherRoomID = t0.getInt64Field(0);
+			int64 FatherSpaceID = t0.getInt64Field(0);
 			int64 FatherMeaningID = t0.getInt64Field(1);
             int64 ChildID   = t0.getInt64Field(2);
            
@@ -333,43 +333,43 @@ void CLogicDialog::_FindMemoryRoom(CLogicThread* Think,map<int64,FDeque>* DestTo
 				continue;   //这是对意义空间值为0时的特殊处理造成的结果，忽略
 			}
 			
-			if (FatherRoomID != ROOT_SPACE)
+			if (FatherSpaceID != ROOT_SPACE)
 			{
 				//依次取出父空间意义的所有结尾空间
 		
-				FDeque EndRoomList;			
+				FDeque EndSpaceList;			
 				int64toa(FatherMeaningID,buf);
 				SQL.format("select %s from  \"%s\"  ;",RB_SPACE_ID,buf);
 				CppSQLite3Table t1 = CBrainMemory::BrainDB.getTable(SQL);
 				for (int row1 = 0; row1 < t1.numRows(); row1++)
 				{	
 					t1.setRow(row1);
-					int64 RoomID = t1.getInt64Field(0);
-					EndRoomList.push_back(RoomID);
+					int64 SpaceID = t1.getInt64Field(0);
+					EndSpaceList.push_back(SpaceID);
 				}	
 				
 				bool Find ;
 				
 				//比较两个结尾空间列表，如果有对应的时间关联则前面所的
 				//的ChildID为最终的记忆路径
-				FDeque::iterator DequeIt1 = TokenEndRoomList.begin();
-				while (DequeIt1 != TokenEndRoomList.end())
+				FDeque::iterator DequeIt1 = TokenEndSpaceList.begin();
+				while (DequeIt1 != TokenEndSpaceList.end())
 				{
 					int64 Time1 = *DequeIt1;
 					
 					Find = false;
 					int64 Interval=0; 
-					FDeque::iterator DequeIt2 = EndRoomList.begin();
-					while (DequeIt2 != EndRoomList.end())
+					FDeque::iterator DequeIt2 = EndSpaceList.begin();
+					while (DequeIt2 != EndSpaceList.end())
 					{
 						int64 Time2 = *DequeIt2;
-						Interval = (Time1-Time2)/10000000L;
+						Interval = Time1-Time2;
 						
-						if ((Interval>=0&&Interval<m_Interval) || (Interval<0&&-Interval<m_Interval))
+						if ((Interval>=0&&Interval<m_FindInterval) || (Interval<0&&-Interval<m_FindInterval))
 						{  					
 							//保留后记忆token的意义ID及时间戳作为结果
-							//RoomSet.insert(ChildID);
-							RoomSet.push_back(ChildID);
+							//SpaceSet.insert(ChildID);
+							SpaceSet.push_back(ChildID);
 							Find = true;
 							break;
 						}else{
@@ -402,54 +402,54 @@ void CLogicDialog::_FindMemoryRoom(CLogicThread* Think,map<int64,FDeque>* DestTo
 				for (int row1 = 0; row1 < t1.numRows(); row1++)
 				{	
 					t1.setRow(row1);
-					int64 RoomID = t1.getInt64Field(0);
+					int64 SpaceID = t1.getInt64Field(0);
 					int64 MeaningID = t1.getInt64Field(1);
-					int64 RoomType = t1.getInt64Field(2);
+					int64 SpaceType = t1.getInt64Field(2);
 
-					if(RoomType == MEMORY_BODY){
+					if(SpaceType == MEMORY_BODY){
 						//得到MeaningID下的所有结尾空间
 						int64toa(MeaningID,buf);
-					}else if (IsMeaningRoom(RoomType))
+					}else if (IsMeaningSpace(SpaceType))
 					{   //直接得到所有结尾空间
-						int64toa(RoomID,buf);					
+						int64toa(SpaceID,buf);					
 					}
-					assert(RoomType != MEMORY_LOGIC_END || RoomType != MEMORY_NULL_END);
+					assert(SpaceType != MEMORY_LOGIC_END || SpaceType != MEMORY_NULL_END);
 
-					FDeque EndRoomList;		
+					FDeque EndSpaceList;		
 					SQL.format("select %s from  \"%s\"  ;",RB_SPACE_ID,buf);
 					CppSQLite3Table t2 = CBrainMemory::BrainDB.getTable(SQL);
 					for (int row2 = 0; row2 < t2.numRows(); row2++)
 					{	
 						t2.setRow(row2);
 						int64 EndID = t2.getInt64Field(0);
-						EndRoomList.push_back(EndID);
+						EndSpaceList.push_back(EndID);
 					}	
 					
-					if(EndRoomList.size()==0)continue;
+					if(EndSpaceList.size()==0)continue;
 					bool Find ;
 					
 					//比较两个结尾空间列表，如果有对应的时间关联则前面所的
 					//的ChildID为最终的记忆路径
-					FDeque::iterator DequeIt1 = TokenEndRoomList.begin();
-					while (DequeIt1 != TokenEndRoomList.end())
+					FDeque::iterator DequeIt1 = TokenEndSpaceList.begin();
+					while (DequeIt1 != TokenEndSpaceList.end())
 					{
 						int64 Time1 = *DequeIt1;
 						
 						Find = false;
 						int64 Interval=0; 
-						FDeque::iterator DequeIt2 = EndRoomList.begin();
-						while (DequeIt2 != EndRoomList.end())
+						FDeque::iterator DequeIt2 = EndSpaceList.begin();
+						while (DequeIt2 != EndSpaceList.end())
 						{
 							int64 Time2 = *DequeIt2;
-							Interval = (Time1-Time2)/10000000L;
+							Interval = Time1-Time2;
 							
-							if ((Interval>=0&&Interval<m_Interval) || (Interval<0&&-Interval<m_Interval))
+							if ((Interval>=0&&Interval<m_FindInterval) || (Interval<0&&-Interval<m_FindInterval))
 							{  					
-								if(RoomType == MEMORY_BODY){
-									RoomSet.push_back(RoomID);
-								}else //if (RoomType == MEMORY_TYPE_MEANING)
+								if(SpaceType == MEMORY_BODY){
+									SpaceSet.push_back(SpaceID);
+								}else //if (SpaceType == MEMORY_TYPE_MEANING)
 								{   //直接得到搜索结果
-									ProcessMeaning(Think,RoomID,MeaningID,RoomType,m_FindType);
+									ProcessMeaning(Think,SpaceID,MeaningID,SpaceType,m_FindType);
 								}
 								Find = true;
 								break;
@@ -489,18 +489,18 @@ void CLogicDialog::_FindMemoryRoom(CLogicThread* Think,map<int64,FDeque>* DestTo
 	  目前干脆不管。
 	*/
 
-	ResultRoomList->swap(RoomSet);
+	ResultSpaceList->swap(SpaceSet);
     return;
 
-	if(RoomSet.size()==0)return;
+	if(SpaceSet.size()==0)return;
 
 	deque<int64>::iterator SetIt1 ,SetIt2 ;
-	SetIt1 = RoomSet.begin();
+	SetIt1 = SpaceSet.begin();
 	SetIt2 = SetIt1;
 	SetIt2++;
 	
-	if(RoomSet.size()==1){
-		ResultRoomList->push_back(*SetIt1);
+	if(SpaceSet.size()==1){
+		ResultSpaceList->push_back(*SetIt1);
 		return ;
 	}
 	
@@ -510,18 +510,18 @@ void CLogicDialog::_FindMemoryRoom(CLogicThread* Think,map<int64,FDeque>* DestTo
 
 		int64 Interval = (Time2-Time1)/10000000L;
 		assert(Interval>=0);	
-		if (Interval<m_Interval)
+		if (Interval<m_FindInterval)
 		{  										
-			SetIt2 = RoomSet.erase(SetIt1);
+			SetIt2 = SpaceSet.erase(SetIt1);
 		}else{
-			ResultRoomList->push_back(Time1);
+			ResultSpaceList->push_back(Time1);
 		}
 	    SetIt1 = SetIt2;
 		SetIt2++;
-	}while(SetIt2 != RoomSet.end());
+	}while(SetIt2 != SpaceSet.end());
 
 	//补上最后一个
-	ResultRoomList->push_back(*SetIt1);
+	ResultSpaceList->push_back(*SetIt1);
 }
 
 void CLogicDialog::FindFirst(tstring& text,FindTypeExpected FindType/*= FIND_ALL*/){
@@ -570,7 +570,7 @@ void CLogicDialog::FindFirst(tstring& text,FindTypeExpected FindType/*= FIND_ALL
 			continue;
 		}
 		
-		deque<int64> MeaningRoomIDList;
+		deque<int64> MeaningSpaceIDList;
 		if (Token->isPunct())
 		{
 			continue;
@@ -579,17 +579,17 @@ void CLogicDialog::FindFirst(tstring& text,FindTypeExpected FindType/*= FIND_ALL
 //			RuntimeOutput(srcMsg,_T("Warning: token \"%s\" incognizance !"),Token->m_Str.c_str());
 //			continue;
 		}else{
-			TempThink.GetAllMeaningRoomID(Token->m_MemoryID, MeaningRoomIDList);
+			TempThink.GetAllMeaningSpaceID(Token->m_MemoryID, MeaningSpaceIDList);
 		}
 
 		if(flag == _T("not")){
-			_FindTokenNot(MeaningRoomIDList,*CurTokenList,*ResultTokenList);
+			_FindTokenNot(MeaningSpaceIDList,*CurTokenList,*ResultTokenList);
 			flag = _T("");
 		}else if(flag == _T("or")){
-			_FindTokenOr(MeaningRoomIDList,*CurTokenList,*ResultTokenList);
+			_FindTokenOr(MeaningSpaceIDList,*CurTokenList,*ResultTokenList);
 			flag = _T("");
 		}else{
-			_FindTokenAnd(MeaningRoomIDList,*CurTokenList,*ResultTokenList,FirstToken);
+			_FindTokenAnd(MeaningSpaceIDList,*CurTokenList,*ResultTokenList,FirstToken);
 		}
 		//交换地址，把得到的结果继续参与下一个token运算，避免交换值
 		CurTokenList->clear();
@@ -602,7 +602,7 @@ void CLogicDialog::FindFirst(tstring& text,FindTypeExpected FindType/*= FIND_ALL
 	//得到最终的搜索路径
 	//现在得到的是一个或多个token某个指定意义空间ID及使用这个意义的结尾空间列表
 	//需要把它转换成最终搜索路径，并剔除重复路径
-	_FindMemoryRoom(&TempThink,CurTokenList,&m_FindSeedList);
+	_FindMemorySpace(&TempThink,CurTokenList,&m_FindSeedList);
 
 }
 	
@@ -610,7 +610,7 @@ void CLogicDialog::FindContinue(CLogicThread* Think,uint32 Index, ePipeline& Sea
 	
 	if(Index >= m_FindResultList.size()){  //指定要求的结果超过当前结果的范围，则继续搜索新结果
 
-		int64 RoomID, RoomValue,RoomType;
+		int64 SpaceID, SpaceValue,SpaceType;
 		char buf[30];
 		CppSQLite3Buffer SQL;
 
@@ -618,26 +618,26 @@ void CLogicDialog::FindContinue(CLogicThread* Think,uint32 Index, ePipeline& Sea
 		while(m_FindResultList.size()< End && m_FindSeedList.size())
 		{
 			
-			RoomID = m_FindSeedList.front();
+			SpaceID = m_FindSeedList.front();
 			m_FindSeedList.pop_front();
 			
-			ToRBrain(RoomID);
-			int64toa(RoomID,buf);
+			ToRBrain(SpaceID);
+			int64toa(SpaceID,buf);
 			SQL.format("select *  from  \"%s\" ;",buf);
 			CppSQLite3Table t = CBrainMemory::BrainDB.getTable(SQL);
 			
 			for (int row = 0; row < t.numRows(); row++)
 			{
 				t.setRow(row);
-				RoomID = t.getInt64Field(0);
-				RoomType = t.getInt64Field(2);
+				SpaceID = t.getInt64Field(0);
+				SpaceType = t.getInt64Field(2);
 				
-				if (IsMeaningRoom(RoomType))
+				if (IsMeaningSpace(SpaceType))
 				{
-					RoomValue = t.getInt64Field(1);
-					ProcessMeaning(Think,RoomID,RoomValue,RoomType,m_FindType);
+					SpaceValue = t.getInt64Field(1);
+					ProcessMeaning(Think,SpaceID,SpaceValue,SpaceType,m_FindType);
 				}else{
-					m_FindSeedList.push_back(RoomID);
+					m_FindSeedList.push_back(SpaceID);
 				}
 			}	
 		}
@@ -662,38 +662,38 @@ void CLogicDialog::FindContinue(CLogicThread* Think,uint32 Index, ePipeline& Sea
 	}		
 }
 
-void CLogicDialog::ProcessMeaning(CLogicThread* Think,int64 RoomID,int64 RoomValue,int64 RoomType,FindTypeExpected FindType /*= FIND_ALL*/){
+void CLogicDialog::ProcessMeaning(CLogicThread* Think,int64 SpaceID,int64 SpaceValue,int64 SpaceType,FindTypeExpected FindType /*= FIND_ALL*/){
 
 	char buf[30];
 	CppSQLite3Buffer SQL;
 	int64 FatherID;
 	
-	if (RoomType == MEMORY_PEOPLE ){  //独立表达,到此结束
+	if (SpaceType == MEMORY_PEOPLE ){  //独立表达,到此结束
 		if(FindType==FIND_ALL || FindType==FIND_PEOPLE)
-			OutputFindResult(OBJECT_RESULT,RoomID,RoomValue);
-		//m_ObjectList[RoomID] = RoomValue;
-	}else if (RoomType == MEMORY_OBJECT)
+			OutputFindResult(OBJECT_RESULT,SpaceID,SpaceValue);
+		//m_ObjectList[SpaceID] = SpaceValue;
+	}else if (SpaceType == MEMORY_OBJECT)
 	{
 		if(FindType==FIND_ALL || FindType==FIND_OBJECT)
-			OutputFindResult(OBJECT_RESULT,RoomID,RoomValue);
+			OutputFindResult(OBJECT_RESULT,SpaceID,SpaceValue);
 	}
 	else{ //既可能独立表达也可能参与表达
-		if (RoomType == MEMORY_SERIES || RoomType == MEMORY_SHUNT){
+		if (SpaceType == MEMORY_SERIES || SpaceType == MEMORY_SHUNT){
 			if(FindType==FIND_ALL || FindType==FIND_LOGIC)
-				OutputFindResult(LOGIC_RESULT,RoomID,RoomValue);
-		}else if (RoomType == MEMORY_INSTINCT)
+				OutputFindResult(LOGIC_RESULT,SpaceID,SpaceValue);
+		}else if (SpaceType == MEMORY_INSTINCT)
 		{
 			if(FindType==FIND_ALL || FindType==FIND_COMMAND)
-				//m_LogicList[RoomID] = RoomValue;
-				OutputFindResult(LOGIC_RESULT,RoomID,RoomValue);
+				//m_LogicList[SpaceID] = SpaceValue;
+				OutputFindResult(LOGIC_RESULT,SpaceID,SpaceValue);
 		}
 
 		int32 OldCount =m_FindSeedList.size();
-		if(Think->LBrainHasTable(RoomID)){
+		if(Think->LBrainHasTable(SpaceID)){
 			//索引空间是否有表，有则表示其为其它空间的空间值
 			//根据索引表得到其作为空间值时的空间存储ID，存入种子表
-			ToLBrain(RoomID);
-			int64toa(RoomID,buf);
+			ToLBrain(SpaceID);
+			int64toa(SpaceID,buf);
 			SQL.format("select %s,%s from  \"%s\"  ;",LB_FATHER_ID,LB_CHILD_ID,buf);
 
 			int64 OldFather = 0;
@@ -703,12 +703,12 @@ void CLogicDialog::ProcessMeaning(CLogicThread* Think,int64 RoomID,int64 RoomVal
 				t0.setRow(row);
 				FatherID = t0.getInt64Field(0);
 				int64 ChildID = t0.getInt64Field(1);
-				if(ChildID == -RoomID)continue; //特殊设计，忽略
+				if(ChildID == -SpaceID)continue; //特殊设计，忽略
 
 				int64 ChildType = Think->GetChildType(FatherID,ChildID);
 				if(ChildType == MEMORY_BODY){ //参与其它意义
 					//如何避免一个token在同一个记忆的不同地方引起的重复呢？
-					if((FatherID - OldFather)> m_Interval){
+					if((FatherID - OldFather)> m_FindInterval){
 						m_FindSeedList.push_back(ChildID);
 						OldFather = FatherID;
 					}
@@ -717,34 +717,34 @@ void CLogicDialog::ProcessMeaning(CLogicThread* Think,int64 RoomID,int64 RoomVal
 		}
 		//作为文本,忽略参与表达，只返回最终表达(参与表达引起m_FindSeedList增长)
 		if( OldCount == m_FindSeedList.size()){
-			ToRBrain(RoomID);
-			if(RoomValue != RoomID){ //根据规则，如果是NULL_MEANING则RoomValue == RoomID
-				int64 RoomID1 = RoomValue;
-				int64 RoomValue1 =0;
-				int64 RoomType1 = 0;
-				if(Think->GetRoomInfo(RoomID1,RoomValue1,RoomType1)){
-					if (RoomType1 == MEMORY_INSTINCT){
+			ToRBrain(SpaceID);
+			if(SpaceValue != SpaceID){ //根据规则，如果是NULL_MEANING则SpaceValue == SpaceID
+				int64 SpaceID1 = SpaceValue;
+				int64 SpaceValue1 =0;
+				int64 SpaceType1 = 0;
+				if(Think->GetSpaceInfo(SpaceID1,SpaceValue1,SpaceType1)){
+					if (SpaceType1 == MEMORY_INSTINCT){
 						if(FindType==FIND_ALL || FindType==FIND_COMMAND)
-							OutputFindResult(LOGIC_RESULT,RoomID1,RoomValue1);
+							OutputFindResult(LOGIC_RESULT,SpaceID1,SpaceValue1);
 					}
-					else if (RoomType1 == MEMORY_PEOPLE ){  //独立表达,到此结束
+					else if (SpaceType1 == MEMORY_PEOPLE ){  //独立表达,到此结束
 						if(FindType==FIND_ALL || FindType==FIND_PEOPLE)
-							OutputFindResult(OBJECT_RESULT,RoomID1,RoomValue1);
-					}else if (RoomType1 == MEMORY_OBJECT)
+							OutputFindResult(OBJECT_RESULT,SpaceID1,SpaceValue1);
+					}else if (SpaceType1 == MEMORY_OBJECT)
 					{
 						if(FindType==FIND_ALL || FindType==FIND_OBJECT)
-							OutputFindResult(OBJECT_RESULT,RoomID1,RoomValue1);
+							OutputFindResult(OBJECT_RESULT,SpaceID1,SpaceValue1);
 					}
-					else if (RoomType1 == MEMORY_SERIES || RoomType1 == MEMORY_SHUNT){
+					else if (SpaceType1 == MEMORY_SERIES || SpaceType1 == MEMORY_SHUNT){
 						if(FindType==FIND_ALL || FindType==FIND_LOGIC)
-								OutputFindResult(LOGIC_RESULT,RoomID1,RoomValue1);	
+								OutputFindResult(LOGIC_RESULT,SpaceID1,SpaceValue1);	
 					}
 				}
-			}else if(IsPartOfSpeech(RoomType)){
+			}else if(IsPartOfSpeech(SpaceType)){
 				if(FindType==FIND_ALL || FindType==FIND_TEXT){
-					//m_TextList[RoomID] = RoomValue;
-					ToRBrain(RoomID);
-					OutputFindResult(TEXT_RESULT,RoomID,RoomValue);
+					//m_TextList[SpaceID] = SpaceValue;
+					ToRBrain(SpaceID);
+					OutputFindResult(TEXT_RESULT,SpaceID,SpaceValue);
 				}	
 			}
 		}	
@@ -752,28 +752,28 @@ void CLogicDialog::ProcessMeaning(CLogicThread* Think,int64 RoomID,int64 RoomVal
 	
 }
 
-void  CLogicDialog::PrintText(CLogicThread* Think,ePipeline& SearchResult,int32 n,int64 RoomID){
+void  CLogicDialog::PrintText(CLogicThread* Think,ePipeline& SearchResult,int32 n,int64 SpaceID){
 	tstring Text;
-	Think->RetrieveText(RoomID,Text);
+	Think->RetrieveText(SpaceID,Text);
 			
     ePipeline Item;
 	Item.PushInt(TEXT_RESULT);
 	Item.PushInt(n);
-	Item.PushInt(RoomID);
+	Item.PushInt(SpaceID);
 	Item.PushString(Text);
 	
 	SearchResult.PushPipe(Item);
 }
 
-void  CLogicDialog::PrintLogic(CLogicThread* Think,ePipeline& SearchResult,int32 n,int64 RoomID,int64 RoomValue){
+void  CLogicDialog::PrintLogic(CLogicThread* Think,ePipeline& SearchResult,int32 n,int64 SpaceID,int64 SpaceValue){
 	tstring Text ;
 	deque<tstring> LogicList;
-	if (BelongInstinct(RoomValue))
+	if (BelongInstinct(SpaceValue))
 	{
-		Think->RetrieveText(RoomID,Text);
+		Think->RetrieveText(SpaceID,Text);
 		Text = _T("Command : ") + Text;
 	}else{
-		Think->RetrieveLogic(RoomID,LogicList);		
+		Think->RetrieveLogic(SpaceID,LogicList);		
 		deque<tstring>::iterator It = LogicList.begin();
 		while (It != LogicList.end())
 		{
@@ -788,7 +788,7 @@ void  CLogicDialog::PrintLogic(CLogicThread* Think,ePipeline& SearchResult,int32
 	LogicList.clear();
    
 	tstring Memo;
-	Think->GetMemo(RoomID,LogicList);
+	Think->GetMemo(SpaceID,LogicList);
 	deque<tstring>::iterator It = LogicList.begin();
 	while (It != LogicList.end())
 	{
@@ -803,22 +803,22 @@ void  CLogicDialog::PrintLogic(CLogicThread* Think,ePipeline& SearchResult,int32
     ePipeline Item;
 	Item.PushInt(LOGIC_RESULT);
 	Item.PushInt(n);
-	Item.PushInt(RoomID);
+	Item.PushInt(SpaceID);
 	Item.PushString(Text);
 	Item.PushString(Memo); 
 	SearchResult.PushPipe(Item);
 }
 
-void  CLogicDialog::PrintObject(CLogicThread* Think,ePipeline& SearchResult,int32 n,int64 RoomID,int64 RoomValue){
+void  CLogicDialog::PrintObject(CLogicThread* Think,ePipeline& SearchResult,int32 n,int64 SpaceID,int64 SpaceValue){
 
 	tstring Text;
 
-	Think->RetrieveObject(RoomID,Text);
+	Think->RetrieveObject(SpaceID,Text);
 	    
 	//得到逻辑描述
 	tstring Memo;
 	deque<tstring> MemoList;
-    Think->GetMemo(RoomID,MemoList);
+    Think->GetMemo(SpaceID,MemoList);
 	deque<tstring>::iterator It = MemoList.begin();
 	while (It != MemoList.end())
 	{
@@ -832,23 +832,23 @@ void  CLogicDialog::PrintObject(CLogicThread* Think,ePipeline& SearchResult,int3
 	ePipeline Item;
 	Item.PushInt(OBJECT_RESULT);
 	Item.PushInt(n);
-	Item.PushInt(RoomID);
+	Item.PushInt(SpaceID);
 	Item.PushString(Text);
 	Item.PushString(Memo);
 	SearchResult.PushPipe(Item);
 
 };
 
-void  CLogicDialog::OutputFindResult(int8 type, int64 RoomID,int64 RoomValue){
+void  CLogicDialog::OutputFindResult(int8 type, int64 SpaceID,int64 SpaceValue){
 	//避免结果重复之苯方法
 /*
 	vector<_FindResult>::iterator It = m_FindResultList.begin();
 	while(It < m_FindResultList.end()){
-	    if(It->m_ID == RoomID)return; 
+	    if(It->m_ID == SpaceID)return; 
 		It++;
 	}
 */   
-	_FindResult Result(type, RoomID,RoomValue);
+	_FindResult Result(type, SpaceID,SpaceValue);
 	m_FindResultList.push_back(Result);
 	
 	

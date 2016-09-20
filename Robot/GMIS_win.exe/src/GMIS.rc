@@ -231,7 +231,7 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 IDR_ROOM MENU
 BEGIN
-    POPUP "&Room"
+    POPUP "&Space"
     BEGIN
         MENUITEM "&Import Object",              ID_ROOM_IMPORTOBJECT
         MENUITEM "&Export Object",              ID_ROOM_EXPORTFILE
@@ -239,7 +239,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Select Object",              ID_ROOM_SELECTOBJECT
         MENUITEM SEPARATOR
-        MENUITEM "Create Child &Room",          ID_ROOM_CREATEROOM
+        MENUITEM "Create Child &Space",          ID_ROOM_CREATEROOM
     END
 END
 

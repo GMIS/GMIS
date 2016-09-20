@@ -7,8 +7,6 @@
 #define _USERLINKERPIPE_H__
 
 
-#include "SpaceMutex.h"
-#include "LinkerPipe.h"
 
 
 #if defined(USING_POCO)
@@ -29,6 +27,8 @@ using namespace Poco::Net;
 
 #endif
 
+#include "SpaceMutex.h"
+#include "LinkerPipe.h"
 
 namespace PHYSIC
 {

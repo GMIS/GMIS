@@ -108,8 +108,8 @@ CAutoObjectView::CAutoObjectView(){
     ButtonItem* Select = new ButtonItem(ID_ROOM_SELECTOBJECT,_T("Select"),NULL,false);
 	m_Toolbar.PushChild(Select);
 	
-    ButtonItem* CreateRoom = new ButtonItem(ID_ROOM_CREATEROOM,_T("CreateRoom"),NULL,false);
-	m_Toolbar.PushChild(CreateRoom);
+    ButtonItem* CreateSpace = new ButtonItem(ID_ROOM_CREATEROOM,_T("CreateSpace"),NULL,false);
+	m_Toolbar.PushChild(CreateSpace);
 };
 void CAutoObjectView::Show(){
    RECT rc;
@@ -223,23 +223,23 @@ void CAutoObjectView::OnImportObject(){
 
 	CMsg Msg(SYSTEM_SOURCE,DEFAULT_DIALOG,MSG_ROBOT_CREATE_SPACE,DEFAULT_DIALOG,0);
 
-	int64 CurRoomID = m_Parent->GetRoomID();
+	int64 CurSpaceID = m_Parent->GetSpaceID();
 
     ePipeline SpacePath;
 	GetGUI()->GetSpacePath(SpacePath);
 	
-	ePipeline& rLetter = Msg.GetLetter();
+	ePipeline& rLetter = Msg.GetLetter(false);
 	rLetter.PushInt(OBJECT_SPACE);
 	rLetter.PushString(ObjectFileName);
 	rLetter.PushString(szFileName);
 	rLetter.PushPipe(SpacePath);
-//	rLetter.PushInt64(CurRoomID);
+//	rLetter.PushInt64(CurSpaceID);
 
     GetBrain()->SendMsgToSpace(Msg);
 }
 
 
-void CAutoObjectView::OnCreateChildRoom(bool IsContainer/* =false */){
+void CAutoObjectView::OnCreateChildSpace(bool IsContainer/* =false */){
 	CLinker   World;
 	GetBrain()->GetLinker(SPACE_SOURCE,World); 
     if (!World.IsValid()){
@@ -247,12 +247,12 @@ void CAutoObjectView::OnCreateChildRoom(bool IsContainer/* =false */){
 		return;
 	}
 			
-	if(!m_Parent->AllowCreateRoom()){
+	if(!m_Parent->AllowCreateSpace()){
 		::MessageBox(GetHwnd(),_T("Do not have enough space"),_T("Create fail"),MB_OK);
 		return ;
 	}
 
-	tstring Param = _T("Input New Room Name");
+	tstring Param = _T("Input New Space Name");
 	if (IsContainer) Param = _T("Input New Container Name");
 	
 	tstring Name;
@@ -265,14 +265,14 @@ void CAutoObjectView::OnCreateChildRoom(bool IsContainer/* =false */){
 	}
 
 	CMsg Msg(SYSTEM_SOURCE,DEFAULT_DIALOG,MSG_ROBOT_CREATE_SPACE,DEFAULT_DIALOG,0);
-	ePipeline& Letter = Msg.GetLetter();
+	ePipeline& Letter = Msg.GetLetter(false);
 	if(IsContainer)Letter.PushInt(CONTAINER_SPACE);
 	else  Letter.PushInt(LOCAL_SPACE);
 	Letter.PushString(Name);
 	GetBrain()->SendMsgToSpace(Msg);
 };
 
-void CAutoObjectView::OnDeleteObjectFromRoom(tstring Fingerprint){
+void CAutoObjectView::OnDeleteObjectFromSpace(tstring Fingerprint){
 
 	CLinker   World;
 	GetBrain()->GetLinker(SPACE_SOURCE,World); 
@@ -286,7 +286,7 @@ void CAutoObjectView::OnDeleteObjectFromRoom(tstring Fingerprint){
     
 	
 	CMsg Msg(SYSTEM_SOURCE,DEFAULT_DIALOG,MSG_ROBOT_DEL_SPACE,DEFAULT_DIALOG,0);
-	ePipeline& rLetter = Msg.GetLetter();
+	ePipeline& rLetter = Msg.GetLetter(false);
 	rLetter.PushPipe(Path);
 	rLetter.PushString(Fingerprint);
 	GetBrain()->SendMsgToSpace(Msg);
@@ -342,7 +342,7 @@ void CAutoObjectView::OnExportObjectAsFile(tstring Name, int64 FatherID, int64 C
     GetBrain()->OutSysInfo(Task.c_str());
 		  
 	CMsg Msg(SYSTEM_SOURCE,DEFAULT_DIALOG,MSG_ROBOT_EXPORT_OBJECT,DEFAULT_DIALOG,0);
-	ePipeline& Letter = Msg.GetLetter();
+	ePipeline& Letter = Msg.GetLetter(false);
 	Letter.PushInt(FatherID);
 	Letter.PushInt(ChildID);
 	Letter.PushString(szFileName);
@@ -351,12 +351,6 @@ void CAutoObjectView::OnExportObjectAsFile(tstring Name, int64 FatherID, int64 C
 };	
 
 void CAutoObjectView::OnSelectObject(ObjectItem* Ob){
-	if(Ob ==NULL || Ob->m_Alias==0 || 
-		Ob->m_Type == ROBOT_VISITER){
-		//::MessageBox(GetHwnd(),"illegal command","Warning",MB_OK);
-		return;
-	};
-	
 	
 	ePipeline Msg(TO_BRAIN_MSG::GUI_OBJECT_OPERATE::ID);
 		
@@ -371,7 +365,7 @@ void CAutoObjectView::OnSelectObject(ObjectItem* Ob){
 	Item->PushInt(Ob->m_Type);
 	Item->PushString(Ob->m_Fingerprint);
 	Item->PushPipe(Addr);
-	Item->PushInt(DLL_INVALID);
+	Item->PushInt(0);
 
 	Msg.Push_Directly(Item);
 	
@@ -395,7 +389,7 @@ LRESULT CAutoObjectView::ToolbarReaction(ButtonItem* Bnt){
 				::MessageBox(GetHwnd(),_T("illegal command"),_T("Tip"),MB_OK);
 				return 0;
 			}			
-			OnExportObjectAsFile(Ob->m_Name, m_Parent->GetRoomID(), Ob->m_Alias);
+			OnExportObjectAsFile(Ob->m_Name, m_Parent->GetSpaceID(), Ob->m_Alias);
 		}
 		break;
 	case ID_ROOM_DELETE:
@@ -407,14 +401,13 @@ LRESULT CAutoObjectView::ToolbarReaction(ButtonItem* Bnt){
 				return 0;
 			}	
 			
-			OnDeleteObjectFromRoom(Ob->m_Fingerprint);
+			OnDeleteObjectFromSpace(Ob->m_Fingerprint);
 		}
 		break;
     case ID_ROOM_SELECTOBJECT:
 		{
 			ObjectItem* Ob = (ObjectItem*)m_SpaceSelected;
-			if(Ob ==NULL || Ob->m_Alias==0 || 
-				Ob->m_Type != OBJECT_SPACE){
+			if(Ob ==NULL || Ob->m_Alias==0 /*|| Ob->m_Type != OBJECT_SPACE*/){
 				::MessageBox(GetHwnd(),_T("illegal command"),_T("Tip"),MB_OK);
 				return 0;
 			}	
@@ -424,7 +417,7 @@ LRESULT CAutoObjectView::ToolbarReaction(ButtonItem* Bnt){
 		break;
 	case ID_ROOM_CREATEROOM:
 		{
-            OnCreateChildRoom(FALSE);	
+            OnCreateChildSpace(FALSE);	
 		}
 		break;
 	}
@@ -511,7 +504,7 @@ LRESULT  CAutoObjectView::OnCommand(WPARAM wParam, LPARAM lParam){
 				//::MessageBox(GetHwnd(),"illegal command","Warning",MB_OK);
 				return 0;
 			}			
-			OnExportObjectAsFile(m_RBSelected->m_Name, m_Parent->GetRoomID(), m_RBSelected->m_Alias);
+			OnExportObjectAsFile(m_RBSelected->m_Name, m_Parent->GetSpaceID(), m_RBSelected->m_Alias);
 		}
  		break;
    case ID_ROOM_DELETE:
@@ -522,7 +515,7 @@ LRESULT  CAutoObjectView::OnCommand(WPARAM wParam, LPARAM lParam){
 				return 0;
 			}	
 			
-			OnDeleteObjectFromRoom(m_RBSelected->m_Fingerprint);
+			OnDeleteObjectFromSpace(m_RBSelected->m_Fingerprint);
 		}
 		break;
     case ID_ROOM_SELECTOBJECT:
@@ -532,7 +525,7 @@ LRESULT  CAutoObjectView::OnCommand(WPARAM wParam, LPARAM lParam){
 		break;
 	case ID_ROOM_CREATEROOM:
 		{
-            OnCreateChildRoom(FALSE);	
+            OnCreateChildSpace(FALSE);	
 		}
 		break;
 	}			
@@ -547,8 +540,8 @@ LRESULT  CAutoObjectView::OnCommand(WPARAM wParam, LPARAM lParam){
 CWorldShow::CWorldShow()
 {
 
-	m_Room1.ObjectView.m_Parent = this;
-    m_Room2.ObjectView.m_Parent = this;
+	m_Space1.ObjectView.m_Parent = this;
+    m_Space2.ObjectView.m_Parent = this;
 
 	m_WhoUpdating  = 0;
 
@@ -563,23 +556,23 @@ CWorldShow::CWorldShow()
     m_MoveTime = 0;
    
 	ButtonItem3*  BntMap = new ButtonItem3;
-	ButtonItem3*  BntCreateRoom = new ButtonItem3;
+	ButtonItem3*  BntCreateSpace = new ButtonItem3;
 	ButtonItem3*  BntImportObject = new ButtonItem3;
 
     BntMap->m_Alias  = BNT_MAP;
 	BntMap->SetColor(RGB(0,0,0),RGB(255,255,255),RGB(0,255,0));
 	BntMap->SetText(_T("Map"),false);
 	
-	BntCreateRoom->m_Alias = BNT_CREATEROOM;
-	BntCreateRoom->SetColor(RGB(0,0,0),RGB(255,255,255),RGB(0,255,0));
-	BntCreateRoom->SetText(_T("CreateRoom"),false);
+	BntCreateSpace->m_Alias = BNT_CREATEROOM;
+	BntCreateSpace->SetColor(RGB(0,0,0),RGB(255,255,255),RGB(0,255,0));
+	BntCreateSpace->SetText(_T("CreateSpace"),false);
 
 	BntImportObject->m_Alias = BNT_IMPORTOBJECT;
 	BntImportObject->SetColor(RGB(0,0,0),RGB(255,255,255),RGB(0,255,0));
 	BntImportObject->SetText(_T("ImportObject"),false);
 
 	PushChild(BntMap);
-	PushChild(BntCreateRoom);
+	PushChild(BntCreateSpace);
 	PushChild(BntImportObject);
 };
 
@@ -612,14 +605,14 @@ void CWorldShow::Reset(int64 ChildID,int64 ParentID,tstring ParentName,SPACETYPE
 	m_NaviMoveTime = 0;
     m_MoveTime = 0;
 
-  	m_Room1.Room.ClearAllObject();
-    m_Room2.Room.ClearAllObject();
-  	m_Room1.Room.m_Alias = ChildID;
-  	m_Room2.Room.m_Alias = -1;
+  	m_Space1.Space.ClearAllObject();
+    m_Space2.Space.ClearAllObject();
+  	m_Space1.Space.m_Alias = ChildID;
+  	m_Space2.Space.m_Alias = -1;
 
-	m_RoomTitle.SetText(_T(""),false,SS.m_Font24);
+	m_SpaceTitle.SetText(_T(""),false,SS.m_Font24);
 
-	m_CurRoom = &m_Room1;
+	m_CurSpace = &m_Space1;
 
 	wglMakeCurrent(m_DC, m_RC);
 
@@ -628,8 +621,8 @@ void CWorldShow::Reset(int64 ChildID,int64 ParentID,tstring ParentName,SPACETYPE
 	glLoadIdentity();	
     
 	glMatrixMode(GL_PROJECTION);
-	m_CurRoom->Room.ToPlace(0,0,0,0,0,0);
-	m_CurRoom->Room.SetParentRoom(FRONTFACE,ParentID,ParentName,ParentType);
+	m_CurSpace->Space.ToPlace(0,0,0,0,0,0);
+	m_CurSpace->Space.SetParentSpace(FRONTFACE,ParentID,ParentName,ParentType);
 		
 	wglMakeCurrent(NULL,NULL);
 
@@ -656,14 +649,14 @@ bool CWorldShow::InitScene(){
 
 	m_StatusInfo.SetColor(RGB(64,64,64),RGB(0,255,0),RGB(0,255,0));
 
-	m_RoomTitle.SetColor(RGB(64,64,64),RGB(255,0,0),RGB(0,255,0));
-    m_RoomTitle.SetText(_T("Space Unconnected"),false,SS.m_Font24);
+	m_SpaceTitle.SetColor(RGB(64,64,64),RGB(255,0,0),RGB(0,255,0));
+    m_SpaceTitle.SetText(_T("Space Unconnected"),false,SS.m_Font24);
     
-	m_RoomTitle.m_State = 0; //不显示背景和border
+	m_SpaceTitle.m_State = 0; //不显示背景和border
     m_StatusInfo.m_State = 0;
 
-	m_Room1.Room.SetSize(12,2,12); //调用必须先于纹理设置
-	m_Room2.Room.SetSize(12,2,12);
+	m_Space1.Space.SetSize(12,2,12); //调用必须先于纹理设置
+	m_Space2.Space.SetSize(12,2,12);
 	
 	//int roomwalltex = LoadGLTexture(_T("roomwall.bmp"));
     int roomwalltex = LoadGLTextureFromRes(IDB_ROOMWALL);
@@ -684,56 +677,56 @@ bool CWorldShow::InitScene(){
  	//int metaltex = LoadGLTexture(_T("metal.bmp"));
 	int metaltex = LoadGLTextureFromRes(IDB_METAL);
 
-	m_Room1.Room.InitTexture(roomwalltex,floortex,ceilingtex,doortex,0);
-	m_Room2.Room.InitTexture(roomwalltex,floortex,ceilingtex,doortex,0);
+	m_Space1.Space.InitTexture(roomwalltex,floortex,ceilingtex,doortex,0);
+	m_Space2.Space.InitTexture(roomwalltex,floortex,ceilingtex,doortex,0);
 		
 
 	Reset(LOCAL_SPACEID,1,_T("Outer World"),OUTER_SPACE);
    
-	ConnectRoomFail(_T("Space Disconnected"));
+	ConnectSpaceFail(_T("Space Disconnected"));
 
 //	AddObject(0,"Object",OBJECT_SPACE,NULL,100,"3DE25F61");
 	for(int i=0; i<0; i++){
 	
-//	for(int i=0; i<m_CurRoom->Room.GetMapUintSize(); i++){
+//	for(int i=0; i<m_CurSpace->Space.GetMapUintSize(); i++){
 	//	AddObject(i,"Object",OBJECT_SPACE,NULL,100,"3DE25F61");
 	};
 
-/*	int index =m_CurRoom->Room.AddChildRoom(100,"LiveRoom",LOCAL_SPACE);
-    m_Room2.Room.m_DataValid = true;
-	m_Room2.Room.m_Alias = 100;
-	m_Room2.Room.SetParentRoom(RIGHTFACE,1,"LiveRoom",LOCAL_SPACE);
+/*	int index =m_CurSpace->Space.AddChildSpace(100,"LiveSpace",LOCAL_SPACE);
+    m_Space2.Space.m_DataValid = true;
+	m_Space2.Space.m_Alias = 100;
+	m_Space2.Space.SetParentSpace(RIGHTFACE,1,"LiveSpace",LOCAL_SPACE);
 */    
 	return true;
 };
 
-void CWorldShow::BeginUpdateRoom(tstring RoomName, int64 RoomID,int ObjectNum){
+void CWorldShow::BeginUpdateSpace(tstring SpaceName, int64 SpaceID,int ObjectNum){
 
-	RoomView* UpdateRoom = GetUpdataRoom(RoomID);
-    UpdateRoom->Clear();
-	UpdateRoom->Room.m_Name = RoomName;
-	if(m_CurRoom==UpdateRoom){
-		m_RoomTitle.SetText(RoomName,false,SS.m_Font24);
+	SpaceView* UpdateSpace = GetUpdataSpace(SpaceID);
+    UpdateSpace->Clear();
+	UpdateSpace->Space.m_Name = SpaceName;
+	if(m_CurSpace==UpdateSpace){
+		m_SpaceTitle.SetText(SpaceName,false,SS.m_Font24);
 	}
 
-	tstring s = Format1024(_T("Updata Space %s..."),RoomName.c_str()); 
+	tstring s = Format1024(_T("Updata Space %s..."),SpaceName.c_str()); 
 	m_StatusInfo.SetText(s,false);
 	   
 	Invalidate();
 }
     
-void CWorldShow::EndUpdateRoom(int64 RoomID){
-	RoomView* UpdateRoom = GetUpdataRoom(RoomID);
+void CWorldShow::EndUpdateSpace(int64 SpaceID){
+	SpaceView* UpdateSpace = GetUpdataSpace(SpaceID);
   
-	UpdateRoom->Room.m_DataValid = true;
+	UpdateSpace->Space.m_DataValid = true;
     m_StatusInfo.SetText(_T(""),false);
-	UpdateRoom->ObjectView.SetHeaderText(UpdateRoom->Room.m_Name);
+	UpdateSpace->ObjectView.SetHeaderText(UpdateSpace->Space.m_Name);
 
-	if(UpdateRoom != m_CurRoom && m_CurDypass){ //如果用户还正等待在更新的空间门前则打开
+	if(UpdateSpace != m_CurSpace && m_CurDypass){ //如果用户还正等待在更新的空间门前则打开
 		//找到通向对应空间的门
-		CDoorWall* dw = m_CurRoom->Room.m_DoorWall[m_CurDypass->face];
+		CDoorWall* dw = m_CurSpace->Space.m_DoorWall[m_CurDypass->face];
 		if(dw == NULL)return;		
-		if(UpdateRoom->Room.IsValidRoom(dw->m_Alias)){
+		if(UpdateSpace->Space.IsValidSpace(dw->m_Alias)){
 			wglMakeCurrent(m_DC, m_RC);
 			OpenDoor();
 			wglMakeCurrent(NULL, NULL);
@@ -748,8 +741,8 @@ void CWorldShow::RoamingWorld(float x0,float z0){
         wglMakeCurrent(m_DC, m_RC);
 
 		//把新位置的世界坐标转换成基于当前房间的本地坐标
-		float xm = m_xpos-m_CurRoom->Room.m_x0;
-		float zm = m_zpos-m_CurRoom->Room.m_z0;
+		float xm = m_xpos-m_CurSpace->Space.m_x0;
+		float zm = m_zpos-m_CurSpace->Space.m_z0;
 		
 		//优先检查是否已经在走廊内
         if (m_CurDypass)//如果之前在
@@ -767,10 +760,10 @@ void CWorldShow::RoamingWorld(float x0,float z0){
 					 }
 					 else if (zm>m_CurDypass->z2) //离开走廊，进入此门相对的房间
 					 {
-						 RoomView* Room = GetOtherRoom(m_CurRoom);
-                         if (Room->Room.IsValidRoom(m_CurDypass->Space->m_Alias))
+						 SpaceView* Space = GetOtherSpace(m_CurSpace);
+                         if (Space->Space.IsValidSpace(m_CurDypass->Space->m_Alias))
                          {
-							 EnterOtherRoom();
+							 EnterOtherSpace();
                          }else{
                              m_zpos =z0;
 							 m_xpos =x0;
@@ -784,10 +777,10 @@ void CWorldShow::RoamingWorld(float x0,float z0){
 					 }
 					 else if (xm<m_CurDypass->x1)
 					 {
-						 RoomView* Room = GetOtherRoom(m_CurRoom);
-                         if (Room->Room.IsValidRoom(m_CurDypass->Space->m_Alias))
+						 SpaceView* Space = GetOtherSpace(m_CurSpace);
+                         if (Space->Space.IsValidSpace(m_CurDypass->Space->m_Alias))
                          {
-							 EnterOtherRoom();
+							 EnterOtherSpace();
                          }else{
                              m_zpos =z0;
 							 m_xpos =x0;
@@ -802,10 +795,10 @@ void CWorldShow::RoamingWorld(float x0,float z0){
 					 }
 					 else if (zm<m_CurDypass->z1)
 					 {
-						 RoomView* Room = GetOtherRoom(m_CurRoom);
-                         if (Room->Room.IsValidRoom(m_CurDypass->Space->m_Alias))
+						 SpaceView* Space = GetOtherSpace(m_CurSpace);
+                         if (Space->Space.IsValidSpace(m_CurDypass->Space->m_Alias))
                          {
-							 EnterOtherRoom();
+							 EnterOtherSpace();
                          }else{
                              m_zpos =z0;
 							 m_xpos =x0;
@@ -819,10 +812,10 @@ void CWorldShow::RoamingWorld(float x0,float z0){
 					 }
 					 else if (xm>m_CurDypass->x2)
 					 {
-						 RoomView* Room = GetOtherRoom(m_CurRoom);
-                         if (Room->Room.IsValidRoom(m_CurDypass->Space->m_Alias))
+						 SpaceView* Space = GetOtherSpace(m_CurSpace);
+                         if (Space->Space.IsValidSpace(m_CurDypass->Space->m_Alias))
                          {
-							 EnterOtherRoom();
+							 EnterOtherSpace();
                          }else{
                              m_zpos =z0;
 							 m_xpos =x0;
@@ -834,7 +827,7 @@ void CWorldShow::RoamingWorld(float x0,float z0){
             return ;
         }
 				
-		mapunit* m = m_CurRoom->Room.IsInDypassRect(m_xpos,m_zpos);
+		mapunit* m = m_CurSpace->Space.IsInDypassRect(m_xpos,m_zpos);
 		if(m) //之前不在门廊，现在打开对应的门
         {
 			if (m_WhoUpdating) //退回去，不允许进入另一个空间
@@ -857,17 +850,17 @@ void CWorldShow::RoamingWorld(float x0,float z0){
         }
          
         //是否与房间里的物体碰撞
-        m = m_CurRoom->Room.IsInObjectRect(m_xpos,m_zpos);
+        m = m_CurSpace->Space.IsInObjectRect(m_xpos,m_zpos);
 		if (m)
 		{
 			//假设X不变，z改变如果依然与Object碰撞则z不变
-			if(m->InRect(x0-m_CurRoom->Room.m_x0,zm)){
+			if(m->InRect(x0-m_CurSpace->Space.m_x0,zm)){
 				m_zpos = z0;
                 m_MoveTime = 0;
 				m_MoveSpeed = 0;
 			}
 			//假设z不变，x改变如果依然与Object碰撞则x不变
-			if(m->InRect(xm,z0-m_CurRoom->Room.m_z0)){
+			if(m->InRect(xm,z0-m_CurSpace->Space.m_z0)){
 				m_xpos = x0;
 				m_MoveTime = 0;
 				m_MoveSpeed = 0;
@@ -880,15 +873,15 @@ void CWorldShow::RoamingWorld(float x0,float z0){
 		}
          
 		//处理好与物体的碰撞，还要检查是否与房间墙壁发生碰撞
-		float dx = m_CurRoom->Room.m_RoomDx/2.0-0.4;
-		float dz = m_CurRoom->Room.m_RoomDz/2.0-0.4;
+		float dx = m_CurSpace->Space.m_SpaceDx/2.0-0.4;
+		float dz = m_CurSpace->Space.m_SpaceDz/2.0-0.4;
 
 
 		//确保在墙壁组成的包围盒里,但四周的门廊（如果有的话）是一个例外
 
 		if(xm<-dx){
-			CDoorWall* dw = m_CurRoom->Room.m_DoorWall[LEFTFACE];
-			mapunit& dyp = m_CurRoom->Room.m_Dypass[LEFTFACE];
+			CDoorWall* dw = m_CurSpace->Space.m_DoorWall[LEFTFACE];
+			mapunit& dyp = m_CurSpace->Space.m_Dypass[LEFTFACE];
 			if(dw==NULL || (m_zpos<dyp.z1 || m_zpos>dyp.z2)){
 				m_xpos = x0;
 				m_MoveTime = 0;
@@ -896,8 +889,8 @@ void CWorldShow::RoamingWorld(float x0,float z0){
 			}
 		}
 		if(xm>dx){
-			CDoorWall* dw = m_CurRoom->Room.m_DoorWall[RIGHTFACE];
-			mapunit& dyp = m_CurRoom->Room.m_Dypass[RIGHTFACE];
+			CDoorWall* dw = m_CurSpace->Space.m_DoorWall[RIGHTFACE];
+			mapunit& dyp = m_CurSpace->Space.m_Dypass[RIGHTFACE];
 			if(dw == NULL || ( m_zpos<dyp.z1 || m_zpos>dyp.z2)){
 				m_xpos = x0;
 				m_MoveTime = 0;
@@ -906,8 +899,8 @@ void CWorldShow::RoamingWorld(float x0,float z0){
 		}
 
 		if(zm<-dz){
-			CDoorWall* dw = m_CurRoom->Room.m_DoorWall[BACKFACE];
-			mapunit& dyp = m_CurRoom->Room.m_Dypass[BACKFACE];
+			CDoorWall* dw = m_CurSpace->Space.m_DoorWall[BACKFACE];
+			mapunit& dyp = m_CurSpace->Space.m_Dypass[BACKFACE];
 			if(dw == NULL || (m_xpos<dyp.x1 || m_xpos>dyp.x2)){
 				m_zpos = z0;
 				m_MoveTime = 0;
@@ -915,8 +908,8 @@ void CWorldShow::RoamingWorld(float x0,float z0){
 			}
 		}
 		if(zm>dz){
-			CDoorWall* dw = m_CurRoom->Room.m_DoorWall[FRONTFACE];
-			mapunit& dyp = m_CurRoom->Room.m_Dypass[FRONTFACE];
+			CDoorWall* dw = m_CurSpace->Space.m_DoorWall[FRONTFACE];
+			mapunit& dyp = m_CurSpace->Space.m_Dypass[FRONTFACE];
 			if(dw == NULL || (m_xpos<dyp.x1 || m_xpos>dyp.x2)){
 				m_zpos = z0;
 				m_MoveTime = 0;
@@ -943,17 +936,17 @@ bool CWorldShow::OpenDoor(){
    if(m_CurDypass==NULL)return false;
    
    //找到空间的门
-   CDoorWall* dw = m_CurRoom->Room.m_DoorWall[m_CurDypass->face];
+   CDoorWall* dw = m_CurSpace->Space.m_DoorWall[m_CurDypass->face];
    if(dw == NULL)return false;
    tstring Name = dw->GetName();
 
    //确定对应空间数据是否有效
-   RoomView* OtherRoom = GetOtherRoom(m_CurRoom);
-   if(OtherRoom->Room.IsValidRoom(dw->m_Alias)){
+   SpaceView* OtherSpace = GetOtherSpace(m_CurSpace);
+   if(OtherSpace->Space.IsValidSpace(dw->m_Alias)){
 	    //打开当前门，让两个空间都显示
         dw->m_State |=  SPACE_OPENDOOR;
 	   	
-		CDoorWall* Otherdw = GetOtherDoor(m_CurRoom,m_CurDypass);
+		CDoorWall* Otherdw = GetOtherDoor(m_CurSpace,m_CurDypass);
 		Otherdw->m_State |=  SPACE_OPENDOOR;
 		m_ShowBoth = true;
 		return true;
@@ -971,114 +964,114 @@ bool CWorldShow::OpenDoor(){
 	    //先摆放另一个房间，使其正门对准我们即将通过的门
 		ChildID = dw->m_Alias;
 		
-		float dx1 = m_CurRoom->Room.m_RoomDx/2;
-		float dz1 = m_CurRoom->Room.m_RoomDz/2;
+		float dx1 = m_CurSpace->Space.m_SpaceDx/2;
+		float dz1 = m_CurSpace->Space.m_SpaceDz/2;
 
-		float dx2 = OtherRoom->Room.m_RoomDx/2;
-		float dz2 = OtherRoom->Room.m_RoomDz/2;
+		float dx2 = OtherSpace->Space.m_SpaceDx/2;
+		float dz2 = OtherSpace->Space.m_SpaceDz/2;
  
 		assert(m_CurDypass != NULL);
 		float x,y,z; //新房间的位置坐标（世界坐标）
-		y = m_CurRoom->Room.m_y0; //高度都一样
+		y = m_CurSpace->Space.m_y0; //高度都一样
 		if(m_CurDypass->face == FRONTFACE){
-			x = m_CurRoom->Room.m_x0;
-			z = m_CurRoom->Room.m_z0+(dz1+dz2+ DYPASS_DEPTH+DYPASS_DEPTH);
-			OtherRoom->Room.ToPlace(x,y,z,0,0,0);
+			x = m_CurSpace->Space.m_x0;
+			z = m_CurSpace->Space.m_z0+(dz1+dz2+ DYPASS_DEPTH+DYPASS_DEPTH);
+			OtherSpace->Space.ToPlace(x,y,z,0,0,0);
             if (dw->m_Alias == LOCAL_SPACEID){
- 				OtherRoom->Room.SetParentRoom(FRONTFACE,1, _T("Outer World"),m_CurRoom->Room.m_Type);
+ 				OtherSpace->Space.SetParentSpace(FRONTFACE,1, _T("Outer World"),m_CurSpace->Space.m_Type);
 			} 
 			if (dw->m_State & SPACE_PARENT) //等于返回自己的父空间
 			{   //则在父空间注册通向自己的的门
-				OtherRoom->Room.AddChildRoom(BACKFACE,m_CurRoom->Room.m_Alias, m_CurRoom->Room.m_Name,dw->m_Fingerprint);
-                MapItem* RoomItem = GetGUI()->m_MapView.FindChildItem(m_CurRoom->Room.m_Alias);
-                if(RoomItem){ //找到父空间的父空间ID作为地址向World获取数据
-					MapItem* ParentItem = (MapItem*)RoomItem->m_Parent;
+				OtherSpace->Space.AddChildSpace(BACKFACE,m_CurSpace->Space.m_Alias, m_CurSpace->Space.m_Name,dw->m_Fingerprint);
+                MapItem* SpaceItem = GetGUI()->m_MapView.FindChildItem(m_CurSpace->Space.m_Alias);
+                if(SpaceItem){ //找到父空间的父空间ID作为地址向World获取数据
+					MapItem* ParentItem = (MapItem*)SpaceItem->m_Parent;
 				    if(ParentItem)ParentID = ParentItem->m_Alias;
 				}
 			}
             else{
-				ParentID = m_CurRoom->Room.m_Alias;
-				OtherRoom->Room.SetParentRoom(BACKFACE,m_CurRoom->Room.m_Alias, m_CurRoom->Room.m_Name,m_CurRoom->Room.m_Type);
+				ParentID = m_CurSpace->Space.m_Alias;
+				OtherSpace->Space.SetParentSpace(BACKFACE,m_CurSpace->Space.m_Alias, m_CurSpace->Space.m_Name,m_CurSpace->Space.m_Type);
             }
-            CDoorWall*  Otherdw = OtherRoom->Room.m_DoorWall[BACKFACE];
+            CDoorWall*  Otherdw = OtherSpace->Space.m_DoorWall[BACKFACE];
             Otherdw->m_State |=  SPACE_OPENDOOR;
 
 		}else if (m_CurDypass->face == BACKFACE){
-			x = m_CurRoom->Room.m_x0;
-			z = m_CurRoom->Room.m_z0-(dz1+dz2+ DYPASS_DEPTH+DYPASS_DEPTH);
-			OtherRoom->Room.ToPlace(x,y,z,0,0,0);
+			x = m_CurSpace->Space.m_x0;
+			z = m_CurSpace->Space.m_z0-(dz1+dz2+ DYPASS_DEPTH+DYPASS_DEPTH);
+			OtherSpace->Space.ToPlace(x,y,z,0,0,0);
 			if (dw->m_Alias == LOCAL_SPACEID){
-				OtherRoom->Room.SetParentRoom(FRONTFACE,1, _T("Outer World"),m_CurRoom->Room.m_Type);
+				OtherSpace->Space.SetParentSpace(FRONTFACE,1, _T("Outer World"),m_CurSpace->Space.m_Type);
             }
 						
 			if (dw->m_State & SPACE_PARENT) //等于返回自己的父空间
 			{   //则在父空间注册通向自己的的门
-				OtherRoom->Room.AddChildRoom(FRONTFACE,m_CurRoom->Room.m_Alias, m_CurRoom->Room.m_Name,dw->m_Fingerprint);
-                MapItem* RoomItem = GetGUI()->m_MapView.FindChildItem(m_CurRoom->Room.m_Alias);
-                if(RoomItem){ //找到父空间的父空间ID作为地址向World获取数据
-					MapItem* ParentItem = (MapItem*)RoomItem->m_Parent;
+				OtherSpace->Space.AddChildSpace(FRONTFACE,m_CurSpace->Space.m_Alias, m_CurSpace->Space.m_Name,dw->m_Fingerprint);
+                MapItem* SpaceItem = GetGUI()->m_MapView.FindChildItem(m_CurSpace->Space.m_Alias);
+                if(SpaceItem){ //找到父空间的父空间ID作为地址向World获取数据
+					MapItem* ParentItem = (MapItem*)SpaceItem->m_Parent;
 				    if(ParentItem)ParentID = ParentItem->m_Alias;
 				}
 			}
 			else{
-				ParentID = m_CurRoom->Room.m_Alias;
-				OtherRoom->Room.SetParentRoom(FRONTFACE,m_CurRoom->Room.m_Alias, m_CurRoom->Room.m_Name,m_CurRoom->Room.m_Type);
+				ParentID = m_CurSpace->Space.m_Alias;
+				OtherSpace->Space.SetParentSpace(FRONTFACE,m_CurSpace->Space.m_Alias, m_CurSpace->Space.m_Name,m_CurSpace->Space.m_Type);
 			}
-			CDoorWall*  Otherdw = OtherRoom->Room.m_DoorWall[FRONTFACE];
+			CDoorWall*  Otherdw = OtherSpace->Space.m_DoorWall[FRONTFACE];
             Otherdw->m_State |=  SPACE_OPENDOOR;
 
 		}else if (m_CurDypass->face == LEFTFACE){
-            z = m_CurRoom->Room.m_z0;
-			x = m_CurRoom->Room.m_x0-(dx1+dz2+ DYPASS_DEPTH+DYPASS_DEPTH);
-            OtherRoom->Room.ToPlace(x,y,z,0,0,0);
+            z = m_CurSpace->Space.m_z0;
+			x = m_CurSpace->Space.m_x0-(dx1+dz2+ DYPASS_DEPTH+DYPASS_DEPTH);
+            OtherSpace->Space.ToPlace(x,y,z,0,0,0);
 			if (dw->m_Alias == LOCAL_SPACEID){
-                OtherRoom->Room.SetParentRoom(FRONTFACE,1, _T("Outer World"),m_CurRoom->Room.m_Type);
+                OtherSpace->Space.SetParentSpace(FRONTFACE,1, _T("Outer World"),m_CurSpace->Space.m_Type);
 			}
 					
 			if (dw->m_State & SPACE_PARENT) //等于返回自己的父空间
 			{   //则在父空间注册通向自己的的门
-				OtherRoom->Room.AddChildRoom(RIGHTFACE,m_CurRoom->Room.m_Alias, m_CurRoom->Room.m_Name,dw->m_Fingerprint);
-                MapItem* RoomItem = GetGUI()->m_MapView.FindChildItem(m_CurRoom->Room.m_Alias);
-                if(RoomItem){ //找到父空间的父空间ID作为地址向World获取数据
-					MapItem* ParentItem = (MapItem*)RoomItem->m_Parent;
+				OtherSpace->Space.AddChildSpace(RIGHTFACE,m_CurSpace->Space.m_Alias, m_CurSpace->Space.m_Name,dw->m_Fingerprint);
+                MapItem* SpaceItem = GetGUI()->m_MapView.FindChildItem(m_CurSpace->Space.m_Alias);
+                if(SpaceItem){ //找到父空间的父空间ID作为地址向World获取数据
+					MapItem* ParentItem = (MapItem*)SpaceItem->m_Parent;
 				    if(ParentItem)ParentID = ParentItem->m_Alias;
 				}
 			}else{
-				ParentID = m_CurRoom->Room.m_Alias;
-				OtherRoom->Room.SetParentRoom(RIGHTFACE,m_CurRoom->Room.m_Alias, m_CurRoom->Room.m_Name,m_CurRoom->Room.m_Type);
+				ParentID = m_CurSpace->Space.m_Alias;
+				OtherSpace->Space.SetParentSpace(RIGHTFACE,m_CurSpace->Space.m_Alias, m_CurSpace->Space.m_Name,m_CurSpace->Space.m_Type);
             }
-			CDoorWall*  Otherdw = OtherRoom->Room.m_DoorWall[RIGHTFACE];
+			CDoorWall*  Otherdw = OtherSpace->Space.m_DoorWall[RIGHTFACE];
             Otherdw->m_State |=  SPACE_OPENDOOR;
 
 		}else{ //RIGHTFASE
-            z = m_CurRoom->Room.m_z0;
-			x = m_CurRoom->Room.m_x0+(dx1+dz2+ DYPASS_DEPTH+DYPASS_DEPTH);
-            OtherRoom->Room.ToPlace(x,y,z,0,0,0);
+            z = m_CurSpace->Space.m_z0;
+			x = m_CurSpace->Space.m_x0+(dx1+dz2+ DYPASS_DEPTH+DYPASS_DEPTH);
+            OtherSpace->Space.ToPlace(x,y,z,0,0,0);
             if (dw->m_Alias == LOCAL_SPACEID){
-                OtherRoom->Room.SetParentRoom(FRONTFACE,1, _T("Outer World"),m_CurRoom->Room.m_Type);
+                OtherSpace->Space.SetParentSpace(FRONTFACE,1, _T("Outer World"),m_CurSpace->Space.m_Type);
 			}
 					
 			if (dw->m_State & SPACE_PARENT) //等于返回自己的父空间
 			{   //则在父空间注册通向自己的的门
-				OtherRoom->Room.AddChildRoom(LEFTFACE,m_CurRoom->Room.m_Alias, m_CurRoom->Room.m_Name,dw->m_Fingerprint);
-                MapItem* RoomItem = GetGUI()->m_MapView.FindChildItem(m_CurRoom->Room.m_Alias);
-                if(RoomItem){ //找到父空间的父空间ID作为地址向World获取数据
-					MapItem* ParentItem = (MapItem*)RoomItem->m_Parent;
+				OtherSpace->Space.AddChildSpace(LEFTFACE,m_CurSpace->Space.m_Alias, m_CurSpace->Space.m_Name,dw->m_Fingerprint);
+                MapItem* SpaceItem = GetGUI()->m_MapView.FindChildItem(m_CurSpace->Space.m_Alias);
+                if(SpaceItem){ //找到父空间的父空间ID作为地址向World获取数据
+					MapItem* ParentItem = (MapItem*)SpaceItem->m_Parent;
 				    if(ParentItem)ParentID = ParentItem->m_Alias;
 				}
 			}else{
-				ParentID = m_CurRoom->Room.m_Alias;
-				OtherRoom->Room.SetParentRoom(LEFTFACE,m_CurRoom->Room.m_Alias, m_CurRoom->Room.m_Name,m_CurRoom->Room.m_Type);
+				ParentID = m_CurSpace->Space.m_Alias;
+				OtherSpace->Space.SetParentSpace(LEFTFACE,m_CurSpace->Space.m_Alias, m_CurSpace->Space.m_Name,m_CurSpace->Space.m_Type);
             }
-			CDoorWall*  Otherdw = OtherRoom->Room.m_DoorWall[LEFTFACE];
+			CDoorWall*  Otherdw = OtherSpace->Space.m_DoorWall[LEFTFACE];
             Otherdw->m_State |=  SPACE_OPENDOOR;
 
 		};
         if(ChildID == LOCAL_SPACEID)ParentID = ROOT_SPACE;
 
-	    OtherRoom->Clear();
-		OtherRoom->Room.m_Alias = ChildID;
-        OtherRoom->Room.m_Name  = dw->GetName();
+	    OtherSpace->Clear();
+		OtherSpace->Space.m_Alias = ChildID;
+        OtherSpace->Space.m_Name  = dw->GetName();
 
    }
 
@@ -1094,7 +1087,7 @@ bool CWorldShow::OpenDoor(){
 	   GetGUI()->GetSpacePath(Path);
 
 	   CMsg Msg(SYSTEM_SOURCE,DEFAULT_DIALOG,MSG_ROBOT_GOTO_SPACE,DEFAULT_DIALOG,0);
-	   ePipeline& Letter = Msg.GetLetter();
+	   ePipeline& Letter = Msg.GetLetter(false);
 	   Letter.PushPipe(Path);
 	   GetBrain()->SendMsgToSpace(Msg);
 	   
@@ -1109,66 +1102,66 @@ bool CWorldShow::OpenDoor(){
 /*
 - 进入另一个房间，改变仅仅当前空间的相关设置 
 */
-void CWorldShow::EnterOtherRoom(){
+void CWorldShow::EnterOtherSpace(){
 	FACEPOS fc = m_CurDypass->face;
-//	CDoorWall* dw = m_CurRoom->Room.m_DoorWall[fc];
+//	CDoorWall* dw = m_CurSpace->Space.m_DoorWall[fc];
 //	assert(dw);
 //	dw->m_State &= ~SPACE_OPENDOOR;
     m_PreDypass = m_CurDypass;
 
-    RoomView* OtherRoom = GetOtherRoom(m_CurRoom);
-	m_CurRoom = OtherRoom;
+    SpaceView* OtherSpace = GetOtherSpace(m_CurSpace);
+	m_CurSpace = OtherSpace;
         
     m_CurDypass = NULL;
 	//得到新当前空间对应入口过道
 	if(fc == FRONTFACE){
-		  m_CurDypass = &m_CurRoom->Room.m_Dypass[BACKFACE];
+		  m_CurDypass = &m_CurSpace->Space.m_Dypass[BACKFACE];
 	}else if (fc == BACKFACE){
-		  m_CurDypass = &m_CurRoom->Room.m_Dypass[FRONTFACE];
+		  m_CurDypass = &m_CurSpace->Space.m_Dypass[FRONTFACE];
 	}else if (fc == LEFTFACE){
- 		  m_CurDypass = &m_CurRoom->Room.m_Dypass[RIGHTFACE];
+ 		  m_CurDypass = &m_CurSpace->Space.m_Dypass[RIGHTFACE];
 	}else{ //RIGHTFASE
-		  m_CurDypass = &m_CurRoom->Room.m_Dypass[LEFTFACE];
+		  m_CurDypass = &m_CurSpace->Space.m_Dypass[LEFTFACE];
 	};
     assert(m_CurDypass);
 //	fc = m_CurDypass->face;
-//	dw = m_CurRoom->Room.m_DoorWall[fc];
+//	dw = m_CurSpace->Space.m_DoorWall[fc];
 //	assert(dw);
 //	dw->m_State &= ~SPACE_OPENDOOR;		
 	
-	m_RoomTitle.SetText(m_CurRoom->Room.m_Name,false,SS.m_Font24);
-	SendParentMessage(CM_GOTOSPACE,m_CurRoom->Room.m_Alias,0,NULL); //重置map当前条目
+	m_SpaceTitle.SetText(m_CurSpace->Space.m_Name,false,SS.m_Font24);
+	SendParentMessage(CM_GOTOSPACE,m_CurSpace->Space.m_Alias,0,NULL); //重置map当前条目
 };
 
-CDoorWall* CWorldShow::GetOtherDoor(RoomView* Room, mapunit* Dypass){
-    assert(Room);
+CDoorWall* CWorldShow::GetOtherDoor(SpaceView* Space, mapunit* Dypass){
+    assert(Space);
 	assert(Dypass);
 	CDoorWall* dw = NULL;
-	RoomView* OtherRoom = GetOtherRoom(Room);
-	assert(OtherRoom);
+	SpaceView* OtherSpace = GetOtherSpace(Space);
+	assert(OtherSpace);
 	
 	if(Dypass->face == FRONTFACE){
-		    dw = OtherRoom->Room.m_DoorWall[BACKFACE];
+		    dw = OtherSpace->Space.m_DoorWall[BACKFACE];
 	}else if (Dypass->face == BACKFACE){
-		    dw = OtherRoom->Room.m_DoorWall[FRONTFACE];
+		    dw = OtherSpace->Space.m_DoorWall[FRONTFACE];
 	}else if (Dypass->face == LEFTFACE){
- 		    dw = OtherRoom->Room.m_DoorWall[RIGHTFACE];
+ 		    dw = OtherSpace->Space.m_DoorWall[RIGHTFACE];
 	}else{ //RIGHTFASE
-		    dw = OtherRoom->Room.m_DoorWall[LEFTFACE];
+		    dw = OtherSpace->Space.m_DoorWall[LEFTFACE];
 	};
     assert(dw);
 	return dw;
 }
 void CWorldShow::CloseDoor(){
 	
-	CDoorWall* dw = m_CurRoom->Room.m_DoorWall[m_CurDypass->face];
+	CDoorWall* dw = m_CurSpace->Space.m_DoorWall[m_CurDypass->face];
 	assert(dw);
 	dw->m_State &= ~SPACE_OPENDOOR;
 	
 	if (m_PreDypass)
 	{
-       RoomView* Room = GetOtherRoom(m_CurRoom);
-	   dw = Room->Room.m_DoorWall[m_PreDypass->face];
+       SpaceView* Space = GetOtherSpace(m_CurSpace);
+	   dw = Space->Space.m_DoorWall[m_PreDypass->face];
 	   assert(dw);
 	   dw->m_State &= ~SPACE_OPENDOOR;
 	}
@@ -1231,13 +1224,13 @@ int CWorldShow::LoadGLTextureFromRes(uint32 ResHandle){
 
 
 
-void CWorldShow::ConnectRoomFail(tstring Reason){
-	ClearAllObject(m_CurRoom->Room.m_Alias);
-	m_RoomTitle.SetText(Reason,false,SS.m_Font24);
+void CWorldShow::ConnectSpaceFail(tstring Reason){
+	ClearAllObject(m_CurSpace->Space.m_Alias);
+	m_SpaceTitle.SetText(Reason,false,SS.m_Font24);
 }
 
-void  CWorldShow::SetRoomTitle(tstring Title){
-	m_RoomTitle.SetText(Title,false,SS.m_Font24);
+void  CWorldShow::SetSpaceTitle(tstring Title){
+	m_SpaceTitle.SetText(Title,false,SS.m_Font24);
 	Invalidate();
 }
 
@@ -1247,7 +1240,7 @@ void  CWorldShow::SetStatusText(tstring s){
 
 void CWorldShow::AddObject(int64 ParentID,int64 ID,tstring& Name,SPACETYPE Type,tstring& Fingerprint,HICON hIcon){
 	ObjectItem* Item = new ObjectItem(ID,Name,Type,Fingerprint,hIcon);
-	//RoomView* UpdataView = GetUpdataRoom(ParentID);
+	//SpaceView* UpdataView = GetUpdataSpace(ParentID);
 	if (GetHwnd())
 	{
 		SendChildMessage(GetHwnd(),OBJECT_ADD,(int64)Item,ParentID);
@@ -1262,22 +1255,22 @@ void CWorldShow::AddObject(int64 ParentID,int64 ID,tstring& Name,SPACETYPE Type,
 	}
 };
     
-int32 CWorldShow::FindObject(tstring& Name, vector<ObjectItem>& RoomList){
+int32 CWorldShow::FindObject(tstring& Name, vector<ObjectItem>& SpaceList){
 	if(GetHwnd()){
-		SendChildMessage(m_CurRoom->ObjectView.GetHwnd(),OBJECT_FIND,(int64)&Name,(int64)&RoomList);
-		if (RoomList.size())  //可能出现用户转换当前空间
+		SendChildMessage(m_CurSpace->ObjectView.GetHwnd(),OBJECT_FIND,(int64)&Name,(int64)&SpaceList);
+		if (SpaceList.size())  //可能出现用户转换当前空间
 		{
-			RoomView* View = GetOtherRoom(m_CurRoom);
-			SendChildMessage(m_CurRoom->ObjectView.GetHwnd(),OBJECT_FIND,(int64)&Name,(int64)&RoomList);
+			SpaceView* View = GetOtherSpace(m_CurSpace);
+			SendChildMessage(m_CurSpace->ObjectView.GetHwnd(),OBJECT_FIND,(int64)&Name,(int64)&SpaceList);
 		}
 	}else{
-		m_CurRoom->ObjectView.OnFindObject((WPARAM)&Name,(LPARAM)&RoomList);
-		if(RoomList.size()){
-			RoomView* View = GetOtherRoom(m_CurRoom);
-			View->ObjectView.OnFindObject((WPARAM)&Name,(LPARAM)&RoomList);
+		m_CurSpace->ObjectView.OnFindObject((WPARAM)&Name,(LPARAM)&SpaceList);
+		if(SpaceList.size()){
+			SpaceView* View = GetOtherSpace(m_CurSpace);
+			View->ObjectView.OnFindObject((WPARAM)&Name,(LPARAM)&SpaceList);
 		}
 	}
-	return RoomList.size();
+	return SpaceList.size();
 }
 
 void CWorldShow::DeleteObject(tstring Fingerprint){
@@ -1400,8 +1393,8 @@ LRESULT CWorldShow::OnCreate(WPARAM wParam, LPARAM lParam){
     //必须在CGLWin::OnCreate之前初始化好子窗口
 	RECT rc={0};
 	HINSTANCE AppInstance = GetHinstance();
-	if(!m_Room1.ObjectView.Create(AppInstance,NULL,WS_CHILD,rc,GetHwnd(),10))return -1;
-	if(!m_Room2.ObjectView.Create(AppInstance,NULL,WS_CHILD,rc,GetHwnd(),11))return -1;
+	if(!m_Space1.ObjectView.Create(AppInstance,NULL,WS_CHILD,rc,GetHwnd(),10))return -1;
+	if(!m_Space2.ObjectView.Create(AppInstance,NULL,WS_CHILD,rc,GetHwnd(),11))return -1;
 
 	if(RegisterToolClass(AppInstance)==FALSE)return -1;
 	
@@ -1422,7 +1415,7 @@ LRESULT CWorldShow::OnCreate(WPARAM wParam, LPARAM lParam){
 
 LRESULT CWorldShow::OnKeydown(WPARAM wParam, LPARAM lParam){
 	
-	if(m_WhoUpdating == m_CurRoom->Room.m_Alias)return 0;
+	if(m_WhoUpdating == m_CurSpace->Space.m_Alias)return 0;
 			
 	if (wParam == VK_UP ){
 		m_Key = wParam;
@@ -1482,8 +1475,8 @@ LRESULT CWorldShow::OnKeyUp(WPARAM wParam, LPARAM lParam){
 
 LRESULT CWorldShow::OnRButtonDown(WPARAM wParam, LPARAM lParam){
 	::ShowWindow(m_NaviBar.GetHwnd(),SW_HIDE);
-	m_CurRoom->ObjectView.Show();
-	SetFocus(m_CurRoom->ObjectView.GetHwnd());
+	m_CurSpace->ObjectView.Show();
+	SetFocus(m_CurSpace->ObjectView.GetHwnd());
 	return 0;
 }
 
@@ -1499,10 +1492,10 @@ LRESULT CWorldShow::OnLButtonDown(WPARAM wParam, LPARAM lParam){
 		SendParentMessage(CM_OPENVIEW,BNT_MAP,0,NULL);
 
 	}else if (Space->m_Alias == BNT_CREATEROOM){
-	    m_CurRoom->ObjectView.OnCreateChildRoom(FALSE);
+	    m_CurSpace->ObjectView.OnCreateChildSpace(FALSE);
 	}else if (Space->m_Alias == BNT_IMPORTOBJECT){
         //test AddObject(12,"Test.dll",OBJECT_SPACE,SS.m_DefaultConvIcon,12345,"DSFEFT");
-		m_CurRoom->ObjectView.OnImportObject();
+		m_CurSpace->ObjectView.OnImportObject();
 	}
 	return 0;
 }
@@ -1595,13 +1588,13 @@ LRESULT CWorldShow::ChildReaction(SpaceRectionMsg* srm){
 	{
 	case OBJECT_ADD:
 		{
-			RoomView* UpdataView = GetUpdataRoom(srm->lParam);
+			SpaceView* UpdataView = GetUpdataSpace(srm->lParam);
 			ObjectItem* Item = (ObjectItem*)srm->wParam;
 
 			UpdataView->ObjectView.OnAddObject((WPARAM)Item,0);
 			if(Item->m_Type == LOCAL_SPACE){
-				int index = UpdataView->Room.AddChildRoom(Item->m_Alias,Item->m_Name,Item->m_Type,Item->m_Fingerprint);
-				if (index != -1 && UpdataView==m_CurRoom && m_CurDypass == NULL){//观察者自动转向新加入的物体：
+				int index = UpdataView->Space.AddChildSpace(Item->m_Alias,Item->m_Name,Item->m_Type,Item->m_Fingerprint);
+				if (index != -1 && UpdataView==m_CurSpace && m_CurDypass == NULL){//观察者自动转向新加入的物体：
 					float x2,y2;
 					if(index == FRONTFACE){
 						x2 =0.0f; 
@@ -1629,9 +1622,9 @@ LRESULT CWorldShow::ChildReaction(SpaceRectionMsg* srm){
 				}
 			}else{
 
-				mapunit* mp = UpdataView->Room.AddChildObject(Item->m_Alias,Item->m_Name,Item->m_Type,Item->m_hIcon,Item->m_Fingerprint);
+				mapunit* mp = UpdataView->Space.AddChildObject(Item->m_Alias,Item->m_Name,Item->m_Type,Item->m_hIcon,Item->m_Fingerprint);
 				if (mp){
-					if(UpdataView==m_CurRoom && m_CurDypass == NULL)
+					if(UpdataView==m_CurSpace && m_CurDypass == NULL)
 					{   //观察者自动转向新加入的物体:   
 						//1 根据当前场景旋转得到一个向量  (初始观察者面相90°)
 						float x1 = 1.0f*cos((m_heading+90)*piover180);
@@ -1655,21 +1648,21 @@ LRESULT CWorldShow::ChildReaction(SpaceRectionMsg* srm){
 		break;
 	case OBJECT_DEL:
 		{
-		LRESULT ret = m_CurRoom->ObjectView.OnDeleteObject(srm->wParam,0);
+		LRESULT ret = m_CurSpace->ObjectView.OnDeleteObject(srm->wParam,0);
 		if(ret){
 			 tstring Fingerprint = *(tstring*)srm->wParam;
-		     m_CurRoom->Room.DeleteChildObject(Fingerprint);
+		     m_CurSpace->Space.DeleteChildObject(Fingerprint);
 		}
         //让另个房间数据无效，因为可能删除的正是那个房间。 
-		RoomView* View = GetOtherRoom(m_CurRoom);
+		SpaceView* View = GetOtherSpace(m_CurSpace);
 		View->Clear();
-		View->Room.m_Alias = 0;
-		View->Room.m_DataValid = false;
+		View->Space.m_Alias = 0;
+		View->Space.m_DataValid = false;
 		}
 		break;
 	case OBJECT_CLR:
 		{
-		RoomView* UpdataView = GetUpdataRoom(srm->lParam);
+		SpaceView* UpdataView = GetUpdataSpace(srm->lParam);
         UpdataView->Clear();
 		}
 	    break;
@@ -1717,7 +1710,7 @@ void CWorldShow::GoBack(int32 s){
 LRESULT CWorldShow::ParentReaction(SpaceRectionMsg* SRM){
 	if (SRM->Msg == CM_WORLDTRUN)
 	{
-		if(m_WhoUpdating == m_CurRoom->Room.m_Alias)return 0;
+		if(m_WhoUpdating == m_CurSpace->Space.m_Alias)return 0;
 
 		float  yRot = (float)SRM->wParam/100.0f;
 		float  xRot = (float)SRM->lParam/100.0f;
@@ -1733,7 +1726,7 @@ LRESULT CWorldShow::ParentReaction(SpaceRectionMsg* SRM){
 
 	}else if (SRM->Msg == CM_WORLDMOVE)
 	{
-		if(m_WhoUpdating == m_CurRoom->Room.m_Alias)return 0;
+		if(m_WhoUpdating == m_CurSpace->Space.m_Alias)return 0;
 
 		if (SRM->wParam == ID_GOAHREAD)
 		{
@@ -1779,12 +1772,12 @@ void CWorldShow::Draw3D(float32* ParentMatrix /*=NULL*/,ePipeline* Pipe /*=NULL*
 	if(m_ShowBoth){
 		GLfloat  W[16];
 		::memcpy(W,WorldTrans,sizeof(W));	
-		m_Room1.Room.Draw(W);
+		m_Space1.Space.Draw(W);
 
 		::memcpy(W,WorldTrans,sizeof(W));
-		m_Room2.Room.Draw(W);
+		m_Space2.Space.Draw(W);
     }else{ 
-		m_CurRoom->Room.Draw(WorldTrans);
+		m_CurSpace->Space.Draw(WorldTrans);
 	}
 	
 	Draw2DAll();
@@ -1852,7 +1845,7 @@ void CWorldShow::Draw2DAll(){
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_ONE,GL_SRC_ALPHA);
 		
-        m_RoomTitle.Draw3D(NULL);
+        m_SpaceTitle.Draw3D(NULL);
 		
 #ifdef _USE_THREAD_RENDER
         CTGLWin::Draw3D(NULL,NULL);
@@ -1888,23 +1881,23 @@ void CWorldShow::Layout(bool Redraw){
 	glLoadIdentity();				
 
 
-	m_RoomTitle.SetArea(10,10,280,26);
-	m_RoomTitle.Layout();
+	m_SpaceTitle.SetArea(10,10,280,26);
+	m_SpaceTitle.Layout();
 
 	m_StatusInfo.SetArea(10,30,280,50);
     m_StatusInfo.Layout();
 
     
     ButtonItem3*  BntMap = (ButtonItem3*)m_ChildList[0];
-	ButtonItem3*  BntCreateRoom = (ButtonItem3*)m_ChildList[1];
+	ButtonItem3*  BntCreateSpace = (ButtonItem3*)m_ChildList[1];
 	ButtonItem3*  BntImportObject = (ButtonItem3*)m_ChildList[2];
 
 	/* 右对齐
 	BntImportObject->SetArea(w-96,h-22,w-10,h-6);
 	BntImportObject->Layout();
 	
-	BntCreateRoom->SetArea(w-190,h-22,w-106,h-6);
-	BntCreateRoom->Layout();
+	BntCreateSpace->SetArea(w-190,h-22,w-106,h-6);
+	BntCreateSpace->Layout();
 
     BntMap->SetArea(w-260,h-22,w-200,h-6);
 	BntMap->Layout();
@@ -1913,8 +1906,8 @@ void CWorldShow::Layout(bool Redraw){
 	BntMap->SetArea(10,h-22,56,h-6);
 	BntMap->Layout();
 	
-	BntCreateRoom->SetArea(66,h-22,152,h-6);
-	BntCreateRoom->Layout();
+	BntCreateSpace->SetArea(66,h-22,152,h-6);
+	BntCreateSpace->Layout();
 
     BntImportObject->SetArea(172,h-22,248,h-6);
 	BntImportObject->Layout();

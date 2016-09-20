@@ -59,7 +59,7 @@ CObjectData* CLogicDialog::FindObject(int64 ObjectID){
 	//没找到则在父对话中找
 	if (m_ParentDialogID!=NO_PARENT)
 	{
-		CLogicDialog* ParentDialog = m_Brain->GetBrainData()->GetDialog(m_SourceID,m_ParentDialogID);
+		CLogicDialog* ParentDialog = GetBrain()->GetBrainData()->GetDialog(m_SourceID,m_ParentDialogID);
 		if (ParentDialog)
 		{
 			It = ParentDialog->m_ObjectList.begin();
@@ -73,7 +73,7 @@ CObjectData* CLogicDialog::FindObject(int64 ObjectID){
 	}
 
     //最后在系统对话中找
-	CLogicDialog* SysDialog = m_Brain->GetBrainData()->GetDialog(SYSTEM_SOURCE,DEFAULT_DIALOG);
+	CLogicDialog* SysDialog = GetBrain()->GetBrainData()->GetDialog(SYSTEM_SOURCE,DEFAULT_DIALOG);
 	if (SysDialog)
 	{
 		It = SysDialog->m_ObjectList.begin();
@@ -110,7 +110,7 @@ int32 CLogicDialog::FindObject(tstring Name,vector<CObjectData>& ObjectList){
 	//没找到则在父对话中找
 	if (m_ParentDialogID!=NO_PARENT)
 	{
-		CLogicDialog* ParentDialog = m_Brain->GetBrainData()->GetDialog(m_SourceID,m_ParentDialogID);
+		CLogicDialog* ParentDialog = GetBrain()->GetBrainData()->GetDialog(m_SourceID,m_ParentDialogID);
 		if (ParentDialog)
 		{
 			It = ParentDialog->m_ObjectList.begin();
@@ -129,7 +129,7 @@ int32 CLogicDialog::FindObject(tstring Name,vector<CObjectData>& ObjectList){
 		return ObjectList.size();
 	}
     //最后在系统对话中找
-	CLogicDialog* SysDialog = m_Brain->GetBrainData()->GetDialog(SYSTEM_SOURCE,DEFAULT_DIALOG);
+	CLogicDialog* SysDialog = GetBrain()->GetBrainData()->GetDialog(SYSTEM_SOURCE,DEFAULT_DIALOG);
 	if (SysDialog)
 	{
 		It = SysDialog->m_ObjectList.begin();
@@ -579,11 +579,24 @@ ePipeline* CLogicDialog::FindObjectInstance(int64 InstanceID){
 	return &Pipe;
 }
 
-
+ePipeline*  CLogicDialog::FindRequestInstance(int64 InstanceID){
+	map<int64,ePipeline>::iterator it = m_RequestInstanceList.find(InstanceID);
+	if (it == m_RequestInstanceList.end())
+	{
+		return NULL;
+	}
+	ePipeline& Pipe = it->second;
+	return &Pipe;
+}
 void CLogicDialog::AddObjectInstance(int64 InstanceID,ePipeline& Pipe){
 	m_ObjectInstanceList[InstanceID] = Pipe;
 
 }
+void CLogicDialog::AddRequestInstance(int64 InstanceID,ePipeline& Pipe){
+	m_RequestInstanceList[InstanceID] = Pipe;
+
+}
+
 void CLogicDialog::AddMemoryInstance(int64 InstanceID, ePipeline& Pipe){
 	m_MemoryInstanceList[InstanceID] = Pipe;
 }
@@ -593,6 +606,14 @@ void CLogicDialog::CloseObjectInstance(int64 InstanceID){
 	if (it != m_ObjectInstanceList.end())
 	{
 		m_ObjectInstanceList.erase(it);
+	}
+}
+
+void CLogicDialog::CloseRequestInstance(int64 InstanceID){
+	map<int64,ePipeline>::iterator it = m_RequestInstanceList.find(InstanceID);
+	if (it != m_RequestInstanceList.end())
+	{
+		m_RequestInstanceList.erase(it);
 	}
 }
 
@@ -693,7 +714,7 @@ void CLogicDialog::GetLocalObjectData(ePipeline& List){
     vector<CObjectData*>::iterator Ita = m_ObjectList.begin();
 	while(Ita!=m_ObjectList.end()){
 		CObjectData* Item = *Ita;
-		List.Push_Directly(Item->GetItemData());
+		List.Push_Directly(Item->Clone());
 		Ita++;
 	}
 }

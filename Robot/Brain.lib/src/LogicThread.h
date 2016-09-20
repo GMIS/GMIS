@@ -11,6 +11,7 @@
 #pragma warning(disable: 4786)
 
 #include "PhysicSpace.h"
+
 #include <set>
 #include <deque>
 #include "LogicTask.h"
@@ -18,12 +19,12 @@
 #include "InstinctDefine.h"
 #include "TextAnalyse.h"
 
-
 /* 根据输入的文字信息线索，实时找到对应的记忆
 系统允许与每一个对话者分别对应一个线索分析。
 */
 
 class  CWord;
+class  CLogicDialog;
 
 enum NumType{ 
 	NOT_NUM = 0,
@@ -142,14 +143,14 @@ public:
 	TokenLogicSense             m_TokenSense;
 	
 	struct MeaningPos{
-		int64 RoomID;
+		int64 SpaceID;
 		int64 ParamTokenPos;
 	};
 	struct ClauseLogicSense{
 		CClause*                BelongClause;    //以下数据属于当前那个子句
 		int32                   NextTokenPos;    //指出当前正确分析到子句的那个token  
 		bool                    FirstWord;       //指出当前token是否算本子句的第一个token（不算and和then）
-		map<int64,MeaningPos>   ClauseMeaning;   //当前子句理解到的行为表 〈RoomValue,MeaningPos〉
+		map<int64,MeaningPos>   ClauseMeaning;   //当前子句理解到的行为表 〈SpaceValue,MeaningPos〉
 		vector<int64>           FatherList;      //暂存token之间修饰得到的形ID
 		ClauseLogicSense():BelongClause(NULL),NextTokenPos(0),FirstWord(true){};
 	};
@@ -178,7 +179,7 @@ public:
 	void ThinkProc(CLogicDialog* Dialog,CMsg& Msg);
     void ThinkProc(CLogicDialog* Dialog, int32 Pos,tstring& Msg,bool Forecast,int64 EventID=0);	
 	
-	int32 GetActionRoom(int64 ParentID,ClauseLogicSense* cls);
+	int32 GetActionSpace(int64 ParentID,ClauseLogicSense* cls);
 
 	//在当前输入中检查InstinctID的名字是否为已经有Name
 	//如果IsRef=true只检查clause之前的，否则在整个输入中检查所有不属于Clause的
@@ -211,7 +212,7 @@ public:
 	*/
 	void NotifyTokenError(CLogicDialog* Dialog,CToken* Token,uint32 ErrorID);
 	void NotifyClauseError(CLogicDialog* Dialog,CClause* Clause,uint32 ErrorID);
-	void AnalyseMsg(int64 RoomID,const char* Comment=NULL);
+	void AnalyseMsg(int64 SpaceID,const char* Comment=NULL);
 
 	//检查输入的逻辑是否可以执行
 	bool CanBeExecute(CLogicDialog* Dialog);
@@ -234,19 +235,19 @@ public:
 
 	void  SetForecast(CLogicDialog* Dialog,TextType Type,void* Text);
 
-	struct  ForecastRoom{
-		ForecastRoom*                      Parent;         //父空间
+	struct  ForecastSpace{
+		ForecastSpace*                      Parent;         //父空间
 		int64                              ID;             //本空间是识别ID；
-        tstring							   RoomText;       //回取本空间(不含父空间部分）所得的文本
-        map<int64,ForecastRoom*>::iterator It;             //指出已经递归预测那个子空间
-        map<int64,ForecastRoom*>           ChildList;      //找到的非意义子空间，用来做进一步预测 <意义值,ForecastRoom>
+        tstring							   SpaceText;       //回取本空间(不含父空间部分）所得的文本
+        map<int64,ForecastSpace*>::iterator It;             //指出已经递归预测那个子空间
+        map<int64,ForecastSpace*>           ChildList;      //找到的非意义子空间，用来做进一步预测 <意义值,ForecastSpace>
 		vector<int64>					   MeanlingList;   //已经找到的意义，需要翻译成文本输出
 		
 
-		ForecastRoom():Parent(NULL),ID(0){};
-		ForecastRoom(ForecastRoom* pParent, int64 RoomID):Parent(pParent),ID(RoomID){};
-		~ForecastRoom(){ //递归解构
-			map<int64,ForecastRoom*>::iterator It = ChildList.begin();
+		ForecastSpace():Parent(NULL),ID(0){};
+		ForecastSpace(ForecastSpace* pParent, int64 SpaceID):Parent(pParent),ID(SpaceID){};
+		~ForecastSpace(){ //递归解构
+			map<int64,ForecastSpace*>::iterator It = ChildList.begin();
             while(It != ChildList.end()){
 				delete It->second;
 				It->second = NULL;
@@ -256,19 +257,19 @@ public:
 	};
      
 	int32                   m_ForecastDepth; //default = 20, 应该可以改变
-	ForecastRoom*           m_ForecastRoom; 
+	ForecastSpace*           m_ForecastSpace; 
 	
-	void  GetAllChild(ForecastRoom* ParentRoom);
-	ForecastRoom* GetCurForecastRoom(ForecastRoom* Parent);
+	void  GetAllChild(ForecastSpace* ParentSpace);
+	ForecastSpace* GetCurForecastSpace(ForecastSpace* Parent);
 	void  Forecast(CLogicDialog* Dialog,CToken* Token);
 	void  Forecast(CClause* Clause);
 	void  Forecast(CSentence* Sentence);	
 public:
-	bool  ForecastOK(){ return m_ForecastRoom && m_ForecastRoom->ChildList.size();};
+	bool  ForecastOK(){ return m_ForecastSpace && m_ForecastSpace->ChildList.size();};
 	/*根据空间值得到空间识别ID,没有找到对应的子空间返回0
 	  如果找到，
 	*/
-	int64 GetForecastResult(int64 RoomValue); 
+	int64 GetForecastResult(int64 SpaceValue); 
 	 void ExecuteForecast();
 
 
@@ -334,12 +335,13 @@ public:
 
       BeginPos为m_SentenceList的位置
 	*/
-    int64 LearnParagraph(int32 BeginPos,int32 SentenceNum,int64 Meaning=NULL_MEANING, int64 MeaningSense=MEANING_SENSE_OK,int64 ReturnID = 0);
+    int64	LearnParagraph(int32 BeginPos,int32 SentenceNum,int64 Meaning=NULL_MEANING, int64 MeaningSense=MEANING_SENSE_OK,int64 ReturnID = 0);
 		
 	CToken*    JustOneToken(); //仅含一个token且type = COMMON,不是返回NULL
 	CClause*   JustOneClause(); //仅含一个Clause
 	CSentence* JustOneSentence();
 
+	bool IsFloatNum();
 public:
 	/*通用文字记忆操作，只适用与死记硬背
 	  如果text只是一个token则返回token的记忆ID，
@@ -399,7 +401,7 @@ public:
 	*/
 	int64 LearnInstinctInstance(int64 InstinctID,Energy* Param);	
 
-    int64 LearnLogic(ePipeline* LogicPipe);
+    int64 LearnLogic(CLogicDialog* Dialog,ePipeline* LogicPipe);
 //z    int64 LearnLogic(CGlobalLogicItem* Logic);
 
 	int64  LearnEnergy(Energy* E);
@@ -447,7 +449,7 @@ public:// 仅用于测试
 
 class  CWord{
 public:
-	tstring            m_Text;      
+	tstring           m_Text;      
 	int64             m_ID;           //记忆ID
 
 	uint32            m_AllPart;      //所有候选词性	

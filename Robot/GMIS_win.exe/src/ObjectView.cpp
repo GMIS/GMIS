@@ -1,4 +1,4 @@
-﻿// BrainRoomView.cpp: implementation of the CBrainObjectView class.
+﻿// BrainSpaceView.cpp: implementation of the CBrainObjectView class.
 //
 //////////////////////////////////////////////////////////////////////
 #pragma warning (disable: 4786)
@@ -212,14 +212,14 @@ LRESULT CObjectView::OnClearAll(int64 wParam, int64 lParam){
 
 LRESULT CObjectView::OnFindObject(int64 wParam, int64 lParam){
 	tstring& Name = *(tstring*)wParam;
-	vector<ObjectItem>& RoomList = *(vector<ObjectItem>*)lParam;
+	vector<ObjectItem>& SpaceList = *(vector<ObjectItem>*)lParam;
 
     deque<CVSpace2*>::iterator It = m_ChildList.begin();
 	while (It != m_ChildList.end())
 	{
 	    ObjectItem* Item = (ObjectItem*)(*It);
 		if(_tcsicmp(Item->m_Name.c_str(),Name.c_str())==0){
-			RoomList.push_back(*Item);
+			SpaceList.push_back(*Item);
 		}
 		It++;
 	}
@@ -274,7 +274,7 @@ LRESULT CObjectView::ChildReaction(SpaceRectionMsg* srm){
 
 
 
-void CObjectView::ConnectRoomFail(tstring Reason){
+void CObjectView::ConnectSpaceFail(tstring Reason){
 	ClearAllObject();
 	SetHeaderText(Reason,FALSE);
 }
@@ -293,13 +293,13 @@ void CObjectView::AddObject(int64 ID,tstring& Name,SPACETYPE Type,tstring& Finge
 	else OnAddObject((int64)Item,0);
 };
     
-int32 CObjectView::FindObject(tstring& Name, vector<ObjectItem>& RoomList){
+int32 CObjectView::FindObject(tstring& Name, vector<ObjectItem>& SpaceList){
 	if(GetHwnd()){
-		SendChildMessage(GetHwnd(),OBJECT_FIND,(int64)&Name,(int64)&RoomList);
+		SendChildMessage(GetHwnd(),OBJECT_FIND,(int64)&Name,(int64)&SpaceList);
 	}else{
-	    OnFindObject((int64)&Name,(int64)&RoomList);
+	    OnFindObject((int64)&Name,(int64)&SpaceList);
 	}
-	return RoomList.size();
+	return SpaceList.size();
 }
 
 void CObjectView::DeleteObject(int64 ID){

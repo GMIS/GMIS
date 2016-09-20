@@ -9,76 +9,76 @@
 #include "NotifyMsgDef.h"
 #include "LogicDialog.h"
 
-int64 CLogicThread::GetForecastResult(int64 RoomValue){ //根据空间值得到空间识别ID
-	assert(m_ForecastRoom != NULL);
+int64 CLogicThread::GetForecastResult(int64 SpaceValue){ //根据空间值得到空间识别ID
+	assert(m_ForecastSpace != NULL);
 
-	int64 RoomID = 0;
-	map<int64,ForecastRoom*>::iterator It = m_ForecastRoom->ChildList.find(RoomValue);
-	if(It != m_ForecastRoom->ChildList.end()){
-	    ForecastRoom* Room = It->second;
-		assert(Room != NULL);
-		RoomID = Room->ID;
+	int64 SpaceID = 0;
+	map<int64,ForecastSpace*>::iterator It = m_ForecastSpace->ChildList.find(SpaceValue);
+	if(It != m_ForecastSpace->ChildList.end()){
+	    ForecastSpace* Space = It->second;
+		assert(Space != NULL);
+		SpaceID = Space->ID;
 		//替换一个无用的ROOM，避免解构时无物可Delete
-		ForecastRoom* Empty = new ForecastRoom();
+		ForecastSpace* Empty = new ForecastSpace();
 		It->second = Empty;
         
 		//合并文本
-		Room->RoomText = m_ForecastRoom->RoomText + Room->RoomText;
-        Room->Parent   = NULL;
+		Space->SpaceText = m_ForecastSpace->SpaceText + Space->SpaceText;
+        Space->Parent   = NULL;
 		//删除旧的预测空间
-		delete m_ForecastRoom;		
+		delete m_ForecastSpace;		
 		
-		m_ForecastRoom = Room; //新的预测空间为当前选中的子空间,以便能继续预测
+		m_ForecastSpace = Space; //新的预测空间为当前选中的子空间,以便能继续预测
 	}
-	return RoomID;	
+	return SpaceID;	
 }
 	
-void  CLogicThread::GetAllChild(ForecastRoom* ParentRoom)
+void  CLogicThread::GetAllChild(ForecastSpace* ParentSpace)
 {
-	   assert(ParentRoom != NULL);
+	   assert(ParentSpace != NULL);
 
 	   CppSQLite3Buffer SQL;
 	   CppSQLite3Query  Result;
        char a[30];
       
-	   ParentRoom->ChildList.clear();
-	   ParentRoom->MeanlingList.clear();
+	   ParentSpace->ChildList.clear();
+	   ParentSpace->MeanlingList.clear();
 
-       if(!RBrainHasTable(ParentRoom->ID))return;
+       if(!RBrainHasTable(ParentSpace->ID))return;
 	   
-	   ToRBrain(ParentRoom->ID);
-	   int64toa(ParentRoom->ID,a);
+	   ToRBrain(ParentSpace->ID);
+	   int64toa(ParentSpace->ID,a);
 	   SQL.format("select *  from \"%s\" ;",a);
 	   Result = BrainDB.execQuery(SQL);
        
 	   while(!Result.eof())
 	   {
-		   int64 RoomID = Result.getInt64Field(0);
-		   int64 RoomValue = Result.getInt64Field(1);
+		   int64 SpaceID = Result.getInt64Field(0);
+		   int64 SpaceValue = Result.getInt64Field(1);
            int64 Type = Result.getInt64Field(2);
 
-		   if(IsMeaningRoom(Type)){
-			   ParentRoom->MeanlingList.push_back(RoomValue);
+		   if(IsMeaningSpace(Type)){
+			   ParentSpace->MeanlingList.push_back(SpaceValue);
 		   }
 		   else if(Type == MEMORY_BODY){
-			   ForecastRoom* ChildRoom = new ForecastRoom(ParentRoom,RoomID);
-			   ParentRoom->ChildList[RoomValue] = ChildRoom; 	
+			   ForecastSpace* ChildSpace = new ForecastSpace(ParentSpace,SpaceID);
+			   ParentSpace->ChildList[SpaceValue] = ChildSpace; 	
 		   }
 		   Result.nextRow();
 	   }
 }
 
 //深度优先，如果穷尽，则返回Parent尝试下一个
-CLogicThread::ForecastRoom* CLogicThread::GetCurForecastRoom(ForecastRoom* Parent){
+CLogicThread::ForecastSpace* CLogicThread::GetCurForecastSpace(ForecastSpace* Parent){
     if(Parent->MeanlingList.size())return Parent; 
 	if(Parent->ChildList.size()){
 		if(Parent->It != Parent->ChildList.end())
-			return GetCurForecastRoom(Parent->It->second);
+			return GetCurForecastSpace(Parent->It->second);
 		else {
 			Parent = Parent->Parent;
 			if(Parent){
 				Parent->It++;
-				return GetCurForecastRoom(Parent);
+				return GetCurForecastSpace(Parent);
 			}
 			else return NULL;
 		}
@@ -93,8 +93,8 @@ void CLogicThread::ExecuteForecast(){
          return;
 
 	//此时处理有两种情况：
-	// 1 准备预测 m_ForecastRoom == NULL;
-	// 2 继续预测 m_ForecastRoom != NULL;
+	// 1 准备预测 m_ForecastSpace == NULL;
+	// 2 继续预测 m_ForecastSpace != NULL;
 	switch(m_ForecastType){
 	case TOKEN:
 		Forecast((CToken*)m_ForecastText);
@@ -112,9 +112,9 @@ void CLogicThread::ExecuteForecast(){
 void  CLogicThread::SetForecast(CLogicDialog* Dialog,TextType Type,void* Text){ 
 	
 	if(m_ForecastText != Text || m_ForecastType != Type){ 
-		if(m_ForecastRoom){
-			delete m_ForecastRoom;
-		    m_ForecastRoom = NULL;
+		if(m_ForecastSpace){
+			delete m_ForecastSpace;
+		    m_ForecastSpace = NULL;
 		}
 	}
 	m_ForecastType = Type;
@@ -131,7 +131,7 @@ void  CLogicThread::SetForecast(CLogicDialog* Dialog,TextType Type,void* Text){
 
 void CLogicThread::Forecast(CLogicDialog* Dialog,CToken* Token){
 
-	if(m_ForecastRoom == NULL){
+	if(m_ForecastSpace == NULL){
 		if(Token->isPunct()){ 
             return;  
 		}
@@ -140,9 +140,9 @@ void CLogicThread::Forecast(CLogicDialog* Dialog,CToken* Token){
 			return;
 		}
 		else{ //token正确			assert(Token->m_Type == COMMON);
-			m_ForecastRoom = new ForecastRoom;
-			m_ForecastRoom->ID = Token->m_MemoryID;
-			m_ForecastRoom->RoomText = Token->m_Str;
+			m_ForecastSpace = new ForecastSpace;
+			m_ForecastSpace->ID = Token->m_MemoryID;
+			m_ForecastSpace->SpaceText = Token->m_Str;
 		}
 
 		CNotifyDialogState nf(NOTIFY_DIALOG_OUTPUT);
@@ -153,32 +153,32 @@ void CLogicThread::Forecast(CLogicDialog* Dialog,CToken* Token){
 	}
 	
 	//深度预测所有可能
-	//找到当前正在处理那个嵌套ForecastRoom
-	ForecastRoom* CurRoom = GetCurForecastRoom(m_ForecastRoom);
-	if(CurRoom == NULL)return;
+	//找到当前正在处理那个嵌套ForecastSpace
+	ForecastSpace* CurSpace = GetCurForecastSpace(m_ForecastSpace);
+	if(CurSpace == NULL)return;
 
 
 	//得到本空间文本，以便随后childi能组装意义的文本
-	if(CurRoom->RoomText.size() ==0){
-	    assert(CurRoom != m_ForecastRoom);
+	if(CurSpace->SpaceText.size() ==0){
+	    assert(CurSpace != m_ForecastSpace);
 		//得到本空间文本,对于Token总是字符
-		int64 RoomID = CurRoom->Parent->It->first; //=此空间的Meaning
-	    int64 ch = IDToChar(RoomID);
+		int64 SpaceID = CurSpace->Parent->It->first; //=此空间的Meaning
+	    int64 ch = IDToChar(SpaceID);
 		assert(ch<255);
-		CurRoom->RoomText = (TCHAR)ch;
+		CurSpace->SpaceText = (TCHAR)ch;
 		return;		
 	}
 	
 	//把已经得到的意义空间全部回取成文本
-	if(CurRoom->MeanlingList.size()){
+	if(CurSpace->MeanlingList.size()){
 		//取出一个，返回其文本
 		//int64 MeaningID = Parent->MeanlingList.back();
-        CurRoom->MeanlingList.pop_back();
+        CurSpace->MeanlingList.pop_back();
 
 		tstring Word;				
-		while(CurRoom){ //向父空间漫游回取完整的文本
-			Word = CurRoom->RoomText+Word;
-			CurRoom = CurRoom->Parent;
+		while(CurSpace){ //向父空间漫游回取完整的文本
+			Word = CurSpace->SpaceText+Word;
+			CurSpace = CurSpace->Parent;
 		}
 		if(Word.size()){
 			CNotifyDialogState nf(NOTIFY_DIALOG_OUTPUT);
@@ -191,17 +191,17 @@ void CLogicThread::Forecast(CLogicDialog* Dialog,CToken* Token){
 	
  
     //继续往深处挖掘 			
-	assert(CurRoom->ChildList.size() == 0 && CurRoom->MeanlingList.size()==0);
+	assert(CurSpace->ChildList.size() == 0 && CurSpace->MeanlingList.size()==0);
 	
 	//得到Token->m_MemoryID的所有子空间  
-	GetAllChild(CurRoom);
-	if(CurRoom->ChildList.size()){
-		CurRoom->It = CurRoom->ChildList.begin();
+	GetAllChild(CurSpace);
+	if(CurSpace->ChildList.size()){
+		CurSpace->It = CurSpace->ChildList.begin();
 	}
 	else {//表示当前空间没有子空间，虚置一个表示结尾
-		ForecastRoom* Empty = new ForecastRoom();
-		CurRoom->ChildList[0] = Empty;
-		CurRoom->It = CurRoom->ChildList.end(); //表示已经处理过			
+		ForecastSpace* Empty = new ForecastSpace();
+		CurSpace->ChildList[0] = Empty;
+		CurSpace->It = CurSpace->ChildList.end(); //表示已经处理过			
 	}
 	return;
 };

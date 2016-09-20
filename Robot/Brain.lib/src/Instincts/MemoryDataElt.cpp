@@ -1,5 +1,7 @@
-#include "MemoryDataElt.h"
+
+#include "..\Brain.h"
 #include "..\LogicDialog.h"
+#include "MemoryDataElt.h"
 
 bool  CCreateMemory::TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){ 
 

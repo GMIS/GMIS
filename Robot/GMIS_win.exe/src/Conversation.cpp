@@ -828,7 +828,7 @@ void  CConversation::SetCurTaskState(TASK_STATE State)
 	IOViewToolbarA* Toolbar1 = (IOViewToolbarA*)GetToolbar(0);
 	
     if(State == TASK_PAUSE){
-		ShowView(LOGIC_VIEW,FALSE);
+		/*ShowView(LOGIC_VIEW,FALSE);
 		ShowView(OBJECT_VIEW,FALSE);
 		ShowView(FIND_VIEW,FALSE);
 
@@ -837,7 +837,8 @@ void  CConversation::SetCurTaskState(TASK_STATE State)
 
 		Toolbar1->AddBnt(&Toolbar1->m_BntDialog);
 		Toolbar1->AddBnt(&Toolbar1->m_BntOutput);
-		Toolbar1->AddBnt(&Toolbar1->m_BntMemory);
+		Toolbar1->AddBnt(&Toolbar1->m_BntMemory);*/
+
 		Toolbar1->AddBnt(&Toolbar1->m_BntDebug);
 
 	}
@@ -1197,32 +1198,32 @@ void   CConversation::FindViewProc(ePipeline& Info){
 				case LOGIC_RESULT:
 					{
 						int64 n = Item.PopInt();
-						int64 RoomID = Item.PopInt();
+						int64 SpaceID = Item.PopInt();
 						tstring Text;
 						Item.PopString(Text);
 						tstring Memo;
 						Item.PopString(Memo);
-						m_OutputWin.m_FindView.AddCommandOrLogic(n,RoomID,Text.c_str(),Memo.c_str());
+						m_OutputWin.m_FindView.AddCommandOrLogic(n,SpaceID,Text.c_str(),Memo.c_str());
 					}
 					break;
 				case OBJECT_RESULT:
 					{
 						int64 n = Item.PopInt();
-						int64 RoomID = Item.PopInt();
+						int64 SpaceID = Item.PopInt();
 						tstring Text;
 						Item.PopString(Text);
 						tstring Memo;
 						Item.PopString(Memo);
-						m_OutputWin.m_FindView.AddObjectOrPeople(n, RoomID,Text.c_str(),Memo.c_str());
+						m_OutputWin.m_FindView.AddObjectOrPeople(n, SpaceID,Text.c_str(),Memo.c_str());
 					}
 					break;
 				case TEXT_RESULT:
 					{
 						int64 n = Item.PopInt();
-						int64 RoomID = Item.PopInt();
+						int64 SpaceID = Item.PopInt();
 						tstring Text;
 						Item.PopString(Text);
-						m_OutputWin.m_FindView.AddText(n,RoomID,Text.c_str());
+						m_OutputWin.m_FindView.AddText(n,SpaceID,Text.c_str());
 					}
 					break;
 				default:

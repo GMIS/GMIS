@@ -63,22 +63,22 @@ enum STATE_OUTPUT_LEVEL{
 //output level:
  
 //1 NORMAL_LEVEL
-#define LINKER_BEGIN_ERROR_STATE  101  //linker will be in error state If there is any error occurred when a received string is compiled into msg
-#define LINKER_END_ERROR_STATE    102  //Inform the linker to exit the error state and resume receiving information
-#define LINKER_INVALID_ADDRESS  103  
-#define LINKER_ILLEGAL_MSG      104
-#define LINKER_EXCEPTION_ERROR  106
-#define LINKER_IO_ERROR         107
-#define LINKER_CONNECT_ERROR    108
-#define LINKER_CREATE_ERROR     109
+#define LINKER_BEGIN_ERROR_STATE	101  //linker will be in error state If there is any error occurred when a received string is compiled into msg
+#define LINKER_END_ERROR_STATE		102  //Inform the linker to exit the error state and resume receiving information
+#define LINKER_INVALID_ADDRESS		103  
+#define LINKER_ILLEGAL_MSG			104
+#define LINKER_EXCEPTION_ERROR		106
+#define LINKER_IO_ERROR				107
+#define LINKER_CONNECT_ERROR		108
+#define LINKER_CREATE_ERROR			109
 //2 LIGHT_LEVEL
-#define LINKER_PUSH_MSG         200  //Pushes a message to be sent and reports the current delivery status
-#define LINKER_MSG_SENDED       201  //A message has been sent
-#define LINKER_MSG_RECEIVED     202  //A message has been received
+#define LINKER_PUSH_MSG				200  //Pushes a message to be sent and reports the current delivery status
+#define LINKER_MSG_SENDED			201  //A message has been sent
+#define LINKER_MSG_RECEIVED			202  //A message has been received
 
 //3 WEIGHT_LEVEL
-#define LINKER_RECEIVE_STEP     300  //Report receiving progress and data
-#define LINKER_SEND_STEP        301  //Report Sending progress
+#define LINKER_RECEIVE_STEP			300  //Report receiving progress and data
+#define LINKER_SEND_STEP			301  //Report Sending progress
   
 
 enum SendState{ 
@@ -160,7 +160,6 @@ public:
 	friend  class CLinker;
 private:
 		int32                m_UseCounter;    //For Linker reference counting, when there are other threads to use it to avoid being deleted
-
 protected:
 	
 		int64                m_SourceID;         
@@ -254,6 +253,7 @@ public:
 	void   SetSourceID(int64 SourceID);
 	int64  GetSourceID();
 
+
 	LinkerType GetLinkerType(){
 		return m_LinkerType;
 	}
@@ -282,9 +282,6 @@ public:
 
 	//Stop send current message, must be locked  before calling it
 	void BreakSend();   
-
-	void SwitchDebugMode(bool open);
-	void SetDebugStep(int32 Step);
 
     //To achieve specific IO processing here, called by host thread
 	virtual bool  ThreadIOWorkProc(char* Buffer,uint32 BufSize);

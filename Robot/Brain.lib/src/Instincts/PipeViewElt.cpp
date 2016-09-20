@@ -1,5 +1,6 @@
-#include "PipeViewElt.h"
+#include "..\Brain.h"
 #include "..\LogicDialog.h"
+#include "PipeViewElt.h"
 
 void CPipeViewMass::PrintView(ePipeline& Result,ePipeline& Pipe)
 {

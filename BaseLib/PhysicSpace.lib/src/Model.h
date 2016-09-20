@@ -66,7 +66,8 @@ enum Log_Flag{
 	LOG_ERROR                 =0x00000400,
 	LOG_WARNING               =0x00000800,
 	LOG_TIP                   =0x00001000,
-	LOG_EXCEPTION             =0x00002000
+	LOG_EXCEPTION             =0x00002000,
+	LOG_EVENT_TICK            =0x00004000,
 };
 
 
@@ -88,8 +89,6 @@ class CThreadWorker : public Object{
 public:	
 	Model*     m_Parent;
 	int32      m_WorkType;
-	int64      m_IdleCount;
-
 protected:
 	//handling for  network IO
 	void ModelIOWorkProc();
@@ -115,19 +114,16 @@ public:
 	CSuperiorLinkerList();
 	~CSuperiorLinkerList();	
 
-	int32  GetLinkerNum();
-	virtual void CreateLinker(CLinker& Linker,Model* Parent,int64 SourceID,ePipeline& Param);
+	int32			GetLinkerNum();
 
-	void   AddLinker(CLinkerPipe* Linker); 
-    
-	virtual bool   DeleteLinker(int64 SourceID);  
-	
-	bool   HasLinker(const AnsiString& Address,const int32 Port);
+	void			AddLinker(CLinkerPipe* Linker); 
+	void			GetLinker(int64 SourceID,CLinker& Linker);
+	bool			HasLinker(const AnsiString& Address,const int32 Port);
 
-	void   GetLinker(int64 SourceID,CLinker& Linker);
-
-	virtual void   PopLinker(CLinker& Linker);   //pop one ClinkerPipe using by io thread
-	virtual void  ReturnLinker(CLinker& Linker);  //the io thread exited and return the CLinkerPipe to LinkerList
+	virtual bool	DeleteLinker(int64 SourceID);  
+	virtual void	CreateLinker(CLinker& Linker,Model* Parent,int64 SourceID,ePipeline& Param);
+	virtual void	PopLinker(CLinker& Linker);   //pop one ClinkerPipe using by io thread
+	virtual void	ReturnLinker(CLinker& Linker);  //the io thread exited and return the CLinkerPipe to LinkerList
 
 };
 
@@ -141,32 +137,38 @@ public:
 		uint32                           m_NerveMsgMaxNumInPipe;   //if the amount of  messages in pipe more than it,considering to generate a new processing thread,default = 10
 		int64                            m_NerveMsgMaxInterval;    //if the time interval of the last popped message was greater than it,considering to generate a new processing thread,default=10*1000*1000(the unit is hundred of nanoseconds, or 1 second)
 		
-
 		map<int64,CThreadWorker*>        m_CentralNerveWorkerList;  
 		uint32                           m_MaxNerveWorkerNum;      //Allowed maximum number of threads to process central nerve msg， default=20
-		uint32                           m_NerveIdleMaxCount;	   //If the count of idle of the thread exceed this number, the thread will exit,default=30
+		int64                            m_NerveIdleMaxInterval;   //If the idle interval  of the thread exceed this number, the thread will exit,default = 5 second
 
 		map<int64,CThreadWorker*>		 m_ModelIOWorkerList;       //for connecting to the server
 
 		deque<CThreadWorker*>            m_ThreadWorkerPool;
+
+		uint32                           m_NerveWorkingNum; 
+
 	public:
 		CLockedModelData();
 		~CLockedModelData();
        
 		void    Clear();
 
-		int64   GetNerveMsgInterval();
-		void    SetNerveMsgInterval(int32 n);
+		void    IncreNerveWorkerCount();
+		void    DecreNerveWorkerCount();
+		int32   GetBusyNerveWorkerNum();
+		int32   GetIdleWorkerNum(); //GetNerveWorkerNum()-GetBusyNerveWorkerNum();
 
-		int32	GetNerveMaxIdleCount();
-		void	SetNerveMaxIdleCount(int32 n);
-		
-		int32   GetCentralNerveWorkerNum();
-								
+		int64   GetNerveMsgInterval();
+		int64	GetNerveMaxIdleInterval();
+		void	SetNerveMaxIdleInterval(int32 second);
+		void    SetNerveMsgInterval(int32 n);	
+		void    SetMaxNerveWorkerNum(int32 n);
+
+		int32   GetCentralNerveWorkerNum();								
 		int32   GetIOWorkerNum();
 
 		CThreadWorker* CreateThreadWorker(int64 ID,Model* Parent,int32 Type);
-		void   DeleteThreadWorker(Model* Parent,int64 ID,int32 Type);
+		void    DeleteThreadWorker(Model* Parent,int64 ID,int32 Type);
 		
 		void    WaitAllWorkerThreadClosed(Model* Parent);
 		bool    RequestCreateNewCentralNerveWorker(uint32 MsgNum,int64 Interval,uint32& Reason); 
@@ -184,53 +186,53 @@ protected:
 	CSuperiorLinkerList  m_SuperiorList;               
 	CLockedModelData     m_ModelData;
 	
-	int32          m_nCPU;       //default = 2
-	uint32         m_LogFlag;    //default = 0
-	bool           m_bAutoWork;  //auto create CThreadWorker in Activate() to run Do(Energy* e), default =  true;
+	int32				 m_nCPU;       //default = 2
+	uint32				 m_LogFlag;    //default = 0
+	bool				 m_bAutoWork;  //auto create CThreadWorker in Activate() to run Do(Energy* e), default =  true;
 
 	/*
-	Detecting the state to determine whether system need to increase Workers (threads)，
+	Detecting the state to determine whether system need to increase workers (threads)，
 	called by the PushCentralNerveMsg;
 	*/
-	virtual BOOL  CreateCentralNerveWorkerStrategy(int64 NewMsgPushTime,int64 LastMsgPopTime);
+	virtual BOOL	     CreateCentralNerveWorkerStrategy(int64 NewMsgPushTime,int64 LastMsgPopTime);
 
 public:
     Model(CUserTimer* Timer,CUserSpacePool* Pool);
 	virtual ~Model();
 
-	virtual MASS_TYPE  MassType(){ return MASS_MODEL;};
-    virtual bool	   Activate();
-	virtual void       Dead();
+	virtual MASS_TYPE   MassType(){ return MASS_MODEL;};
+    virtual bool	    Activate();
+	virtual void        Dead();
 	
 		
-	void    SetLogFlag(uint32 flag);
-	uint32  GetLogFlag();	
-	int32   GetCpuNum();
+	void				SetLogFlag(uint32 flag);
+	uint32				GetLogFlag();	
+	int32				GetCpuNum();
 
-	virtual void    CentralNerveMsgProc(CMsg& Msg)=0;
+	virtual void		CentralNerveMsgProc(CMsg& Msg)=0;
 
 	//Type = OUTPUT_TEXT...if(Type&m_LogOutFlag)then output
-	virtual void    OutputLog(uint32 Flag,const wchar_t* text)=0;
+	virtual void		OutputLog(uint32 Flag,const wchar_t* text)=0;
 	
-	virtual tstring MsgID2Str(int64 MsgID)=0;
+	virtual tstring		MsgID2Str(int64 MsgID)=0;
 
 
 	// note: Linker already in locked state
-	virtual void       NotifyLinkerState(int64 SourceID,int64 NotifyID,STATE_OUTPUT_LEVEL Flag,ePipeline& Info)=0;
+	virtual void        NotifyLinkerState(int64 SourceID,int64 NotifyID,STATE_OUTPUT_LEVEL Flag,ePipeline& Info)=0;
 	
-	virtual void       NotifySysState(int64 NotifyType,int64 NotifyID,ePipeline* Data);
+	virtual void        NotifySysState(int64 NotifyType,int64 NotifyID,ePipeline* Data);
 
 
-    CSuperiorLinkerList* GetSuperiorLinkerList();
-	CLockedModelData*    GetModelData();
+    CSuperiorLinkerList*GetSuperiorLinkerList();
+	CLockedModelData*   GetModelData();
 
 	//it call CentralNerveWorkStrategy() after pushing the message into central nerve 
 	//bDirectly meant directly return when the msg pushed the queue without checking and starting work thread
-	void			   PushCentralNerveMsg(CMsg& Msg,bool bUrgenceMsg,bool bDirectly);
-	void			   PopCentralNerveMsg(CMsg& Msg);
+	void				PushCentralNerveMsg(CMsg& Msg,bool bUrgenceMsg,bool bDirectly);
+	void				PopCentralNerveMsg(CMsg& Msg);
 
-	int32			   GetCentralNerveMsgNum();
-	void			   GetCentralNerveMsgList(ePipeline& Pipe);
+	int32				GetCentralNerveMsgNum();
+	void				GetCentralNerveMsgList(ePipeline& Pipe);
 
 	//allows to connect several servers at same time,  the same address and port will be ignored 
     /* Connect to a specified address, the address data that was in Pipe depend on the connection type
@@ -246,13 +248,13 @@ public:
 		|             <----MSG_CONNECT_OK-------       | Accept
 		|				<----MSG_DICCONNECT--------	   | Or refuse  	
     */
-	bool Connect(int64 ID,AnsiString Address,int32 Port,int32 TimeOut,tstring& error,bool bBlock);
+	bool				Connect(int64 ID,AnsiString Address,int32 Port,int32 TimeOut,tstring& error,bool bBlock);
 
 	//default central nerve worker
-	virtual bool Do(Energy* E);
+	virtual bool		Do(Energy* E);
 	
 	//used for internal testing purposes only
-	virtual void UnitTest();
+	virtual void		UnitTest();
 };
 
 }// namespace PHYSIC

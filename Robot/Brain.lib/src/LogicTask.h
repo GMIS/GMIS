@@ -10,6 +10,7 @@
 
 #include "PhysicSpace.h"
 #include "Element.h"
+#include "BrainSysTask.h"
 
 #include <map>
 #include <set>
@@ -58,7 +59,7 @@ protected:
 	
 public:
 
-	CLogicTask();
+	CLogicTask(int64 MassCount=0);
 	CLogicTask(CLogicTask* Parent);
 	CLogicTask(int64 TaskID,int64 UserDialogID);
 	virtual ~CLogicTask();
@@ -77,10 +78,13 @@ public:
 
 	CLogicTask* GetRootTask();
 
-	
+	void CompileSysTask(SysTaskType Task, tstring TaskName,ePipeline& Param);
+
 	bool Compile(CLogicDialog* Dialog,ePipeline* Sentence);
 	CElement* CompileSentence(CLogicDialog* Dialog,tstring& LogicText,ePipeline* Sentence);
 	CElement* CompileSentenceForTest(CLogicDialog* Dialog,tstring& LogicText,ePipeline* Sentence);
+	CElement* CompileSentenceFromMemory(CLogicDialog* Dialog,ePipeline* Sentence);
+
 	bool CompileOK(){ return m_ActomList.size() !=0;};
 
 	CLogicTask& operator<<(CLogicTask& Task);

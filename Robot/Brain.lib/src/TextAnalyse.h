@@ -8,9 +8,9 @@
 #ifndef _TEXTANALYSE_H__
 #define _TEXTANALYSE_H__
 
-
 #include "AbstractSpace.h"
-#include "Element.h"
+#include "Energy.h"
+#include "MsgList.h"
 
 
 #define  ERROR_0          0 //"input not completed"

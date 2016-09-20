@@ -17,6 +17,9 @@
 
 #define _LinkDLL __declspec(dllexport)
 
+#ifdef _MSC_VER
+#define EXECUTER_TYPE 1000
+#endif
 /*
 使用方法：
   - 首先用一个类来封装自己想要的功能。
@@ -40,36 +43,12 @@ extern "C"  _LinkDLL void _cdecl  DestroyObject(Mass* p){
 	delete p;
 	p = NULL;
 }
-extern "C"  _LinkDLL DLL_TYPE _cdecl GetDllType(){
+extern "C"  _LinkDLL int _cdecl GetDllType(){
 	//不同的返回值帮助决定不同的C运行时库
 #ifdef _DEBUG
-
-#if _MSC_VER<1300
-	return DLL_VC6D;
-#elif _MSC_VER<1400
-	return DLL_VC7D;
-#elif _MSC_VER<1500
-	return DLL_VC8D;
-#elif _MSC_VER<1600
-	return DLL_VC9D;
-#elif _MSC_VER<1700
-	return DLL_VC10D;
-#endif
-
+	return EXECUTER_TYPE+1;	
 #else
-
-#if _MSC_VER<1300
-	return DLL_VC6;
-#elif _MSC_VER<1400
-	return DLL_VC7;
-#elif _MSC_VER<1500
-	return DLL_VC8;
-#elif _MSC_VER<1600
-	return DLL_VC9;
-#elif _MSC_VER<1700
-	return DLL_VC10;
-#endif
-
+	return EXECUTER_TYPE;
 #endif
 } 
 

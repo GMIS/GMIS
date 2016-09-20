@@ -61,11 +61,11 @@ public:
 	void DeleteItem(int64 ID); 
 	void ClearAllItem();
 	
-    void  ConnectRoomFail(tstring Reason);
+    void  ConnectSpaceFail(tstring Reason);
 	void  SetHeaderText(tstring Title,BOOL Enable=TRUE);
 	void  AddObject(int64 ID,tstring& Name,SPACETYPE Type,tstring& Fingerprint,HICON hIcon);
 	void  DeleteObject(int64 ID); 
-    int32 FindObject(tstring& Name, vector<ObjectItem>& RoomList);
+    int32 FindObject(tstring& Name, vector<ObjectItem>& SpaceList);
 	void  ClearAllObject();
 
 	virtual void    Layout(bool Redraw =true);

@@ -95,6 +95,7 @@ public:
 	COLORREF crTaskMassBk;     
 	COLORREF crTaskMassPause;
     COLORREF crTaskMassBreak;
+	COLORREF crTaskMassDeleted;
 
 	HANDLE     m_imgRun;
 	HANDLE     m_imgPause;

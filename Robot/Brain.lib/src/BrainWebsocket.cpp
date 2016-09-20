@@ -1,5 +1,6 @@
-#include "BrainWebsocket.h"
 #include "Brain.h"
+#include "BrainWebsocket.h"
+
 
 void WebSocketRequestHandler::handleRequest(HTTPServerRequest& request, HTTPServerResponse& response)
 {

@@ -36,6 +36,8 @@ public:
 	virtual tstring GetName(){ return m_Name;};
 	virtual TypeAB GetTypeAB(){ return 0x00000000;}
 
+	bool DoOpen(ePipeline& ExePipe);
+
 	virtual bool Do(Energy* E);
 	
 	/*如果Object的执行依赖其内部状态信息则应该实现下面两个函数来实现初始化

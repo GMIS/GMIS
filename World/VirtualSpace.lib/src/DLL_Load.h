@@ -16,7 +16,7 @@
 typedef Mass*          (*pGetObjectFunc)(std::wstring Name,int64 ID);
 typedef void           (*pDeleteObjectFunc)(Mass* p);
 typedef const TCHAR*   (*pGetObjectDocFunc)();
-typedef const DLL_TYPE (*pGetObjectType)();
+typedef const int32    (*pGetObjectType)();
 
 
 //程序完成后自动释放dll,

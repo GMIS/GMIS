@@ -112,7 +112,7 @@ public:
 	virtual ~CImportMemory(){
 	};
 
-	virtual TypeAB  GetTypeAB(){ return 0x10000000;};	
+	virtual TypeAB  GetTypeAB(){ return PARAM_TYPE1(TYPE_INT);};	
 	virtual bool TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
 };
 
@@ -126,7 +126,7 @@ public:
 	virtual ~CExportMemory(){
 	};
 
-	virtual TypeAB  GetTypeAB(){ return 0x10000000;};	
+	virtual TypeAB  GetTypeAB(){ return PARAM_TYPE1(TYPE_INT);};	
 	virtual bool TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
 };
 
@@ -141,7 +141,7 @@ public:
 
 	virtual ~CGetMemory(){};
 
-	virtual TypeAB  GetTypeAB(){ return 0x10000000;};
+	virtual TypeAB  GetTypeAB(){ return PARAM_TYPE1(TYPE_INT);};
 
 	virtual bool TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
 
@@ -171,7 +171,7 @@ public:
 	virtual ~CInsertMemory(){
 	};
 
-	virtual TypeAB  GetTypeAB(){ return 0x10000000;};	
+	virtual TypeAB  GetTypeAB(){ return PARAM_TYPE1(TYPE_INT);};	
 	virtual bool TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
 };
 
@@ -186,7 +186,7 @@ public:
 	virtual ~CModifyMemory(){
 	};
 
-	virtual TypeAB  GetTypeAB(){ return 0x10000000;};	
+	virtual TypeAB  GetTypeAB(){ return PARAM_TYPE1(TYPE_INT);};	
 	virtual bool TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
 };
 
@@ -199,7 +199,7 @@ public:
 
 	virtual ~CRemoveMemory(){};
 
-	virtual TypeAB  GetTypeAB(){ return 0x10000000;};
+	virtual TypeAB  GetTypeAB(){ return PARAM_TYPE1(TYPE_INT);};
 
 	virtual bool TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
 

@@ -18,7 +18,7 @@ std::wstring UTF8_To_UTF16(const std::string &source)
 	}  
 	catch (std::range_error &e)  
 	{  
-		return std::wstring();  
+		return std::wstring(_T("UTF8_To_UTF16 error"));  
 	}
 
 }  
@@ -32,7 +32,7 @@ std::string UTF16_To_UTF8(const std::wstring &source)
 	}  
 	catch (std::range_error &)  
 	{  
-		return std::string();  
+		return std::string("UTF16_To_UTF8 error");  
 	}  
 }  
 

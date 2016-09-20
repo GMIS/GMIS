@@ -33,16 +33,16 @@ People& GetHost(People* p){
 	return *__Host;
 };
 
-ROOM_SPACE& GetRootRoom(ROOM_SPACE* r){
-	static ROOM_SPACE*	__RootRoom = NULL;
+ROOM_SPACE& GetRootSpace(ROOM_SPACE* r){
+	static ROOM_SPACE*	__RootSpace = NULL;
 	if(r){
-		__RootRoom = r;
-	}else if (__RootRoom && !__RootRoom->IsValid())
+		__RootSpace = r;
+	}else if (__RootSpace && !__RootSpace->IsValid())
 	{
-		__RootRoom->Load(ROOT_SPACE, LOCAL_SPACEID);
+		__RootSpace->Load(ROOT_SPACE, LOCAL_SPACEID);
 	}
-    assert (__RootRoom != NULL);
-	return *__RootRoom;
+    assert (__RootSpace != NULL);
+	return *__RootSpace;
 }
 
 
@@ -477,7 +477,9 @@ bool SpaceAddress::operator == (const SpaceAddress Address){
 };
 
 //////////////////////////////////////////////////////////////////////////
+CObjectData::CObjectData():m_ID(-1){
 
+}
 CObjectData::CObjectData(ePipeline& ObjectData){
 	assert (ObjectData.Size()==5);
 	
@@ -487,7 +489,7 @@ CObjectData::CObjectData(ePipeline& ObjectData){
 	m_Fingerprint = *(tstring*)ObjectData.GetData(2);
 	ePipeline* Path = (ePipeline*)ObjectData.GetData(3);
 	m_Address << *Path;
-	m_ExecuterType  = (DLL_TYPE)*(int64*)ObjectData.GetData(4);
+	m_ExecuterType  = *(int64*)ObjectData.GetData(4);
 }
 CObjectData& CObjectData::operator =(const CObjectData& ob){
 	if(this != &ob){
@@ -501,7 +503,7 @@ CObjectData& CObjectData::operator =(const CObjectData& ob){
 	return *this;
 }
 
-ePipeline* CObjectData::GetItemData(){
+ePipeline* CObjectData::Clone(){
 	
 	ePipeline* Item = new ePipeline(m_ID);
 	Item->PushString(m_Name);
@@ -718,7 +720,7 @@ SpaceAddress CSpace::GetAddress(){
 
 
 void CSpace::CreateDefaultOwnerInfo(ePipeline& Pipe){
-	Pipe.PushInt(NO_RIGHT);
+	Pipe.PushInt(FREE);
     ePipeline Empty;
 	Pipe.PushPipe(Empty);
 }
@@ -727,7 +729,7 @@ void CSpace::CreateDefaultOwner(ePipeline& Pipe)
 {
     tstring  Name = _T("Unkown");
 	tstring  Cryptograhp = _T("");
-	SPACE_RIGHT  Right = NO_RIGHT;
+	SPACE_RIGHT  Right = FREE;
     tstring  Email = _T("Unkown");
     tstring  Memo = _T("Unkown");
    
@@ -978,7 +980,7 @@ void ROOM_SPACE::DeleteOwner(People& p)
 bool  ROOM_SPACE::AllowInto(People& p){
 	if (!IsValid())
 	{
-		return false;
+		return UNKOWN;
 	}
 
     //如果已经在此空间则直接返回
@@ -988,7 +990,7 @@ bool  ROOM_SPACE::AllowInto(People& p){
 
 
 	ePipeline& OwnerInfo = GetOwnerInfo();
-	SPACE_RIGHT RoomRight = *(SPACE_RIGHT*)OwnerInfo.GetData(REG_RIGHT);
+	SPACE_RIGHT SpaceRight = *(SPACE_RIGHT*)OwnerInfo.GetData(REG_RIGHT);
 
 	ePipeline& OwnerList = *(ePipeline*)OwnerInfo.GetData(REG_OWNER_LIST);
 
@@ -999,7 +1001,7 @@ bool  ROOM_SPACE::AllowInto(People& p){
 		if (Cryptograph == p.m_Cryptograhp)
 		{
 			SPACE_RIGHT Right = *(SPACE_RIGHT*)Owner->GetData(1);
-			if(Right >= RoomRight){
+			if(Right >= SpaceRight){
 				return true;
 			}
 			break;
@@ -1009,12 +1011,10 @@ bool  ROOM_SPACE::AllowInto(People& p){
     //访问者不是固定注册的拥有者，但只要当前空间不禁止参观也可以进入
 	bool Allow = false;
 
-	return Allow;
-	
 	//以下以后再实现
-	switch(RoomRight)
+	switch(SpaceRight)
 	{
-	case NO_RIGHT:
+	case FREE:
 		{   //能够访问，robot的访问权限保持不变
 			Allow = true;	
 		}
@@ -1078,7 +1078,8 @@ bool  ROOM_SPACE::Logon(int64 SourceID,People& Who){
 		Who.GoInto(SourceID,*this);
 		return true;
 	}
-	else return false;
+	
+	return false;
 }
 //////////////////////////////////////////////////////////////////////////
 
@@ -1138,15 +1139,15 @@ void People::GoOut(){
 	}
 }
 
-void People::GoInto(int64 SourceID,ROOM_SPACE& Room){
+void People::GoInto(int64 SourceID,ROOM_SPACE& Space){
 
 	//先离开之前所在的空间,然后ROBOT设置新的地址
 	GoOut();
 
 	//如果没有注册 则注册为子空间，robot权利不变
-	int64 RoomID = Room.GetSpaceID();
+	int64 SpaceID = Space.GetSpaceID();
 
-	SetID(RoomID); //ParentID
+	SetID(SpaceID); //ParentID
     
 	int64& ChilID = *(int64*)GetData(0);
 	ChilID = SourceID;

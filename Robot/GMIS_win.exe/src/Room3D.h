@@ -146,9 +146,9 @@ public:
 	SPACETYPE   m_Type;
 	tstring     m_Fingerprint;
 
-	float      m_RoomDx; //default = 6
-	float      m_RoomDy; //default = 1 
-	float      m_RoomDz; //default = 6
+	float      m_SpaceDx; //default = 6
+	float      m_SpaceDy; //default = 1 
+	float      m_SpaceDz; //default = 6
 	
 	/*此房间位于世界坐标的摆放原点
 	  世界坐标通过此摆放点转换成基于自身原点的本地坐标，用于碰撞检测
@@ -190,7 +190,7 @@ public:
 	CRoom3D();
 	virtual ~CRoom3D();
     
-	bool IsValidRoom(int64 RoomID);
+	bool IsValidSpace(int64 SpaceID);
 
 	//指定的点（世界坐标）被转换成本地坐标后，检查是否位于相应矩形内
 	mapunit*  IsInDypassRect(float x,float z);
@@ -204,15 +204,15 @@ public:
 	}
 	
 	int32 GetMapUintSize(){ return m_MapList.size();};
-    bool  AllowInsertRoom(); //检查是否还有空位可以插入新的房间
+    bool  AllowInsertSpace(); //检查是否还有空位可以插入新的房间
     mapunit*  GetOneBlankMapUnit();
 
-	void  SetParentRoom(FACEPOS fc,int64 ID,tstring ParentName,SPACETYPE Type);
-    mapunit*  GetParentRoom(); //没有返回NULL;
+	void  SetParentSpace(FACEPOS fc,int64 ID,tstring ParentName,SPACETYPE Type);
+    mapunit*  GetParentSpace(); //没有返回NULL;
 
 	//如果返回-1则表示没有空位
-	int  AddChildRoom(int64 ID,tstring Name, SPACETYPE Type,tstring Fingerprint);
-	int  AddChildRoom(FACEPOS fc,int64 ID,tstring Name,tstring Fingerprint);
+	int  AddChildSpace(int64 ID,tstring Name, SPACETYPE Type,tstring Fingerprint);
+	int  AddChildSpace(FACEPOS fc,int64 ID,tstring Name,tstring Fingerprint);
 	mapunit*  AddChildObject(int64 ID,tstring Name,SPACETYPE Type,HICON hIcon,tstring Fingerprint);
 	void DeleteChildObject(tstring Fingerprint);
     void ClearAllObject();  //注意：不包括可能含有的通向父空间的门

@@ -63,7 +63,7 @@ public:
 	eINT():m_Value(0){
 
 	};
-	eINT(const int64 &Int64):m_Value(Int64){
+	eINT(const int64 Int64):m_Value(Int64){
 
 	};
 	virtual ~eINT(){
@@ -104,7 +104,7 @@ public:
 	eFLOAT():m_Value(0){
 
 	};
-	eFLOAT(const float64 &V):m_Value(V){
+	eFLOAT(const float64 V):m_Value(V){
 
 	};
 	virtual ~eFLOAT(){

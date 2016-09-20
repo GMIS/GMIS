@@ -16,10 +16,10 @@ MsgProcState CElement::EltMsgProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Ms
 	case MSG_EVENT_TICK:
 		{
 		   int64 EventID = Msg.GetEventID();
-		   ePipeline& Letter = Msg.GetLetter();
+		   ePipeline& Letter = Msg.GetLetter(true);
 		   int64 TimeStamp = Letter.PopInt();
 
-		   Dialog->m_Brain->GetBrainData()->ResetEventTickCount(EventID);
+		   GetBrain()->GetBrainData()->ResetEventTickCount(EventID);
 
 		   //Dialog->SaveReceiveItem(_T("ResetEventTickCount"),0);
 
@@ -46,13 +46,50 @@ MsgProcState CElement::EltMsgProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Ms
 MsgProcState CElement::OnEltTaskControl(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
 	int64 EventID = Msg.GetEventID();
 	
-	ePipeline& Letter = Msg.GetLetter();
+	ePipeline& Letter = Msg.GetLetter(true);
 	int64 Cmd = Letter.PopInt();
 	
 	switch (Cmd)
 	{
 	case TO_BRAIN_MSG::TASK_CONTROL::CMD_RUN:
 		{
+			if(Dialog->m_DialogType == DIALOG_EVENT){
+				int64 EventID = Dialog->m_DialogID;
+				CBrainEvent EventInfo;
+				bool ret = GetBrain()->GetBrainData()->GetEvent(EventID,EventInfo,false);
+				if (!ret) 
+				{
+					ExeError(ExePipe,Format1024(_T("lost event %I64ld"),EventID));
+					return CONTINUE_TASK;
+				}
+
+				CLogicDialog* ParentDlg = GetBrain()->GetBrainData()->GetDialog(Dialog->m_SourceID,Dialog->m_ParentDialogID);
+				if (ParentDlg==NULL)
+				{
+					ExeError(ExePipe,_T("not find parent dialog"));
+					return CONTINUE_TASK;
+				}
+
+				WORK_MODE WorkMode = ParentDlg->GetWorkMode();
+				if(WorkMode == WORK_THINK){
+					tstring& CurLogicName = ParentDlg->m_CurLogicName;
+					ParentDlg->SetWorkMode(WORK_DEBUG);
+
+					CLogicTask* Task = Dialog->GetTask();
+					Task->m_Name = CurLogicName;
+					ParentDlg->m_CurLogicName = _T("");
+
+					bool ret = ParentDlg->RegisterLogic(Task);
+					if (!ret)
+					{
+						ParentDlg->RuntimeOutput(ParentDlg->m_CompileError);
+					}	
+					ExePipe.SetID(RETURN_NORMAL);	
+					Dialog->SetTaskState(TASK_RUN);
+					return CONTINUE_TASK;
+				}
+			}
+
 			WORK_MODE WorkMode = Dialog->GetWorkMode();
 
 			if (WorkMode == WORK_THINK)
@@ -71,8 +108,19 @@ MsgProcState CElement::OnEltTaskControl(CLogicDialog* Dialog,int32 ChildIndex,CM
 
 			}else if (WorkMode == WORK_DEBUG)
 			{
-				ExePipe.SetID(RETURN_BREAK);	
+				ExePipe.Clear();
+				if(EventID>0){
+					Dialog->ClosePauseDialog(EventID);
+					ePipeline& NewExePipe = *(ePipeline*)Letter.GetData(0);
+					ExePipe << NewExePipe;
+					ExePipe.SetID(RETURN_NORMAL);
+				}else{
+					ExePipe.SetID(RETURN_BREAK);
+				}
+				
 				Dialog->SetTaskState(TASK_RUN);
+				return CONTINUE_TASK;
+
 			}else{
 				assert(WorkMode == WORK_TASK || WorkMode ==WORK_TEST);
 
@@ -139,12 +187,13 @@ MsgProcState CElement::OnEltTaskControl(CLogicDialog* Dialog,int32 ChildIndex,CM
 		    return RETURN_DIRECTLY; 
 		}
 		break;
-	case  TO_BRAIN_MSG::TASK_CONTROL::CMD_DEBUG_BREAK:
+	case  TO_BRAIN_MSG::TASK_CONTROL::CMD_SET_BREAKPOINT:
 		{
 			int64 bBreak = Letter.PopInt();
 			ePipeline* Path = (ePipeline*)Letter.GetData(0);
 
-			Dialog->SetBreakPoint(*Path,bBreak);
+			bool ret = Dialog->SetBreakPoint(*Path,bBreak);
+			ExePipe.SetID(RETURN_NORMAL);
 			return RETURN_DIRECTLY; 
 		}
 		break;
@@ -158,179 +207,142 @@ MsgProcState CElement::OnEltInsertLogic(CLogicDialog* Dialog,int32 ChildIndex,CM
 
 	int64 EventID = Msg.GetEventID();
 
-	ePipeline& Letter = Msg.GetLetter();
+	ePipeline& Letter = Msg.GetLetter(true);
 
-	tstring InsertLogicName = Letter.PopString();
+	int64 ChildID = Letter.PopInt();
+	tstring LogicNameOrLogicText = Letter.PopString();
 
-	CLocalLogicCell* lg = Dialog->FindLogic(InsertLogicName);
+
+	if(RealtionType()==SHUNT_RELATION){
+		ExeError(ExePipe,Format1024(_T("can't insert logic '%s 'in  shunt-body"),LogicNameOrLogicText.c_str())); 
+		RETURN_DIRECTLY;
+	}
+
+	CLocalLogicCell* lg = Dialog->FindLogic(LogicNameOrLogicText);
 	
-	CLogicTask* LogicTask = NULL;
-	if(lg == NULL) {				
-		ExePipe.m_Label = Format1024(_T("Error: Not find Local logic[%s]"),InsertLogicName.c_str());
-		ExePipe.SetID(RETURN_ERROR);
+	CElement* E = NULL;
 
+	if(lg == NULL) {		
+		if(LogicNameOrLogicText.size()==0){
+			ExeError(ExePipe,_T("no find availabel logic"));
+			return RETURN_DIRECTLY;
+		}
 
-		CMsg rMsg(Dialog->m_SourceID,DEFAULT_DIALOG,MSG_TASK_FEEDBACK,DEFAULT_DIALOG,EventID);		
+		TCHAR ch = *LogicNameOrLogicText.rbegin();
+		if(ch !=_T(';') || ch !=_T('；')){
+			LogicNameOrLogicText+=_T(";");
+		}
 
-		ePipeline& rLetter = rMsg.GetLetter();
-		rLetter.PushPipe(ExePipe);	
-		
-		Dialog->m_Brain->PushCentralNerveMsg(rMsg,false,false);	
+		CLogicThread  Think;	
+		Think.ThinkProc(Dialog,0,LogicNameOrLogicText,false,0);	
+		bool ret = Think.CanBeExecute(Dialog);
+		if(!ret){
+			ExeError(ExePipe,Format1024(_T("the '%s' is not a valid logic name or command"),LogicNameOrLogicText.c_str()));
+			return RETURN_DIRECTLY; 
+		}
+		CText& Text = Think.m_Text;
+	
+		if (Text.m_SentenceList.size()!=1)
+		{
+			ExeError(ExePipe,Format1024(_T("the '%s' is more than one sentence"),LogicNameOrLogicText.c_str()));
+			return RETURN_DIRECTLY; 
+		}
 
-		ExePipe.Break(); //不在继续处理,并返回系统
-		return RETURN_DIRECTLY; 
+		CSentence* Sentence = Text.m_SentenceList[0];
+	
+		//序号以原任务计数增长，确保唯一性
+		int64 Count = Dialog->GetTask()->m_MassCount;
+		CLogicTask Task(Count);
+	
+		E  = Task.CompileSentence(Dialog,LogicNameOrLogicText,&Sentence->m_AnalyseResult);	
+		if(E==NULL){
+			ExeError(ExePipe,Format1024(_T("Error: the logic '%s' compile failed"),LogicNameOrLogicText.c_str()));
+			return RETURN_DIRECTLY; 
+		}
+
+		Dialog->GetTask()->m_MassCount = Task.m_MassCount; //跟踪计数
 	}		
 	else if(!lg->IsValid()) {
-		ExePipe.m_Label = Format1024(_T("Error: Local logic[%s] not valid"),InsertLogicName.c_str());
-		ExePipe.SetID(RETURN_ERROR);
-		
-		CMsg rMsg(Dialog->m_SourceID,DEFAULT_DIALOG,MSG_TASK_FEEDBACK,DEFAULT_DIALOG,EventID);		
-		ePipeline& rLetter = rMsg.GetLetter();
-		rLetter.PushPipe(ExePipe);	
-		
-		Dialog->m_Brain->PushCentralNerveMsg(rMsg,false,false);	
-
-		ExePipe.Break(); //不在继续处理,并返回系统
+		ExeError(ExePipe,Format1024(_T("Error: Local logic '%s' is not valid"),LogicNameOrLogicText.c_str()));
 		return RETURN_DIRECTLY; 
 	}else{
-		LogicTask = &lg->m_Task;	
+		ePipeline LogicPipe(lg->m_Task.m_LogicData);	
+		
+		//序号以原任务计数增长，确保唯一性
+		int64 Count = Dialog->GetTask()->m_MassCount;
+		CLogicTask Task(Count);
+       
+		E  = Task.CompileSentence(Dialog,LogicNameOrLogicText,&LogicPipe);
+		if (!E)
+		{
+			ExeError(ExePipe,Format1024(_T("Compile logic '%s' failed: %s" ),LogicNameOrLogicText.c_str(),Task.m_CompileError.c_str()));
+			return RETURN_DIRECTLY; 
+		}
+		Dialog->GetTask()->m_MassCount = Task.m_MassCount; //跟踪计数
 	}
-	
-	CLogicTask* Task = Dialog->GetTask();
-	ePipeline LogicPipe(LogicTask->m_LogicData);
-		
-	CElement* E  = Task->CompileSentence(Dialog,InsertLogicName,&LogicPipe);
-	
-	if (!E)
-	{
 
-		ExePipe.m_Label = Format1024(_T("Insert logic [%s]:[%s]" ),InsertLogicName.c_str(),Task->m_CompileError.c_str());
-		ExePipe.SetID(RETURN_ERROR);
-		
-		CMsg rMsg(Dialog->m_SourceID,DEFAULT_DIALOG,MSG_TASK_FEEDBACK,DEFAULT_DIALOG,EventID);		
-		ePipeline& rLetter = rMsg.GetLetter();
-		rLetter.PushPipe(ExePipe);	
-		
-		Dialog->m_Brain->PushCentralNerveMsg(rMsg,false,false);	
-		
-		ExePipe.Break(); //不在继续处理,并返回系统
+
+	ActomList::iterator it = E->m_ActomList.begin();
+	while(it != E->m_ActomList.end()){
+		Mass* m = * it++;
+		if (m->MassType() == MASS_ELEMENT)
+		{
+			CElement* e = (CElement*)m;
+			e->m_Parent = this;
+		}
+	}
+
+	bool bInsert = false;
+
+	it = m_ActomList.begin();
+	while(it != m_ActomList.end()){
+		Mass* m = *it;
+		if(m->m_ID == ChildID){	
+			m_ActomList.insert(it,E->m_ActomList.begin(),E->m_ActomList.end());	
+			bInsert = true;
+			break;
+		}
+		it++;
+	}
+
+	if(!bInsert){
+		ExeError(ExePipe,Format1024(_T("the index out of range  when inserting logic '%s'" ),LogicNameOrLogicText.c_str()));
 		return RETURN_DIRECTLY; 
 	}
 
+	GetBrain()->OutputLog(LOG_MSG_RUNTIME_TIP,Format1024(_T("execute inserting logic:%s"),LogicNameOrLogicText).c_str());
 	
-	InsertLogic(-1,E); //插入末尾
-
-	Dialog->m_Brain->OutputLog(LOG_MSG_RUNTIME_TIP,_T("Execute inserting logic:1  EventID:%I64ld"),EventID);
-	
-	/* 改为整体重置
-	ePipeline DebugItemList;
-	Task->GetDebugItem(DebugItemList,E);
-
-	assert(DebugItemList.Size()==1);
-	ePipeline* DebugItem = (ePipeline*)DebugItemList.GetData(0);
-
-	ePipeline* InsertAddress = (ePipeline*)LocalAddress.Clone();
-	int64 DialogID = InsertAddress->PopInt(); //第一个对话ID,这个无需发送给GUI
-    int64 TaskID   = InsertAddress->PopInt(); //第二个是任务ID也用不到
-
-	CNotifyState nf(NOTIFY_DEBUG_VIEW);
-	nf.PushInt(DEBUG_INSERT_LOGIC);
-	nf.Push_Directly(InsertAddress);
-	nf.PushPipe(*DebugItem);
-	nf.Notify(Dialog);
-	*/
+	Dialog->UpdateDebugTree();
 
 
-	if (Dialog->m_LogicItemTree.Size())
-	{
-		Dialog->m_LogicItemTree.Clear();
-		Task->GetDebugItem(Dialog->m_LogicItemTree);
-
-		ePipeline PauseIDList;
-		Dialog->GetPauseIDList(PauseIDList);
-
-		CNotifyDialogState nf(NOTIFY_DEBUG_VIEW);
-		nf.PushInt(DEBUG_RESET);
-		nf.Push_Directly(Dialog->m_LogicItemTree.Clone());
-		nf.PushPipe(PauseIDList);
-		nf.Notify(Dialog);
-	}
-
-	ExePipe.SetID(RETURN_NORMAL);
-
-	CMsg rMsg(Dialog->m_SourceID,DEFAULT_DIALOG,MSG_TASK_FEEDBACK,DEFAULT_DIALOG,EventID);		
-	ePipeline& rLetter = rMsg.GetLetter();
-	rLetter.PushPipe(ExePipe);	
-	Dialog->m_Brain->PushCentralNerveMsg(rMsg,false,false);		
-
-	ExePipe.Break(); //不在继续处理,并返回系统
+	//ExePipe.SetID(RETURN_NORMAL);
 	return RETURN_DIRECTLY; 
 };
 
 MsgProcState CElement::OnEltRemoveLogic(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress){
 	int64 EventID = Msg.GetEventID();
 
-	ePipeline& Letter = Msg.GetLetter();
-	
+	ePipeline& Letter = Msg.GetLetter(true);
 	int64 ChildID = Letter.PopInt();
 
- 	//递归查找所有Element实例，确保其在实例列表中的登记项目被删除
-	//Mass* E = Elt->FindMass(ChildID);
-	//Dialog->RemoveLogicInstance(E);
+	assert(ChildIndex==IT_SELF);
 
-	bool ret = RemoveLoigc(ChildID);
-	//assert(ret);
-
-	Dialog->m_Brain->OutputLog(LOG_MSG_RUNTIME_TIP,_T("Executer removing logic:%d EventID:%I64ld "),ret,EventID);
-
-	if (!ret)
-	{
-		ExePipe.SetID(RETURN_ERROR);
-		ExePipe.GetLabel() = Format1024(_T("Remove logic fail EventID:%I64ld"),EventID);
-		CMsg rMsg(Dialog->m_SourceID,DEFAULT_DIALOG,MSG_TASK_FEEDBACK,DEFAULT_DIALOG,EventID);		
-		ePipeline& rLetter = rMsg.GetLetter();
-		rLetter.PushPipe(ExePipe);	
-		Dialog->m_Brain->PushCentralNerveMsg(rMsg,false,false);		
-
-		ExePipe.Break(); //不在继续处理,并返回系统
+	if(RealtionType()==SHUNT_RELATION){
+		ExeError(ExePipe,Format1024(_T("can't remove shunt-body's child logic:%I64ld "),ChildID));
 		return RETURN_DIRECTLY; 
 	}
-	/*改为整体重置
-	ePipeline* RemoveAddress = (ePipeline*)LocalAddress.Clone();
-	int64 DialogID = RemoveAddress->PopInt(); //第一个对话ID,这个无需发送给GUI
-    int64 TaskID   = RemoveAddress->PopInt(); //第二个是任务ID也用不到
 
-
-	CNotifyState nf(NOTIFY_DEBUG_VIEW);
-	nf.PushInt(DEBUG_REMOVE_LOGIC);
-	nf.Push_Directly(RemoveAddress);
-	nf.PushInt(ChildID);
-	nf.Notify(Dialog);
-	*/
-
-	if (Dialog->m_LogicItemTree.Size())
-	{
-		CLogicTask* Task = Dialog->GetTask();
-		Dialog->m_LogicItemTree.Clear();
-		Task->GetDebugItem(Dialog->m_LogicItemTree);
-
-		ePipeline PauseIDList;
-		Dialog->GetPauseIDList(PauseIDList);
-
-		CNotifyDialogState nf(NOTIFY_DEBUG_VIEW);
-		nf.PushInt(DEBUG_RESET);
-		nf.Push_Directly(Dialog->m_LogicItemTree.Clone());
-		nf.PushPipe(PauseIDList);
-		nf.Notify(Dialog);
+    ActomList::iterator it = m_ActomList.begin();
+	while(it != m_ActomList.end()){
+		Mass* m = *it++;
+		if(m->m_ID == ChildID){
+			m->m_ID = -m->m_ID;
+			break;
+		}	
 	}
-	
-	CMsg rMsg(Dialog->m_SourceID,DEFAULT_DIALOG,MSG_TASK_FEEDBACK,DEFAULT_DIALOG,EventID);		
-	ePipeline& rLetter = rMsg.GetLetter();
-	rLetter.PushPipe(ExePipe);	
-	Dialog->m_Brain->PushCentralNerveMsg(rMsg,false,false);		
-	
+  
+	Dialog->UpdateDebugTree();
 
-	ExePipe.Break(); //不在继续处理,并返回系统
 	return RETURN_DIRECTLY; 
 }
 
@@ -338,35 +350,32 @@ MsgProcState CElement::OnEltTaskResult(CLogicDialog* Dialog,int32 ChildIndex,CMs
 {
 	int64 EventID = Msg.GetEventID();
 	
-	ePipeline& Letter = Msg.GetLetter();
-	ePipeline* OldExePipe= (ePipeline*)Letter.GetData(0);
-	ePipeline* NewExePipe= (ePipeline*)Letter.GetData(1);
+	ePipeline& Letter = Msg.GetLetter(true);
+	ePipeline OldExePipe;
+	ePipeline* NewExePipe= (ePipeline*)Letter.GetData(0);
 	
 	
 	if (!NewExePipe->IsAlive())
 	{
-		Dialog->CloseEventDialog(EventID,*OldExePipe,ExePipe);
-		
-		tstring Answer = _T("收到的数据管道已经无效");
-		ExePipe.SetLabel(Answer.c_str());
-		ExePipe.SetID(RETURN_ERROR);
+		Dialog->CloseEventDialog(EventID,OldExePipe,ExePipe);
+		ExeError(ExePipe,_T("the task has been stoped"));
 		return RETURN_DIRECTLY;
 	}
 	
 	int64 retTask = NewExePipe->GetID();
 	if (retTask == RETURN_ERROR)
 	{
-		Dialog->CloseEventDialog(EventID,*OldExePipe,ExePipe);
-		ExePipe.SetLabel(NewExePipe->GetLabel().c_str());
-		ExePipe.SetID(RETURN_ERROR);
+		Dialog->CloseEventDialog(EventID,OldExePipe,ExePipe);
+		ExeError(ExePipe,NewExePipe->GetLabel());
 		return RETURN_DIRECTLY;
 	}
 	
 	ExePipe.Clear();
-	ExePipe << *OldExePipe;
+	ExePipe << OldExePipe;
 	
-	Dialog->CloseEventDialog(EventID,*OldExePipe,ExePipe);
 
-	return CONTINUE_TASK;
+	Dialog->CloseEventDialog(EventID,OldExePipe,ExePipe);
+
+	return RETURN_DIRECTLY;
 
 }

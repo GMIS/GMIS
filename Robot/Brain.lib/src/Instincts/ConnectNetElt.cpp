@@ -1,3 +1,4 @@
+#include "..\Brain.h"
 #include "ConnectNetElt.h"
 
 
@@ -134,7 +135,7 @@ bool  CConnectSocket::CheckConnected(ePipeline* Pipe, ePipeline* LocalAddress)
 										
 					CMsg Msg(MSG_SET_TIMER,0,0);
 
-					ePipeline& Letter = Msg.GetLetter();
+					ePipeline& Letter = Msg.GetLetter(false);
 					TimeStamp += (int64)50*1000*10; //毫秒转换成百纳秒
 					Letter.PushInt64(TimeStamp);
 					
@@ -177,7 +178,7 @@ bool  CConnectSocket::CheckConnected(ePipeline* Pipe, ePipeline* LocalAddress)
 				if(TimeStamp <m_StopTime){		
 						
 					CMsg Msg(MSG_SET_TIMER,0,0); 
-					ePipeline& Letter = Msg.GetLetter();
+					ePipeline& Letter = Msg.GetLetter(false);
 					int64 TimeStamp = AbstractSpace::CreateTimeStamp();
 					TimeStamp += (int64)50*1000*10; //毫秒转换成百纳秒
 					Letter.PushInt64(TimeStamp);

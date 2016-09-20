@@ -182,13 +182,13 @@ bool     CElementCell::FromEnergy(Energy* E){
 
 CLogicThread::CLogicThread(){
 
-	m_ForecastRoom = NULL;
+	m_ForecastSpace = NULL;
 
 	Reset(0,0);
 }
 CLogicThread::CLogicThread(int64 ID,int64 UserDialogID)
 {
-	m_ForecastRoom = NULL;
+	m_ForecastSpace = NULL;
 	Reset(ID,UserDialogID);
 };
 
@@ -201,11 +201,11 @@ void CLogicThread::Reset(int64 ThreadID,int64 UserDialogID){
 
 	m_Text.Clear();
 
-	if(m_ForecastRoom){
-		delete m_ForecastRoom;
-		m_ForecastRoom = NULL;
+	if(m_ForecastSpace){
+		delete m_ForecastSpace;
+		m_ForecastSpace = NULL;
 	}
-	m_ForecastRoom = new ForecastRoom();
+	m_ForecastSpace = new ForecastSpace();
 	//BrainDB.close();
 
 	m_LastMsgTimeStamp = 0;
@@ -222,9 +222,9 @@ void CLogicThread::Reset(int64 ThreadID,int64 UserDialogID){
 
 CLogicThread::~CLogicThread()
 {
-	if(m_ForecastRoom){
-		delete m_ForecastRoom;
-		m_ForecastRoom = NULL;
+	if(m_ForecastSpace){
+		delete m_ForecastSpace;
+		m_ForecastSpace = NULL;
 	}
 
 	ClearAnalyse();

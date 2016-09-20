@@ -13,14 +13,14 @@
 
 
 
-int32 CLogicThread::GetActionRoom(int64 ParentID,ClauseLogicSense* cls){
+int32 CLogicThread::GetActionSpace(int64 ParentID,ClauseLogicSense* cls){
 	   CppSQLite3Buffer SQL;
        char a[30],b[30];
 	   
 	   uint32 PartOfSpeech = 0;
 //	   if(!RBrainHasTable(ID))return 0;
 
-	   map<int64,MeaningPos>& RoomList = cls->ClauseMeaning;
+	   map<int64,MeaningPos>& SpaceList = cls->ClauseMeaning;
 
 	   ToRBrain(ParentID);
 
@@ -41,11 +41,11 @@ int32 CLogicThread::GetActionRoom(int64 ParentID,ClauseLogicSense* cls){
 			int64 ID = t.getInt64Field(0);
 			int64 Value = t.getInt64Field(1);
 			MeaningPos Pos;
-			Pos.RoomID = ID;
+			Pos.SpaceID = ID;
 			Pos.ParamTokenPos = cls->NextTokenPos;
-            RoomList[Value] = Pos;
+            SpaceList[Value] = Pos;
 	   }
-	   return RoomList.size();	
+	   return SpaceList.size();	
 }
 
 void CLogicThread::ThinkProc(CLogicDialog* Dialog,CMsg& Msg){
@@ -57,7 +57,7 @@ void CLogicThread::ThinkProc(CLogicDialog* Dialog,CMsg& Msg){
 	ePipeline& Letter = m_TextMsgQueue[EventID];
 	assert(Letter.Size()==0);
 	
-	Letter << Msg.GetLetter();    
+	Letter << Msg.GetLetter(true);    
 	
 	if (State == THINK_ON)
     {
@@ -156,7 +156,17 @@ void CLogicThread::ThinkProc(CLogicDialog* Dialog,int32 Pos,tstring& Msg,bool Fo
 			ePipeline& Letter = it->second;
 			
 			Pos  = Letter.PopInt();
-			Msg  = Letter.PopString();
+			eElectron e;
+			Letter.Pop(&e);
+
+			if(e.EnergyType() == TYPE_INT){
+				int64 n = e.Int64();
+				Msg.assign(n,127); 
+			}else {
+				assert(e.EnergyType() == TYPE_STRING);
+				Msg = e.String();
+			}
+
 			EventID = Letter.PopInt();
 
 			m_TextMsgQueue.erase(it);
@@ -335,12 +345,12 @@ void CLogicThread::Think(CLogicDialog* Dialog,CClause* Clause, int32 AlterTokenP
 			if (Token->m_Type != COMMON || !Token->IsOK())break; 
 			
 			//取得每一个单词的词性空间，
-			map<int64,int64>     RoomList;
-			if(GetAllPartOfSpeechRoom(Token->m_MemoryID, RoomList)==0)break;;
+			map<int64,int64>     SpaceList;
+			if(GetAllPartOfSpeechSpace(Token->m_MemoryID, SpaceList)==0)break;;
 			
 			if(cls->FirstWord){  
 				
-				map<int64,int64>::iterator It = RoomList.begin();
+				map<int64,int64>::iterator It = SpaceList.begin();
 				
 				if(cls->NextTokenPos == Clause->m_BeginPos){
 					//提前处理两个特殊的关系代词,确定此子句的逻辑关系
@@ -355,7 +365,7 @@ void CLogicThread::Think(CLogicDialog* Dialog,CClause* Clause, int32 AlterTokenP
 					else Clause->m_LogicRelation = SERIES_RELATION;
 				}
 				//尝试用每一个词性打头，看是否有可能的句子
-				while(It != RoomList.end()){				
+				while(It != SpaceList.end()){				
 					int64 ID = GetChildID(ROOT_SPACE,It->first,MEMORY_BODY);
 					if(ID){
 						cls->FatherList.push_back(ID);
@@ -369,8 +379,8 @@ void CLogicThread::Think(CLogicDialog* Dialog,CClause* Clause, int32 AlterTokenP
 				vector<int64>::iterator FatherIt = cls->FatherList.begin();
 				while(FatherIt != cls->FatherList.end()){
 					int64 ParentID = *FatherIt;
-					map<int64,int64>::iterator ChildIt = RoomList.begin();
-					while(ChildIt != RoomList.end()){
+					map<int64,int64>::iterator ChildIt = SpaceList.begin();
+					while(ChildIt != SpaceList.end()){
 						int64 ChildID = ChildIt->first;
 						//优先从预测表里找
 						if(m_ForecastText == (void*)Clause && ForecastOK()){		
@@ -398,7 +408,7 @@ void CLogicThread::Think(CLogicDialog* Dialog,CClause* Clause, int32 AlterTokenP
 			}
 		}//end for
 	}
-    
+   
 
 	//不管当前理解是以正常退出，还是因为错误退出，只要修改了cls->FatherList含有的条
 	//目，就以当前修饰结果为形，重新取得其含有的意义,如果
@@ -407,7 +417,7 @@ void CLogicThread::Think(CLogicDialog* Dialog,CClause* Clause, int32 AlterTokenP
 		cls->ClauseMeaning.clear();
 		vector<int64>::iterator It = cls->FatherList.begin();
 		while(It != cls->FatherList.end()){
-			GetActionRoom(*It, cls);
+			GetActionSpace(*It, cls);
 			It++;
 		}
 	};
@@ -989,8 +999,7 @@ bool  CLogicThread::CheckInstinctParam(CLogicDialog* Dialog,CClause* Clause, vec
 			Clause->m_Param = new eSTRING(LabelName);     
 		}
 		break;
-	case INSTINCT_VIEW_PIPE:
-		break;
+
 	case INSTINCT_INPUT_NUM:
 	case INSTINCT_INPUT_TEXT:
 		{
@@ -1003,7 +1012,7 @@ bool  CLogicThread::CheckInstinctParam(CLogicDialog* Dialog,CClause* Clause, vec
 			Clause->m_Param = new eSTRING(LabelName);     
 		}
 		break;
-	case INSTINCT_WAIT_SECOND:
+	case INSTINCT_WAIT_TIME:
 		{
 			if(ParamList.size()==0){
 				Clause->m_Param = NULL;
@@ -1075,8 +1084,9 @@ bool  CLogicThread::CheckInstinctParam(CLogicDialog* Dialog,CClause* Clause, vec
 	case INSTINCT_CLOSE_MEMORY:
 	case INSTINCT_MODIFY_MEMORY:
 	case INSTINCT_GET_MEMORY_FOCUS:
-	case INSTINCT_SET_LOGIC_ADDRESS:
 	case INSTINCT_GET_LOGIC_ADDRESS:
+	case INSTINCT_PRINT_PIPE:
+		break;
 		{
 			if (ParamList.size()!=0)
 			{
@@ -1144,7 +1154,6 @@ bool  CLogicThread::CheckInstinctParam(CLogicDialog* Dialog,CClause* Clause, vec
 		}
 		break;
 	case INSTINCT_REMOVE_LOGIC:
-	case INSTINCT_GET_DATE:
 	case INSTINCT_GET_TIME:
 	case INSTINCT_OUTPUT_INFO:
 	case INSTINCT_CLEAR_TEMP_LOGIC:
@@ -1155,6 +1164,10 @@ bool  CLogicThread::CheckInstinctParam(CLogicDialog* Dialog,CClause* Clause, vec
 			}		
 		}
 		break;
+	case INSTINCT_SET_LOGIC_ADDRESS:
+		{
+			if(ParamList.size()==0)break; //注意：这里break是有条件的，允许无参数和有参数两种版本
+		}
 	case INSTINCT_SET_LOGIC_BREAKPOINT:
 	case INSTINCT_TEST_EXPECTATION:
 		{
@@ -1246,8 +1259,57 @@ bool  CLogicThread::CheckInstinctParam(CLogicDialog* Dialog,CClause* Clause, vec
 	case INSTINCT_USE_OBJECT:
 	case INSTINCT_CLOSE_OBJECT:
 	case INSTINCT_GET_OBJECT_DOC:
-	case INSTINCT_ASK_PEOPLE:
+		{
+			if( ParamList.size()!=0 ){
+				//Error = "param error" 
+				Clause->m_MemoryID = ERROR_20;
+				return false;
+			}
+		}
 		break;
+	case INSTINCT_CALL_ROBOT:
+	case INSTINCT_CHAT_ROBOT:
+	case INSTINCT_FOCUS_REQUEST:
+		{
+			if (ParamList.size() == 0) //动态版本
+			{
+				return true;
+			}
+			else if( ParamList.size() ==1 ){ //静态版本
+				tstring Name = ParamList[0];
+				Clause->m_Param = new eSTRING(Name);   
+			}else{
+				//Error = "the param  more than one or lose param when reference element";
+				Clause->m_MemoryID = ERROR_3;
+				return false;
+			}
+		}
+		break;
+	case INSTINCT_NAME_REQUEST:
+		{
+			if (ParamList.size() ==1)
+			{
+				tstring Name = ParamList[0];
+				Name = TriToken(Name);
+				Clause->m_Param = new eSTRING(Name);
+			}
+			else if( ParamList.size() !=0 ){
+				//Error = "the param  more than one or lose param when reference element";
+				Clause->m_MemoryID = ERROR_3;
+				return false;
+			} 
+		}
+		break;
+	case INSTINCT_EXECUTE_REQUEST:
+	case INSTINCT_CLOSE_REQUEST:
+		{
+			if( ParamList.size()!=0 ){
+				//Error = "param error" 
+				Clause->m_MemoryID = ERROR_20;
+				return false;
+			}
+		}
+		break;	
 	case INSTINCT_THINK_LOGIC :
 		{
 			tstring LogicName;
@@ -1315,95 +1377,35 @@ bool  CLogicThread::CheckInstinctParam(CLogicDialog* Dialog,CClause* Clause, vec
 			Clause->m_Param = new eINT(t);     
 		}
 		break;
-	case INSTINCT_SET_GLOBLELOGIC:
-		break;
 	case INSTINCT_CLOSE_DIALOG:
-		break;
-	case INSTINCT_LEARN_TOKEN:
-	case INSTINCT_LEARN_PRONOUN:
-	case INSTINCT_LEARN_ADJECTIVE:
-	case INSTINCT_LEARN_NUMERAL:  
-	case INSTINCT_LEARN_VERB:  
-	case INSTINCT_LEARN_ADVERB: 
-	case INSTINCT_LEARN_ARTICLE: 
-	case INSTINCT_LEARN_PREPOSITION:
-	case INSTINCT_LEARN_CONJUNCTION:
-	case INSTINCT_LEARN_INTERJECTION:
-	case INSTINCT_LEARN_NOUN: 
+	case INSTINCT_LEARN_WORD:
 		{
-			//只能有一个参数
-			if(ParamList.size() != 1){
+			if(ParamList.size() != 0){
 				Clause->m_MemoryID = ERROR_3;
 				return false;
 			}	
-			tstring Word = ParamList[0];
-			Clause->m_Param = new eSTRING(Word);	
 		}
 		break;
 	case INSTINCT_LEARN_TEXT:
-		{
-			if(ParamList.size() == 1){
-				tstring Text = ParamList[0];
-				Clause->m_Param = new eSTRING(Text);				
-			}else if(ParamList.size() == 0){
-				tstring Text ;
-				Clause->m_Param = new eSTRING(Text);				
-			}else{
-				//Error = "param error" 
-				Clause->m_MemoryID = ERROR_20;
-				return false;
-			}
-		}
-		break;
 	case INSTINCT_LEARN_LOGIC:
 	case INSTINCT_LEARN_OBJECT:
 	case INSTINCT_LEARN_ACTION:
+	case INSTINCT_LEARN_LANGUAGE:
 		{
-			//只能有一个参数
-			if(ParamList.size() != 1){
+			if(ParamList.size() !=0){
 				Clause->m_MemoryID = ERROR_3;
 				return false;
 			}	
-			tstring Text = ParamList[0];
-			Text = TriToken(Text);
-			//这里应该对text进行相应的检查
-			Clause->m_Param = new eSTRING(Text);		
-		}
-		break;
-	case INSTINCT_FIND_SET_PRICISION:
-		{
-			if( ParamList.size()!=1 ){
-				//Error = "param error" 
-				Clause->m_MemoryID = ERROR_20;
-				return false;
-			}
-			
-			tstring s = ParamList[0];
-			NumType type = IsNum(s);
-			if(type != INT_NUM){
-				//Error = "The param must be a int num.";
-				Clause->m_MemoryID = ERROR_6;
-				return false;
-			}
-			int32 t = _ttoi(s.c_str());
-			Clause->m_Param = new eINT(t); 
-		}
-		break;
-	case INSTINCT_FIND_SET_STARTTIME:
-	case INSTINCT_FIND_SET_ENDTIME:
-		{
-			//				if( ParamList.size()!=0 ){
-			//Error = "param error" 
-			Clause->m_MemoryID = ERROR_20;
-			return false;
-			//				}
 		}
 		break;
 	case INSTINCT_FIND:
 	case INSTINCT_FIND_LOGIC:
 	case INSTINCT_FIND_OBJECT:
 		{
-			if( ParamList.size()!=1 ){
+			if(ParamList.size()==0){
+				break;
+			}
+			else if( ParamList.size()!=1 ){
 				//Error = "param error" 
 				Clause->m_MemoryID = ERROR_20;
 				return false;
@@ -1414,7 +1416,6 @@ bool  CLogicThread::CheckInstinctParam(CLogicDialog* Dialog,CClause* Clause, vec
 			Clause->m_Param = new eSTRING(s); 
 		}
 		break;
-
 	case INSTINCT_CREATE_ACCOUNT:
 	case INSTINCT_DELETE_ACCOUNT:
 		{

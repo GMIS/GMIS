@@ -38,10 +38,11 @@ void GetLogicName(tstring& SrcLoigcName, tstring& LogicName,tstring& LogicInstan
 
 
 
-CLogicTask::CLogicTask()
+CLogicTask::CLogicTask(int64 MassCount)
 :CSeries(0,_T("Logic"))
 {
 	Reset(0,-1);
+	m_MassCount = MassCount;
 }
 
 CLogicTask::CLogicTask(CLogicTask* Parent)
@@ -202,12 +203,12 @@ CLogicTask& CLogicTask::operator<<(CLogicTask& Task){
 
 bool  CLogicTask::SetBreakPoint(ePipeline& Path,BOOL bEnable ){
 	
-	if (Path.Size()==0 || m_ActomList.size()==0)
+	if (Path.Size()<2 || m_ActomList.size()==0)
 	{
 		return false;
 	}
-	int64 ID = Path.PopInt();  //第一个ID不是真实的
-	assert(ID == 1);
+	int64 ID = Path.PopInt();  //第一个ID是task.m_ID
+
 
 	CElement* Parent = this;
 	while(Path.Size()){
@@ -295,6 +296,43 @@ void  CLogicTask::GetDebugItem(ePipeline& ParentPipe,Mass* m){
 
 /////////////////////////////////////////////////
 
+void CLogicTask::CompileSysTask(SysTaskType TaskID, tstring TaskName,ePipeline& Param){
+	Clear();
+
+	m_ActionType = 0;
+
+	m_CompileError = _T("");
+	m_CurThinkLogicName = _T("");
+
+	m_LogicText = _T("System task:")+TaskName;
+
+	int64 ID = m_MassCount++;
+	switch(TaskID){
+	case SysTask_BrainInit:
+		{
+			CBrainInitElt* Task = new CBrainInitElt(ID,TaskName,Param);
+			assert(Task);
+			Push(Task);
+		}
+		break;
+	case SysTask_GotoSpace:
+		{
+			CBrainGotoSpaceElt* Task = new CBrainGotoSpaceElt(ID,TaskName,Param);
+			assert(Task);
+			Push(Task);
+		}
+		break;
+	case SysTask_RobotRequest:
+		{
+			CBrainRobotRequestElt* Task = new CBrainRobotRequestElt(ID,TaskName,Param);
+			assert(Task);
+			Push(Task);
+		}
+		break;
+	default:
+		break;
+	}
+};
 
 bool CLogicTask::Compile(CLogicDialog* Dialog,ePipeline* Sentence){
 
@@ -349,6 +387,131 @@ bool CLogicTask::Compile(CLogicDialog* Dialog,ePipeline* Sentence){
 	return true;
 };
 
+CElement* CLogicTask::CompileSentenceFromMemory(CLogicDialog* Dialog,ePipeline* Sentence){
+	
+	CElement* E;
+	
+	if(Sentence->m_ID == -1){
+		E = new CShunt(m_MassCount++);	
+	}else{
+		E = new CSeries(m_MassCount++);	
+	}
+	
+	if(!E){
+		return NULL;
+	}
+
+	std::auto_ptr<CElement> ptr(E); //如果编译错误则自动删除E
+
+	for (int i=0; i<Sentence->Size();i++)
+	{
+		ePipeline* Clause = (ePipeline*)Sentence->GetData(i);	
+
+		bool bShunt = Clause->m_ID==-1;
+
+		if (bShunt && E->RealtionType()==SERIES_RELATION)
+		{
+			int j=i;
+			for(j;j<Sentence->Size(); j++){
+				ePipeline* Clause = (ePipeline*)Sentence->GetData(j);
+				if(Clause->m_ID != -1)break;
+			}
+
+			ePipeline ShuntPipe(-1);
+			Sentence->TransEnergy(i,j-i,&ShuntPipe);
+
+			if(i==0 && Sentence->Size()==0){
+				m_MassCount--;
+				return CompileSentenceFromMemory(Dialog,&ShuntPipe); //整个都是并联
+			}
+
+			CElement* m = CompileSentenceFromMemory(Dialog,&ShuntPipe);
+			if(m==NULL){
+				return NULL;
+			}	
+			E->Push(m);		
+			continue;
+		}
+
+
+		Energy* FirstData =  Clause->GetEnergy(0);
+
+		if (FirstData->EnergyType() == TYPE_PIPELINE) //对于从记忆中取回的逻辑数据，可能出现这种情况
+		{
+			ePipeline* NestSentence = Clause;
+
+			if(E->RealtionType() == SHUNT_RELATION){
+				NestSentence->SetID(0);  //一个嵌套逻辑，默认为串联，除非检测到其子句为并联
+			}
+			CElement* m = CompileSentenceFromMemory(Dialog,NestSentence);
+			assert(m!=NULL);
+
+			if(m==NULL)return NULL;
+			E->Push(m);
+			continue;
+		}
+
+		int64 InstinctID = *(int64*)FirstData->Value();
+
+		Energy* Param = NULL;
+		if(Clause->Size()>1){
+			Param = Clause->GetEnergy(1);
+		}
+
+	
+		if (BelongCommanAction(InstinctID))
+		{
+			m_ActionType |= COMMON_ACTION;
+		}else if (BelongIndeInterAction(InstinctID))
+		{
+			m_ActionType |= INDE_INTER_ACTION;
+		}
+		else if (BelongInterAction(InstinctID))
+		{
+			m_ActionType |= INTER_ACTION;
+		}else{
+			m_ActionType |= OUTER_ACTION;
+		}
+
+		Mass* m = NULL;
+		assert(BelongInstinct(InstinctID));
+
+	    assert (INSTINCT_USE_LOGIC != InstinctID); //记忆里所有引用逻辑都展开成本能记忆了，所以不可能还有这个
+
+		if(InstinctID == INSTINCT_SET_LABEL)
+		{
+			tstring Label = *(tstring*)Param->Value();
+
+			assert(E->RealtionType()!= SHUNT_RELATION);
+			Label = Label+_T(":(label)");
+
+			ePipeline NewSentence;
+			Sentence->TransEnergy(++i,Sentence->Size()-i,&NewSentence);
+
+			assert(Sentence->Size()==i);
+
+			CElement* m = CompileSentenceFromMemory(Dialog,&NewSentence);
+			assert(m!=NULL);
+
+			if(m==NULL)return NULL;
+
+			m->m_Name = Label;
+			E->Push(m);
+		}
+		else{
+			m = GetInstinctInstance(Dialog,InstinctID, Param);
+			if(m==NULL){
+				return NULL;
+			}
+			E->Push(m);	
+
+		}		
+	}
+	ptr.release(); //编译没发生错误，则释放控制权
+
+	return E;
+}
+
 CElement* CLogicTask::CompileSentenceForTest(CLogicDialog* Dialog,tstring& LogicText,ePipeline* Sentence)
 {
 	CBrainTestElt* E = new CBrainTestElt(m_MassCount++);
@@ -372,11 +535,13 @@ CElement* CLogicTask::CompileSentenceForTest(CLogicDialog* Dialog,tstring& Logic
 			m_ActionType |= COMMON_ACTION;
 		}else if (BelongIndeInterAction(InstinctID)) //忽略内部命令
 		{
-			continue;
+			m_CompileError = _T("测试模式下不能自动执行内部命令");
+			return false;
 		}
 		else if (BelongInterAction(InstinctID))
 		{
-			continue;
+			m_CompileError = _T("测试模式下不能自动执行内部命令");
+			return false;
 		}else{
 			m_ActionType |= OUTER_ACTION;
 		}
@@ -476,19 +641,12 @@ CElement* CLogicTask::CompileSentenceForTest(CLogicDialog* Dialog,tstring& Logic
 		}else{ //客户自定义命令
 			ePipeline Pipe;
 			CLogicThread* Think = Dialog->GetThink();
-			if(!Think->RetrieveLogic(InstinctID,&Pipe,false))
+			if(!Think->RetrieveLogic(InstinctID,&Pipe))
 			{
-				deque<tstring> CommandList;
-				Think->GetCustomCommandText(InstinctID,CommandList);
-				deque<tstring>::iterator It = CommandList.begin();
-				m_CompileError = _T("can't compile custom commond : \n");
-				while (It != CommandList.end())
-				{
-					tstring& Command = *It;
-					Command+=_T('\n');
-					m_CompileError += Command;
-					It++;
-				}				
+				tstring CmdText = _T("no memory");
+				Think->GetCommandText(InstinctID,CmdText);
+				m_CompileError = _T("can't compile custom commond : ")+CmdText;
+				
 				return NULL;
 			}
 
@@ -536,8 +694,12 @@ CElement* CLogicTask::CompileSentence(CLogicDialog* Dialog,tstring& LogicText,eP
 	for (int i=0; i<Sentence->Size();i++)
 	{
 		ePipeline* Clause = (ePipeline*)Sentence->GetEnergy(i);	
-		int64 InstinctID  = *(int64*)Clause->GetData(0);
 		
+		Energy* FirstData =  Clause->GetEnergy(0);
+		
+		assert(FirstData->EnergyType() == TYPE_INT);
+		int64 InstinctID = *(int64*)FirstData->Value();
+
 		Energy* Param = NULL;
 		if(Clause->Size()>1)Param = Clause->GetEnergy(1);
 
@@ -724,29 +886,22 @@ CElement* CLogicTask::CompileSentence(CLogicDialog* Dialog,tstring& LogicText,eP
 		}else{ //客户自定义命令
 			ePipeline Pipe;
 			CLogicThread* Think = Dialog->GetThink();
-			if(!Think->RetrieveLogic(InstinctID,&Pipe,false))
+
+			tstring CmdText = _T("no memory");
+			
+			if(!Think->RetrieveLogic(InstinctID,&Pipe))
 			{
-				deque<tstring> CommandList;
-				Think->GetCustomCommandText(InstinctID,CommandList);
-				deque<tstring>::iterator It = CommandList.begin();
-				m_CompileError = _T("can't compile custom commond : \n");
-				while (It != CommandList.end())
-				{
-					tstring& Command = *It;
-					Command+=_T('\n');
-					m_CompileError += Command;
-					It++;
-				}				
+				Think->GetCommandText(InstinctID,CmdText);
+				m_CompileError = _T("can't understand custom commond : ")+CmdText;
 				return NULL;
 			}
             
-			CLogicTask NestTask(this);
-		    bool ret = NestTask.Compile(Dialog,&Pipe);
-			if (ret)
+			m = CompileSentenceFromMemory(Dialog,&Pipe);
+			if (!m)
 			{
-				assert(NestTask.m_ActomList.size()==1);
-				m = NestTask.m_ActomList.back();
-				NestTask.m_ActomList.clear();
+				Think->GetCommandText(InstinctID,CmdText);
+				m_CompileError = _T("can't compile custom commond : ")+CmdText;
+				return NULL;
 			}
 		}
 		
@@ -1013,11 +1168,10 @@ Mass* CLogicTask::GetInstinctInstance(CLogicDialog* Dialog,int64 InstinctID, Ene
 			M = new CGotoLabel(NewName.c_str(),ID,Name);
 		}
 		break;
-	case INSTINCT_VIEW_PIPE:
+	case INSTINCT_PRINT_PIPE:
 		{
 			assert(Param == NULL);
-			m_CompileError  = Format1024(_T("WARNING: Can't use view pipe command in intertask,will be ignore.")).c_str();
-			M = new CPipeViewMass(ID);	
+			M = new CPrintPipeMass(ID);	
 		}
 		break;
     case INSTINCT_INPUT_TEXT:
@@ -1038,14 +1192,14 @@ Mass* CLogicTask::GetInstinctInstance(CLogicDialog* Dialog,int64 InstinctID, Ene
 			M = new CInputElement(ID,Tip,true);
 		}
 		break;
-    case INSTINCT_WAIT_SECOND:
+    case INSTINCT_WAIT_TIME:
 		{
 			if(Param){
 				assert(Param->EnergyType() == TYPE_FLOAT);
 				float64 Second = *(float64*)Param->Value();
-				M = new CWaitSecond_Static(ID,Second);
+				M = new CWaitTime_Static(ID,Second);
 			}else{
-				M = new CWaitSecond(ID);
+				M = new CWaitTime(ID);
 			}
 		}
         break;
@@ -1183,11 +1337,6 @@ Mass* CLogicTask::GetInstinctInstance(CLogicDialog* Dialog,int64 InstinctID, Ene
 	//	{
 	//		M = new CSetLogicBreakpoint(ID);
 	//	}
-	case INSTINCT_GET_DATE:
-		{
-			M = new CGetDate(ID);
-		}
-		break;
 	case INSTINCT_GET_TIME:
 		{
 			M = new CGetTime(ID);
@@ -1227,7 +1376,7 @@ Mass* CLogicTask::GetInstinctInstance(CLogicDialog* Dialog,int64 InstinctID, Ene
 				int64 InstanceID = AbstractSpace::CreateTimeStamp();
 				Ob.m_ID = InstanceID;
 				
-				ObjectInfo = Ob.GetItemData();	
+				ObjectInfo = Ob.Clone();	
 				Dialog->m_ObjectFocus = InstinctID;
 
 				M = new CStartObject(ID, ObjectInfo);
@@ -1298,22 +1447,105 @@ Mass* CLogicTask::GetInstinctInstance(CLogicDialog* Dialog,int64 InstinctID, Ene
 			M = new CGetObjectDoc(ID);
 		}
 		break;
-	case INSTINCT_ASK_PEOPLE:
-		{
 
+	case INSTINCT_CALL_ROBOT:
+	case INSTINCT_CHAT_ROBOT:
+		{
+			if(Param){ //静态版本
+				assert(Param->EnergyType() == TYPE_STRING);
+
+				tstring Name = *(tstring*)Param->Value();
+
+				//优先在临时物体列表里找
+				vector<CObjectData> ObjectList;
+				int n = Dialog->FindObject(Name,ObjectList);
+
+				ePipeline* ObjectInfo = NULL;
+
+				if( n == 0 ){
+					m_CompileError = Format1024(_T("robot %s is not online"),Name.c_str());
+				}
+				else if( n == 1 ){
+					CObjectData& Ob = ObjectList.front();
+
+					if(Ob.m_Type <ROBOT_VISITER){
+						m_CompileError = Format1024(_T("the '%s 'is not a robot"),Name.c_str());
+						return NULL;
+					}
+					
+					Ob.m_ID = 0;  //暂时 instance id =0 表示还没实例化
+					ObjectInfo = Ob.Clone();	
+
+
+					if(INSTINCT_CHAT_ROBOT == InstinctID){
+						M = new CChatRobot(ID,ObjectInfo);
+					}else{
+						M = new CCallRobot(ID, ObjectInfo);
+					}
+				}
+				else if( n > 0 )
+				{
+					//原本应该让用户选择，这里暂时简化处理
+					m_CompileError = Format1024(_T("robot %s is not unique"),Name.c_str());
+					return NULL;
+				}
+			}else{  //动态版本
+				if(INSTINCT_CHAT_ROBOT == InstinctID){
+					M = new CChatRobot(ID,NULL);
+				}else{
+					M = new CCallRobot(ID, NULL);
+				}
+			}	
 		}
 		break;
-	case INSTINCT_BRAIN_INIT:
+	case INSTINCT_FOCUS_REQUEST:
 		{
-			M = new CBrainInitElt(ID);
+			if (Param)
+			{
+				if(Param->EnergyType() == TYPE_STRING)
+				{
+					tstring& Name = *(tstring*)Param->Value();
+					M = new CFocusRobotRequest_Static(ID,Name);
+				}else{
+					return NULL;
+				}
+			} 
+			else
+			{
+				M = new CFocusRobotRequest(ID);
+			}
+		}
+		break;
+	case INSTINCT_NAME_REQUEST:
+		{
+			if (Param)
+			{
+				if(Param->EnergyType() == TYPE_STRING)
+				{
+					tstring& Name = *(tstring*)Param->Value();
+					M = new CNameRobotRequest_Static(ID,Name);
+				}
+			}else{
+				M = new CNameRobotRequest(ID);
+			} 
+		}
+		break;
+	case INSTINCT_EXECUTE_REQUEST:
+		{
+			M = new CExecuteRobotRequest(ID);
+		}
+		break;
+	case INSTINCT_CLOSE_REQUEST:
+		{
+			M = new CCloseRobotRequest(ID);
 		}
 		break;
 	default:
 		if (BelongInterAction(InstinctID))
 		{
-			ePipeline Clause;
-			if(Param)Clause.Push_Directly(Param->Clone());
-			M = new CInterBrainObject(ID,_T("InterBrainObject"),InstinctID,Clause);
+			ePipeline ParamList;
+			if(Param)ParamList.Push_Directly(Param->Clone());
+			M = new CInterInstinct(ID,_T("InterInstinct"),InstinctID,ParamList);
 
 			if (InstinctID == INSTINCT_THINK_LOGIC)
 			{

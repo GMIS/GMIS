@@ -1,5 +1,6 @@
-#include "OutputInfo.h"
+#include "..\Brain.h"
 #include "..\LogicDialog.h"
+#include "OutputInfo.h"
 
 COutputInfo::COutputInfo(int64 ID)
 	:CElement(ID,_T("Output Info")){

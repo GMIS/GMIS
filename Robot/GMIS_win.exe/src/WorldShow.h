@@ -39,7 +39,7 @@ public:
 	tstring         m_ViewName;
     CWorldShow*     m_Parent;
 	ObjectItem*     m_RBSelected;
-    tstring         m_AddressText; //类似与  \Hoem\LiveRoom
+    tstring         m_AddressText; //类似与  \Hoem\LiveSpace
 public:
 	CAutoObjectView();
 	virtual ~CAutoObjectView(){};  	
@@ -50,8 +50,8 @@ public:
 
 protected:
 	void OnImportObject();
-    void OnCreateChildRoom(bool IsContainer=false);
-    void OnDeleteObjectFromRoom(tstring Fingerprint);
+    void OnCreateChildSpace(bool IsContainer=false);
+    void OnDeleteObjectFromSpace(tstring Fingerprint);
     void OnExportObjectAsFile(tstring Name, int64 FatherID, int64 ChildID);
 	void OnSelectObject(ObjectItem* Item);
 
@@ -77,21 +77,21 @@ class CWorldShow :
 protected:
 	/*一式两份，通常只显示一份，另一份则在进入之前后台更新
 	*/
-	struct  RoomView
+	struct  SpaceView
 	{
-		CRoom3D          Room;
+		CRoom3D          Space;
 		CAutoObjectView  ObjectView;
 
 		void Clear(){
 		    ObjectView.OnClearAll(0,0);
-		    Room.ClearAllObject();
+		    Space.ClearAllObject();
 		}
 	};
     
-	RoomView   m_Room1;
-	RoomView   m_Room2;
+	SpaceView   m_Space1;
+	SpaceView   m_Space2;
 
-	RoomView*  m_CurRoom;     //指出当前位于那个房间
+	SpaceView*  m_CurSpace;     //指出当前位于那个房间
     int64      m_WhoUpdating; //是否正在更新，更新期间目前不允许进入任何一个其他空间。
 
 	
@@ -112,20 +112,20 @@ protected:
 	GLfloat     m_walkbiasangle;
 	GLfloat     m_lookupdown;
 
-	CLabel3     m_RoomTitle;
+	CLabel3     m_SpaceTitle;
     CLabel3     m_StatusInfo;
        
 	bool        m_bWorldActive;  //指出是否可以漫游  
 
 	int32       m_MenuBmpFont;
 
-	RoomView* GetOtherRoom(RoomView* Room){
-		return Room==&m_Room1 ? &m_Room2 :&m_Room1;
+	SpaceView* GetOtherSpace(SpaceView* Space){
+		return Space==&m_Space1 ? &m_Space2 :&m_Space1;
 	}
-	RoomView* GetUpdataRoom(int64 ParentID){
-		return m_Room1.Room.m_Alias == ParentID? &m_Room1: &m_Room2;
+	SpaceView* GetUpdataSpace(int64 ParentID){
+		return m_Space1.Space.m_Alias == ParentID? &m_Space1: &m_Space2;
 	}
-	CDoorWall* GetOtherDoor(RoomView* Room, mapunit* Dypass); //得到指定房间对应通道对应房间的门
+	CDoorWall* GetOtherDoor(SpaceView* Space, mapunit* Dypass); //得到指定房间对应通道对应房间的门
 
 protected:  //Navigation 用导航棒操作3D漫游
 	enum NAVIBAR_STATE{NAVIBAR_INIT,NAVIBAR_STOP,NAVIBAR_MOVE};
@@ -151,7 +151,7 @@ protected: //用键盘操作3D漫游
 	//x0,z0为漫游之前的位置
 	void RoamingWorld(float x0,float z0);
     bool OpenDoor();  //能打开返回ture，反之false
-    void EnterOtherRoom();
+    void EnterOtherSpace();
     void CloseDoor();
 	
 	friend  class CAutoObjectView;
@@ -168,22 +168,22 @@ public:
 	//在跳跃式方位指定空间之前，清空所有数据，同时设置好父空间
 	void  Reset(int64 ChildID,int64 ParentID,tstring ParentName,SPACETYPE ParentType);
 
-	int64 GetRoomID(){ return m_CurRoom->Room.m_Alias;};
+	int64 GetSpaceID(){ return m_CurSpace->Space.m_Alias;};
 
-	bool  AllowCreateRoom(){ return m_CurRoom->Room.AllowInsertRoom();}
-    bool  AllowImportObject(){ return m_CurRoom->Room.GetOneBlankMapUnit() != NULL;}
+	bool  AllowCreateSpace(){ return m_CurSpace->Space.AllowInsertSpace();}
+    bool  AllowImportObject(){ return m_CurSpace->Space.GetOneBlankMapUnit() != NULL;}
    
-    void  BeginUpdateRoom(tstring RoomName, int64 RoomID,int ObjectNum);
-    void  EndUpdateRoom(int64 RoomID);
+    void  BeginUpdateSpace(tstring SpaceName, int64 SpaceID,int ObjectNum);
+    void  EndUpdateSpace(int64 SpaceID);
 
-    void  ConnectRoomFail(tstring Reason);
+    void  ConnectSpaceFail(tstring Reason);
 
 	void  SetStatusText(tstring s);
-	void  SetRoomTitle(tstring Title);
+	void  SetSpaceTitle(tstring Title);
 
 	void  AddObject(int64 ParentID,int64 ID,tstring& Name,SPACETYPE Type,tstring& Fingerprint,HICON hIcon);
 	void  DeleteObject(tstring Fingerprint);
-    int32 FindObject(tstring& Name, vector<ObjectItem>& RoomList);
+    int32 FindObject(tstring& Name, vector<ObjectItem>& SpaceList);
 	void  ClearAllObject(int64 ParentID);
 
 	virtual LRESULT SendChildMessage(HWND Child,UINT Msg,int64 wParam, int64 lParam);

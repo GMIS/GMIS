@@ -126,7 +126,7 @@
   <ItemGroup>
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\MainFrame.cpp" />
-    <ClCompile Include="src\RequestProc.cpp" />
+    <ClCompile Include="src\SpaceMsgProc.cpp" />
     <ClCompile Include="src\SpacePortal.cpp" />
     <ClCompile Include="src\StatusTip.cpp" />
     <ClCompile Include="src\Win32Tool.cpp" />

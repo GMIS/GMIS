@@ -18,11 +18,11 @@ CLocalInfoAuto::CLocalInfoAuto(CLogicDialog* Dialog,CElement* Elt,ePipeline& Pip
 //	tstring s = Format1024(_T("go in Elt:%s "),Elt->GetName().c_str());
 //	Dialog->RuntimeOutput(ID,s.c_str());
 
-	if (Dialog->m_Brain->GetLogFlag() & LOG_MSG_PROC_PATH ) //可用于调试时跟踪执行路径
+	if (GetBrain()->GetLogFlag() & LOG_MSG_PROC_PATH ) //可用于调试时跟踪执行路径
 	{
 		if (Dialog->m_CurTaskMsgID != MSG_EVENT_TICK)
 		{
-			Dialog->m_Brain->OutputLog(LOG_MSG_PROC_PATH,_T("+%I64ld %s ExePipe Alive:%d State:%I64ld "),ID,Elt->GetName().c_str(),m_Dialog->m_ExePipe.IsAlive(),m_Dialog->m_ExePipe.GetID());
+			GetBrain()->OutputLog(LOG_MSG_PROC_PATH,Format1024(_T("+%I64ld %s ExePipe Alive:%d State:%I64ld "),ID,Elt->GetName().c_str(),m_Dialog->m_ExePipe.IsAlive(),m_Dialog->m_ExePipe.GetID()).c_str());
 		}
 	}
 }
@@ -35,11 +35,11 @@ CLocalInfoAuto::~CLocalInfoAuto (){
 	//tstring s = _T("go out Elt");
 	//m_Dialog->RuntimeOutput(ID,s.c_str());
 	
-	if (m_Dialog->m_Brain->GetLogFlag() & LOG_MSG_PROC_PATH  )
+	if (GetBrain()->GetLogFlag() & LOG_MSG_PROC_PATH  )
 	{
 		if (m_Dialog->m_CurTaskMsgID != MSG_EVENT_TICK)
 		{
-			m_Dialog->m_Brain->OutputLog(LOG_MSG_PROC_PATH,_T("-%I64ld  ExePipe Alive:%d State:%I64ld "),ID,m_Dialog->m_ExePipe.IsAlive(),m_Dialog->m_ExePipe.GetID());
+			GetBrain()->OutputLog(LOG_MSG_PROC_PATH,Format1024(_T("-%I64ld  ExePipe Alive:%d State:%I64ld "),ID,m_Dialog->m_ExePipe.IsAlive(),m_Dialog->m_ExePipe.GetID()).c_str());
 		}
 	}
 }   
@@ -138,21 +138,21 @@ void CElement::Push(Mass* Object){
 	}
 };
 
-void CElement::InsertLogic(int64 Index,CElement* e)
+bool CElement::InsertLogic(int64 Index,CElement* e)
 {
-	ActomPtr It = m_ActomList.begin();
-	if (Index<0 || Index > m_ActomList.size())
-	{
-		Push(e);
-	}else{
-        It +=Index;
-		m_ActomList.insert(It,e);
-
-		if (e->MassType() == MASS_ELEMENT)
-		{
-			e->m_Parent = this;
-		}
+	if(Index<0 ||Index > m_ActomList.size()){
+		return false;
 	}
+
+	ActomPtr It = m_ActomList.begin()+Index;
+
+	m_ActomList.insert(It,e);
+
+	if (e->MassType() == MASS_ELEMENT)
+	{
+		e->m_Parent = this;
+	}
+	return true;
 }
 
 Mass* CElement::GetChild(int64 ChildID){
@@ -168,21 +168,16 @@ Mass* CElement::GetChild(int64 ChildID){
 	}
 	return NULL;
 }
-bool CElement::RemoveLoigc(int64 ChildID)
+bool CElement::RemoveLoigc(int64 ChildIndex)
 {
-	ActomPtr It = m_ActomList.begin();
-	while(It != m_ActomList.end()){
-		Mass* m = *It;
-		if (m->m_ID == ChildID)
-		{
-			delete m;
-			m_ActomList.erase(It);
-
-			return true;
-		}
-		It++;
+	if(ChildIndex<0 || ChildIndex>=m_ActomList.size()){
+		return false;
 	}
-	return false;
+	ActomPtr It = m_ActomList.begin()+ChildIndex;
+	Mass* m = *It;
+	delete m;
+	m_ActomList.erase(It);
+	return true;
 }
 
 
@@ -316,13 +311,16 @@ bool CSeries::Do(CLogicDialog* Dialog,ePipeline& ExePipe, ePipeline& LocalAddres
 
 	ActomList::iterator It = m_ActomList.begin();
 
+	int64 MsgID = Msg.GetMsgID();
+
 	if (!Msg.IsReaded()) //先处理信息
 	{		
 		ePipeline& ObjectAddress = Msg.GetReceiver();
 		if (ObjectAddress.Size()==0) //该此Element处理信息,在处理自己的Child之前
 		{
 			ChildIndex = IT_SELF;  //表示自身,而不是某个child
-			MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress); 
+			MsgProcState ret = EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress); 
+			
 			if (ret==RETURN_DIRECTLY)
 			{
 				return true;
@@ -332,14 +330,19 @@ bool CSeries::Do(CLogicDialog* Dialog,ePipeline& ExePipe, ePipeline& LocalAddres
 		} 
 		else //根据地址在自己的子物体里寻找
 		{
-			int64 ID = ObjectAddress.PopInt();			
+			int64 ID = ObjectAddress.PopInt();	
+			int64 ChildID;
 			while (It != m_ActomList.end())
 			{
 				Mass* Child = *It;
-				if (Child->m_ID == ID)
+				ChildID = Child->m_ID;
+				if(It_be_marked_deleted(ChildID)){ //负数表示被标记为删除，但为了控制消息（比如取消暂停）处理出错，需要临时恢复使用
+					ChildID = -ChildID;
+				}
+				if (ChildID== ID)
 				{
 					break;
-				}
+				}	
 				It++;
 			}
 			
@@ -347,14 +350,12 @@ bool CSeries::Do(CLogicDialog* Dialog,ePipeline& ExePipe, ePipeline& LocalAddres
 			{
 				//先交给系统缺省处理(有时需要关闭无效事件)
 			    int64 MsgID = Msg.GetMsgID();
-				tstring MsgStr = Dialog->m_Brain->MsgID2Str(MsgID);
+				tstring MsgStr = GetBrain()->MsgID2Str(MsgID);
 
 				ChildIndex = IT_SELF;
-				CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
+				EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 				
-				ExePipe.SetID(RETURN_ERROR);
-				ExePipe.GetLabel() = Format1024(_T("Error: Msg(%s) Address(%I64ld) Invalid"),MsgStr.c_str(),ID);
-				return true; //返回true是因为递归执行已经在此中断，我们已经设置了RETURN_ERROR，避免退出时重复设置
+				return ExeError(ExePipe,Format1024(_T("msg(%s) address(%I64ld) is invalid"),MsgStr.c_str(),ID)); //返回true是因为递归执行已经在此中断，我们已经设置了RETURN_ERROR，避免退出时重复设置
 			}else{
 				
 				Mass* Child = *It;
@@ -362,15 +363,13 @@ bool CSeries::Do(CLogicDialog* Dialog,ePipeline& ExePipe, ePipeline& LocalAddres
 					if (ObjectAddress.Size()!=0) //对于非MASS_ELEMENT,则肯定是最后一个目标地址
 					{
 						int64 MsgID = Msg.GetMsgID();
-						tstring MsgStr = Dialog->m_Brain->MsgID2Str(MsgID);
+						tstring MsgStr = GetBrain()->MsgID2Str(MsgID);
 
-						ExePipe.SetID(RETURN_ERROR);
-						ExePipe.GetLabel() = Format1024(_T("Error: Msg(%s) Address(%I64ld) Invalid"),MsgStr.c_str(),ID);
-						return true;//返回true是因为递归执行已经在此中断，我们已经设置了RETURN_ERROR，避免退出时重复设置
+						return ExeError(ExePipe,Format1024(_T("msg(%s) address(%I64ld) is invalid"),MsgStr.c_str(),ID));//返回true是因为递归执行已经在此中断，我们已经设置了RETURN_ERROR，避免退出时重复设置
 					};
 					
 					ChildIndex = It-m_ActomList.begin();
-					MsgProcState ret = CElement::EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
+					MsgProcState ret = EltMsgProc(Dialog,ChildIndex,Msg,ExePipe,LocalAddress);
 					if (ret == RETURN_DIRECTLY)
 					{
 						return true;
@@ -383,17 +382,19 @@ bool CSeries::Do(CLogicDialog* Dialog,ePipeline& ExePipe, ePipeline& LocalAddres
 	//然后依据漫游产生的迭代器位置，继续正常的逻辑执行。
 	while(ExePipe.IsAlive() && It!=m_ActomList.end()){ 
 
-		Mass* Child = *It++;
-	
+		Mass* Child = *It;
+	    
+		if(It_be_marked_deleted(Child->m_ID) && Msg.IsReaded()){//被标记为删除，正式执行时实际删除,但消息处理例外
+			It = m_ActomList.erase(It);
+			Dialog->UpdateDebugTree();
+			continue;
+		}
+		It++;
+
 		if(Child->MassType() == MASS_ELEMENT){
 			CElement* Elt = (CElement*)Child;
 			if(!Elt->Do(Dialog,ExePipe,LocalAddress,Msg)){
-				ExePipe.SetID(RETURN_ERROR);
-				if (ExePipe.GetLabel().size()==0)
-				{
-					ExePipe.GetLabel() = Format1024(_T("%I64ld: %s execute failure."),Child->m_ID,Child->GetName().c_str());
-				}
-				return true;//返回true是因为递归执行已经在此中断，我们已经设置了RETURN_ERROR，避免退出时重复设置
+				return ExeError(ExePipe,Format1024(_T("%I64ld: %s execute failure."),Child->m_ID,Child->GetName().c_str()));//返回true是因为递归执行已经在此中断，我们已经设置了RETURN_ERROR，避免退出时重复设置
 			};
 		}
 		else {					
@@ -402,22 +403,15 @@ bool CSeries::Do(CLogicDialog* Dialog,ePipeline& ExePipe, ePipeline& LocalAddres
 
 			if( !ExePipe.HasTypeAB(Type))  
 			{
-				ExePipe.SetID(RETURN_ERROR);
-				ExePipe.GetLabel() = Format1024(_T("%I64ld: %s input data type checking failure:(%x,%x)"),Child->m_ID,Child->GetName().c_str(),Type,ExePipe.GetTypeAB());
-				return true;//返回true是因为递归执行已经在此中断，我们已经设置了RETURN_ERROR，避免退出时重复设置
+				return ExeError(ExePipe,Format1024(_T("%I64ld: %s input data type checking failure:(%x,%x)"),Child->m_ID,Child->GetName().c_str(),Type,ExePipe.GetTypeAB()));//返回true是因为递归执行已经在此中断，我们已经设置了RETURN_ERROR，避免退出时重复设置
 			}else{								
 				if(!Child->Do(&ExePipe)){
-					ExePipe.SetID(RETURN_ERROR);
-					if (ExePipe.GetLabel().size()==0){
-						ExePipe.GetLabel() = Format1024(_T("%I64ld: %s execute failure."),Child->m_ID,Child->GetName().c_str());
-					}
-					return true;//返回true是因为递归执行已经在此中断，我们已经设置了RETURN_ERROR，避免退出时重复设置
+					return ExeError(ExePipe,Format1024(_T("%I64ld: %s execute failure."),Child->m_ID,Child->GetName().c_str()));//返回true是因为递归执行已经在此中断，我们已经设置了RETURN_ERROR，避免退出时重复设置
 				};     
 			}			
 		};
 		
-		//根据情况作出不同处理
-		
+		//根据情况作出不同处理	
 		int64 State = ExePipe.GetID();
 		if (State == RETURN_NORMAL)//让正常执行拥有最大效率
 		{
@@ -463,6 +457,14 @@ bool CSeries::Do(CLogicDialog* Dialog,ePipeline& ExePipe, ePipeline& LocalAddres
 					return true;
 				}else{
 					Mass* NextChild = *It;
+					if(It_be_marked_deleted(NextChild->m_ID)){
+						It = m_ActomList.erase(It);
+						Dialog->UpdateDebugTree();
+						if(It == m_ActomList.end()){
+							return true;
+						}
+						NextChild = *It;
+					}
 					LocalAddress.PushInt(NextChild->m_ID);
 					Dialog->NotifyPause(ExePipe,LocalAddress);
 				}
@@ -522,47 +524,38 @@ bool    CShunt::FromEnergy(Energy* E){
 	return true;
 }
 
-void CShunt::InsertLogic(int64 Index,CElement* e){
+bool CShunt::InsertLogic(int64 Index,CElement* e){
 
-	ActomPtr It = m_ActomList.begin();
-	if (Index<0 || Index > m_ActomList.size())
-	{
-		Push(e);
-		ePipeline Empty;
-		m_TempResultList.PushPipe(Empty);
-	}else{
-        It +=Index;
-		m_ActomList.insert(It,e);
-		
-		ePipeline Empty;
-		m_TempResultList.InsertEnergy(Index,Empty.Clone());
-
-		if (e->MassType() == MASS_ELEMENT)
-		{
-			e->m_Parent = this;
-		}
-	
+	if(Index<0 || Index>m_ActomList.size()){
+		return false;
 	}
+	ActomPtr It = m_ActomList.begin()+Index;
 
+	m_ActomList.insert(It,e);
+
+	ePipeline Empty;
+	m_TempResultList.InsertEnergy(Index,Empty.Clone());
+
+	if (e->MassType() == MASS_ELEMENT)
+	{
+		e->m_Parent = this;
+	}
+	return true;
 };
 
-bool CShunt::RemoveLoigc(int64 ChildID){
-	int n=0;
-	ActomPtr It = m_ActomList.begin();
-	while(It != m_ActomList.end()){
-		Mass* m = *It;
-		if (m->m_ID == ChildID)
-		{
-			delete m;
-			m_ActomList.erase(It);
-			
-			m_TempResultList.EraseEnergy(n,1);
-			return true;;
-		}
-		n++;
-		It++;
+bool CShunt::RemoveLoigc(int64 ChildIndex){
+	if(ChildIndex<0 || ChildIndex>=m_ActomList.size()){
+		return false;
 	}
-	return false;
+	int n=0;
+	ActomPtr It = m_ActomList.begin()+ChildIndex;
+	Mass* m = *It;
+	delete m;
+	m_ActomList.erase(It);
+
+	m_TempResultList.EraseEnergy(ChildIndex,1);
+	return true;;
+
 }
 
 
@@ -651,7 +644,7 @@ bool CShunt::Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,
 		int64 MsgEventID = Msg.GetEventID();
 		if (MsgEventID !=0 && MsgEventID< GetEventID())  
 		{
-			Dialog->m_Brain->OutputLog(LOG_MSG_RUNTIME_TIP,_T("WARNING: (%I64ld)%s Msg:%I64ld Event:%I64ld < Shunt EventID:%I64ld"),m_ID,GetName().c_str(),Msg.GetMsgID(),MsgEventID,GetEventID());	
+			GetBrain()->OutputLog(LOG_MSG_RUNTIME_TIP,Format1024(_T("WARNING: (%I64ld)%s Msg:%I64ld Event:%I64ld < Shunt EventID:%I64ld"),m_ID,GetName().c_str(),Msg.GetMsgID(),MsgEventID,GetEventID()).c_str());	
 			ExePipe.Break();
 			return true;
 		}
@@ -674,12 +667,17 @@ bool CShunt::Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,
 		{
 			int64 ID = ObjectAddress.PopInt();
 			assert(ID>0);
-		
+		    int64 ChildID;
 			ActomList::iterator It = m_ActomList.begin();
 			while (It != m_ActomList.end())
 			{
 				Mass* Child = *It;
-				if (Child->m_ID == ID)
+				ChildID = Child->m_ID;
+				if(It_be_marked_deleted(ChildID)){ //负数表示被标记为删除，但为了控制消息（比如取消暂停）处理出错，需要临时恢复使用
+					ChildID = -ChildID;
+				}
+
+				if (ChildID == ID)
 				{
 					break;
 				}
@@ -714,11 +712,9 @@ bool CShunt::Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,
 					if (ObjectAddress.Size()!=0) //对于非MASS_ELEMENT,则肯定是最后一个目标地址
 					{
 						int64 MsgID = Msg.GetMsgID();
-						tstring MsgStr = Dialog->m_Brain->MsgID2Str(MsgID);
+						tstring MsgStr = GetBrain()->MsgID2Str(MsgID);
 
-						ExePipe.SetID(RETURN_ERROR);
-						ExePipe.GetLabel() = Format1024(_T("Error: Msg(%s) Address(%I64ld) Invalid"),MsgStr.c_str(),ID);
-						return true;
+						return ExeError(ExePipe, Format1024(_T("Error: Msg(%s) Address(%I64ld) Invalid"),MsgStr.c_str(),ID));
 					};
 
 									
@@ -766,11 +762,7 @@ bool CShunt::Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,
 		if(Child->MassType() == MASS_ELEMENT){
 			CElement* Elt = (CElement*)Child;
 			if(!Elt->Do(Dialog,ExePipe,LocalAddress,Msg)){
-				ExePipe.SetID(RETURN_ERROR); 
-				if (ExePipe.GetLabel().size()==0){
-					ExePipe.GetLabel() = Format1024(_T("%I64ld: %s execute failure."),Child->m_ID,Child->GetName().c_str());
-				}
-				return true;
+				return ExeError(ExePipe,Format1024(_T("%I64ld: %s execute failure."),Child->m_ID,Child->GetName().c_str()));
 			};
 
 			//处理信息后有可能直接返回，比如MSG_EVENT_TICK
@@ -784,18 +776,12 @@ bool CShunt::Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,
 			uint32 Type = Child->GetTypeAB();             		
 			if( !ExePipe.HasTypeAB(Type))  
 			{
-				ExePipe.SetID(RETURN_ERROR);
-				ExePipe.GetLabel() = Format1024(_T("%I64ld: %s input data type checking failure:(%x,%x)"),Child->m_ID,Child->GetName().c_str(),Type,ExePipe.GetTypeAB());
-				return true;
+				return ExeError(ExePipe,Format1024(_T("%I64ld: %s input data type checking failure:(%x,%x)"),Child->m_ID,Child->GetName().c_str(),Type,ExePipe.GetTypeAB()));
 			}else{
 				
 				if(!Child->Do(&ExePipe)){
 					Reset();			
-					ExePipe.SetID(RETURN_ERROR); 
-					if (ExePipe.GetLabel().size()==0){
-						ExePipe.GetLabel() = Format1024(_T("%I64ld: %s execute failure."),Child->m_ID,Child->GetName().c_str());
-					}
-					return true;
+					return ExeError(ExePipe,Format1024(_T("%I64ld: %s execute failure."),Child->m_ID,Child->GetName().c_str()));
 				};     
 			}		
 		};

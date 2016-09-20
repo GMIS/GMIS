@@ -88,7 +88,8 @@ SystemSetting::SystemSetting(){
 	crTaskMassBk = RGB(255,255,255);   
 	crTaskMassPause = RGB(200,128,128);
 	crTaskMassBreak = RGB(128,128,200);
-	
+	crTaskMassDeleted = RGB(100,100,100);
+
 	m_imgRun = NULL; 
 	m_imgPause = NULL; 
 	m_imgStop = NULL; 

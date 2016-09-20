@@ -6,10 +6,10 @@
 #pragma warning (disable:4786)
 
 #include "PhysicSpace.h"
-#include "MainFrame.h"
 #include "MainBrain.h"
+#include "MainFrame.h"
 
-CMainBrain*  GetBrain();
+
 CMainFrame*  GetGUI();
 
 

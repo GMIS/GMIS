@@ -25,9 +25,9 @@ void CBrain::NotifySysState(int64 NotifyType,int64 NotifyID,ePipeline* Data){
 					Cmd.PushInt(TO_STATUS_VIEW::PFM_MSG_UPDATE);
 					Cmd.PushInt(CENTRALNERVE_MSG_NUM);
 					Cmd.PushPipe(*Data);
-					GuiMsg.GetLetter().PushPipe(Cmd);
+					GuiMsg.GetLetter(false).PushPipe(Cmd);
 
-					GetBrainData()->SendMsgToGUI(this,SYSTEM_SOURCE,GuiMsg);
+					GetBrainData()->SendMsgToGUI(SYSTEM_SOURCE,GuiMsg);
 				}
 				break;	
 	
@@ -39,9 +39,9 @@ void CBrain::NotifySysState(int64 NotifyType,int64 NotifyID,ePipeline* Data){
 					Cmd.PushInt(TO_STATUS_VIEW::PFM_THREAD_UPDATE);
 					Cmd.PushInt(THREAD_CENTRAL_NERVE);
 					Cmd.PushInt(n);
-					GuiMsg.GetLetter().PushPipe(Cmd);
+					GuiMsg.GetLetter(false).PushPipe(Cmd);
 
-					GetBrainData()->SendMsgToGUI(this,SYSTEM_SOURCE,GuiMsg);
+					GetBrainData()->SendMsgToGUI(SYSTEM_SOURCE,GuiMsg);
 				}
 				break;
 			case NTID_NERVE_THREAD_CLOSED:
@@ -49,15 +49,15 @@ void CBrain::NotifySysState(int64 NotifyType,int64 NotifyID,ePipeline* Data){
 					int64 nThreadNum = Data->PopInt();
 					int64 nClosedThreadID = Data->PopInt();
 					CLockedModelData*  LockedData = GetModelData();
-					LockedData->DeleteThreadWorker(this,nClosedThreadID,MODEL_CENTRAL_NEVER_WORK_TYPE);
+					LockedData->DeleteThreadWorker(GetBrain(),nClosedThreadID,MODEL_CENTRAL_NEVER_WORK_TYPE);
 
 					ePipeline Cmd(TO_STATUS_VIEW::ID);
 					Cmd.PushInt(TO_STATUS_VIEW::PFM_THREAD_UPDATE);
 					Cmd.PushInt(THREAD_CENTRAL_NERVE);
 					Cmd.PushInt(nThreadNum);
-					GuiMsg.GetLetter().PushPipe(Cmd);
+					GuiMsg.GetLetter(false).PushPipe(Cmd);
 
-					GetBrainData()->SendMsgToGUI(this,SYSTEM_SOURCE,GuiMsg);
+					GetBrainData()->SendMsgToGUI(SYSTEM_SOURCE,GuiMsg);
 				}
 				break;
 			case NTID_NERVE_THREAD_LIMIT:
@@ -75,7 +75,7 @@ void CBrain::NotifySysState(int64 NotifyType,int64 NotifyID,ePipeline* Data){
 				{
 					int64 ID = Data->PopInt();
 					CLockedModelData* ModelData = GetModelData();
-					ModelData->DeleteThreadWorker(this,ID,MODEL_IO_WORK_TYPE);
+					ModelData->DeleteThreadWorker(GetBrain(),ID,MODEL_IO_WORK_TYPE);
 				}
 				break;
 			case NTID_CONNECT_FAIL:
@@ -107,9 +107,9 @@ void CBrain::NotifySysState(int64 NotifyType,int64 NotifyID,ePipeline* Data){
 					Cmd.PushInt(TO_STATUS_VIEW::PFM_MSG_UPDATE);
 					Cmd.PushInt(NERVE_MSG_NUM);
 					Cmd.PushPipe(*Data);
-					GuiMsg.GetLetter().PushPipe(Cmd);
+					GuiMsg.GetLetter(false).PushPipe(Cmd);
 
-					GetBrainData()->SendMsgToGUI(this,SYSTEM_SOURCE,GuiMsg);
+					GetBrainData()->SendMsgToGUI(SYSTEM_SOURCE,GuiMsg);
 				}
 				break;
 			case NTID_NERVE_THREAD_JOIN:
@@ -119,9 +119,9 @@ void CBrain::NotifySysState(int64 NotifyType,int64 NotifyID,ePipeline* Data){
 					Cmd.PushInt(TO_STATUS_VIEW::PFM_THREAD_UPDATE);
 					Cmd.PushInt(THREAD_NERVE);
 					Cmd.PushInt(n);
-					GuiMsg.GetLetter().PushPipe(Cmd);
+					GuiMsg.GetLetter(false).PushPipe(Cmd);
 
-					GetBrainData()->SendMsgToGUI(this,SYSTEM_SOURCE,GuiMsg);		
+					GetBrainData()->SendMsgToGUI(SYSTEM_SOURCE,GuiMsg);		
 				}
 				break;
 			case NTID_NERVE_THREAD_CLOSED:
@@ -130,15 +130,15 @@ void CBrain::NotifySysState(int64 NotifyType,int64 NotifyID,ePipeline* Data){
 					int64 nClosedThreadID = Data->PopInt();
 
 					CLockedSystemData*  LockedData = GetSystemData();
-					LockedData->DeleteThreadWorker(this,nClosedThreadID,SYSTEM_NEVER_WORK_TYPE);
+					LockedData->DeleteThreadWorker(GetBrain(),nClosedThreadID,SYSTEM_NEVER_WORK_TYPE);
 
 					ePipeline Cmd(TO_STATUS_VIEW::ID);
 					Cmd.PushInt(TO_STATUS_VIEW::PFM_THREAD_UPDATE);
 					Cmd.PushInt(THREAD_NERVE);
 					Cmd.PushInt(nThreadNum);
-					GuiMsg.GetLetter().PushPipe(Cmd);
+					GuiMsg.GetLetter(false).PushPipe(Cmd);
 
-					GetBrainData()->SendMsgToGUI(this,SYSTEM_SOURCE,GuiMsg);
+					GetBrainData()->SendMsgToGUI(SYSTEM_SOURCE,GuiMsg);
 				}
 				break;
 			case NTID_NERVE_THREAD_LIMIT:
@@ -177,7 +177,7 @@ void CBrain::NotifySysState(int64 NotifyType,int64 NotifyID,ePipeline* Data){
 			if(NotifyID == NTID_IO_WORKER_CLOSED)
 			{
 				int64 ID = Data->PopInt();
-				m_BrainData.DeleteThreadWorker(this,ID,BRAIN_WEBSOCKET_IO_WORK_TYPE);
+				m_BrainData.DeleteThreadWorker(ID,BRAIN_WEBSOCKET_IO_WORK_TYPE);
 			}
 		}
 		break;
@@ -375,6 +375,7 @@ void CBrain::NotifyLinkerState(int64 SourceID,int64 NotifyID,STATE_OUTPUT_LEVEL 
 					}else if(LinkerType == SERVER_LINKER){
 						bool ret = m_SuperiorList.DeleteLinker(SourceID);
 						if(!ret)return; //链接并不存在
+
 					}else if (LinkerType == WEBSOCKET_LINKER){
 						bool ret = m_WebsocketClientList.DeleteLinker(SourceID);
 						if(!ret)return; //链接并不存在
@@ -390,7 +391,13 @@ void CBrain::NotifyLinkerState(int64 SourceID,int64 NotifyID,STATE_OUTPUT_LEVEL 
 
 					if (SourceID==SPACE_SOURCE)
 					{
-						GetBrainData()->DeleteDialogOfSource(SourceID);
+						CLogicDialog* Dialog = GetBrainData()->GetDialog(SPACE_SOURCE,DEFAULT_DIALOG);
+						CNotifyDialogState nf(NOTIFY_DIALOG_LIST);
+						nf.PushInt(DL_ENABLE_DIALOG);
+						nf.PushInt(FALSE);
+						nf.Notify(Dialog);
+
+						//GetBrainData()->DeleteDialogOfSource(SourceID);
 
 						tstring ip ;
 
@@ -403,9 +410,9 @@ void CBrain::NotifyLinkerState(int64 SourceID,int64 NotifyID,STATE_OUTPUT_LEVEL 
 						Cmd.PushInt(TO_SYSTEM_VIEW::CONNECT_STATE);
 						Cmd.PushString(ip);
 						Cmd.PushInt(FALSE);	
-						GuiMsg2.GetLetter().PushPipe(Cmd);
+						GuiMsg2.GetLetter(false).PushPipe(Cmd);
 
-						GetBrainData()->SendMsgToGUI(this,GuiMsg2,-1);
+						GetBrainData()->SendMsgToGUI(GuiMsg2,-1);
 						return;
 					}
 
@@ -422,9 +429,9 @@ void CBrain::NotifyLinkerState(int64 SourceID,int64 NotifyID,STATE_OUTPUT_LEVEL 
 					Cmd1.PushInt(InvalidDialog->m_DialogID);
 					Cmd1.PushString(InvalidDialog->m_DialogName);
 
-					GuiMsg.GetLetter().PushPipe(Cmd1);
+					GuiMsg.GetLetter(false).PushPipe(Cmd1);
 					//通知其它GUI删除此对话
-					GetBrainData()->SendMsgToGUI(this,GuiMsg,SourceID);
+					GetBrainData()->SendMsgToGUI(GuiMsg,SourceID);
 					
 				}
 				return;
@@ -464,7 +471,13 @@ void CBrain::NotifyLinkerState(int64 SourceID,int64 NotifyID,STATE_OUTPUT_LEVEL 
 
 					if (SourceID==SPACE_SOURCE)
 					{
-						GetBrainData()->DeleteDialogOfSource(SourceID);
+						CLogicDialog* Dialog = GetBrainData()->GetDialog(SPACE_SOURCE,DEFAULT_DIALOG);
+						CNotifyDialogState nf(NOTIFY_DIALOG_LIST);
+						nf.PushInt(DL_ENABLE_DIALOG);
+						nf.PushInt(FALSE);
+						nf.Notify(Dialog);
+
+						//GetBrainData()->DeleteDialogOfSource(SourceID);
 
 						tstring ip ;
 
@@ -477,9 +490,9 @@ void CBrain::NotifyLinkerState(int64 SourceID,int64 NotifyID,STATE_OUTPUT_LEVEL 
 						Cmd.PushInt(TO_SYSTEM_VIEW::CONNECT_STATE);
 						Cmd.PushString(ip);
 						Cmd.PushInt(FALSE);	
-						GuiMsg2.GetLetter().PushPipe(Cmd);
+						GuiMsg2.GetLetter(false).PushPipe(Cmd);
 
-						GetBrainData()->SendMsgToGUI(this,GuiMsg2,-1);
+						GetBrainData()->SendMsgToGUI(GuiMsg2,-1);
 						return;
 					}
 
@@ -530,6 +543,9 @@ void CBrain::NoitfyDialogState(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 	switch(NotifyID)
 	{
 
+	case NOTIFY_WORK_MODE:
+		OnNotifyWorkMode(Dialog,NotifyInfo);
+		break;
 	case NOTIFY_THINK_STATE:
 		OnNotifyThinkState(Dialog,NotifyInfo);
 		break;
@@ -538,6 +554,9 @@ void CBrain::NoitfyDialogState(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 		break;
 	case NOTIFY_DIALOG_OUTPUT: 
 		OnNotifyDialogOutput(Dialog,NotifyInfo);
+		break;
+	case NOTIFY_INPUT_VIEW:
+		OnNotifyInputView(Dialog,NotifyInfo);
 		break;
 	case NOTIFY_LOGIC_VIEW:
 		OnNotifyLogicView(Dialog,NotifyInfo);
@@ -570,6 +589,22 @@ void CBrain::NoitfyDialogState(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 	};
 }
 
+void CBrain::OnNotifyWorkMode(CLogicDialog* Dialog, ePipeline* NotifyInfo){
+	int64 WorkMode = NotifyInfo->PopInt();
+
+	ePipeline Receiver;
+	Receiver.PushInt(Dialog->m_SourceID);
+	Receiver.PushInt(Dialog->m_DialogID);
+
+	CMsg GuiMsg(SYSTEM_SOURCE,Receiver,MSG_BRAIN_TO_GUI,DEFAULT_DIALOG,0);
+
+	ePipeline Cmd(TO_RUNTIME_VIEW::ID);
+	Cmd.PushInt(TO_RUNTIME_VIEW::SET_WORKMODE);
+	Cmd.PushInt(WorkMode);
+	GuiMsg.GetLetter(false).PushPipe(Cmd);
+
+	GetBrainData()->SendMsgToGUI(Dialog->m_SourceID,GuiMsg);
+}
 
 void CBrain::OnNotifyThinkState(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 	int64 State = NotifyInfo->PopInt();
@@ -590,19 +625,19 @@ void CBrain::OnNotifyThinkState(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 
 			ePipeline Cmd0(TO_RUNTIME_VIEW::ID);
 			Cmd0.PushInt(TO_RUNTIME_VIEW::SET_EDIT);
-	        Cmd0.PushString(Dialog->m_EditText);
-			Cmd0.PushInt(TRUE);
-			GuiMsg.GetLetter().PushPipe(Cmd0);
+			Cmd0.PushString(Dialog->m_EditText);
+			Cmd0.PushInt(Dialog->m_bEditValid);
+			GuiMsg.GetLetter(false).PushPipe(Cmd0);
 			         			
 			ePipeline Cmd1(TO_STATUS_VIEW::ID);
 			Cmd1.PushInt(TO_STATUS_VIEW::SET_PROGRESS);
 			Cmd1.PushInt(0);
-			GuiMsg.GetLetter().PushPipe(Cmd1);
+			GuiMsg.GetLetter(false).PushPipe(Cmd1);
 
 			ePipeline Cmd2(TO_STATUS_VIEW::ID);
 			Cmd2.PushInt(TO_STATUS_VIEW::SET_TEXT);
 			Cmd2.PushString(_T(""));
-			GuiMsg.GetLetter().PushPipe(Cmd2);
+			GuiMsg.GetLetter(false).PushPipe(Cmd2);
 		}
 		break;
 	case THINK_ON:
@@ -611,7 +646,7 @@ void CBrain::OnNotifyThinkState(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 			ePipeline Cmd(TO_STATUS_VIEW::ID);
 			Cmd.PushInt(TO_STATUS_VIEW::IO_LIGHT_FLASH);
 			Cmd.PushInt(TRUE);
-			GuiMsg.GetLetter().PushPipe(Cmd);
+			GuiMsg.GetLetter(false).PushPipe(Cmd);
 			
 		}
 		break;
@@ -620,16 +655,16 @@ void CBrain::OnNotifyThinkState(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 			ePipeline Cmd(TO_STATUS_VIEW::ID);
 			Cmd.PushInt(TO_STATUS_VIEW::IO_LIGHT_FLASH);
 			Cmd.PushInt(FALSE);
-			GuiMsg.GetLetter().PushPipe(Cmd);
+			GuiMsg.GetLetter(false).PushPipe(Cmd);
 
 			ePipeline Cmd0(TO_RUNTIME_VIEW::ID);
 			Cmd0.PushInt(TO_RUNTIME_VIEW::CONTINUE_EDIT);
-			GuiMsg.GetLetter().PushPipe(Cmd0);
+			GuiMsg.GetLetter(false).PushPipe(Cmd0);
 
 			ePipeline Cmd1(TO_STATUS_VIEW::ID);
 			Cmd1.PushInt(TO_STATUS_VIEW::SET_PROGRESS);
 			Cmd1.PushInt(0);
-			GuiMsg.GetLetter().PushPipe(Cmd1);	
+			GuiMsg.GetLetter(false).PushPipe(Cmd1);	
 		}
 		break;
 	
@@ -640,20 +675,21 @@ void CBrain::OnNotifyThinkState(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 			Dialog->RuntimeOutput(0,Dialog->m_ThinkError);
 			ePipeline Cmd1(TO_RUNTIME_VIEW::ID);
 			Cmd1.PushInt(TO_RUNTIME_VIEW::CONTINUE_EDIT);
-			GuiMsg.GetLetter().PushPipe(Cmd1);
+			GuiMsg.GetLetter(false).PushPipe(Cmd1);
 
 			ePipeline Cmd(TO_STATUS_VIEW::ID);
 			Cmd.PushInt(TO_STATUS_VIEW::IO_LIGHT_FLASH);
 			Cmd.PushInt(FALSE);
-			GuiMsg.GetLetter().PushPipe(Cmd);
+			GuiMsg.GetLetter(false).PushPipe(Cmd);
 		}
 	default:
 		break;
 	}
 
-	GetBrainData()->SendMsgToGUI(this,Dialog->m_SourceID,GuiMsg);
+	GetBrainData()->SendMsgToGUI(Dialog->m_SourceID,GuiMsg);
 }
 void CBrain::OnNotifyTaskState(CLogicDialog* Dialog, ePipeline* NotifyInfo){
+
 	int64 WorkMode = NotifyInfo->PopInt();
 	int64 State = NotifyInfo->PopInt();
 
@@ -673,14 +709,14 @@ void CBrain::OnNotifyTaskState(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 			ePipeline Cmd(TO_RUNTIME_VIEW::ID);
 			Cmd.PushInt(TO_RUNTIME_VIEW::SET_WORKMODE);
 			Cmd.PushInt(WorkMode);
-			GuiMsg.GetLetter().PushPipe(Cmd);
+			GuiMsg.GetLetter(false).PushPipe(Cmd);
 
 			ePipeline Cmd1(TO_STATUS_VIEW::ID);
 			Cmd1.PushInt(TO_STATUS_VIEW::SET_TEXT);
 
 			
 			ePipeline Info;
-			Dialog->m_Brain->GetBrainData()->GetBrainStateInfo(Info);
+			GetBrain()->GetBrainData()->GetBrainStateInfo(Info);
 
 			int64 EventNum = Info.PopInt();
 			int64 DialogNum = Info.PopInt();
@@ -691,20 +727,20 @@ void CBrain::OnNotifyTaskState(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 			int64 TaskPoolSize = Info.PopInt();
 			int64 GuiNum       = Info.PopInt();
 
-			tstring Tip = Format1024(_T("EN:%I64ld DN:%I64ld DP:%I64ld THN:%I64ld THP:%I64ld TKN:%I64ld TKP:%I64ld"),
+			tstring Tip = Format1024(_T("EvertNum:%I64ld DialogNum:%I64ld DialogPoolSize:%I64ld ThreadNum:%I64ld ThreadPoolSize:%I64ld TaskNum:%I64ld TaskPoolSize:%I64ld"),
 				EventNum,DialogNum,DialogPoolSize,ThreadNum,ThreadPoolSize,TaskNum,TaskPoolSize);
 			Cmd1.PushString(Tip);
-			GuiMsg.GetLetter().PushPipe(Cmd1);
+			GuiMsg.GetLetter(false).PushPipe(Cmd1);
 
 			ePipeline Cmd3(TO_RUNTIME_VIEW::ID);
 			Cmd3.PushInt(TO_RUNTIME_VIEW::TASK_STATE);
 			Cmd3.PushInt(TASK_STOP);			
-			GuiMsg.GetLetter().PushPipe(Cmd3);	
+			GuiMsg.GetLetter(false).PushPipe(Cmd3);	
 
 			ePipeline Cmd4(TO_STATUS_VIEW::ID);
 			Cmd4.PushInt(TO_STATUS_VIEW::SET_PROGRESS);
 			Cmd4.PushInt(0);
-			GuiMsg.GetLetter().PushPipe(Cmd4);
+			GuiMsg.GetLetter(false).PushPipe(Cmd4);
 
 		}
 		break;
@@ -713,18 +749,18 @@ void CBrain::OnNotifyTaskState(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 			ePipeline Cmd(TO_RUNTIME_VIEW::ID);
 			Cmd.PushInt(TO_RUNTIME_VIEW::SET_WORKMODE);
 			Cmd.PushInt(WorkMode);
-			GuiMsg.GetLetter().PushPipe(Cmd);
+			GuiMsg.GetLetter(false).PushPipe(Cmd);
 
 			ePipeline Cmd2(TO_STATUS_VIEW::ID);
 			Cmd2.PushInt(TO_STATUS_VIEW::SET_TEXT);
 			Cmd2.PushString(_T("Compile..."));
-			GuiMsg.GetLetter().PushPipe(Cmd2);
+			GuiMsg.GetLetter(false).PushPipe(Cmd2);
 
 
 			ePipeline Cmd3(TO_RUNTIME_VIEW::ID);
 			Cmd3.PushInt(TO_RUNTIME_VIEW::TASK_STATE);
 			Cmd3.PushInt(TASK_COMPILE);			
-			GuiMsg.GetLetter().PushPipe(Cmd3);	
+			GuiMsg.GetLetter(false).PushPipe(Cmd3);	
 
 		}
 		break;
@@ -735,7 +771,7 @@ void CBrain::OnNotifyTaskState(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 			ePipeline Cmd3(TO_RUNTIME_VIEW::ID);
 			Cmd3.PushInt(TO_RUNTIME_VIEW::TASK_STATE);
 			Cmd3.PushInt(TASK_COMPILE);			
-			GuiMsg.GetLetter().PushPipe(Cmd3);	
+			GuiMsg.GetLetter(false).PushPipe(Cmd3);	
 		}
 		break;
 	case TASK_RUN:  
@@ -744,25 +780,25 @@ void CBrain::OnNotifyTaskState(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 			ePipeline Cmd2(TO_RUNTIME_VIEW::ID);
 			Cmd2.PushInt(TO_RUNTIME_VIEW::TASK_STATE);
 			Cmd2.PushInt(TASK_RUN);			
-			GuiMsg.GetLetter().PushPipe(Cmd2);	
+			GuiMsg.GetLetter(false).PushPipe(Cmd2);	
 
 		}
 		break;
 	case TASK_PAUSE:
 		{
 			int64 TaskTimeStamp   = Dialog->m_LogicItemTree.GetID();
-			int64 PauseID  = Dialog->GetFocusPauseItemID();		
+			int64 PauseID  = *(int64*)Dialog->m_LogicAddress.GetLastData();	
 				
 			ePipeline Cmd(TO_RUNTIME_VIEW::ID);
 			Cmd.PushInt(TO_RUNTIME_VIEW::SET_WORKMODE);
 			Cmd.PushInt(WorkMode);
-			GuiMsg.GetLetter().PushPipe(Cmd);
+			GuiMsg.GetLetter(false).PushPipe(Cmd);
 			
 			Dialog->m_StatusText = _T("Pause...");
 			ePipeline Cmd1(TO_STATUS_VIEW::ID);
 			Cmd1.PushInt(TO_STATUS_VIEW::SET_TEXT);
 			Cmd1.PushString(Dialog->m_StatusText);
-			GuiMsg.GetLetter().PushPipe(Cmd1);
+			GuiMsg.GetLetter(false).PushPipe(Cmd1);
 			
 			if (PauseID)
 			{
@@ -770,13 +806,13 @@ void CBrain::OnNotifyTaskState(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 				Cmd3.PushInt(DEBUG_MARK_PAUSE);
 				Cmd3.PushInt(TaskTimeStamp);
 				Cmd3.PushInt(PauseID);
-				GuiMsg.GetLetter().PushPipe(Cmd3);
+				GuiMsg.GetLetter(false).PushPipe(Cmd3);
 			}
 			
 			ePipeline Cmd4(TO_RUNTIME_VIEW::ID);
 			Cmd4.PushInt(TO_RUNTIME_VIEW::TASK_STATE);
 			Cmd4.PushInt(TASK_PAUSE);			
-			GuiMsg.GetLetter().PushPipe(Cmd4);	
+			GuiMsg.GetLetter(false).PushPipe(Cmd4);	
 			
 		}
 		break;
@@ -786,12 +822,12 @@ void CBrain::OnNotifyTaskState(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 			ePipeline Cmd0(TO_STATUS_VIEW::ID);
 			Cmd0.PushInt(TO_STATUS_VIEW::SET_TEXT);
 			Cmd0.PushString(Dialog->m_StatusText);
-			GuiMsg.GetLetter().PushPipe(Cmd0);
+			GuiMsg.GetLetter(false).PushPipe(Cmd0);
 
 			ePipeline Cmd1(TO_RUNTIME_VIEW::ID);
 			Cmd1.PushInt(TO_RUNTIME_VIEW::SET_WORKMODE);
 			Cmd1.PushInt(WorkMode);
-			GuiMsg.GetLetter().PushPipe(Cmd1);
+			GuiMsg.GetLetter(false).PushPipe(Cmd1);
 			
 		}
 		break;
@@ -800,15 +836,15 @@ void CBrain::OnNotifyTaskState(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 			
 			ePipeline Cmd4(TO_RUNTIME_VIEW::ID);
 			Cmd4.PushInt(TO_RUNTIME_VIEW::TASK_STATE);
-			Cmd4.PushInt(TASK_PAUSE);			
-			GuiMsg.GetLetter().PushPipe(Cmd4);	
+			Cmd4.PushInt(TASK_DELELTE);			
+			GuiMsg.GetLetter(false).PushPipe(Cmd4);	
 		}
 		break;
 	default:
 		break;
 	}
 
-	GetBrainData()->SendMsgToGUI(this,Dialog->m_SourceID,GuiMsg);
+	GetBrainData()->SendMsgToGUI(Dialog->m_SourceID,GuiMsg);
 }
 
 void CBrain::OnNotifyDialogOutput(CLogicDialog* Dialog, ePipeline* NotifyInfo){	
@@ -835,7 +871,7 @@ void CBrain::OnNotifyDialogOutput(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 			ePipeline Cmd0(TO_HISTORY_VIEW::ID);
 			Cmd0.PushInt(TO_HISTORY_VIEW::ADD_ITEM);
 			Cmd0.Push_Directly(Item->Clone());	
-			GuiMsg.GetLetter().PushPipe(Cmd0);
+			GuiMsg.GetLetter(false).PushPipe(Cmd0);
 		}
 		break;
 	case RUNTIME_INFO:
@@ -851,7 +887,7 @@ void CBrain::OnNotifyDialogOutput(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 			Cmd0.PushInt(TO_RUNTIME_VIEW::OUT_PIPE_INFO);
 
 			Cmd0.Push_Directly(Item->Clone());
-			GuiMsg.GetLetter().PushPipe(Cmd0);
+			GuiMsg.GetLetter(false).PushPipe(Cmd0);
 		}
 		break;
 	case STATUS_INFO:
@@ -860,7 +896,7 @@ void CBrain::OnNotifyDialogOutput(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 			ePipeline Cmd1(TO_STATUS_VIEW::ID);
 			Cmd1.PushInt(TO_STATUS_VIEW::SET_TEXT);
 			Cmd1.PushString(s);
-			GuiMsg.GetLetter().PushPipe(Cmd1);
+			GuiMsg.GetLetter(false).PushPipe(Cmd1);
 		}
 		break;
 	case FORECAST_INFO:
@@ -869,7 +905,7 @@ void CBrain::OnNotifyDialogOutput(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 			ePipeline Cmd1(TO_RUNTIME_VIEW::ID);
 			Cmd1.PushInt(TO_RUNTIME_VIEW::OUT_FORECAST_INFO);
 			Cmd1.PushString(s);
-			GuiMsg.GetLetter().PushPipe(Cmd1);
+			GuiMsg.GetLetter(false).PushPipe(Cmd1);
 		}
 		break;
 	case INIT_FOCUS:
@@ -877,7 +913,7 @@ void CBrain::OnNotifyDialogOutput(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 			ePipeline Cmd1(TO_SYSTEM_VIEW::ID);
 			Cmd1.PushInt(TO_SYSTEM_VIEW::SET_CUR_DIALOG);
 			Cmd1<<*NotifyInfo;
-            GuiMsg.GetLetter().PushPipe(Cmd1);
+            GuiMsg.GetLetter(false).PushPipe(Cmd1);
 		}
 		break;
 	case DIALOG_INFO_MORE:
@@ -889,7 +925,7 @@ void CBrain::OnNotifyDialogOutput(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 			ePipeline Cmd0(TO_HISTORY_VIEW::ID);
 			Cmd0.PushInt(TO_HISTORY_VIEW::ADD_MORE_ITEM);
 			Cmd0.Push_Directly(e.Release());	
-			GuiMsg.GetLetter().PushPipe(Cmd0);
+			GuiMsg.GetLetter(false).PushPipe(Cmd0);
 		}
 		break;
 	case RUNTIME_INFO_MORE:
@@ -898,7 +934,7 @@ void CBrain::OnNotifyDialogOutput(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 		}
 		break;
 	}
-	GetBrainData()->SendMsgToGUI(this,Dialog->m_SourceID,GuiMsg);
+	GetBrainData()->SendMsgToGUI(Dialog->m_SourceID,GuiMsg);
 }
 
 void CBrain::OnNotifyLogicView(CLogicDialog* Dialog, ePipeline* NotifyInfo){
@@ -911,9 +947,9 @@ void CBrain::OnNotifyLogicView(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 
 	ePipeline Cmd1(TO_LOGIC_VIEW::ID);
 	Cmd1<<*NotifyInfo;
-	GuiMsg.GetLetter().PushPipe(Cmd1);
+	GuiMsg.GetLetter(false).PushPipe(Cmd1);
 	
-	GetBrainData()->SendMsgToGUI(this,Dialog->m_SourceID,GuiMsg);
+	GetBrainData()->SendMsgToGUI(Dialog->m_SourceID,GuiMsg);
 };
 
 void CBrain::OnNotifyObjectList(CLogicDialog* Dialog, ePipeline* NotifyInfo){
@@ -926,9 +962,9 @@ void CBrain::OnNotifyObjectList(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 	
 	ePipeline Cmd1(TO_OBJECT_VIEW::ID);
 	Cmd1<<*NotifyInfo;
-	GuiMsg.GetLetter().PushPipe(Cmd1);
+	GuiMsg.GetLetter(false).PushPipe(Cmd1);
 	
-	GetBrainData()->SendMsgToGUI(this,Dialog->m_SourceID,GuiMsg);
+	GetBrainData()->SendMsgToGUI(Dialog->m_SourceID,GuiMsg);
 }
 
 void CBrain::OnNotifyDialogList(CLogicDialog* Dialog, ePipeline* NotifyInfo){
@@ -952,7 +988,7 @@ void CBrain::OnNotifyDialogList(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 			Cmd1.PushInt(Dialog->m_DialogID);
 			Cmd1.PushInt(Dialog->m_ParentDialogID);
 			Cmd1.PushString(Dialog->m_DialogName);
-			GuiMsg.GetLetter().PushPipe(Cmd1);
+			GuiMsg.GetLetter(false).PushPipe(Cmd1);
 			
 			if (bFocusDialog)
             {
@@ -961,8 +997,8 @@ void CBrain::OnNotifyDialogList(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 				Cmd.PushInt(Dialog->m_SourceID);
 				Cmd.PushInt(Dialog->m_DialogID);
 
-				Dialog->m_Brain->GetBrainData()->GetFocusDialogData(Dialog->m_SourceID,Dialog->m_DialogID,Cmd,false);
-				GuiMsg.GetLetter().PushPipe(Cmd);	
+				GetBrain()->GetBrainData()->GetFocusDialogData(Dialog->m_SourceID,Dialog->m_DialogID,Cmd,false);
+				GuiMsg.GetLetter(false).PushPipe(Cmd);	
             };
 		}
 		break;
@@ -975,7 +1011,7 @@ void CBrain::OnNotifyDialogList(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 			Cmd1.PushInt(Dialog->m_DialogID);
 			Cmd1.PushString(Dialog->m_DialogName);
 
-			GuiMsg.GetLetter().PushPipe(Cmd1);
+			GuiMsg.GetLetter(false).PushPipe(Cmd1);
 
 			if (NotifyInfo->Size())
 			{
@@ -1000,7 +1036,7 @@ void CBrain::OnNotifyDialogList(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 			ePipeline Cmd1(TO_DIALOG_VIEW::ID);
 			Cmd1.PushInt(TO_DIALOG_VIEW::INIT);
 			Cmd1.PushPipe(DialogListInfo);
-			GuiMsg.GetLetter().PushPipe(Cmd1);
+			GuiMsg.GetLetter(false).PushPipe(Cmd1);
 
 			//设置此登录对话为当前焦点对话
 			ePipeline Pipe;  //历史对话记录
@@ -1010,7 +1046,7 @@ void CBrain::OnNotifyDialogList(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 			Cmd2.PushInt(TheDialog->m_SourceID);
 			Cmd2.PushInt(TheDialog->m_DialogID);
 			Cmd2<<Pipe;
-			GuiMsg.GetLetter().PushPipe(Cmd2);
+			GuiMsg.GetLetter(false).PushPipe(Cmd2);
 
 			//通知用户是否已经连接空间
 			ePipeline Cmd3(TO_SYSTEM_VIEW::ID);
@@ -1021,14 +1057,15 @@ void CBrain::OnNotifyDialogList(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 				CUserLinkerPipe* LinkerPipe = (CUserLinkerPipe*)Linker.Release();
 				Cmd3.PushString(LinkerPipe->GetIP());
 				Cmd3.PushInt(TRUE);	
+
 			}else{
 				Cmd3.PushString(_T(""));
-				Cmd3.PushInt(FALSE);	
+				Cmd3.PushInt(FALSE);
 			}
 			
-			GuiMsg.GetLetter().PushPipe(Cmd3);	
+			GuiMsg.GetLetter(false).PushPipe(Cmd3);	
 
-			GetBrainData()->SendMsgToGUI(this,SourceID,GuiMsg);
+			GetBrainData()->SendMsgToGUI(SourceID,GuiMsg);
 
 			//通知其它GUI用户，增加一个对话条目。
 			ePipeline Receiver;
@@ -1042,15 +1079,25 @@ void CBrain::OnNotifyDialogList(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 			Cmd.PushInt(TheDialog->m_DialogID);
 			Cmd.PushInt(TheDialog->m_ParentDialogID);
 			Cmd.PushString(TheDialog->m_DialogName);
-			GuiMsg.GetLetter().PushPipe(Cmd);
-			GetBrainData()->SendMsgToGUI(this,GuiMsg,SourceID);
+			GuiMsg.GetLetter(false).PushPipe(Cmd);
+			GetBrainData()->SendMsgToGUI(GuiMsg,SourceID);
 			return;
 		}
+		break;
+	case DL_ENABLE_DIALOG:
+		{
+			ePipeline Cmd1(TO_DIALOG_VIEW::ID);
+			Cmd1.PushInt(TO_DIALOG_VIEW::ENABLE_ITEM);
+			Cmd1<< *NotifyInfo;
+			GuiMsg.GetLetter(false).PushPipe(Cmd1);
+
+		}
+		break;
 	default:
 		break;
 	}
 
-	GetBrainData()->SendMsgToGUI(this,Dialog->m_SourceID,GuiMsg);
+	GetBrainData()->SendMsgToGUI(Dialog->m_SourceID,GuiMsg);
 }
 
 void CBrain::OnNotifyProgressOutput(CLogicDialog* Dialog, ePipeline* NotifyInfo)
@@ -1069,13 +1116,13 @@ void CBrain::OnNotifyProgressOutput(CLogicDialog* Dialog, ePipeline* NotifyInfo)
 			ePipeline Cmd(TO_STATUS_VIEW::ID);
 			Cmd.PushInt(TO_STATUS_VIEW::SET_TEXT);
 			Cmd.PushString(s);
-			GuiMsg.GetLetter().PushPipe(Cmd);
+			GuiMsg.GetLetter(false).PushPipe(Cmd);
 
 			int64 Per = NotifyInfo->PopInt();
 			ePipeline Cmd1(TO_STATUS_VIEW::ID);
 			Cmd1.PushInt(TO_STATUS_VIEW::SET_PROGRESS);
 			Cmd1.PushInt(Per);
-			GuiMsg.GetLetter().PushPipe(Cmd1);
+			GuiMsg.GetLetter(false).PushPipe(Cmd1);
 		}
 		break;
 	case COMPILE_PROGRESS:
@@ -1085,14 +1132,14 @@ void CBrain::OnNotifyProgressOutput(CLogicDialog* Dialog, ePipeline* NotifyInfo)
 			ePipeline Cmd1(TO_STATUS_VIEW::ID);
 			Cmd1.PushInt(TO_STATUS_VIEW::SET_PROGRESS);
 			Cmd1.PushInt(Per);
-			GuiMsg.GetLetter().PushPipe(Cmd1);
+			GuiMsg.GetLetter(false).PushPipe(Cmd1);
 		}
 		break;
 	default:
 		break;
 	}
 	
-	GetBrainData()->SendMsgToGUI(this,Dialog->m_SourceID,GuiMsg);
+	GetBrainData()->SendMsgToGUI(Dialog->m_SourceID,GuiMsg);
 	
 }
 void CBrain::OnNotifyDebugView(CLogicDialog* Dialog, ePipeline* NotifyInfo){
@@ -1107,9 +1154,9 @@ void CBrain::OnNotifyDebugView(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 	ePipeline Cmd1(TO_DEBUG_VIEW::ID);
 	Cmd1<< *NotifyInfo;
 	
-	GuiMsg.GetLetter().PushPipe(Cmd1);
+	GuiMsg.GetLetter(false).PushPipe(Cmd1);
 
-	GetBrainData()->SendMsgToGUI(this,Dialog->m_SourceID,GuiMsg);
+	GetBrainData()->SendMsgToGUI(Dialog->m_SourceID,GuiMsg);
 }
 
 void CBrain::OnNotifyBrainInit(CLogicDialog* Dialog, ePipeline* NotifyInfo){
@@ -1128,13 +1175,13 @@ void CBrain::OnNotifyBrainInit(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 		ePipeline Cmd(TO_STATUS_VIEW::ID);
 		Cmd.PushInt(TO_STATUS_VIEW::SET_TEXT);
 		Cmd.PushString(tip);
-		GuiMsg.GetLetter().PushPipe(Cmd);
+		GuiMsg.GetLetter(false).PushPipe(Cmd);
 
 		int64 Per = NotifyInfo->PopInt();
 		ePipeline Cmd1(TO_STATUS_VIEW::ID);
 		Cmd1.PushInt(TO_STATUS_VIEW::SET_PROGRESS);
 		Cmd1.PushInt(Per);
-		GuiMsg.GetLetter().PushPipe(Cmd1);
+		GuiMsg.GetLetter(false).PushPipe(Cmd1);
 
 	}else if (Type == BEGIN_INIT)
 	{
@@ -1144,7 +1191,7 @@ void CBrain::OnNotifyBrainInit(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 		Cmd3.PushInt(FALSE); //RUN BNT disable
 		Cmd3.PushInt(TRUE);  //PAUSE BNT Enable
 		Cmd3.PushInt(TRUE);  //STOP BNT Enable
-		GuiMsg.GetLetter().PushPipe(Cmd3);
+		GuiMsg.GetLetter(false).PushPipe(Cmd3);
 				
 	}else if (Type == END_INIT)
 	{
@@ -1152,26 +1199,26 @@ void CBrain::OnNotifyBrainInit(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 		ePipeline Cmd(TO_STATUS_VIEW::ID);
 		Cmd.PushInt(TO_STATUS_VIEW::SET_TEXT);
 		Cmd.PushString(tip);
-		GuiMsg.GetLetter().PushPipe(Cmd);
+		GuiMsg.GetLetter(false).PushPipe(Cmd);
 		
 		int64 Per = 0;
 		ePipeline Cmd1(TO_STATUS_VIEW::ID);
 		Cmd1.PushInt(TO_STATUS_VIEW::SET_PROGRESS);
 		Cmd1.PushInt(Per);
-		GuiMsg.GetLetter().PushPipe(Cmd1);
+		GuiMsg.GetLetter(false).PushPipe(Cmd1);
 
 		ePipeline Cmd3(TO_RUNTIME_VIEW::ID);
 		Cmd3.PushInt(TO_RUNTIME_VIEW::TASK_TOOLBAR);
 		Cmd3.PushInt(FALSE); //RUN BNT disable
 		Cmd3.PushInt(FALSE);  //PAUSE BNT Enable
 		Cmd3.PushInt(FALSE);  //STOP BNT Enable
-		GuiMsg.GetLetter().PushPipe(Cmd3);
+		GuiMsg.GetLetter(false).PushPipe(Cmd3);
 
 	}else{
 		return ;
 	}
 
-	GetBrainData()->SendMsgToGUI(this,Dialog->m_SourceID,GuiMsg);
+	GetBrainData()->SendMsgToGUI(Dialog->m_SourceID,GuiMsg);
 }
 
 void CBrain::OnNotifyFindInfo(CLogicDialog* Dialog, ePipeline* NotifyInfo){
@@ -1184,9 +1231,9 @@ void CBrain::OnNotifyFindInfo(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 	
 	ePipeline Cmd1(TO_FIND_VIEW::ID);
 	Cmd1<< *NotifyInfo;
-	GuiMsg.GetLetter().PushPipe(Cmd1);
+	GuiMsg.GetLetter(false).PushPipe(Cmd1);
 
-	GetBrainData()->SendMsgToGUI(this,Dialog->m_SourceID,GuiMsg);
+	GetBrainData()->SendMsgToGUI(Dialog->m_SourceID,GuiMsg);
 }
 
 
@@ -1200,7 +1247,28 @@ void CBrain::OnNotifyMemoryList(CLogicDialog* Dialog, ePipeline* NotifyInfo){
 	
 	ePipeline Cmd1(TO_DATA_VIEW::ID);
 	Cmd1<< *NotifyInfo;
-	GuiMsg.GetLetter().PushPipe(Cmd1);
+	GuiMsg.GetLetter(false).PushPipe(Cmd1);
 	
-	GetBrainData()->SendMsgToGUI(this,Dialog->m_SourceID,GuiMsg);
+	GetBrainData()->SendMsgToGUI(Dialog->m_SourceID,GuiMsg);
+}
+
+void CBrain::OnNotifyInputView(CLogicDialog* Dialog,ePipeline* NotifyInfo){
+
+	int64 Type = NotifyInfo->PopInt();
+
+	ePipeline Receiver;
+	Receiver.PushInt(Dialog->m_SourceID);
+	Receiver.PushInt(Dialog->m_DialogID);
+
+	CMsg GuiMsg(SYSTEM_SOURCE,Receiver,MSG_BRAIN_TO_GUI,DEFAULT_DIALOG,0);
+
+	if(Type == ENABLE_INPUT){
+		ePipeline Cmd0(TO_RUNTIME_VIEW::ID);
+		Cmd0.PushInt(TO_RUNTIME_VIEW::SET_EDIT);
+		Cmd0.PushString(Dialog->m_EditText);
+		Cmd0.PushInt(Dialog->m_bEditValid);
+		GuiMsg.GetLetter(false).PushPipe(Cmd0);
+	}
+
+	GetBrainData()->SendMsgToGUI(Dialog->m_SourceID,GuiMsg);
 }

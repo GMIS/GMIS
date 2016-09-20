@@ -1,11 +1,12 @@
 ﻿
 #pragma  warning (disable:4786)
 
-#include "LogView.h"
 #include "Brain.h"
+#include "GMIS.h"
+#include "LogView.h"
 #include "UserTimer.h"
 #include "GUIMsgDefine.h"
-#include "GMIS.h"
+
 
 void CLogView::CFooterBar::ControlBnt::Draw(HDC hDC,ePipeline* Pipe /*=NULL*/){
 	RECT rc = GetArea();

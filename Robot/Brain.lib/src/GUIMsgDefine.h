@@ -32,7 +32,7 @@ namespace TO_BRAIN_MSG{
 		const uint32 CMD_RUN            = 101;
 		const uint32 CMD_STOP           = 102;  
 		const uint32 CMD_PAUSE          = 103; 
-		const uint32 CMD_DEBUG_BREAK    = 104;
+		const uint32 CMD_SET_BREAKPOINT    = 104;
 		const uint32 CMD_DEBUG_STEP     = 105; 
 		//const uint32 CMD_WAITED_FEEDBACK= 106;
 		//const uint32 CMD_DEBUG          = 107;
@@ -121,6 +121,7 @@ namespace TO_DIALOG_VIEW{
 	const uint32 DEL_ITEM			= 70002;	
 	const uint32 CLEAR				= 70003;
 	const uint32 INIT				= 70004;
+	const uint32 ENABLE_ITEM        = 70005;
 
 };
 

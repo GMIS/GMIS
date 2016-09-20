@@ -55,7 +55,7 @@ public:
 
 		int32 n=0; 
 
-		SPACETYPE RoomType = ROBOT_VISITER;
+		SPACETYPE SpaceType = ROBOT_VISITER;
 		while(m_Alive) 
 		{
 			//Each time we take out the 100-space checking, delete the ROBOT_VISIT residues 
@@ -77,7 +77,7 @@ public:
 			while (m_Alive && It != TableList.end())
 			{
 				int64toa(*It,Name); 	
-				SQL.format("delete from \"%s\"  where %s = %d ",Name,ITEM_TYPE,RoomType);
+				SQL.format("delete from \"%s\"  where %s = %d ",Name,ITEM_TYPE,SpaceType);
 				GetWorldDB().execDML(SQL);
 				It++;
 				n++;
@@ -126,7 +126,6 @@ int APIENTRY WinMain(HINSTANCE hInstance,
                      LPSTR     lpCmdLine,
                      int       nCmdShow)
 {
-	
 
     HANDLE  MutexOneInstance = ::CreateMutexW( NULL, FALSE,
 	  _T("SPACEPORTAL_CREATED"));
@@ -169,8 +168,8 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	People  Host; 
 	GetHost(&Host);//initialize，due to the static variable  can not control the destructor order, in order to avoid Host destruct ahead of the WorldDB , Host to local variables
 
-	ROOM_SPACE RootRoom;
-	GetRootRoom(&RootRoom); //initialize
+	ROOM_SPACE RootSpace;
+	GetRootSpace(&RootSpace); //initialize
 	
 
 	CSpacePortal SpacePortal(&Timer,&SpacePool);	
@@ -225,20 +224,20 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 
 				tstring Fingerprint = Format1024(_T("%I64ld"),OUTER_SPACEID); //Current space eigenvalue replaced by its subspace's ID for simplifying 
 
-				ROOM_SPACE OuterRoom(ROOT_SPACE,OUTER_SPACEID,OuterName,0,OUTER_SPACE,NO_RIGHT,Fingerprint);
+				ROOM_SPACE OuterSpace(ROOT_SPACE,OUTER_SPACEID,OuterName,0,OUTER_SPACE,FREE,Fingerprint);
 
 				Fingerprint = Format1024(_T("%I64ld"),LOCAL_SPACEID);
-				ROOM_SPACE LocalRoom(ROOT_SPACE,LOCAL_SPACEID,AfxAccount.LocalName, 0,LOCAL_SPACE,NO_RIGHT,Fingerprint);
+				ROOM_SPACE LocalSpace(ROOT_SPACE,LOCAL_SPACEID,AfxAccount.LocalName, 0,LOCAL_SPACE,FREE,Fingerprint);
 
-				LocalRoom.AddOwner(AfxAccount.Name.c_str(),Cryptograph,USABLE);
+				LocalSpace.AddOwner(AfxAccount.Name.c_str(),Cryptograph,USABLE);
 
 				People& Host = GetHost();
 				Host.SetName(AfxAccount.Name);
 				Host.m_Cryptograhp = Cryptograph;
 				Host.SetSpaceType(ROBOT_HOST);
 
-				ROOM_SPACE& RootRoom = GetRootRoom();
-				bool ret = RootRoom.Logon(0,Host);
+				ROOM_SPACE& RootSpace = GetRootSpace();
+				bool ret = RootSpace.Logon(0,Host);
 				assert(ret);
 			}    
 			catch (...) {
@@ -262,8 +261,8 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 			Host.m_Cryptograhp = CryptText;
 			Host.SetSpaceType(ROBOT_HOST);
 
-			ROOM_SPACE& RootRoom = GetRootRoom();
-			if(RootRoom.Logon(0,Host)){			                
+			ROOM_SPACE& RootSpace = GetRootSpace();
+			if(RootSpace.Logon(0,Host)){			                
 				bHostValid = true;				
 			}
 		}
@@ -281,8 +280,8 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 				Host.m_Cryptograhp = AfxAccount.Name+AfxAccount.Password; 
 				Host.SetSpaceType(ROBOT_HOST);
 
-				ROOM_SPACE& RootRoom = GetRootRoom();
-				if(RootRoom.Logon(0,Host)){	
+				ROOM_SPACE& RootSpace = GetRootSpace();
+				if(RootSpace.Logon(0,Host)){	
 					bHostValid = true;
 					break;				
 				}

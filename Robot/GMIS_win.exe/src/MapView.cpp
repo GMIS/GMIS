@@ -18,7 +18,7 @@
 HICON MapItem::hWorld     = NULL; 
 HICON MapItem::hContainer = NULL;
 HICON MapItem::hPeople    = NULL;
-HICON MapItem::hRoom      = NULL;
+HICON MapItem::hSpace      = NULL;
 	
 BOOL CALLBACK GetIPDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
@@ -121,16 +121,16 @@ CMapView::CMapView(){
 	MapItem::hWorld     = ::LoadIcon(GetHinstance(),MAKEINTRESOURCE(IDI_EARTH)); 
 	MapItem::hContainer = ::LoadIcon(GetHinstance(),MAKEINTRESOURCE(IDI_CONTAINER)); 
 	MapItem::hPeople    = ::LoadIcon(GetHinstance(),MAKEINTRESOURCE(IDI_PEOPLE)); 
-	MapItem::hRoom     =  ::LoadIcon(GetHinstance(),MAKEINTRESOURCE(IDI_ROOM)); 
+	MapItem::hSpace     =  ::LoadIcon(GetHinstance(),MAKEINTRESOURCE(IDI_ROOM)); 
 
 	WorldStart* Item = new WorldStart(ROOT_SPACE,_T("World"),MapItem::hWorld);
 	Item->SetAreaSize(250,22);
 //	Item->m_State |= SPACE_DISABLE;
     m_ChildList.push_back(Item);
-	MapItem* Outer = new MapItem(OUTER_SPACEID,_T("Outer Space"),MapItem::hRoom); //加入虚节点,以显示还有
+	MapItem* Outer = new MapItem(OUTER_SPACEID,_T("Outer Space"),MapItem::hSpace); //加入虚节点,以显示还有
 	Item->PushChild(Outer);
 	Outer->m_State |= SPACE_DISABLE;
-	MapItem* Local = new MapItem(LOCAL_SPACEID,_T("Local Space(Invalid)"),MapItem::hRoom); //加入虚节点,以显示还有
+	MapItem* Local = new MapItem(LOCAL_SPACEID,_T("Local Space(Invalid)"),MapItem::hSpace); //加入虚节点,以显示还有
 	Local->SetAreaSize(180,18);
 	Item->PushChild(Local);
 }
@@ -187,7 +187,7 @@ MapItem* CMapView::Path2Item(ePipeline& Path)
 	
     return ParentItem;
 }
-void CMapView::InitLocalRoom(tstring LocalName){
+void CMapView::InitLocalSpace(tstring LocalName){
 	assert(m_ChildList.size()==1);
 	WorldStart* World = (WorldStart*)m_ChildList.front();
 	assert(World->m_ChildList.size()==2);
@@ -204,7 +204,7 @@ void CMapView::EnableNewConnect(BOOL bEnable){
     ::EnableWindow(World->m_IPAddress,bEnable);
 }
 
-void CMapView::SetOuterRoomName(tstring Name){
+void CMapView::SetOuterSpaceName(tstring Name){
 	assert(m_ChildList.size()==1);
 	WorldStart* World = (WorldStart*)m_ChildList.front();
 	assert(World->m_ChildList.size()==2);
@@ -212,7 +212,7 @@ void CMapView::SetOuterRoomName(tstring Name){
 	Outer->m_Text = Name;
 }
 	
-void CMapView::SetLocalRoomName(tstring Name){
+void CMapView::SetLocalSpaceName(tstring Name){
 	assert(m_ChildList.size()==1);
 	WorldStart* World = (WorldStart*)m_ChildList.front();
 	assert(World->m_ChildList.size()==2);
@@ -366,20 +366,20 @@ LRESULT CMapView::OnLButtonDown(WPARAM wParam, LPARAM lParam){
 			GetBrain()->GetLinker(SPACE_SOURCE,World);
 			if(World.IsValid()){
 				MapItem* Item = (MapItem*)SpaceSelected;
-				MapItem* ParentRoom = (MapItem*)Item->m_Parent;
-                assert(ParentRoom);
-				GetGUI()->m_WorldShow.Reset(Item->m_Alias,ParentRoom->m_Alias,ParentRoom->m_Text,LOCAL_SPACE);
+				MapItem* ParentSpace = (MapItem*)Item->m_Parent;
+                assert(ParentSpace);
+				GetGUI()->m_WorldShow.Reset(Item->m_Alias,ParentSpace->m_Alias,ParentSpace->m_Text,LOCAL_SPACE);
 
 				ePipeline Path;
 				GetGUI()->GetSpacePath(Path);
 				CMsg Msg(SYSTEM_SOURCE,DEFAULT_DIALOG,MSG_ROBOT_GOTO_SPACE,DEFAULT_DIALOG,0);
-				ePipeline& Letter = Msg.GetLetter();
+				ePipeline& Letter = Msg.GetLetter(false);
                 Letter.PushPipe(Path);
 				World().PushMsgToSend(Msg);
 			}else{
 				OnReset();
 				tstring Title = _T("Space Unconnected");
-				GetGUI()->m_WorldShow.ConnectRoomFail(Title);
+				GetGUI()->m_WorldShow.ConnectSpaceFail(Title);
 			}
 
 		}
@@ -428,7 +428,7 @@ LRESULT CMapView::Reaction(UINT message, WPARAM wParam, LPARAM lParam){
 
 	
 
-void CMapView::SetCurRoom(int64 ChildID){
+void CMapView::SetCurSpace(int64 ChildID){
 	MapItem* Item = (MapItem*)OnFind(ChildID,0);
 	if(Item==NULL)return;
     if(m_SpaceSelected){
@@ -494,8 +494,8 @@ void CTitleMapView::Reset(){
 	else m_MapView.OnReset();
 };
 
-void CTitleMapView::SetCurRoom(int64 ChildID){
-	m_MapView.SetCurRoom(ChildID);
+void CTitleMapView::SetCurSpace(int64 ChildID){
+	m_MapView.SetCurSpace(ChildID);
 };
 
 void CTitleMapView::Layout(bool Redraw /* = true */){

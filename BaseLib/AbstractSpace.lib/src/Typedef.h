@@ -5,6 +5,7 @@
 #ifndef _TYPEDEF_H
 #define _TYPEDEF_H
 
+#include "vld.h"
 
 #include <assert.h>
 #include <string>
@@ -14,6 +15,7 @@
 #include <map>
 #include <list>
 #include <stdio.h>
+
 
 
 #ifdef _WIN32
@@ -88,20 +90,6 @@ const float EPSINON = 0.00001f;
 #endif
 
 
-enum DLL_TYPE{
-	DLL_INVALID = 0,
-	DLL_VC6  = 60,
-	DLL_VC6D = 61,
-	DLL_VC7  = 70,
-	DLL_VC7D = 71,
-	DLL_VC8  = 80,
-	DLL_VC8D = 81,
-	DLL_VC9  = 90,
-	DLL_VC9D = 91,
-	DLL_VC10 = 100,
-	DLL_VC10D= 101
-};
-
 /////////////////////////////////////////////////////
 
 
@@ -112,14 +100,13 @@ enum DLL_TYPE{
   WARNING: If you want to modify the definition here,you  must also modify other parts, see eAddtion.h
 */
 typedef enum  ENERGY_TYPE {
-    TYPE_NULL     =    0,  
-    TYPE_INT      =    1,
-    TYPE_FLOAT    =    2,
-    TYPE_STRING   =    3,
-    TYPE_PIPELINE =    4, 
-	TYPE_BLOB     =    5,
-    TYPE_USER     =    6,  //Special user-defined data type    
-	TYPE_END      =    16 
+    TYPE_NULL     =    1,  
+    TYPE_INT      =    2,
+    TYPE_FLOAT    =    3,
+    TYPE_STRING   =    4,
+    TYPE_PIPELINE =    5, 
+	TYPE_BLOB     =    6,
+    TYPE_USER     =    15  //Special user-defined data type    
 }eType;
 
 #define BASETYPE(TypeID) (TypeID==TYPE_INT || TypeID==TYPE_FLOAT)
@@ -131,6 +118,15 @@ typedef enum  ENERGY_TYPE {
   Please refer to ePipeline.h
  
 */
+
+#define  PARAM_TYPE1(a)					0|a<<28
+#define  PARAM_TYPE2(a,b)				0|a<<28|b<<24
+#define  PARAM_TYPE3(a,b,c)				0|a<<28|b<<24|c<<20
+#define  PARAM_TYPE4(a,b,c,d)			0|a<<28|b<<24|c<<20|d<<16
+#define  PARAM_TYPE5(a,b,c,d,e)			0|a<<28|b<<24|c<<20|d<<16|e<<12
+#define  PARAM_TYPE6(a,b,c,d,e,f)		0|a<<28|b<<24|c<<20|d<<16|e<<12|f<<8
+#define  PARAM_TYPE7(a,b,c,d,e,f,g)		0|a<<28|b<<24|c<<20|d<<16|e<<12|f<<8|g<<4
+#define  PARAM_TYPE8(a,b,c,d,e,f,g,h)	0|a<<28|b<<24|c<<20|d<<16|e<<12|f<<8|g<<4|h
 
 class  TypeAB {
 public:

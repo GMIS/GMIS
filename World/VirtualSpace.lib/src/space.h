@@ -87,7 +87,7 @@ class ROOM_SPACE;
 
 
 People&     GetHost(People* p=NULL); //当p!=NULL意味着初始化
-ROOM_SPACE& GetRootRoom(ROOM_SPACE* r=NULL);//同上
+ROOM_SPACE& GetRootSpace(ROOM_SPACE* r=NULL);//同上
 
 
 struct SpaceAddress{
@@ -229,8 +229,8 @@ enum PropertyInfoType{
 */
 
 enum SPACE_RIGHT{   
-	 UNKOWN = 0 ,     //仅编程需要，表示当前还不知道权利安排状态
-	 NO_RIGHT ,
+	 UNKOWN = 0 ,     //仅编程需要，表示出错
+	 FREE ,           //自由之地
      VISIT_ONLY,      //允许任何人参观
 	 VISIT_NOTIFY,    //允许参观，但会向上级权利人通知
 	 VISIT_APPLY,     //参观应得到上级权利人许可
@@ -249,18 +249,19 @@ public:
 	SPACETYPE    m_Type;
 	tstring      m_Fingerprint;
 	ePipeline    m_Address; //空间路径
-	DLL_TYPE     m_ExecuterType;
+	int32        m_ExecuterType;
 public:
+	CObjectData();
 	CObjectData(ePipeline& ObjectData);
 	CObjectData& operator=(const CObjectData& ob);
 
-	ePipeline* GetItemData();
+	ePipeline* Clone();
 };
 
 
 //////////////////////////////////////////////////////////////////////////
 /*
-//  Space.m_Lable      = 父空间名
+//Space.m_Lable      = 父空间名
   Space.m_ID         = 空间父空间ID
   Space.GetData(0)   = 空间ID
   Space.GetData(1)   = 空间名字
@@ -356,7 +357,7 @@ public:
 
 	//在本空间加一个host，等于生成一个People，只加入最少的信息，
 	//返回生成People后，用户可以再添加额外信息
-	bool AddOwner(const TCHAR* Name,tstring& Cryptograph,SPACE_RIGHT r=NO_RIGHT);
+	bool AddOwner(const TCHAR* Name,tstring& Cryptograph,SPACE_RIGHT r=FREE);
 	
 	//删除一个权利人，Who为权利人列表中的index,注意这里的所有删除仅是物理操作，没有考虑权利安排
 	void DeleteOwner(People& Robot);

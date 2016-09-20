@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="src\Main.cpp" />
+    <ClCompile Include="src\curl\CurlObject.cpp">
+      <Filter>curl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\uArm\ThinDataTransProtocal.cpp">
+      <Filter>uArm</Filter>
+    </ClCompile>
+    <ClCompile Include="src\uArm\uArmObject.cpp">
+      <Filter>uArm</Filter>
+    </ClCompile>
+    <ClCompile Include="src\win_api\WinAPIObject.cpp">
+      <Filter>win_api</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ActiveObject.cpp" />
+    <ClCompile Include="src\test\TestObject.cpp">
+      <Filter>test</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\curl\CurlObject.h">
+      <Filter>curl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\uArm\ThinDataTransProtocal.h">
+      <Filter>uArm</Filter>
+    </ClInclude>
+    <ClInclude Include="src\uArm\uArmObject.h">
+      <Filter>uArm</Filter>
+    </ClInclude>
+    <ClInclude Include="src\win_api\WinAPIObject.h">
+      <Filter>win_api</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ObjectList.h" />
+    <ClInclude Include="src\ActiveObject.h" />
+    <ClInclude Include="src\test\TestObject.h">
+      <Filter>test</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="curl">
+      <UniqueIdentifier>{52ede48a-09fe-49df-a3d7-8fb9d4c46e07}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="uArm">
+      <UniqueIdentifier>{9ad7a169-dfaa-473d-8dbf-8e8811d150ad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="win_api">
+      <UniqueIdentifier>{a8a2cccb-ccf7-4f10-9a9d-22043a1ecdb3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="test">
+      <UniqueIdentifier>{32364644-db85-4e82-823e-7a87133531f3}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

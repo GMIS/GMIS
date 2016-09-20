@@ -7,13 +7,12 @@
 #define _ELEMENT_H__
 
 
-#include "PhysicSpace.h"
 #include <vector>
 #include <deque>
 #include <map>
 #include <tchar.h>
 #include "MsgList.h"
-
+#include "PhysicSpace.h"
 
 /*
   Element是质量体的集合。
@@ -24,19 +23,12 @@
 */
 
 #define IT_SELF  -1
+#define It_be_marked_deleted(ID) ID<0
 
 typedef vector<Mass*>            ActomList;
 typedef vector<Mass*>::iterator  ActomPtr;
 
-enum LogicRelation { 
-	UNKOWN_RELATION = 0, 
-	SERIES_RELATION = 1,
-	SHUNT_RELATION  = 2
-};
-enum MsgProcState{ RETURN_DIRECTLY,CONTINUE_TASK};
-
 class CLogicDialog;
-
 
 class   CElement: public Mass
 {
@@ -61,18 +53,16 @@ public:
 	int64 GetEventID(){
 		return m_EventID;
 	}
+
+
 	virtual Energy*  ToEnergy();	
 	virtual bool     FromEnergy(Energy* E);
 
-	virtual void InsertLogic(int64 Index,CElement* e);
-    virtual bool RemoveLoigc(int64 ChildID);
+	virtual bool InsertLogic(int64 Index,CElement* e);
+    virtual bool RemoveLoigc(int64 ChildIndex);
 
 	Mass* GetChild(int64 ChildID);
-
-
 	void GetAddress(ePipeline& Address);
-
-
 	bool FindLogicAddress(int64 ItemID, ePipeline& Address);
 
 	CElement* FindFocusLogic(const tstring& FocusName);
@@ -101,6 +91,10 @@ public:
 
 
 protected:
+	void SetEventID(int64 EventID){
+		m_EventID = EventID;
+	}
+
 	virtual bool TaskProc(CLogicDialog* Dialog,int32 ChildIndex,CMsg& Msg,ePipeline& ExePipe,ePipeline& LocalAddress);
  
 	//返回CONTINUE_TASK会继续处理TaskProc()，否则不处理TaskProc(),如果想直接返回系统，那么ExePipe.Break();
@@ -171,8 +165,8 @@ public:
 	void Reset();
 	bool GetExePipe(int32 n,ePipeline& ExePipe);
 
-	virtual void InsertLogic(int64 Index,CElement* e);
-	virtual bool RemoveLoigc(int64 ChildID);
+	virtual bool InsertLogic(int64 Index,CElement* e);
+	virtual bool RemoveLoigc(int64 ChildIndex);
 
 	bool Do(CLogicDialog* Dialog,ePipeline& ExePipe,ePipeline& LocalAddress,CMsg& Msg);
 

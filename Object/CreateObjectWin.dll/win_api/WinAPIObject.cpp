@@ -23,28 +23,23 @@ const TCHAR* CWinAPIObject::UserManual = __TEXT(\
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-bool CWinAPIObject::Do(Energy* E)
-{
-	assert(E->EnergyType() == TYPE_PIPELINE);
-	ePipeline* Pipe = (ePipeline*)E;
-
-	if (Pipe->Size()==0)
-	{
+bool CWinAPIObject::DoOpen(ePipeline& ExePipe){
+	if(!ExePipe.HasTypeAB(PARAM_TYPE1(TYPE_STRING))){
+		ExePipe.SetLabel(_T("param error"));
 		return false;
 	}
+	tstring s = ExePipe.PopString();
 
+	tstring runtimeinfo = _T("open ")+s;
+#ifdef _DEBUG
+	std::wcout<<runtimeinfo<<endl;
+#endif	
 	
-    ENERGY_TYPE Type = Pipe->GetDataType(0);
-	if (Type != TYPE_STRING)
-	{
-		return false;
-	}
-	tstring s = Pipe->PopString();
-    
-    HINSTANCE hHandle = ShellExecute(NULL,_T("open"), s.c_str(), NULL, NULL, SW_SHOWNORMAL);
+
+	HINSTANCE hHandle = ShellExecute(NULL,_T("open"), s.c_str(), NULL, NULL, SW_SHOWNORMAL);
 	DWORD ret = (DWORD)hHandle;
 
-    if(ret>32)return true;
+	if(ret>32)return true;
 
 	tstring Error;
 	switch(ret){
@@ -88,8 +83,31 @@ bool CWinAPIObject::Do(Energy* E)
 		Error = _T("A sharing violation occurred.");
 		break;
 	}
-	Pipe->SetLabel(Error.c_str());
-//	Pipe->SetID(RETURN_ERROR);
+	ExePipe.SetLabel(Error.c_str());
+	return false;
+}
+bool CWinAPIObject::Do(Energy* E)
+{
+	assert(E->EnergyType() == TYPE_PIPELINE);
+	ePipeline* Pipe = (ePipeline*)E;
+
+	if (Pipe->Size()==0)
+	{
+		return false;
+	}
+
+	
+    ENERGY_TYPE Type = Pipe->GetDataType(0);
+	if (Type != TYPE_STRING)
+	{
+		return false;
+	}
+	tstring Cmd = Pipe->PopString();
+    
+	if(Cmd == _T("open")){
+		return DoOpen(*Pipe);
+	}
+	Pipe->SetLabel(_T("invalid command"));
 	return false;
 }
 #endif //_COMPILE_WIMAPI_OBJECT

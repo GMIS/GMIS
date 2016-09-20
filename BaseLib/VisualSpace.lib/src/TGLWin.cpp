@@ -2,6 +2,8 @@
 //
 //////////////////////////////////////////////////////////////////////
 #include "TGLWin.h"
+#include <gl\gl.h>
+#include <gl\glu.h>
 
 namespace VISUALSPACE{
 

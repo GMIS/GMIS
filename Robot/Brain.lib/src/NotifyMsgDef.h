@@ -12,11 +12,13 @@
 
 #define NOTIFY_THINK_STATE  20000
 #define NOTIFY_TASK_STATE   20010
+#define NOTIFY_WORK_MODE    20011
 
 #define NOTIFY_BRAIN_INIT   21000
 	#define BEGIN_INIT      100
 	#define INIT_PROGRESS   101
 	#define END_INIT        102
+
 
 #define NOTIFY_DIALOG_OUTPUT 30000
 	#define DIALOG_INFO       101
@@ -31,11 +33,16 @@
 	#define COMMON_PROGRESS   101
 	#define COMPILE_PROGRESS  102
     #define THINK_PROGRESS    103
- 
+
+#define NOTIFY_INPUT_VIEW    22000
+	#define ENABLE_INPUT     101
+
 #define NOTIFY_DIALOG_LIST   23000
  	#define DL_ADD_DIALOG        101
 	#define DL_DEL_DIALOG        102 
     #define DL_LOGIN_ONE         103
+    #define DL_ENABLE_DIALOG     104
+
 
 #define NOTIFY_FIND_VIEW     24000
 		#define FIND_START       100
@@ -64,6 +71,8 @@
 		#define DEBUG_SET_BREAK    202
 		#define DEBUG_INSERT_LOGIC 203
 		#define DEBUG_REMOVE_LOGIC 204
+	    #define DEBUG_DISABLE_PAUSE 205
+
 
 
 #define NOTIFY_MEMORY_VIEW    27000

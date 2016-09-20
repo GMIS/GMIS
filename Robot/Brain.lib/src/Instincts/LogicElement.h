@@ -61,7 +61,7 @@ public:
 		return Format1024(_T("(D)%d"),m_Num);
 	};
 	
-	virtual TypeAB  GetTypeAB(){ return 0x10000000;} 
+	virtual TypeAB  GetTypeAB(){ return PARAM_TYPE1(TYPE_INT);} 
 	
 	virtual Energy*  ToEnergy();
 	

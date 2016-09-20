@@ -13,22 +13,6 @@ namespace PHYSIC{
 
 //CLinkerPipe
 //////////////////////////////////////////////////////////////////////////
-	
-	/*
-	CLinkerPipe::_CInnerIOLock::_CInnerIOLock( CABMutex* mutex,CLinkerPipe* User)
-		: m_Mutex(mutex),m_User(User){
-		assert(mutex);
-		assert(User);
-		m_Mutex->AcquireThis(m_User);				
-	
-
-	};
-	CLinkerPipe::_CInnerIOLock::~_CInnerIOLock (){
-
-	
-		m_Mutex->ReleaseThis(m_User);
-	};
-	*/
 	CLinkerPipe::CLinkerPipe(CABMutex* m,Model* Parent,LinkerType LinkType)
 		:CLockPipe(m),
 		m_UseCounter(0),
@@ -52,9 +36,6 @@ namespace PHYSIC{
 		
 	};
 	
-
-
-
 	CLinkerPipe::CLinkerPipe(CABMutex* m,Model* Parent,LinkerType LinkType,int64 SourceID,tstring Name)
 		:CLockPipe(m,Name.c_str()),
 			m_UseCounter(0),
@@ -553,8 +534,8 @@ namespace PHYSIC{
        else
        {
 
-			Msg->AutoTypeAB();
-			if(Msg->GetTypeAB() != 0x44400000){ 
+			if(!Msg->HasTypeAB(PARAM_TYPE3(TYPE_PIPELINE,TYPE_PIPELINE,TYPE_PIPELINE))){ 
+				assert(0);
 				ePipeline Info;
 				Info.Push_Directly(E.Release());
 				m_Parent->NotifyLinkerState(m_SourceID,LINKER_ILLEGAL_MSG,m_StateOutputLevel,Info);
@@ -564,7 +545,7 @@ namespace PHYSIC{
 			CMsg m((ePipeline*)E.Release()); 
 			int64 SenderID = m.GetSenderID();
 		
-//			int64 MsgID = m.GetMsgID();
+			//int64 MsgID = m.GetMsgID();
 
 			int64 TimeStamp = Msg->GetID();	
 			ePipeline* rMsg = new ePipeline(LINKER_FEEDBACK);
@@ -578,7 +559,7 @@ namespace PHYSIC{
 			
 			//assert(Receiver.Size()==0);
 
-			ePipeline LocalAddress;
+			/*ePipeline LocalAddress;
 			bool ret = ReceiverID2LocalAddress(Receiver,LocalAddress);
 			if (!ret)
 			{
@@ -587,10 +568,11 @@ namespace PHYSIC{
 				m_Parent->NotifyLinkerState(m_SourceID,LINKER_INVALID_ADDRESS,m_StateOutputLevel,Info);
 				return;
 			}
-			
+			m.GetReceiver() << LocalAddress;	
+		
+			*/
 			
 			m.SetSourceID(m_SourceID);
-			m.GetReceiver() << LocalAddress;	
 			m_Parent->PushCentralNerveMsg(m,false,false);			
         }
 
@@ -697,6 +679,7 @@ namespace PHYSIC{
 		return ID;
 	};
 
+	
 	void  CLinkerPipe::SetStateOutputLevel(STATE_OUTPUT_LEVEL  Level){
 		_CLOCK2(m_Mutex,this);
 		m_StateOutputLevel = Level;
@@ -804,7 +787,7 @@ namespace PHYSIC{
 
 		ePipeline& Sender = Msg.GetSender();
 //		ePipeline& Receiver = Msg.GetReceiver();
-        ePipeline& Letter   = Msg.GetLetter();
+        ePipeline& Letter   = Msg.GetLetter(false);
 		
 		int64 MsgID = Letter.GetID();
         assert(MsgID != 0);
@@ -815,10 +798,10 @@ namespace PHYSIC{
 
 		int64 EventID = Msg.GetEventID();
 		
-		int64 SenderID = LocalAddress2SenderID(Sender);	
+	/*	int64 SenderID = LocalAddress2SenderID(Sender);	
 		Sender.Clear();
 		Sender.PushInt(SenderID);
-		
+		*/
 		
 		int64 TimeStamp = CreateTimeStamp();
         Msg.SetSourceID(TimeStamp);

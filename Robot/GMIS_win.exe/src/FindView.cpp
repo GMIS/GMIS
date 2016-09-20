@@ -423,10 +423,10 @@ LRESULT CFindView::OnLButtonDown(WPARAM wParam, LPARAM lParam)
 
 
 
-void CFindView::AddText(int32 Index, int64 RoomID,const TCHAR* Text){
+void CFindView::AddText(int32 Index, int64 SpaceID,const TCHAR* Text){
 	return;
 	tstring s = Format1024(_T("#%3d    TEXT              %s\n   %s"),
-		Index,AbstractSpace::GetTimer()->GetYMD(RoomID).c_str(),Text);
+		Index,AbstractSpace::GetTimer()->GetYMD(SpaceID).c_str(),Text);
 
 	if(GetHwnd())
 		SendChildMessage(GetHwnd(),FIND_ADDRESULT,(WPARAM)s.c_str(),(LPARAM)Index);
@@ -434,9 +434,9 @@ void CFindView::AddText(int32 Index, int64 RoomID,const TCHAR* Text){
 		OnAddResult((WPARAM)s.c_str(),(LPARAM)Index);
 }
 
-void CFindView::AddObjectOrPeople(int32 Index, int64 RoomID,const TCHAR* Text, const TCHAR* Memo){
+void CFindView::AddObjectOrPeople(int32 Index, int64 SpaceID,const TCHAR* Text, const TCHAR* Memo){
 	tstring s = Format1024(_T("#%3d    OBJECT / PEOPLE   %s\n%s\nMemo: %s"),
-		Index,AbstractSpace::GetTimer()->GetYMD(RoomID).c_str(),
+		Index,AbstractSpace::GetTimer()->GetYMD(SpaceID).c_str(),
 		Text,Memo);
 	if(GetHwnd())
 		SendChildMessage(GetHwnd(),FIND_ADDRESULT,(WPARAM)s.c_str(),(LPARAM)Index);
@@ -444,9 +444,9 @@ void CFindView::AddObjectOrPeople(int32 Index, int64 RoomID,const TCHAR* Text, c
 		OnAddResult((WPARAM)s.c_str(),(LPARAM)Index);
 }
 
-void CFindView::AddCommandOrLogic(int32 Index, int64 RoomID,const TCHAR* Text, const TCHAR* Memo){
+void CFindView::AddCommandOrLogic(int32 Index, int64 SpaceID,const TCHAR* Text, const TCHAR* Memo){
 	tstring s = Format1024(_T("#%3d    CMD / LOGIC       %s\n%s\nMemo: %s"),
-		Index,AbstractSpace::GetTimer()->GetYMD(RoomID).c_str(),
+		Index,AbstractSpace::GetTimer()->GetYMD(SpaceID).c_str(),
 		Text,Memo);
 	if(GetHwnd())
 		SendChildMessage(GetHwnd(),FIND_ADDRESULT,(WPARAM)s.c_str(),(LPARAM)Index);

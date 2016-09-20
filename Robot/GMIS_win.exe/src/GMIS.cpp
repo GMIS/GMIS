@@ -18,12 +18,10 @@
 
 #include <WinBase.h>
 
-CMainBrain*  AfxBrain = NULL;
+
 CMainFrame*  AfxGUI   = NULL;
 
-CMainBrain* GetBrain(){
-	return AfxBrain;
-}
+
 CMainFrame* GetGUI(){
 	return AfxGUI;
 }
@@ -95,6 +93,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	bool AlreadyRunning = ( ::GetLastError() == ERROR_ALREADY_EXISTS || 
 		::GetLastError() == ERROR_ACCESS_DENIED);
 
+	AlreadyRunning = false;
 	if ( AlreadyRunning ){
 
 		HWND hWnd = NULL;
@@ -123,7 +122,6 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 
 	
 		static CMainBrain MainBrain(&Timer,&SpacePool,AppName);
-		AfxBrain = &MainBrain;
 
 		if(!MainBrain.Activate()){
 			if (MainBrain.m_ErrorInfo.size()==0)
@@ -134,7 +132,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 			return 0;
 		}
 
-		
+
 #ifndef USING_GUI
 		MainBrain.CheckMemory();
 		//没有图形界面的消息循环，则自己保证循环
@@ -235,6 +233,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 				
 			    ret = MainBrain.Login(LOCAL_GUI_SOURCE,TempAccount.Name,CrypStr);
 				if(ret){
+					MainBrain.SetName(TempAccount.Name);
 					CLogicDialog* Dialog = MainBrain.GetBrainData()->GetDialog(LOCAL_GUI_SOURCE,DEFAULT_DIALOG);
 					CNotifyDialogState nf(NOTIFY_DIALOG_LIST);
 					nf.PushInt(DL_LOGIN_ONE);
@@ -243,7 +242,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 					break;
 				}
 			}
-	
+	            
 			CrypStr = _T("");
 			TempAccount.Password =_T("");
 			if(i==3){

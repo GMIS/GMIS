@@ -24,7 +24,7 @@ public:
 	static HICON  hWorld;
 	static HICON  hContainer;
 	static HICON  hPeople;
-	static HICON  hRoom;
+	static HICON  hSpace;
 
 	HICON         m_hIcon;
 public:
@@ -65,8 +65,8 @@ class CMapView : public CWSTreeView
 public:
     Nerve*            m_Outport;
     
-	void SetOuterRoomName(tstring Name);
-	void SetLocalRoomName(tstring Name);
+	void SetOuterSpaceName(tstring Name);
+	void SetLocalSpaceName(tstring Name);
  
 	void EnableNewConnect(BOOL bEnable);
 public:
@@ -76,12 +76,12 @@ public:
 	void GetSpacePath(ePipeline& Path);
 	MapItem* Path2Item(ePipeline& Path);
 
-	void InitLocalRoom(tstring LocalName); 
+	void InitLocalSpace(tstring LocalName); 
 	
-	MapItem* GetCurRoom(){
+	MapItem* GetCurSpace(){
 		return (MapItem*)m_SpaceSelected;
 	}
-	void SetCurRoom(int64 ChildID);
+	void SetCurSpace(int64 ChildID);
 
 public:
 	virtual void Layout(bool Redraw  =true);
@@ -110,8 +110,8 @@ public:
 	CTitleMapView():m_Created(FALSE){};
 	virtual ~CTitleMapView(){};
 
-	void InitLocalRoom(tstring LocalName){
-		m_MapView.InitLocalRoom(LocalName);
+	void InitLocalSpace(tstring LocalName){
+		m_MapView.InitLocalSpace(LocalName);
 	};
 	
 
@@ -123,7 +123,7 @@ public:
 	void ClearAllItem();
 	void Reset();
     
-	void SetCurRoom(int64 ChildID);
+	void SetCurSpace(int64 ChildID);
 	void  Layout(bool Redraw);
 	virtual LRESULT Reaction(UINT message, WPARAM wParam, LPARAM lParam);
  	LRESULT OnLButtonDown(WPARAM wParam, LPARAM lParam);

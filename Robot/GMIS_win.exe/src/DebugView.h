@@ -62,7 +62,7 @@ protected:
 	void Draw(HDC hDC, ePipeline* Pipe=NULL);
 
 	void Reset(ePipeline& Pipe);
-	void MarkPauseItem(int64 PauseItemID);
+	void MarkPauseItem(int64 PauseItemID,bool bMark);
 
 	void InsertDebugItem(ePipeline& InsertAddress,ePipeline& DebugItemList);
 	void RemoveDebugItem(ePipeline& RemoveAddress,int64 ChildID);

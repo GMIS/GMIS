@@ -84,7 +84,7 @@ public:
 		uint32                     m_MaxNerveWorkerNum;      //Allowed maximum number of central nervous system processing threads，default=20
 		uint32                     m_NerveMsgMaxNumInPipe;   //If more than this amount of messages were not handled,considering to generate a new processing thread,default = 10
 		int64                      m_NerveMsgMaxInterval;    //if the interval  of the last popped message was greater than this number,considering to generate a new processing thread,default=10*1000*1000( 1 second)
-		int32                      m_NerveIdleMaxCount;	     //If the count of idle threads exceeded this number, the extra thread will be exit，default=30
+		int64                      m_NerveIdleMaxInterval;	 //If the count of idle threads exceeded this number, the extra thread will be exit，default=30
 
 		uint32                     m_NerveWorkingNum;        
 		
@@ -101,13 +101,15 @@ public:
 		void    Clear();
 
 		void    IncreNerveWorkerCount();
-        void    DecreNerveWorkerCount();
+		void    DecreNerveWorkerCount();
+		int32   GetBusyNerveWorkerNum();
 
 		int64   GetNerveMsgInterval();
 		void    SetNerveMsgInterval(int32 n);
-		
-		int32	GetNerveMaxIdleCount();
-		void	SetNerveMaxIdleCount(int32 n);
+		void    SetMaxNerveWorkerNum(int32 n);
+
+		int64	GetNerveMaxIdleInterval();
+		void	SetNerveMaxIdleInterval(int32 second);
 		
 		int32   GetIOWorkerNum();
 
@@ -115,7 +117,6 @@ public:
 		void   DeleteThreadWorker(System* Parent,int64 ID,int32 Type);
 
 		int32   GetNerveWorkerNum();
-		int32   GetBusyNerveWorkerNum();
         int32   GetIdleWorkerNum(); //GetNerveWorkerNum()-GetBusyNerveWorkerNum();
 	
 		bool    RequestCreateNewNerveWorker(uint32 MsgNum,int64 Interval,uint32& Reason); 
@@ -172,6 +173,8 @@ public:
 	//open a port and listen, allow to  open several ports at same time, the repeated port will be ignored
 	bool OpenPort(int32 Port,tstring& error,bool bIP6);
 	void ClosePort(int32 Port);
+
+	void    FeedbackError(CLinker& Linker,int64 EventID,tstring ErrorInfo,ePipeline* ExePipe);
 
 };
 

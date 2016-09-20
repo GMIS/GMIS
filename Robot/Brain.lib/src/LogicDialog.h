@@ -61,6 +61,13 @@ struct CNameUser{
 	tstring  m_LogicName;
 	int64	 m_TaskID;
 	int64 	 m_InstanceID;
+
+public:
+	CNameUser()
+		:m_TaskID(0),m_InstanceID(0)
+	{
+
+	}
 };
 
 class CNameList{
@@ -73,14 +80,18 @@ public:
 
 	void	RegisterNameByTask(tstring& Name,int64 TaskID,int64 InstanceID);
 	void	UnregisterNameByTask(tstring& Name);
+	void	UnregisterNameByTask(int64 InstanceID);
 
 	int64   GetInstanceID(tstring& Name);
 	tstring GetInstanceName(int64 InstanceID);
+
+	CNameUser& GetNameUser(tstring& Name);
 
 	Energy*	ToEnergy(); 
 	bool    FromEnergy(Energy* E);
 
 };
+
 
 class CLogicDialog  
 {
@@ -91,7 +102,6 @@ public:
 	int64				m_SourceID;       //对话源ID 
 	int64				m_DialogID;       //对话ID
 
-	CBrain*				m_Brain;
 	int64               m_ParentDialogID; //逻辑父对话ID
 
 	tstring             m_SourceName;
@@ -115,9 +125,8 @@ protected:
 	TASK_STATE			m_TaskState;
 
 
-	map<int64,int64>    m_PauseEventList;    //map<PauseID,EventID> ,如果PauseID == EventID 则是其它子事件
+	map<int64,int64>    m_ChildEventList;    //如果first等于second表示普通子事件，否则表示暂停子事件，此时first等于 paused mass ID
 
-	int64               m_FocusPauseItemID;  //=0表示无效
 	int64               m_ControlDialogID;
 
 	ePipeline           m_ExePipe;            //执行管道
@@ -158,19 +167,21 @@ public:
 public:
 	int64                         m_ObjectFocus;
 	int64                         m_MemoryFocus;
-	tstring                       m_LogicFocus;
+	int64                         m_RequestFocus;
 	
 	vector<CLocalLogicCell*>      m_LogicList;
 	vector<CElementCell*>         m_CapaList;
 	vector<CElementCell*>         m_InduList;
-    vector<CObjectData*>          m_ObjectList;
-
+    vector<CObjectData*>          m_ObjectList;//包含物体和robot
+	
 	map<int64, ePipeline>         m_ObjectInstanceList;
 	map<int64, ePipeline>		  m_MemoryInstanceList;
     map<int64, CElement*>         m_LogicInstanceList;
+	map<int64, ePipeline>         m_RequestInstanceList;
 
 	CNameList                     m_NamedObjectList;   //被命名引用的物体
     CNameList                     m_NamedMemoryList;
+	CNameList                     m_NamedRequestList;   
 
 	ePipeline                     m_MemoryAddress;     //当前焦点记忆的操作地址
 	ePipeline                     m_LogicAddress;      //当前任务逻辑的操作地址
@@ -178,12 +189,12 @@ public:
 	deque<CSentence*>			  m_TaskList;
 
 public:
-	CLogicDialog(CBrain* Frame,int64 SourceID,int64 DialogID,int64 ParentDialogID,tstring SourceName,tstring DialogName,
+	CLogicDialog(int64 SourceID,int64 DialogID,int64 ParentDialogID,tstring SourceName,tstring DialogName,
 		       DIALOG_TYPE Type,TASK_OUT_TYPE TaskType);
 
 	virtual ~CLogicDialog();
 
-	void Reset(CBrain* Frame,int64 SourceID,int64 DialogID,int64 ParentDialogID,tstring SourceName,tstring DialogName,
+	void Reset(int64 SourceID,int64 DialogID,int64 ParentDialogID,tstring SourceName,tstring DialogName,
 		       DIALOG_TYPE Type,TASK_OUT_TYPE TaskType);
 
 	virtual void Do(CMsg& Msg); //只能Brain调用,并且可能多线程调用
@@ -191,17 +202,11 @@ public:
 	void NotifyPause(ePipeline& ExePipe,ePipeline& Address);
     
 	void StopPause(int64 PauseID,int64 CmdID);
-
-	void  SetFocusPauseItemID(int64 ID)
-	{
-		m_FocusPauseItemID = ID;
-	}
-		
-	int64 GetFocusPauseItemID();
  
-	void GetPauseIDList(ePipeline& List);
-
+	void GetPauseMassIDList(ePipeline& List);
+	void GetPauseEventIDList(ePipeline& List);
 	bool IsPaused();
+	void UpdateDebugTree();
 
 	void ClosePauseDialog(int64 PauseEventID);
 
@@ -214,6 +219,10 @@ public:
 		
 	};
 
+	CLogicDialog* GetParentDialog(){
+		CLogicDialog* Parent = GetBrain()->GetBrainData()->GetDialog(m_SourceID,m_ParentDialogID);
+		return Parent;
+	}
 	int64 GetControlEventID(){
 		return m_ControlDialogID;
 	}
@@ -235,7 +244,7 @@ public:
 		return m_TaskList.size()>0;
 	}
 
-	CSentence* PopTask();
+	std::auto_ptr<CSentence>  PopTask();
 
 	void SetWorkMode(WORK_MODE Mode);
     WORK_MODE GetWorkMode();
@@ -252,7 +261,7 @@ public:
 	TASK_STATE  SetTaskState(TASK_STATE State); //返回旧状态
 	TASK_STATE  GetTaskState();
 
-
+	void       EnableInput(bool bEnable);
 
 	//等候10秒让任务暂停
 	void			NotifySuspendTask();
@@ -265,15 +274,14 @@ public:
 	void RuntimeOutput(int64 MassID,tstring s);
 	void RuntimeOutput(INT64 MassID,TCHAR* Format, ...);
 
-	
-	CLogicDialog* StartEventDialog(int64 EventID,tstring DialogName,tstring DialogText,TASK_OUT_TYPE OutType,ePipeline& ClientExePipe,ePipeline& ClientAddress,int64 EventInterval,bool bFocus,bool bEditValid,bool bOnce);
+
+	CLogicDialog* StartEventDialog(int64 EventID,tstring DialogName,TASK_OUT_TYPE OutType,ePipeline& ClientExePipe,ePipeline& ClientAddress,int64 EventInterval,bool bFocus,bool bEditValid,bool bOnce,int64 InstinctID=0);
     void		  CloseEventDialog(int64 EventID,ePipeline& OldExePipe,ePipeline& ExePipe);
 
 public:
 
 	//State用于今后可能出现的需求，比如信息正在接收
-    ePipeline&  SaveReceiveItem(tstring Info,int32 State);
-	ePipeline&  SaveSendItem(tstring Info, int32 State);
+    ePipeline&  SaveDialogItem(tstring Info,tstring Speaker,int32 State=0);
 	
 
 	//当前Sentence,编译完一个子句通知一声，用于显示进度之类
@@ -307,13 +315,15 @@ public:
     ePipeline*  FindTempMemory(int64 InstanceID);
 	CElement*   FindLogicInstance(int64 InstanceID);
     ePipeline*  FindObjectInstance(int64 InstanceID);
-
+	ePipeline*  FindRequestInstance(int64 InstanceID);
 
 	void AddObjectInstance(int64 InstanceID,ePipeline& Pipe);
+	void AddRequestInstance(int64 InstanceID,ePipeline& Pipe);
 	void AddMemoryInstance(int64 InstanceID, ePipeline& Pipe);
 
 	void CloseObjectInstance(int64 InstanceID);
 	void CloseMemoryInstance(int64 InstanceID);
+	void CloseRequestInstance(int64 InstanceID);
 
 /*
 	CVirtualObject* FindRefObject(tstring Name);
@@ -337,7 +347,7 @@ public:
 
 	void GetMemoryInstanceData(ePipeline& List);
 
-	void SetBreakPoint(ePipeline& Path,BOOL bEnable);
+	bool SetBreakPoint(ePipeline& Path,BOOL bEnable);
 
 	//处理信息搜索
 	/////////////////////////////////////////////////////////
@@ -349,7 +359,7 @@ public:
 	
 	struct _FindResult{
 		uint8  m_Type;   //0=text 1=Logic 2=Object
-		int64  m_ID;  //空间值
+		int64  m_ID;     //空间值
 		int64  m_Value;
 		_FindResult(int8 type, int64 ID,int64 Value):m_Type(type),m_ID(ID),m_Value(Value){};
 	};
@@ -357,7 +367,7 @@ public:
 	uint32                m_ItemNumPerPage;    //每次显示多少个结果 default = 10
 	
 	FindTypeExpected      m_FindType;
-	uint32                m_Interval; //通过判断两个意义间隔时间来判断是否有关系，缺省= 5秒
+	int64                 m_FindInterval; //通过判断两个意义间隔时间来判断是否有关系，缺省= 5秒
 	deque<int64>          m_FindSeedList;
 	vector<_FindResult>   m_FindResultList;
 	
@@ -367,25 +377,25 @@ public:
 	void _FindTokenNot(deque<int64>& DestMeaningList, map<int64,FDeque>& SrcMeaningList,map<int64,FDeque>& ResultMeaningList);
     
 	//处理搜索运算
-	void _FindMemoryRoom(CLogicThread* Think,map<int64,FDeque>* DestTokenList, deque<int64>* ResultRoomList);
+	void _FindMemorySpace(CLogicThread* Think,map<int64,FDeque>* DestTokenList, deque<int64>* ResultSpaceList);
 	
 	
 	//MeaningList[空间存储ID]=意义值, 把结果发送给FindView
-    void ProcessMeaning(CLogicThread* Think,int64 RoomID,int64 RoomValue,int64 RoomType,FindTypeExpected FindType = FIND_ALL); 
+    void  ProcessMeaning(CLogicThread* Think,int64 SpaceID,int64 SpaceValue,int64 SpaceType,FindTypeExpected FindType = FIND_ALL); 
 	
-    void  OutputFindResult(int8 type,int64 RoomID,int64 RoomValue); 
+    void  OutputFindResult(int8 type,int64 SpaceID,int64 SpaceValue); 
 	
 	
 	//把ID的意义翻译成文本然后按一定格式保存在Item里
-	void  PrintText(CLogicThread* Think,ePipeline& SearchResult, int32 n,int64 RoomID);
-	void  PrintLogic(CLogicThread* Think,ePipeline& SearchResult,int32 n,int64 RoomID,int64 RoomValue);
-	void  PrintObject(CLogicThread* Think,ePipeline& SearchResult,int32 n,int64 RoomID,int64 RoomValue);	
+	void  PrintText(CLogicThread* Think,ePipeline& SearchResult, int32 n,int64 SpaceID);
+	void  PrintLogic(CLogicThread* Think,ePipeline& SearchResult,int32 n,int64 SpaceID,int64 SpaceValue);
+	void  PrintObject(CLogicThread* Think,ePipeline& SearchResult,int32 n,int64 SpaceID,int64 SpaceValue);	
 	
 
 	//没找到返回0，否则返回找到的种子
 	void  FindFirst(tstring& text,FindTypeExpected FindType = FIND_ALL);
 	void  FindContinue(CLogicThread* Think,uint32 Index, ePipeline& SearchResult); 
-	void  SetFindCellSize(int32 size){  m_Interval = size;};
+	void  SetFindFocusSize(int64 size){  m_FindInterval = size;};
 
 
 //任务对话的信息处理

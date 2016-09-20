@@ -18,6 +18,7 @@
 #define NOTIFY_DIALOG      5
 
 
+
 using namespace VISUALSPACE;
 
 
@@ -42,7 +43,7 @@ public:
 	void AddDialog(int64 SourceID,int64 DialogID,int64 ParentID,tstring Name);
 	void DeleteDialog(int64 SourceID,int64 DialogID);
     void NotifyDialogHasNew(int64 SourceID,int64 DialogID);
-
+	void EnableDialog(int64 SourceID,int64 DialogID,bool bEnable);
 	void  SetCurDialog(int64 SourceID, int64 DialogID);
 	CLinkerItem* GetCurDialog();
 
@@ -57,7 +58,7 @@ protected:
 	virtual LRESULT ChildReaction(SpaceRectionMsg* SRM);
 	virtual LRESULT Reaction(UINT message, WPARAM wParam, LPARAM lParam);
 	LRESULT OnLButtonDown(WPARAM wParam, LPARAM lParam);
-	
+	LRESULT OnTimer(WPARAM wParam, LPARAM lParam);
 };
 
 #endif // !defined(_LINKERVIEW_H__)

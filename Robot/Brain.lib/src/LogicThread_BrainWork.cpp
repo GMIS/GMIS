@@ -3,9 +3,8 @@
 //////////////////////////////////////////////////////////////////////
 #pragma warning(disable: 4786)
 
-
-#include "LogicDialog.h"
 #include "LogicThread.h"
+#include "LogicDialog.h"
 #include "InstinctDefine.h"
 
 

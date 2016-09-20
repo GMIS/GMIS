@@ -1,4 +1,4 @@
-﻿// Room3D.cpp: implementation of the CRoom3D class.
+﻿// Space3D.cpp: implementation of the CSpace3D class.
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -223,22 +223,22 @@ CDoorWall* CRoom3D::Wall2Door(FACEPOS fc){
    if(dw)return dw;
 
     dw = new CDoorWall;
-	float  z = m_RoomDz/2;
-	float  x = m_RoomDx/2;
+	float  z = m_SpaceDz/2;
+	float  x = m_SpaceDx/2;
 	m_DoorWall[fc] = dw;
 	dw->SetTexture(m_WallTexture,m_FloorTexture,m_CeilingTexture,m_DoorTexture);
 
 	if(fc == FRONTFACE){
-		dw->SetSize(m_RoomDx,m_RoomDy);
+		dw->SetSize(m_SpaceDx,m_SpaceDy);
 		dw->ToPlace(0,0,z,0,-180.0f,0);
 	}else if(fc == LEFTFACE){ 
-		dw->SetSize(m_RoomDz,m_RoomDy);
+		dw->SetSize(m_SpaceDz,m_SpaceDy);
 		dw->ToPlace(-x,0,0,0,90.0f,0);
 	}else if (fc== BACKFACE) { 
-		dw->SetSize(m_RoomDx,m_RoomDy);
+		dw->SetSize(m_SpaceDx,m_SpaceDy);
 		dw->ToPlace(0,0,-z,0,0,0);
 	}else if (fc == RIGHTFACE){ 
-		dw->SetSize(m_RoomDz,m_RoomDy);
+		dw->SetSize(m_SpaceDz,m_SpaceDy);
 		dw->ToPlace(x,0,0,0,-90.0f,0);
 	}
     m_Dypass[fc].Space = dw;
@@ -259,66 +259,66 @@ CWall*     CRoom3D::Door2Wall(FACEPOS fc){
 
 void CRoom3D::SetSize(float dx, float dy, float dz){
 
-    m_RoomDx = dx;
-	m_RoomDy = dy;
-	m_RoomDz = dz;
+    m_SpaceDx = dx;
+	m_SpaceDy = dy;
+	m_SpaceDz = dz;
 	
-	float  x = m_RoomDx/2.0f;
-	float  y = m_RoomDy/2.0f;
-	float  z = m_RoomDz/2.0f;
+	float  x = m_SpaceDx/2.0f;
+	float  y = m_SpaceDy/2.0f;
+	float  z = m_SpaceDz/2.0f;
 
-	m_Floor.SetSize(m_RoomDx,m_RoomDz);
+	m_Floor.SetSize(m_SpaceDx,m_SpaceDz);
     m_Floor.ToPlace(0,-y,0,-90,0,0);
 
-    m_Ceiling.SetSize(m_RoomDx,m_RoomDz);
+    m_Ceiling.SetSize(m_SpaceDx,m_SpaceDz);
     m_Ceiling.ToPlace(0,y,0,90,0,0);
 
   	CWall& LeftWall = m_Wall[LEFTFACE];
 	
-	LeftWall.SetSize(m_RoomDz,m_RoomDy);
+	LeftWall.SetSize(m_SpaceDz,m_SpaceDy);
     LeftWall.ToPlace(-x,0,0,0,-90.0f,0);
     LeftWall.m_crDefault = RGB(128,128,50);
 
 	CWall& RightWall = m_Wall[RIGHTFACE];
-	RightWall.SetSize(m_RoomDz,m_RoomDy);
+	RightWall.SetSize(m_SpaceDz,m_SpaceDy);
     RightWall.ToPlace(x,0,0,0,90.0f,0);
     RightWall.m_crDefault = RGB(128,128,100);
 
 	CWall& FrontWall = m_Wall[FRONTFACE];
-	FrontWall.SetSize(m_RoomDx,m_RoomDy);
+	FrontWall.SetSize(m_SpaceDx,m_SpaceDy);
     FrontWall.ToPlace(0,0,z,0,0,0);
     FrontWall.m_crDefault = RGB(128,128,150);
 
 	CWall& BackWall = m_Wall[BACKFACE];
-	BackWall.SetSize(m_RoomDx,m_RoomDy);
+	BackWall.SetSize(m_SpaceDx,m_SpaceDy);
     BackWall.ToPlace(0,0,-z,0,-180.0f,0);
     BackWall.m_crDefault = RGB(128,128,200);	
 
-	InitMap(m_RoomDx,m_RoomDz);
+	InitMap(m_SpaceDx,m_SpaceDz);
 
 	for (int i=0; i<4; i++)
 	{
 		CDoorWall* dw = m_DoorWall[i];
 		if(dw){
 			if(i == FRONTFACE){
-				dw->SetSize(m_RoomDx,m_RoomDy);
+				dw->SetSize(m_SpaceDx,m_SpaceDy);
 				dw->ToPlace(0,0,z,0,-180.0f,0);
 			}else if(i == LEFTFACE){ 
-				dw->SetSize(m_RoomDz,m_RoomDy);
+				dw->SetSize(m_SpaceDz,m_SpaceDy);
 				dw->ToPlace(-x,0,0,0,90.0f,0);
 			}else if (i== BACKFACE) { 
-				dw->SetSize(m_RoomDx,m_RoomDy);
+				dw->SetSize(m_SpaceDx,m_SpaceDy);
 				dw->ToPlace(0,0,-z,0,0,0);
 			}else if (i == RIGHTFACE){ 
-				dw->SetSize(m_RoomDz,m_RoomDy);
+				dw->SetSize(m_SpaceDz,m_SpaceDy);
 				dw->ToPlace(x,0,0,0,-90.0f,0);
 			}
 		}
 	}
 };
 	
-bool CRoom3D::IsValidRoom(int64 RoomID){
-	if(m_Alias == RoomID && m_DataValid)return true;
+bool CRoom3D::IsValidSpace(int64 SpaceID){
+	if(m_Alias == SpaceID && m_DataValid)return true;
 	return false;
 };
 	
@@ -359,7 +359,7 @@ mapunit* CRoom3D::GetOneBlankMapUnit(){
 	return NULL;
 };
 
-bool CRoom3D::AllowInsertRoom(){
+bool CRoom3D::AllowInsertSpace(){
 	for (int i=1; i<4; i++)
 	{
 		if(m_DoorWall[i] == NULL)return true;;
@@ -367,9 +367,9 @@ bool CRoom3D::AllowInsertRoom(){
 	return false;
 }
 
-void  CRoom3D::SetParentRoom(FACEPOS fc,int64 ID,tstring ParentName,SPACETYPE Type){
+void  CRoom3D::SetParentSpace(FACEPOS fc,int64 ID,tstring ParentName,SPACETYPE Type){
 
-    mapunit* mp = GetParentRoom();
+    mapunit* mp = GetParentSpace();
 	if (mp)
 	{
 		if(mp->face != fc){
@@ -386,27 +386,27 @@ void  CRoom3D::SetParentRoom(FACEPOS fc,int64 ID,tstring ParentName,SPACETYPE Ty
     dw->m_Alias = ID;
 	dw->SetName(ParentName);
 
-	float  x = m_RoomDx/2;
-	float  z = m_RoomDz/2;
+	float  x = m_SpaceDx/2;
+	float  z = m_SpaceDz/2;
 
 	if(fc == FRONTFACE){
-		dw->SetSize(m_RoomDx,m_RoomDy);
+		dw->SetSize(m_SpaceDx,m_SpaceDy);
 		dw->ToPlace(0,0,z,0,-180.0f,0);
 	}else if(fc == LEFTFACE){ 
-		dw->SetSize(m_RoomDz,m_RoomDy);
+		dw->SetSize(m_SpaceDz,m_SpaceDy);
 		dw->ToPlace(-x,0,0,0,90.0f,0);
 	}else if (fc== BACKFACE) { 
-		dw->SetSize(m_RoomDx,m_RoomDy);
+		dw->SetSize(m_SpaceDx,m_SpaceDy);
 		dw->ToPlace(0,0,-z,0,0,0);
 	}else if (fc == RIGHTFACE){ 
-		dw->SetSize(m_RoomDz,m_RoomDy);
+		dw->SetSize(m_SpaceDz,m_SpaceDy);
 		dw->ToPlace(x,0,0,0,-90.0f,0);
 	}
 
 	dw->m_State |= SPACE_PARENT;
 }
 
-mapunit*  CRoom3D::GetParentRoom(){
+mapunit*  CRoom3D::GetParentSpace(){
 	for (int i=0; i<4; i++)
 	{
 		mapunit& m = m_Dypass[i];
@@ -415,7 +415,7 @@ mapunit*  CRoom3D::GetParentRoom(){
 	return NULL;
 }
 	
-int CRoom3D::AddChildRoom(int64 ID,tstring Name, SPACETYPE Type,tstring Fingerprint){
+int CRoom3D::AddChildSpace(int64 ID,tstring Name, SPACETYPE Type,tstring Fingerprint){
 	int index=-1;
 	CDoorWall* dw;
 	for (int i=0; i<4; i++)
@@ -432,20 +432,20 @@ int CRoom3D::AddChildRoom(int64 ID,tstring Name, SPACETYPE Type,tstring Fingerpr
 	dw = new CDoorWall(ID,Name,Fingerprint);
     dw->SetTexture(m_WallTexture,m_FloorTexture,m_CeilingTexture,m_DoorTexture);
 	
-	float  x = m_RoomDx/2;
-	float  z = m_RoomDz/2;
+	float  x = m_SpaceDx/2;
+	float  z = m_SpaceDz/2;
 
 	if(index == FRONTFACE){
-		dw->SetSize(m_RoomDx,m_RoomDy);
+		dw->SetSize(m_SpaceDx,m_SpaceDy);
 		dw->ToPlace(0,0,z,0,-180.0f,0);
 	}else if(index == LEFTFACE){ 
-		dw->SetSize(m_RoomDz,m_RoomDy);
+		dw->SetSize(m_SpaceDz,m_SpaceDy);
 		dw->ToPlace(-x,0,0,0,90.0f,0);
 	}else if (index== BACKFACE) { 
-		dw->SetSize(m_RoomDx,m_RoomDy);
+		dw->SetSize(m_SpaceDx,m_SpaceDy);
 		dw->ToPlace(0,0,-z,0,0,0);
 	}else if (index == RIGHTFACE){ 
-		dw->SetSize(m_RoomDz,m_RoomDy);
+		dw->SetSize(m_SpaceDz,m_SpaceDy);
 		dw->ToPlace(x,0,0,0,-90.0f,0);
 	}
 
@@ -455,27 +455,27 @@ int CRoom3D::AddChildRoom(int64 ID,tstring Name, SPACETYPE Type,tstring Fingerpr
 	return index;
 }
 	
-int  CRoom3D::AddChildRoom(FACEPOS fc,int64 ID,tstring Name,tstring Fingerprint){
+int  CRoom3D::AddChildSpace(FACEPOS fc,int64 ID,tstring Name,tstring Fingerprint){
 	CDoorWall* dw = m_DoorWall[fc];
 	assert(dw==NULL);
 	   
 	dw = new CDoorWall(ID,Name,Fingerprint);
     dw->SetTexture(m_WallTexture,m_FloorTexture,m_CeilingTexture,m_DoorTexture);
 	
-	float  x = m_RoomDx/2;
-	float  z = m_RoomDz/2;
+	float  x = m_SpaceDx/2;
+	float  z = m_SpaceDz/2;
 
 	if(fc == FRONTFACE){
-		dw->SetSize(m_RoomDx,m_RoomDy);
+		dw->SetSize(m_SpaceDx,m_SpaceDy);
 		dw->ToPlace(0,0,z,0,-180.0f,0);
 	}else if(fc == LEFTFACE){ 
-		dw->SetSize(m_RoomDz,m_RoomDy);
+		dw->SetSize(m_SpaceDz,m_SpaceDy);
 		dw->ToPlace(-x,0,0,0,90.0f,0);
 	}else if (fc== BACKFACE) { 
-		dw->SetSize(m_RoomDx,m_RoomDy);
+		dw->SetSize(m_SpaceDx,m_SpaceDy);
 		dw->ToPlace(0,0,-z,0,0,0);
 	}else if (fc == RIGHTFACE){ 
-		dw->SetSize(m_RoomDz,m_RoomDy);
+		dw->SetSize(m_SpaceDz,m_SpaceDy);
 		dw->ToPlace(x,0,0,0,-90.0f,0);
 	}
 
@@ -501,7 +501,7 @@ mapunit* CRoom3D::AddChildObject(int64 ID,tstring Name,SPACETYPE Type,HICON hIco
 	
     //PushChild(ob);
 	float cgx = mp->x1 + (mp->x2-mp->x1)/2;
-	float cgy = -m_RoomDy/2+m_ObjectHeight/2;
+	float cgy = -m_SpaceDy/2+m_ObjectHeight/2;
 	float cgz = mp->z1 + (mp->z2-mp->z1)/2;
 
 	if(mp->face == LEFTFACE)ob->ToPlace(cgx,cgy,cgz,0,90.0f,0);

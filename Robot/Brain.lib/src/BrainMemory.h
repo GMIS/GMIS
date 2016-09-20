@@ -60,7 +60,7 @@ using namespace std;
 #define ITEM_C   "c"
 
 /*定义空间索引，位置：MyLBrain.db
-                             
+
 		表名：欲查找的逻辑空间类型
 	   ------------------------------------------------
 	  | 父逻辑空间ID | 父逻辑空间意义ID | 子逻辑空间ID |
@@ -129,7 +129,7 @@ using namespace std;
 #define       MEMORY_SERIES       PARTOFSPEECH_END +15 //处理逻辑串联
 #define       MEMORY_SHUNT        PARTOFSPEECH_END +16 //处理逻辑并联
 	    
-#define    WORD_OK               0x01c432af42dc0000
+#define    WORD_OK               127282417795596288
 #define    WORD_ERROR            WORD_OK+1
 #define    WORD_IMPEACH          WORD_OK+2   
 
@@ -158,7 +158,7 @@ using namespace std;
 
 
 #define    IsPartOfSpeech(ID) ID>PARTOFSPEECH_START&&ID<PARTOFSPEECH_END
-#define    IsMeaningRoom(ID)  (ID>MEMORY_BODY)
+#define    IsMeaningSpace(ID)  (ID>MEMORY_BODY)
 
 //在此范围内的记忆不是可读的文字
 #define    UnReadable(ID) (ID>PARTOFSPEECH_END&&ID<(MEMORY_SHUNT+1))
@@ -275,44 +275,44 @@ public:
 	/*之所以需要父空间的逻辑明文,是因为给出的父空间可能还没有生成单独的表
 	  而制作索引时需要
     */ 
-	void InsertRoom(int64 ParentTable,int64 ParentLogicText,int64 ChildTable,int64 LogicText,int64 LogicType);
+	void InsertSpace(int64 ParentTable,int64 ParentLogicText,int64 ChildTable,int64 LogicText,int64 LogicType);
 
 		
     //连续生成多个嵌套空间，通常用于生成某个记忆的形
-	int64 InsertMultiRoom(
+	int64 InsertMultiSpace(
 		                   vector<int64>& ValueList,
-						   int64 RoomType, 
+						   int64 SpaceType, 
 						   int64 StartParentID = ROOT_SPACE,              //指定插入的起始空间   
 						   int64 StartParentLogicTextID = ROOT_LOGIC_TEXT, //生成索引需要
 						   bool  IsToken = false //组成token的是字符而不是其它空间的意义空间ID,因此需要特别处理
 						   );
 
 	//返回指定的意义空间ID or  0
-	int64 HasMeaningRoom(int64 ParentTable,int64 Meaning,int64 MeaningType);
+	int64 HasMeaningSpace(int64 ParentTable,int64 Meaning,int64 MeaningType);
 
 	//在某个形下生成一个意义空间，同时在其空间下自动生成一个无意义的结尾空间,
 	//如果有重复的意义空间，返回此ID，
 	//如果之前有一个NULL意义空间，则删除这个空间（或许今后这应该由统一的遗忘程序来执行）
 	//如果ReturnID!=0那么意义空间的逻辑空间ID将由ReturnID指定，否则自动生成一个当前时间戳。
 	//返回意义空间的逻辑空间ID
-	int64 InsertMeaningRoom(int64 ParentTable,int64 ParentLogicText,int64 Meaning,int64 MeaningType,int64 ReturnID = 0);      
+	int64 InsertMeaningSpace(int64 ParentTable,int64 ParentLogicText,int64 Meaning,int64 MeaningType,int64 ReturnID = 0);      
 
 	/*
 	   在意义空间下生成一个结尾空间。缺省情况是有意义的，无意义空间通常是自动生成。
 	   注意：所有结尾空间都不在左脑生成索引。
 	*/
-	void InsertEndRoom(int64 ParentTable,int64 LogicText,int64 Type=MEMORY_NULL_END);
+	void InsertEndSpace(int64 ParentTable,int64 LogicText,int64 Type=MEMORY_NULL_END);
 
 	//根据空间的识别ID，得到其值，出错返回0
-	int64 GetRoomValue(int64 RoomID);
+	int64 GetSpaceValue(int64 SpaceID);
 
 	//根据空间的逻辑ID，得到此空间的值和类型
-	bool GetRoomInfo(int64 RoomID, int64& RoomValue, int64 & RoomType); 
+	bool GetSpaceInfo(int64 SpaceID, int64& SpaceValue, int64 & SpaceType); 
 	
 	
 	//根据父空间的识别ID，得到指定子空间的识别ID，出错为0
-	int64 GetChildID(int64 ParentRoomID,int64 ChildRoomValue,int64 ChildRoomType);
-	int64 GetChildType(int64 ParentRoomID,int64 ChildRoomID);
+	int64 GetChildID(int64 ParentSpaceID,int64 ChildSpaceValue,int64 ChildSpaceType);
+	int64 GetChildType(int64 ParentSpaceID,int64 ChildSpaceID);
 	int64 GetFatherID(int64 Child);
 	void DeleteChild(int64 ParentTable,int64 ChildLogicText,int64 ChildLogicType);
 
@@ -336,13 +336,13 @@ public:
 		//记忆形     
         
 		BrainDB.start_transaction();
-		int64 ID = InsertMultiRoom(ValueList,MEMORY_BODY,StartParentID,StartParentLogicTextID,IsToken);
+		int64 ID = InsertMultiSpace(ValueList,MEMORY_BODY,StartParentID,StartParentLogicTextID,IsToken);
 		if(!ID){
 			BrainDB.rollback_transaction();
 			return 0;
 		}
 		//记忆意义空间（自动隐含一个无评价结尾）
-		ID = InsertMeaningRoom(ID,ValueList.back(),MeaningValue,MeaningType,ReturnID);
+		ID = InsertMeaningSpace(ID,ValueList.back(),MeaningValue,MeaningType,ReturnID);
 		if (!ID)
 		{
 			BrainDB.rollback_transaction();
@@ -350,7 +350,7 @@ public:
 		}
 
 		//给一个有效评价的结尾
-		if(MeaningSense)InsertEndRoom(ID,MeaningSense,MEMORY_LOGIC_END);
+		if(MeaningSense)InsertEndSpace(ID,MeaningSense,MEMORY_LOGIC_END);
 		
 		BrainDB.commit_transaction();
 		return ID;
@@ -374,45 +374,45 @@ public:
 	GetAllMeaning采用map<意义值，意义识别ID>有问题，如果意义值相同，则不能得到所有意义空间	
 	*/
 //	int32 GetAllMeaning(int64 ID, map<int64,int64> &MeaningList);
-	int32 GetAllMeaningRoomID(int64 ID, deque<int64>& MeaningRoomIDList);
+	int32 GetAllMeaningSpaceID(int64 ID, deque<int64>& MeaningSpaceIDList);
 
 	//把所有空间类型为词性的集合成一个UINT32
 	uint32 GetAllPartOfSpeech(int64 TokenID);
-    //得到所有词性意义空间的空间ID及词性 map<RoomID，RoomType>
-	int32 GetAllPartOfSpeechRoom(int64 ParentID,map<int64,int64>& RoomList);
+    //得到所有词性意义空间的空间ID及词性 map<SpaceID，SpaceType>
+	int32 GetAllPartOfSpeechSpace(int64 ParentID,map<int64,int64>& SpaceList);
 
 
 	//在指定形下返回指定意义值的意义空间ID
-    int64 GetMeaningRoomID(vector<int64> BodyList,int64 MeaningValue,int64 MeaningType){
-		int64 ParentRoom = ROOT_SPACE;
-		int64 ParentRoomValue = ROOT_LOGIC_TEXT;
-		int64 RoomID = 0;
+    int64 GetMeaningSpaceID(vector<int64> BodyList,int64 MeaningValue,int64 MeaningType){
+		int64 ParentSpace = ROOT_SPACE;
+		int64 ParentSpaceValue = ROOT_LOGIC_TEXT;
+		int64 SpaceID = 0;
 		
 		int32 End = BodyList.size();
 		for(int32 i= 0; i<End; i++)
 		{	
-			int64 RoomValue = BodyList[i];
-			assert(RoomValue != 0);
-			RoomID = GetChildID(ParentRoom,RoomValue, MEMORY_BODY);      
-			if(RoomID == 0){ 
+			int64 SpaceValue = BodyList[i];
+			assert(SpaceValue != 0);
+			SpaceID = GetChildID(ParentSpace,SpaceValue, MEMORY_BODY);      
+			if(SpaceID == 0){ 
 				return 0;
 			}
-			ParentRoom = RoomID;
-			ParentRoomValue = RoomValue;
+			ParentSpace = SpaceID;
+			ParentSpaceValue = SpaceValue;
 		}
 
-		int64 MeaningID = HasMeaningRoom(RoomID,MeaningValue,MeaningType);
+		int64 MeaningID = HasMeaningSpace(SpaceID,MeaningValue,MeaningType);
 		return MeaningID;
 	}
 
 	//得到指定的意义值所表达事物的类型，
 	//如果是现成的意义预定义值返回自身（其中是字符，返回字符值，是本能返回本能ID）
 	//否则是其它意义空间的识别ID，则递归直到返回其具体的意义类型，出错返回0
-//	int64 GetMemoryType(int64 MeaningRoomID,int64 MeaningValue);
+//	int64 GetMemoryType(int64 MeaningSpaceID,int64 MeaningValue);
 	
-//	bool  IsChar(int64 MeaningRoomID);
-//	bool  IsInstinct(int64 MeaningRoomID);
-//	bool  IsAction(int64 MeaningRoomID,int64 MeaningValue);
+//	bool  IsChar(int64 MeaningSpaceID);
+//	bool  IsInstinct(int64 MeaningSpaceID);
+//	bool  IsAction(int64 MeaningSpaceID,int64 MeaningValue);
 
 	//根据指定的意义空间ID返回其形，如果不是特别的意义，则返回其具体的并按相同的嵌套存储层次保存在Pipe里：
 	//ePipeline（父空间）{ eINT64(子空间值), or ePipeline{...}...}
@@ -424,23 +424,23 @@ public:
    
  
 	/*通用文字回取操作
-	 把RoomID代表的空间转换成文本,Nest指示是否是嵌套调用
+	 把SpaceID代表的空间转换成文本,Nest指示是否是嵌套调用
 	 返回值指示返回的文本层次，0= Error 1=token 2=Clause，依次类推
 	 本操作自动还原标点符号。
 	*/
-	int32 RetrieveText(int64 RoomID,tstring& Text,bool Nest=true); 
+	int32 RetrieveText(int64 SpaceID,tstring& Text,bool Nest=true); 
     
 	//某些字符串因为标点符合，不宜用RetrieveText，比如文件名存储，此时可用此函数
-	tstring RetrieveToken(int64 RoomID);
+	tstring RetrieveToken(int64 SpaceID);
 
 	//把Ojbect/people的存储路径到Text,并返回crc，错误返回0
-    uint32  RetrieveObject(int64 RoomID,tstring& Text);
+    uint32  RetrieveObject(int64 SpaceID,tstring& Text);
    
-	bool  RetrieveAction(int64 RoomID,int64 RoomValue, tstring& Text,bool IsShunt);
-	bool  RetrieveAction(int64 RoomID,int64 RoomValue, ePipeline* Pipe,bool IsShunt);
+	bool  RetrieveAction(int64 SpaceID,int64 SpaceValue, tstring& Text,bool IsShunt);
+	bool  RetrieveInstinctInstance(int64 SpaceID,int64 SpaceValue, ePipeline* Pipe);
 
 	//返回一段逻辑,存储为可编译状态
-	bool  RetrieveLogic(int64 RoomID,ePipeline* Pipe,bool IsShunt = false);
+	bool  RetrieveLogic(int64 SpaceID,ePipeline* Pipe);
     
 	/*把一段逻辑表达为文字，由于出现嵌套的子逻辑,显示格式如下：
 	  Logic 0 : instinct a, logic 2, instinct b;
@@ -449,19 +449,19 @@ public:
       如果是抽象的自定义命令（本能直接在显示是调用RetrieveText()）则显示格式：
 	  Command : aaa bbb ; 
 	*/
-	bool  RetrieveLogic(int64 RoomID,deque<tstring>& LogicList,tstring* Text=NULL,bool IsShunt = false);
+	bool  RetrieveLogic(int64 SpaceID,deque<tstring>& LogicList,tstring* Text=NULL,bool IsShunt = false);
     
 	//根据一个任意存储ID，返回描述这个ID的文字列表
-	void  GetMemo(int64 RoomID, deque<tstring>& MemoList);
+	void  GetMemo(int64 SpaceID, deque<tstring>& MemoList);
     
-	//根据一个逻辑存储ID，返回使用这个逻辑的自定义命令表
-	void  GetCustomCommandText(int64 LogicID, deque<tstring>& CommanTextList);
+	//根据一个本能ID或自定义命令ID，返回命令的文本形式
+	void  GetCommandText(int64 LogicID,tstring& CmdText);
 
 
 
 
-	Energy* RetrieveEnergy(int64 RoomID);
-    ePipeline* RetrievePipe(int64 RoomID);
+	Energy* RetrieveEnergy(int64 SpaceID);
+    ePipeline* RetrievePipe(int64 SpaceID);
 
     //大脑初始化
 	////////////////////////////////////////////////////////////////////////////////

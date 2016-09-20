@@ -68,7 +68,7 @@ CLocalObjectView::CObjectItem::~CObjectItem(){
 }
 
 ePipeline* CLocalObjectView::CObjectItem::GetItemData(){
-   return m_ObjectData.GetItemData();
+   return m_ObjectData.Clone();
 }
 
 void CLocalObjectView::CObjectItem::Draw(HDC hDC,ePipeline* Pipe /*= NULL*/){

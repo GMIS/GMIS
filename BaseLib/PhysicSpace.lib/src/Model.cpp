@@ -195,7 +195,7 @@ CThreadWorker::CThreadWorker(int64 ID,Model* Parent,int32 Type)
 {
 	m_ID = ID;
 	m_WorkType = Type;
-	m_IdleCount = 0;
+
 };
 
 CThreadWorker::~CThreadWorker(){
@@ -238,25 +238,40 @@ void CThreadWorker::CentralNerveWorkProc(){
 	Model::CLockedModelData* LockedData = m_Parent->GetModelData();
 
 	try{
+		int64 OldeTimestamp;
+
+		bool bIdle = false;
 		while (IsAlive() && m_Parent->IsAlive())
 		{
 			CMsg Msg;
 			m_Parent->PopCentralNerveMsg(Msg);
 
 			if (Msg.IsValid())
-			{			
+			{	
+				bIdle = false;
+				LockedData->IncreNerveWorkerCount();	
 				m_Parent->CentralNerveMsgProc(Msg);
+				LockedData->DecreNerveWorkerCount();
 
-				m_IdleCount = 0;
 			}else{
-				m_IdleCount++;	
-				int Max = LockedData->GetNerveMaxIdleCount();
+				
+				if(bIdle==false){
+					OldeTimestamp =  AbstractSpace::CreateTimeStamp();
+					bIdle = true;
+				}
+				else{
+					int64 MaxIdleInterval = LockedData->GetNerveMaxIdleInterval();
 
-				if ( m_IdleCount > Max ) //Default exit if 1000 milliseconds  without information can be handled 
-				{
-					m_IdleCount = 0;
-					break;
-				}			
+					int64 NewTimestamp = AbstractSpace::CreateTimeStamp();
+					if (NewTimestamp-OldeTimestamp>MaxIdleInterval){
+						if(LockedData->GetIdleWorkerNum()>1)
+						{
+							break;
+						}
+						OldeTimestamp = NewTimestamp;
+					}
+				}
+
 				SLEEP_MILLI(1);
 			}
 		}
@@ -314,7 +329,7 @@ Model::CLockedModelData::CLockedModelData(){
 	m_MaxNerveWorkerNum    = 20;
 	m_NerveMsgMaxNumInPipe = 10;
 	m_NerveMsgMaxInterval  = 10*1000*1000; //1秒
-	m_NerveIdleMaxCount    = 50;
+	m_NerveIdleMaxInterval = 50*1000*1000;  //5秒
 
 };
 
@@ -359,6 +374,25 @@ void    Model::CLockedModelData::Clear(){
 	m_ThreadWorkerPool.clear();
 }
 
+void  Model::CLockedModelData::IncreNerveWorkerCount(){
+	_CLOCK(&m_Mutex);
+	++m_NerveWorkingNum ;
+}
+void  Model::CLockedModelData::DecreNerveWorkerCount(){
+	_CLOCK(&m_Mutex);
+	--m_NerveWorkingNum;
+}
+
+int32   Model::CLockedModelData::GetBusyNerveWorkerNum(){
+	_CLOCK(&m_Mutex);
+	return m_NerveWorkingNum;		
+};
+
+int32   Model::CLockedModelData::GetIdleWorkerNum(){
+	_CLOCK(&m_Mutex);
+	return m_CentralNerveWorkerList.size() - m_NerveWorkingNum;
+}
+
 int64   Model::CLockedModelData::GetNerveMsgInterval(){
 	_CLOCK(&m_Mutex);
 	return m_NerveMsgMaxInterval;
@@ -368,14 +402,19 @@ void    Model::CLockedModelData::SetNerveMsgInterval(int32 n){
 	m_NerveMsgMaxInterval = n;
 }
 	
-int32   Model::CLockedModelData::GetNerveMaxIdleCount(){
+void    Model::CLockedModelData::SetMaxNerveWorkerNum(int32 n){
 	_CLOCK(&m_Mutex);
-	return m_NerveIdleMaxCount;	
+	m_MaxNerveWorkerNum = n;
+}
+
+int64   Model::CLockedModelData::GetNerveMaxIdleInterval(){
+	_CLOCK(&m_Mutex);
+	return m_NerveIdleMaxInterval;	
 }
 	
-void   Model::CLockedModelData::SetNerveMaxIdleCount(int32 n){
+void   Model::CLockedModelData::SetNerveMaxIdleInterval(int32 second){
 	_CLOCK(&m_Mutex);
-	m_NerveIdleMaxCount = n;
+	m_NerveIdleMaxInterval = second*10*1000*1000;
 }
 
 int32  Model::CLockedModelData::GetCentralNerveWorkerNum(){
@@ -402,7 +441,6 @@ CThreadWorker* Model::CLockedModelData::CreateThreadWorker(int64 ID,Model* Paren
 		Worker = *it;
 		Worker->Dead();
 		Worker->m_ID = ID;
-		Worker->m_IdleCount =0;
 		Worker->m_Parent = Parent;
 		m_ThreadWorkerPool.pop_front();
 	}else{
@@ -518,7 +556,7 @@ void  Model::CLockedModelData::WaitAllWorkerThreadClosed(Model* Parent){
 	{
 		Reason = REASON_MSG_TOO_MUCH;
 		return TRUE;
-	}else if(Interval> m_NerveMsgMaxInterval){ //when exceeded specified interval, there is no  message  be  popped to handled, create  new thread
+	}else if(MsgNum>1 && Interval> m_NerveMsgMaxInterval){ //when exceeded specified interval, there is no  message  be  popped to handled, create  new thread
 		Reason = REASON_TIME_OUT;
 		return TRUE;
 	}
@@ -700,7 +738,7 @@ BOOL  Model::CreateCentralNerveWorkerStrategy(int64 NewMsgPushTime,int64 LastMsg
 	Data.PushInt(n);
 	NotifySysState(NOTIFY_MODEL_SCENE,NTID_NERVE_MSG_NUM,&Data);
 
-	int64 t = NewMsgPushTime-LastMsgPopTime; //convert into second
+	int64 t = NewMsgPushTime-LastMsgPopTime; 
 
 	//If more than 10 messages in the central nerve or there is message waiting for being handled more than 2 seconds, create a new thread
 	uint32 Reason ;
@@ -710,8 +748,11 @@ BOOL  Model::CreateCentralNerveWorkerStrategy(int64 NewMsgPushTime,int64 LastMsg
 		if (Reason == REASON_LIMIT)
 		{
 			NotifySysState(NOTIFY_MODEL_SCENE,NTID_NERVE_THREAD_LIMIT,NULL);
+			return FALSE;
 		}
-		return FALSE;
+		else if(m_ModelData.GetIdleWorkerNum() > 0){
+			return FALSE;
+		}
 	}
 
 	CThreadWorker* CentralNerveWork =m_ModelData.CreateThreadWorker(NewMsgPushTime,this,MODEL_CENTRAL_NEVER_WORK_TYPE);
@@ -855,7 +896,7 @@ bool Model::Do(Energy* E){
 	}
 	catch(...){
 		ePipeline NotifyData;
-		NotifyData.PushString(_T("Where default CentralNerveWork have an exception occurred"));
+		NotifyData.PushString(_T("there have an exception occurred in  CentralNerveWork()"));
 		NotifySysState(NOTIFY_EXCEPTION_OCCURRED,NULL,&NotifyData);
 
 	}

@@ -110,7 +110,7 @@ void CMainFrame::SetCurDialogState(TASK_STATE  State){
 
 void  CMainFrame::SendMsgToBrain(int64 SourceID,int64 DialogID, ePipeline& Msg,int64 EventID){
 	CMsg Msg1(LOCAL_GUI_SOURCE,DEFAULT_DIALOG,MSG_GUI_TO_BRAIN,DEFAULT_DIALOG,EventID);
-	ePipeline& Letter = Msg1.GetLetter();
+	ePipeline& Letter = Msg1.GetLetter(false);
 	Letter.PushInt(SourceID);
 	Letter.PushInt(DialogID);
 	Letter.PushPipe(Msg);
@@ -147,7 +147,7 @@ REPEAT:
 
 	m_Status.LightLamp(IN_LAMP,TRUE);
 
-	ePipeline& Letter = Msg.GetLetter();
+	ePipeline& Letter = Msg.GetLetter(true);
 	for (int i=0; i<Letter.Size(); i++)
 	{
 
@@ -365,7 +365,7 @@ REPEAT:
 
 					int64 ret = Cmd.PopInt();
 
-					m_WorldShow.SetRoomTitle(_T(""));
+					m_WorldShow.SetSpaceTitle(_T(""));
 					m_Status.SetTip(_T(""));
 
 					m_MapView.m_MapView.EnableNewConnect(TRUE);
@@ -376,10 +376,15 @@ REPEAT:
 						if(m_MapView.GetHwnd()){
 							::SendMessage(m_MapView.GetHwnd(),WM_CLOSE,0,0);
 						};
+
+						m_LinkerView.EnableDialog(SPACE_SOURCE,DEFAULT_DIALOG,TRUE);
+
 					}else{
 						m_AddressBar.SetConnectState(FALSE);
 						m_MapView.Reset();
-						m_WorldShow.ConnectRoomFail(_T(""));
+						m_WorldShow.ConnectSpaceFail(_T(""));
+
+						m_LinkerView.EnableDialog(SPACE_SOURCE,DEFAULT_DIALOG,FALSE);
 					}
 				}
 			}
@@ -451,6 +456,10 @@ REPEAT:
 
 						m_LinkerView.AddDialog(SourceID,DialogID,ParentID,Name);
 					} 	
+				}else if (op == TO_DIALOG_VIEW::ENABLE_ITEM)
+				{
+					int64 bEnable = Cmd.PopInt();
+					m_LinkerView.EnableDialog(SourceID,DialogID,bEnable);
 				}
 			}
 			break;
@@ -531,19 +540,19 @@ void CMainFrame::OnSpaceOutput_Catalog(ePipeline& Data){
 
 	ePipeline* SpaceList = (ePipeline*)Data.GetData(0);	
 
-	int64 RoomID = SpaceList->GetID();
-	tstring RoomName = SpaceList->GetLabel();
+	int64 SpaceID = SpaceList->GetID();
+	tstring SpaceName = SpaceList->GetLabel();
 	
-	MapItem* RoomItem = m_MapView.FindChildItem(RoomID);
-	assert(RoomItem);
+	MapItem* SpaceItem = m_MapView.FindChildItem(SpaceID);
+	assert(SpaceItem);
     bool insertmap = false;
-	if(RoomItem->m_ChildList.size()==0)insertmap=true;
+	if(SpaceItem->m_ChildList.size()==0)insertmap=true;
 	
-	if(RoomID == LOCAL_SPACEID){
-		m_MapView.InitLocalRoom(RoomName);
+	if(SpaceID == LOCAL_SPACEID){
+		m_MapView.InitLocalSpace(SpaceName);
 	}else {
-        assert(RoomItem);
-		RoomName = RoomItem->m_Text;
+        assert(SpaceItem);
+		SpaceName = SpaceItem->m_Text;
 	}
 	
 	ePipeline Addr;
@@ -551,9 +560,9 @@ void CMainFrame::OnSpaceOutput_Catalog(ePipeline& Data){
 	m_AddressBar.SetCurSpaceAddress(Addr);
 
 	int n = SpaceList->Size()/3;
-	m_WorldShow.BeginUpdateRoom(RoomName,RoomID,n);
+	m_WorldShow.BeginUpdateSpace(SpaceName,SpaceID,n);
 	
-	//	m_MapView.DeleteAllChild(RoomID); 地图只构建新的不删除旧的
+	//	m_MapView.DeleteAllChild(SpaceID); 地图只构建新的不删除旧的
 	
 	eElectron E1;
 	for(int i=0; i<n; i++){
@@ -567,21 +576,21 @@ void CMainFrame::OnSpaceOutput_Catalog(ePipeline& Data){
 		HICON hIcon = NULL;	
 		
 		if(Type==LOCAL_SPACE || Type == OUTER_SPACE) {//如果是一个房间
-			hIcon = MapItem::hRoom;
-			if(insertmap)m_MapView.AddItem(RoomID,ChildID,Name,hIcon);
+			hIcon = MapItem::hSpace;
+			if(insertmap)m_MapView.AddItem(SpaceID,ChildID,Name,hIcon);
 		}else if(Type == CONTAINER_SPACE){
 			hIcon = MapItem::hContainer;
-			if(insertmap)m_MapView.AddItem(RoomID,ChildID,Name,hIcon);
+			if(insertmap)m_MapView.AddItem(SpaceID,ChildID,Name,hIcon);
 		}else if(Type == ROBOT_VISITER){
 			hIcon = MapItem::hPeople;
-			if(insertmap)m_MapView.AddItem(RoomID,ChildID,Name,hIcon);
+			if(insertmap)m_MapView.AddItem(SpaceID,ChildID,Name,hIcon);
 		}
 		else{
 			hIcon = CUseShGetFileInfo::GetFileIconHandle(Name.c_str(),TRUE);
 		} 
-		m_WorldShow.AddObject(RoomID,ChildID,Name,(SPACETYPE)Type,Fingerprint,hIcon);
+		m_WorldShow.AddObject(SpaceID,ChildID,Name,(SPACETYPE)Type,Fingerprint,hIcon);
 	}
-	m_WorldShow.EndUpdateRoom(RoomID);
+	m_WorldShow.EndUpdateSpace(SpaceID);
 }
 
 void CMainFrame::OnSpaceOutput_Added(ePipeline& Data){
@@ -596,8 +605,8 @@ void CMainFrame::OnSpaceOutput_Added(ePipeline& Data){
 	int64 ParentID  = ChildPipe->GetID();
 	int64 ChildID = AbstractSpace::CreateTimeStamp();
 	
-	//MapItem* ParentRoom = m_MapView.FindChildItem(RoomID);
-	//assert(ParentRoom != NULL);	
+	//MapItem* ParentSpace = m_MapView.FindChildItem(SpaceID);
+	//assert(ParentSpace != NULL);	
 	
     tstring Name  = ChildPipe->PopString();
 	int32   Type  = ChildPipe->PopInt();
@@ -606,7 +615,7 @@ void CMainFrame::OnSpaceOutput_Added(ePipeline& Data){
 	HICON hIcon = NULL;	
 	
 	if(Type==LOCAL_SPACE || Type == OUTER_SPACE) {//如果是一个房间
-		hIcon = MapItem::hRoom;
+		hIcon = MapItem::hSpace;
 		m_MapView.AddItem(ParentID,ChildID,Name,hIcon);
 	}else if(Type == CONTAINER_SPACE){
 		hIcon = MapItem::hContainer;
@@ -631,7 +640,7 @@ void CMainFrame::OnSpaceOutput_Deleted(ePipeline& Data){
 	//是当前焦点空间
 	int64 MapItemID = Path->GetID();
 	
-	MapItem* Item = m_MapView.m_MapView.GetCurRoom();
+	MapItem* Item = m_MapView.m_MapView.GetCurSpace();
 	if (Item && Item->m_Alias == MapItemID)
 	{
 		m_WorldShow.DeleteObject(Fingerprint);	

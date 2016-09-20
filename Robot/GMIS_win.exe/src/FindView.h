@@ -103,9 +103,9 @@ public:
 	void SetTextFont( LONG nHeight, BOOL bBold, BOOL bItalic, const TCHAR* csFaceName );
 	void SetFindTip(tstring Tip);
 
-	void AddText(int32 Index, int64 RoomID,const TCHAR* Text);
-	void AddObjectOrPeople(int32 Index, int64 RoomID,const TCHAR* Text, const TCHAR* Memo);
-	void AddCommandOrLogic(int32 Index, int64 RoomID,const TCHAR* Text, const TCHAR* Memo);
+	void AddText(int32 Index, int64 SpaceID,const TCHAR* Text);
+	void AddObjectOrPeople(int32 Index, int64 SpaceID,const TCHAR* Text, const TCHAR* Memo);
+	void AddCommandOrLogic(int32 Index, int64 SpaceID,const TCHAR* Text, const TCHAR* Memo);
 	void ClearAll();
 
 	void FindEnd(BOOL IsAllEnd); //当前搜索已经全部完成
